@@ -32,3 +32,8 @@ Christoph?
 
 *   GitHub?
 *   Let's try: [https://github.com/orgs/blockr-org/projects/1/views/1](https://github.com/orgs/blockr-org/projects/1/views/1)
+
+
+# How to PR
+
+TBD, as discussed with David
