@@ -19,7 +19,7 @@
 
 # What is a stack?
 
-<img width="400" alt="image" src="https://github.com/blockr-org/blockr/assets/1390827/3a694c2e-1454-4232-97c0-0d1110f70ab3">
+<img width="300" alt="image" src="https://github.com/blockr-org/blockr/assets/1390827/3a694c2e-1454-4232-97c0-0d1110f70ab3">
 
 *   Combine blocks
 *   Pass data input from one block to another
@@ -139,7 +139,10 @@ We're currently constrained by the "input fields" offered by shiny. Medium term,
 
 ## The competition
 
-I had a quick look at Tableau, Spotfire and PowerBI. A common theme is that they offer composing "Excel-type" expressions embedded in a "mini IDE".![](https://t4730439.p.clickup-attachments.com/t4730439/470a4c62-a7a0-4ab9-ad8c-f68e9b5d9827/Screenshot%202023-10-05%20at%2010.56.00.png)
+I had a quick look at Tableau, Spotfire and PowerBI. A common theme is that they offer composing "Excel-type" expressions embedded in a "mini IDE". 
+
+<img width="400" alt="image" src="https://github.com/blockr-org/blockr/assets/1390827/7492e42c-ff41-41d4-a6c1-fe829998c08c">
+
 
 ## Possible building blocks
 
