@@ -1,7 +1,7 @@
 
 # What is a block?
 
-![](https://t4730439.p.clickup-attachments.com/t4730439/75fd767a-fcbd-493b-bdd3-d6f0c91d9d47/image.png)
+<img width="400" alt="image" src="https://github.com/blockr-org/blockr/assets/1390827/12ccccde-ecf8-4ea1-a52f-0a7ce5eaae6e">
 
 ### S3-based object (Nicolas)
 
@@ -19,7 +19,7 @@
 
 # What is a stack?
 
-![](https://t4730439.p.clickup-attachments.com/t4730439/99c226c9-4c8a-47d5-bd41-3302f3528725/image.png)
+<img width="400" alt="image" src="https://github.com/blockr-org/blockr/assets/1390827/3a694c2e-1454-4232-97c0-0d1110f70ab3">
 
 *   Combine blocks
 *   Pass data input from one block to another
