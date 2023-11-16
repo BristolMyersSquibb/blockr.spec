@@ -7,13 +7,13 @@ We would like to improve project coordination. This probably requires a little m
 1.   better documentation
 1.   a task managing platform
 
-#### **Coordination Meeting**
+## **Coordination Meeting**
 
 *   A weekly (?) meeting
 *   John (?), Karma (?), David, Nicolas, Christoph
 *   Discuss and decide on Backlog priorities
 
-### **Coordinator**
+## **Coordinator**
 
 *   Keep Documentation up to date
 *   Maintain task list (on GitHub)
@@ -23,12 +23,12 @@ We would like to improve project coordination. This probably requires a little m
 
 Christoph?
 
-#### Documentation
+## Documentation
 
 *   Project Goals, Principles, Architecture now on GitHub
 *   Goal: do more wire-framing, e.g., using
 
-#### Task Management
+## Task Management
 
 *   GitHub?
 *   Let's try: [https://github.com/orgs/blockr-org/projects/1/views/1](https://github.com/orgs/blockr-org/projects/1/views/1)
