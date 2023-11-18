@@ -2,35 +2,7 @@
 
 ### Goal of this document
 
-To structure the discussion around blockly, block3, etc.
-
-### Experiments
-
-Please ask package authors if you lack access.
-
-#### John's original draft
-
-R6-based blocks
-
-[https://github.com/devOpifex/blockly](https://github.com/devOpifex/blockly/blob/master/README.md)
-
-#### Christoph's experiments
-
-List-based blocks. Introduces 'stacks'. Stacks are working and can be demoed.
-
-[https://github.com/cynkra/block3](https://github.com/cynkra/block3)
-
-#### Nicolas's experiments
-
-Distantly similar to Christoph's experiments, this sets up a more rigid S3 class structure. Introduces 'fields' that contain the user input state.
-
-[https://github.com/nbenn/blockr](https://github.com/nbenn/blockr)
-
-#### David's experiments
-
-Similar to Christoph on the surface. Explores aspects of the user interface such as drag and drop containers, collapsible block. Explore an interface to let people extend/modify a block by their own server/ui functions. UI and server are tightly coupled in this concept.
-
-[https://github.com/DivadNojnarg/abs](https://github.com/DivadNojnarg/abs)
+To document discussions and features around blockr
 
 ### Definitions
 
