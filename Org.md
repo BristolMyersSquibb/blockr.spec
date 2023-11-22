@@ -58,5 +58,5 @@ To improve project coordination, we now have:
 
 # Repositories
 
-- `blockr`: PRs maintained by David
+- `blockr`: PRs maintained by David and Nicolas
 - `bmsui`, `block.demo`, `masonry`: PRs maintained by John
