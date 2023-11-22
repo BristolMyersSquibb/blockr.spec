@@ -2,7 +2,14 @@
 
 ### Goal of this document
 
-To document discussions and features around blockr
+To document developer discussions and features around blockr
+
+
+### User Documentation
+
+Is stored as vignette and rendered as a pkgdown website:
+
+https://blockr-org.github.io/blockr/articles/developer-guide.html#adding-new-fields
 
 ### Definitions
 
