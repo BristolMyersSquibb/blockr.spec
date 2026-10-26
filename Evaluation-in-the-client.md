@@ -1,6 +1,6 @@
-Status: draft. Design for [Client-owned board state](Client-owned-board-state).
+Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Client-owned-board-state)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [document model](Document-model-for-the-client-owned-board) and the [wire protocol proposal](Wire-protocol-between-the-client-and-R), and shapes the scheduler ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)). It replaces what [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) rework within the R board, evaluation demand and statuses, and keeps their terms.
+One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [document model](Board-document-model) and the [wire protocol proposal](Wire-protocol-between-the-client-and-R), and shapes the scheduler ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)). It replaces what [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) rework within the R board, evaluation demand and statuses, and keeps their terms.
 
 ## What must hold
 
@@ -19,7 +19,7 @@ Every block has a version, a number the client keeps for the session and never s
 
 The scheduler evaluates what is demanded, and everything upstream of it. A board's `evaluation` option decides what that is: `"eager"`, the default, demands every block, and `"lazy"` demands only what the following ask for. The option configures the scheduler and never reaches a type's `interpolate`.
 
-- A block of a type declared eager, such as one that writes a file, is always demanded, so it writes in a lazy board too. The type declares it through `new_block(..., eager = TRUE)`, or with a function of the block's state, so that a write block is demanded only while its auto mode is on ([Block types in R](Block-types-in-R-for-the-client-owned-board)), and the registry export carries it ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)).
+- A block of a type declared eager, such as one that writes a file, is always demanded, so it writes in a lazy board too. The type declares it through `new_block(..., eager = TRUE)`, or with a function of the block's state, so that a write block is demanded only while its auto mode is on ([Block types in R](Block-types-in-R)), and the registry export carries it ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)).
 - A standing demand holds a set of blocks until its owner replaces or releases it, and all owners write the same owner-keyed set, as [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) has it for the R board. The dock demands what it shows, and core does not know why.
 - A one-off evaluation evaluates what is stale among some blocks and their upstream once, and resolves with their statuses, such as a code export that needs every block's current expression, or the assistant checking the descendants of a block it changed for new failures. A package request that names the blocks it reads evaluates them this way before it runs ([Wire protocol](Wire-protocol-between-the-client-and-R)).
 
@@ -56,7 +56,7 @@ interface BlockStatus {
 scheduler.status("b");          // a signal, read by whatever draws the block
 ```
 
-The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), with `invalid` in place of its `unset`, since a block type's `validate` says only whether a state can run ([Block types in R](Block-types-in-R-for-the-client-owned-board)). A reply of `ok` makes a block `ready`, `error` makes it `failed`, and `invalid` makes it `invalid`; it is `waiting` while an upstream block is `failed`, `invalid` or `waiting`, `stale` while a newer version exists than its latest reply was for, and `unevaluated` before its first reply. A cancelled evaluation leaves the block `stale`. The status of a block nothing demands keeps its latest reply, so a parked block that failed still reads `failed`.
+The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), with `invalid` in place of its `unset`, since a block type's `validate` says only whether a state can run ([Block types in R](Block-types-in-R)). A reply of `ok` makes a block `ready`, `error` makes it `failed`, and `invalid` makes it `invalid`; it is `waiting` while an upstream block is `failed`, `invalid` or `waiting`, `stale` while a newer version exists than its latest reply was for, and `unevaluated` before its first reply. A cancelled evaluation leaves the block `stale`. The status of a block nothing demands keeps its latest reply, so a parked block that failed still reads `failed`.
 
 ### Scheduling
 

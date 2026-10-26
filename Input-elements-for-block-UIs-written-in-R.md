@@ -1,6 +1,6 @@
-Status: draft. Design for [Client-owned board state](Client-owned-board-state).
+Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Client-owned-board-state)): the input elements a block type composes its UI from in R, without writing JS. It shapes the element set ([blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). Modules for UIs that need more are the UI modules proposal ([UI modules in JS](UI-modules-in-JS)), and how a block type uses its UI is the block types proposal ([Block types in R](Block-types-in-R-for-the-client-owned-board)).
+One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): the input elements a block type composes its UI from in R, without writing JS. It shapes the element set ([blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). Modules for UIs that need more are the UI modules proposal ([UI modules in JS](UI-modules-in-JS)), and how a block type uses its UI is the block types proposal ([Block types in R](Block-types-in-R)).
 
 ## What must hold
 
@@ -50,7 +50,7 @@ select_input("by", "Join by", multiple = TRUE, choices = \(x, y) intersect(colna
 select_input("column", "Column", choices = \(data, table) names(data[[table]]))
 ```
 
-Each function is a request of its block type, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block type whose input slot and state arg share a name is rejected when `block_type()` defines it, since a function's argument would not say which it means ([Block types in R](Block-types-in-R-for-the-client-owned-board)).
+Each function is a request of its block type, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block type whose input slot and state arg share a name is rejected when `block_type()` defines it, since a function's argument would not say which it means ([Block types in R](Block-types-in-R)).
 
 ### Options
 

@@ -20,22 +20,22 @@ Much of core's recent work goes into working around this: deferred and prioritiz
 
 ## Proposal
 
-- Each piece of state has one writer. The board is a document held by a TypeScript store in core's JS API, and what R holds is either computed from one version of it, as a result is, or handed over once, as the opening board is, so nothing has to be kept in step with it. The table in [Document model](Document-model-for-the-client-owned-board#what-lives-where) gives each object, where it lives and for how long.
-- Every edit, by the user, the assistant or an extension, is a versioned delta through one command registry in core, and the same deltas give undo ([Client-owned board state](Client-owned-board-state), [Board updates](Board-updates-for-the-client-owned-board)).
+- Each piece of state has one writer. The board is a document held by a TypeScript store in core's JS API, and what R holds is either computed from one version of it, as a result is, or handed over once, as the opening board is, so nothing has to be kept in step with it. The table in [Document model](Board-document-model#what-lives-where) gives each object, where it lives and for how long.
+- Every edit, by the user, the assistant or an extension, is a versioned delta through one command registry in core, and the same deltas give undo ([Board state owned by the client](Board-state-owned-by-the-client), [Board updates](Board-updates-and-undo)).
 - Whatever does not need R moves to the browser. R is an evaluator, one process per session. A request carries the recipe, and a result is named by block id and version, never by process, so a lost process costs only recomputation, and putting several sessions on one process, or one session on several, stays a server-side change.
 - The client schedules: it bumps versions, tracks what is stale and what is demanded, and requests results in topological order, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Evaluation-in-the-client)).
-- Core keeps no plugin or extension type of its own. The dock is a React app on core's JS API, and extensions are ES modules that register with it, the one extension mechanism, with their logic on core's JS API and their UI in the dock's contribution points ([Client-drawn dock](Client-drawn-dock-and-extensions)).
+- Core keeps no plugin or extension type of its own. The dock is a React app on core's JS API, and extensions are ES modules that register with it, the one extension mechanism, with their logic on core's JS API and their UI in the dock's contribution points ([Dock and extensions in the browser](Dock-and-extensions-in-the-browser)).
 - Block UIs keep a contract free of any framework: composed in R from the input elements core ships, or an ES module mounted with an injected host, which React reaches through its build ([Input elements](Input-elements-for-block-UIs-written-in-R), [UI modules in JS](UI-modules-in-JS)).
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Wire-protocol-between-the-client-and-R)).
 - The code a block shows and exports is the code that ran, since R builds every expression with the block type's `interpolate`. Limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
-- Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process. One small bridge module carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Client-owned-board-state)).
-- Collaboration is not built, but stays open: a delta names its origin ([Board updates](Board-updates-for-the-client-owned-board)), and the dock's fields hold only what everyone who opens a board shares ([Client-drawn dock](Client-drawn-dock-and-extensions)). Early cutoff is not built either and can come later, opt-in per block type.
+- Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process. One small bridge module carries the protocol, and leaving Shiny later replaces only that module ([Board state owned by the client](Board-state-owned-by-the-client)).
+- Collaboration is not built, but stays open: a delta names its origin ([Board updates](Board-updates-and-undo)), and the dock's fields hold only what everyone who opens a board shares ([Dock and extensions in the browser](Dock-and-extensions-in-the-browser)). Early cutoff is not built either and can come later, opt-in per block type.
 
 ## Migration
 
 The switch is one step, since a board mirrored in R would be two owners again. The new client and the slimmer core are built beside the current stack, on a long-lived `js-state` branch of blockr.core, created from main with the first PR, that feature branches merge into, while main keeps the current stack until the switch. Block packages port one at a time, and deployments stay on the current stack until parity.
 
-Documents written by today's `blockr_ser()` are the point of compatibility: they open in the new stack for block types that have been ported ([Serialization](Serialization-of-the-client-owned-board), [blockr.core#402](https://github.com/BristolMyersSquibb/blockr.core/issues/402)), with the dock's views and layouts and the DAG's positions. App scripts keep calling board and block constructors ([Defining a board in R](Defining-a-board-in-R-for-the-client-owned-board)), and blocks stay S3 objects.
+Documents written by today's `blockr_ser()` are the point of compatibility: they open in the new stack for block types that have been ported ([Serialization](Board-serialization), [blockr.core#402](https://github.com/BristolMyersSquibb/blockr.core/issues/402)), with the dock's views and layouts and the DAG's positions. App scripts keep calling board and block constructors ([Defining a board in R](Defining-a-board-in-R)), and blocks stay S3 objects.
 
 ## Open questions
 
@@ -49,9 +49,9 @@ Documents written by today's `blockr_ser()` are the point of compatibility: they
 
 | Repo | Change | Page | Builds on |
 |---|---|---|---|
-| blockr.core | Rewritten | [Client-owned board state](Client-owned-board-state) | |
-| blockr.dock | Rewritten | [Client-drawn dock and extensions](Client-drawn-dock-and-extensions) | blockr.core |
-| blockr.dag | Rebuilt as a dock extension | [Client-drawn DAG extension](Client-drawn-DAG-extension) | blockr.dock |
+| blockr.core | Rewritten | [Board state owned by the client](Board-state-owned-by-the-client) | |
+| blockr.dock | Rewritten | [Dock and extensions in the browser](Dock-and-extensions-in-the-browser) | blockr.core |
+| blockr.dag | Rebuilt as a dock extension | [DAG extension in the browser](DAG-extension-in-the-browser) | blockr.dock |
 | blockr.assistant | Rebuilt as a dock extension | [Assistant as a client extension](Assistant-as-a-client-extension) | blockr.dock |
 | blockr.code | Rebuilt as a dock extension | [Code export as a client extension](Code-export-as-a-client-extension) | blockr.dock |
 | blockr.session | Rebuilt as a dock extension | [Session management as a client extension](Session-management-as-a-client-extension) | blockr.dock |

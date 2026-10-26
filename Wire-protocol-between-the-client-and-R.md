@@ -1,6 +1,6 @@
-Status: draft. Design for [Client-owned board state](Client-owned-board-state).
+Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Client-owned-board-state)): the messages the client and R exchange. It builds on the [document model](Document-model-for-the-client-owned-board) and shapes the protocol document ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)), the evaluator and its Shiny bridge ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)) and outputs ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)). What the client does with replies, its versions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Evaluation-in-the-client)).
+One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): the messages the client and R exchange. It builds on the [document model](Board-document-model) and shapes the protocol document ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)), the evaluator and its Shiny bridge ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)) and outputs ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)). What the client does with replies, its versions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Evaluation-in-the-client)).
 
 ## What must hold
 
@@ -25,7 +25,7 @@ interface Progress { id: string; progress: { value?: number; message?: string } 
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)) and the opening board, the one the app's startup script built ([Document model](Document-model-for-the-client-owned-board)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Serialization-of-the-client-owned-board)), and R opens it as `store.open()` does ([Board updates](Board-updates-for-the-client-owned-board)), so that the packages its constructors name are loaded and the block types it defines registered before any recipe names them, and replies with the board as it rebuilt it in place of the startup script's.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)) and the opening board, the one the app's startup script built ([Document model](Board-document-model)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Board-serialization)), and R opens it as `store.open()` does ([Board updates](Board-updates-and-undo)), so that the packages its constructors name are loaded and the block types it defines registered before any recipe names them, and replies with the board as it rebuilt it in place of the startup script's.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "binary", "progress"] }
@@ -50,7 +50,7 @@ R keeps the result, and the reply carries what the client shows about it: the ex
   "dropped": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
 
-A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: validating the state, building the expression, validating the data, or evaluating. The status is `invalid` when the block type's `validate` returns `FALSE`, with the message it attaches, which R checks before running anything ([Block types in R](Block-types-in-R-for-the-client-owned-board)). A request on a version that is still computing waits for it.
+A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: validating the state, building the expression, validating the data, or evaluating. The status is `invalid` when the block type's `validate` returns `FALSE`, with the message it attaches, which R checks before running anything ([Block types in R](Block-types-in-R)). A request on a version that is still computing waits for it.
 
 After a restart R holds no results, so it replies `missing` with the inputs it lacks, and the client sends their evaluation requests first and then asks again; that costs one round trip, and only after a restart.
 
@@ -88,7 +88,7 @@ A `cancel` names a running request, and R stops it and replies `cancelled` to th
 
 ### Forgetting blocks
 
-When blocks leave the board, the client sends a `forget` naming them, and R drops their results ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)). Opening another board forgets every block, since R opens it afresh ([Board updates](Board-updates-for-the-client-owned-board)).
+When blocks leave the board, the client sends a `forget` naming them, and R drops their results ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)). Opening another board forgets every block, since R opens it afresh ([Board updates](Board-updates-and-undo)).
 
 ```json
 { "id": "21", "kind": "forget", "blocks": ["b", "c"] }
@@ -96,11 +96,11 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 
 ### Decoding
 
-R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Document model](Document-model-for-the-client-owned-board)), so keeping the R process within bounds is the deployment's job. How R types survive JSON is a question for the [serialization proposal](Serialization-of-the-client-owned-board).
+R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Document model](Board-document-model)), so keeping the R process within bounds is the deployment's job. How R types survive JSON is a question for the [serialization proposal](Board-serialization).
 
 ### Versions
 
-The protocol version is one of three, apart from the JS API version modules declare and the package versions a saved board records ([Serialization](Serialization-of-the-client-owned-board)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as shinyreact's protocol does.
+The protocol version is one of three, apart from the JS API version modules declare and the package versions a saved board records ([Serialization](Board-serialization)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as shinyreact's protocol does.
 
 ### The Shiny bridge
 
@@ -108,6 +108,6 @@ The client sends a message with `Shiny.setInputValue("blockr", message, { priori
 
 ## Open questions
 
-- Which JSON decoding R applies, jsonlite's as today or typedjson's, taken up by the [serialization proposal](Serialization-of-the-client-owned-board) and left open in [blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393).
+- Which JSON decoding R applies, jsonlite's as today or typedjson's, taken up by the [serialization proposal](Board-serialization) and left open in [blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393).
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 - Whether R asking for missing inputs after a restart, as proposed, beats every request carrying the recipes of its whole upstream chain ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)).
