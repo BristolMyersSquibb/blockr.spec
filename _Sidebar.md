@@ -20,3 +20,14 @@
 ### Closed
 
 None.
+
+### Title tests, to be removed
+
+- [Metadata comment, one line](99-1)
+- [Metadata comment, three lines](99-2)
+- [YAML front matter](99-3)
+- [Heading on the first line](99-4)
+- [Dotted file name](99.5)
+- [Underscore file name](99_6)
+- [Two dots, with links](99.7.1)
+- [The dock part under a dotted ID](99.8)
