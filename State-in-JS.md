@@ -76,7 +76,7 @@ Documents written by today's `blockr_ser()` are the point of compatibility: they
 - Label: `state-in-js`, on every issue and on the thread.
 - Integration branch: `js-state`, in blockr.core. Other repos are an open question.
 - Versions and pins: open questions.
-- Thread: not opened yet.
+- Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
 
 <details><summary>Notes for implementers</summary>
