@@ -73,7 +73,7 @@ Documents written by today's `blockr_ser()` are the point of compatibility: they
 
 ## Conventions
 
-- Label: `state-in-js`, on every issue and on the thread.
+- Label: `js-state`, named after the integration branch, on every issue and on the thread.
 - Integration branch: `js-state`, in blockr.core. Other repos are an open question.
 - Versions and pins: open questions.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
