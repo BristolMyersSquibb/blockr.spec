@@ -1,15 +1,15 @@
 # Assistant as a client extension
-Status: draft. Part of [State in JS](Doc-1).
+Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.assistant, whose agent loop moves to the browser as a dock extension. It builds on [Client-drawn dock and extensions](Doc-1.2) and on core's commands and scheduler ([Client-owned board state](Doc-1.1)).
+This part covers blockr.assistant, whose agent loop moves to the browser as a dock extension. It builds on [Client-drawn dock and extensions](Rewrite-1.2) and on core's commands and scheduler ([Client-owned board state](Rewrite-1.1)).
 
 ## Problem
 
-Today's assistant runs its agent loop in the session's R process through ellmer, with 40 tools (`ellmer::tool()` definitions at `fd58655`) that change a running Shiny board. Its mutation tools stage a delta ([`commit_pending()`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/a429c3061348a354834eeb2a5c173f8ff27f7c0b/R/stage-pending.R#L88)), and its `commit` tool applies it through the board's `update()` ([`flush_pending()`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/a429c3061348a354834eeb2a5c173f8ff27f7c0b/R/stage-pending.R#L682)) and waits for the touched blocks to re-evaluate, up to `assistant_commit_timeout_secs`, 30 s by default; a commit can also stop partway, with "the board may be partly updated" ([`tools-commit.R`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/tools-commit.R#L84-L116)). With the board a client document ([Client-owned board state](Doc-1.1)), there is no R board to stage into, and the assistant's edits and the user's meet in one document.
+Today's assistant runs its agent loop in the session's R process through ellmer, with 40 tools (`ellmer::tool()` definitions at `fd58655`) that change a running Shiny board. Its mutation tools stage a delta ([`commit_pending()`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/a429c3061348a354834eeb2a5c173f8ff27f7c0b/R/stage-pending.R#L88)), and its `commit` tool applies it through the board's `update()` ([`flush_pending()`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/a429c3061348a354834eeb2a5c173f8ff27f7c0b/R/stage-pending.R#L682)) and waits for the touched blocks to re-evaluate, up to `assistant_commit_timeout_secs`, 30 s by default; a commit can also stop partway, with "the board may be partly updated" ([`tools-commit.R`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/tools-commit.R#L84-L116)). With the board a client document ([Client-owned board state](Rewrite-1.1)), there is no R board to stage into, and the assistant's edits and the user's meet in one document.
 
 ## What must hold
 
-1. The assistant is a dock extension ([Client-drawn dock and extensions](Doc-1.2)) whose edits are deltas through core's commands, applied all or none and marked as its own, so undo keeps its steps apart from the user's ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)).
+1. The assistant is a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) whose edits are deltas through core's commands, applied all or none and marked as its own, so undo keeps its steps apart from the user's ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)).
 2. An edit reports done only once the versions it created have results, with each block's status or error.
 3. No visitor can read a credential that is not their own.
 

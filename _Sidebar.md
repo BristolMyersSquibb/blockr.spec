@@ -1,3 +1,3 @@
 ### Rewrites
 
-- [State in JS](Doc-1)
+- [State in JS](Rewrite-1)

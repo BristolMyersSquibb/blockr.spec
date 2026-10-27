@@ -3,7 +3,7 @@ Plans for changes to blockr too big for one spec. Each rewrite is a tree of page
 <!-- rewrites -->
 ## Open
 
-- [State in JS](Doc-1)
+- [State in JS](Rewrite-1)
 
 ## Closed
 

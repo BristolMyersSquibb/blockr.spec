@@ -1,7 +1,7 @@
 # Board updates: deltas, commands and undo
-Status: draft. Design for [Client-owned board state](Doc-1.1).
+Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Doc-1.1)): how the board changes. It builds on the [document model](Doc-1.1.1) and shapes the store and the command registry ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Doc-1.1.10)).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes. It builds on the [document model](Rewrite-1.1.1) and shapes the store and the command registry ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)).
 
 ## What must hold
 
@@ -22,7 +22,7 @@ The dock's actions are Shiny modules fired through counter-bumped reactive value
 
 ### The store
 
-The store is the TypeScript object in core's JS API that holds a board and through which every change to it passes. There is one per board, which core creates when it opens the page's board and hands to front-ends, extensions and block modules through `CoreApi` ([Front-ends and extension points](Doc-1.1.8)) and the module host ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)), rather than a global, so that tests, and a page that shows two boards one day, can create more than one. The command registry is an object of its own (below).
+The store is the TypeScript object in core's JS API that holds a board and through which every change to it passes. There is one per board, which core creates when it opens the page's board and hands to front-ends, extensions and block modules through `CoreApi` ([Front-ends and extension points](Rewrite-1.1.8)) and the module host ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)), rather than a global, so that tests, and a page that shows two boards one day, can create more than one. The command registry is an object of its own (below).
 
 ```ts
 type Origin = "user" | "assistant" | string;                 // a peer, once a sync add-on exists
@@ -76,7 +76,7 @@ store.apply(delta);
 The store expands a delta, checks it, commits it and tells whoever follows it:
 
 1. The store expands the delta with what follows from it, as today's augment step does: removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)). For the fields a board subclass adds, the store calls the `expand` hook that `store.extend()` registered for the board's class, dispatched on its class vector, a pure function from the delta and the board to a delta of those fields, so the dock's method drops a removed block's panels and passes the delta on to its extensions, through which the DAG drops the block's position, and the store runs the hook until nothing changes, as `augment_board_update()` runs today ([#L2357-L2368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2357-L2368)).
-2. It checks the invariants of [Document model](Doc-1.1.1) on the result, and a failing check rejects the whole delta, so nothing is ever half applied.
+2. It checks the invariants of [Document model](Rewrite-1.1.1) on the result, and a failing check rejects the whole delta, so nothing is ever half applied.
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo.
 4. It hands the expanded delta and the new board to whoever follows the board.
 
@@ -107,7 +107,7 @@ Core's commands cover what its plugins and the dock's actions do today: add, rem
 await store.open(saved);   // replaces the document once R has opened the board
 ```
 
-Opening a board replaces the document rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Document model](Doc-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Doc-1.1.3)) and as a file from today's stack does already ([blockr.core#402](https://github.com/BristolMyersSquibb/blockr.core/issues/402)). The `store.open()` call sends the board to R in a request of [Wire protocol](Doc-1.1.9), in the form of a saved file ([Serialization](Doc-1.1.4)), and R loads the packages its constructors name, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Doc-1.1.4)), builds its R board and replies with the board as it rebuilt it and with the registry, and the store replaces its document and its registry with them. R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Document model](Doc-1.1.1)).
+Opening a board replaces the document rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Document model](Rewrite-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Rewrite-1.1.3)) and as a file from today's stack does already ([blockr.core#402](https://github.com/BristolMyersSquibb/blockr.core/issues/402)). The `store.open()` call sends the board to R in a request of [Wire protocol](Rewrite-1.1.9), in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R loads the packages its constructors name, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Rewrite-1.1.4)), builds its R board and replies with the board as it rebuilt it and with the registry, and the store replaces its document and its registry with them. R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Document model](Rewrite-1.1.1)).
 
 A board whose class differs from the app's opens the way S3 dispatch would treat it:
 
@@ -115,7 +115,7 @@ A board whose class differs from the app's opens the way S3 dispatch would treat
 - A board whose class the app's class extends, such as a core board in a dock app, is converted while R opens it, through the app class's `as_*()` method, as `as_dock_board()` gives a plain board one default view ([blockr.dock R/dock-board.R#L176-L183](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L176-L183)), keeping the board's option values, which `as_dock_board()` drops today.
 - Any other board is refused, naming both classes.
 
-Edits made where a subclass's hook is not loaded, such as a dock board's in a core app, can leave its fields referring to removed blocks, so a front-end repairs its own fields against the board's blocks when it opens one. Opening never changes the front-end, so the client redraws from the new document as after any other change, with no page reload, where a restore today is a `session$reload()` ([Client-owned board state](Doc-1.1)).
+Edits made where a subclass's hook is not loaded, such as a dock board's in a core app, can leave its fields referring to removed blocks, so a front-end repairs its own fields against the board's blocks when it opens one. Opening never changes the front-end, so the client redraws from the new document as after any other change, with no page reload, where a restore today is a `session$reload()` ([Client-owned board state](Rewrite-1.1)).
 
 ### Undo
 
