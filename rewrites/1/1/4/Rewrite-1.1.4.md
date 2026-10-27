@@ -86,7 +86,7 @@ The client's board holds state as its UI wrote it, plain JSON. R decodes it with
 
 ### Migrations
 
-A block saved by an older version of its type migrates through the `blockr_deser()` methods its package has, keyed by the block's class and by the package version its `constructor` records, such as blockr.dplyr's sixteen ([R/legacy-deser.R#L30-L310](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/R/legacy-deser.R#L30-L310)). R runs them while it opens the board ([Board updates](Rewrite-1.1.2)), since the methods and the constructors live in R. The fields a board subclass adds migrate through its package, in JS, keyed by the package version the board's `constructor` records, and the dock's conversion of today's grids moves to the client, as [Client-drawn dock and extensions](Rewrite-1.2) has it.
+A block saved by an older version of its type migrates through the `blockr_deser()` methods its package has, keyed by the block's class and by the package version its `constructor` records, such as blockr.dplyr's sixteen ([R/legacy-deser.R#L30-L310](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/R/legacy-deser.R#L30-L310)). R runs them while it opens the board ([Board updates](Rewrite-1.1.2)), since the methods and the constructors live in R. A field migrates through the package that registers it, in JS, keyed by the version of that package the file records, as the dock's fields are by the version of blockr.dock the board's `constructor` records, and the dock's conversion of today's grids moves to the client, as [Client-drawn dock and extensions](Rewrite-1.2) has it.
 
 ### Options
 
@@ -94,8 +94,9 @@ A saved board holds each option with its value and its constructor, as it holds 
 
 ### Objects that cannot be rebuilt
 
-R drops, when it opens a file, every object it cannot rebuild, because the package its constructor names is not installed or no longer has the constructor, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or R does not evaluate its definition, or it holds a closure from today's stack and no type of its class is registered, together with the links and stack places that refer to a dropped block, and the fields a board subclass adds when its package is missing. It names each dropped object, with the package to install, so the client tells the user what did not open, and a board saved afterwards is written without them ([Document model](Rewrite-1.1.1)).
+R drops, when it opens a file, every object it cannot rebuild, because the package its constructor names is not installed or no longer has the constructor, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or R does not evaluate its definition, or it holds a closure from today's stack and no type of its class is registered, together with the links and stack places that refer to a dropped block, and the fields of a package that is missing. It names each dropped object, with the package to install, so the client tells the user what did not open, and a board saved afterwards is written without them ([Document model](Rewrite-1.1.1)).
 
 ## Open questions
 
+- How the fields packages register map onto the nodes a file holds, such as the DAG's positions onto the `positions` of its extension in the dock's `extensions`, which the loader and the client's writer both need: through a hook each package registers beside its fields, or by a convention, such as an extension's fields being its constructor's args ([Board updates](Rewrite-1.1.2#fields)).
 - How R writes a length-one vector where it builds state, since R has no scalars: always as an array, leaving a scalar arg's UI to unwrap it; by the type an arg spec declares, which shapes the JSON without checking anything; or as typedjson, whose integer markers and tags `JSON.parse()` drops.

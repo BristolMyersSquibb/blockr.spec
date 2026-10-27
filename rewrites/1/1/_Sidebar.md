@@ -5,7 +5,7 @@
 ### Design pages
 
 - [Document model for the client-owned board](Rewrite-1.1.1), draft
-- [Board updates: deltas, commands and undo](Rewrite-1.1.2), draft
+- [Board updates: deltas, commands and undo](Rewrite-1.1.2), review
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3), draft
 - [Serialization of the client-owned board](Rewrite-1.1.4), draft
 - [Block types in R for the client-owned board](Rewrite-1.1.5), draft

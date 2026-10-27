@@ -72,7 +72,7 @@ Conditions 1 to 6 of [State in JS](Rewrite-1#what-must-hold) rest on this part, 
 ## Design pages
 
 - [Document model for the client-owned board](Rewrite-1.1.1): the objects the client holds for a board, how a block names its type, and how packages extend them
-- [Board updates: deltas, commands and undo](Rewrite-1.1.2): the store, deltas, commands, opening a board, undo, and following the board
+- [Board updates: deltas, commands and undo](Rewrite-1.1.2): the store, deltas, the fields packages add, commands, opening a board, undo, and following the board
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3): the app script, the opening board, `serve()` and options
 - [Serialization of the client-owned board](Rewrite-1.1.4): saved files, state values between the client and R, and migrations
 - [Block types in R for the client-owned board](Rewrite-1.1.5): `block_type()`, core's types and hooks, registration, evaluation, generics and testing

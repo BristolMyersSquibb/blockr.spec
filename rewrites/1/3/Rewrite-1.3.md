@@ -11,7 +11,7 @@ The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and
 
 1. The DAG draws the document's blocks, links and stacks in the browser, without g6R, and follows every delta.
 2. Its gestures, such as drawing a link, moving a block into a stack or removing one, run core's commands, so undo and save cover them.
-3. Positions and layout settings are the DAG's section of the document, and boards saved today open with theirs.
+3. Positions and layout settings are fields of the DAG's in the document ([Board updates](Rewrite-1.1.2#fields)), and boards saved today open with theirs.
 4. What blockr.dag offers today carries over: zoom and pan, dragging blocks, click and brush selection, drawing a link by dragging, highlighting on hover, the context menu, the toolbar, tooltips, and stacks that collapse and expand.
 
 ## Proposal

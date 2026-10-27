@@ -18,10 +18,10 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module registered for a board class, and the client picks the one registered for the most specific class in the board's class vector, as S3 dispatch would: the dock registers for `dock_board`, core's basic front-end for `board`. The page loads the front-end of the app's board class, and a board of another class is upgraded or drawn as the app's class when it is opened ([Board updates](Rewrite-1.1.2)), so the front-end never changes while the page lives.
+A front-end is a module registered for the registry id of the board type it draws, as the dock registers for `blockr.dock-dock_board` and core's basic front-end for `blockr.core-board` ([Document model](Rewrite-1.1.1#registry-ids)). The page loads the front-end of the app's board type, and a board of another type is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
 
 ```ts
-registerFrontEnd("dock_board", {
+registerFrontEnd("blockr.dock-dock_board", {
   mount(el: HTMLElement, api: CoreApi): () => void { /* draw the board, return the cleanup */ }
 });
 ```
@@ -30,7 +30,7 @@ registerFrontEnd("dock_board", {
 
 ```ts
 interface CoreApi {
-  store: Store;                    // board(), subscribe(), apply(), open(), from Board updates
+  store: Store;                    // board(), subscribe(), apply(), open(), register(), from Board updates
   commands: Commands;              // run(), plan() and the registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   registry: Registry;              // block types, options and commands, for pickers and settings
@@ -48,11 +48,11 @@ Core's own front-end draws what today's does: a toolbar with adding a block and 
 
 ### Extensions
 
-An extension is a module too, registered with the front-end it extends, and works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen, panels, navbar items and sidebar sections, goes through the front-end's own API, which for the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s. Its state lives in the fields of the board subclass whose front-end it extends, such as the dock board's ([Document model](Rewrite-1.1.1)), and stays consistent through the hook the board updates proposal dispatches on the board's class ([Board updates](Rewrite-1.1.2)). A file names the extension's constructor next to its state, as today ([Serialization](Rewrite-1.1.4)), which the extension's package declares as a front-end declares the constructors of its classes (below).
+An extension is a module too, registered with the front-end it extends, and works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen, panels, navbar items and sidebar sections, goes through the front-end's own API, which for the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s. Its state lives in fields it registers with the store, which other extensions and the assistant change as they change core's objects, and which stay consistent through the `expand` each field registers ([Board updates](Rewrite-1.1.2#fields)). A file names the extension's constructor next to its state, as today ([Serialization](Rewrite-1.1.4)), which the extension's package declares as a front-end declares the constructors of its classes (below).
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board class and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board type and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
 
 ## Open questions
 
