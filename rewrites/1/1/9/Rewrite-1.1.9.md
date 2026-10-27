@@ -114,7 +114,7 @@ Anything else is refused with an `error` that names the lock, while outputs are 
 
 ### Versions
 
-The protocol version is one of three, apart from the JS API version modules declare and the package versions a saved board records ([Serialization](Rewrite-1.1.4)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as shinyreact's protocol does.
+The protocol version is one of four, apart from the JS API version modules declare and the format version and package versions a saved board records ([Serialization](Rewrite-1.1.4#files)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as shinyreact's protocol does.
 
 ### The Shiny bridge
 
