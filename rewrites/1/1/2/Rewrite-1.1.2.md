@@ -163,7 +163,7 @@ Where edits made without a field's package left the field naming removed blocks,
 
 ### Undo
 
-The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. Edits of one value from one input in quick succession, such as typing into a block's text field or into blockr.md's editor, merge into one step.
+The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. Steps never merge. An input that changes with every keystroke or pointer move, a block's or an extension's, submits only once the user pauses or lets go, since each submit to a block has R evaluate everything downstream of it and each delta reaches every follower, so a burst of typing is one edit and one step. Edits that must undo together are one delta or one command, such as a `submit()` that sets several args.
 
 ### Following the board
 
@@ -175,9 +175,9 @@ store.subscribe((change, board) => { /* ... */ });  // after every commit, with 
 
 ## Open questions
 
-- How quickly edits must follow each other to merge into one undo step, and whether a block's UI or an extension can mark a series of edits as one step instead.
 - How a package adds what depends on its screen to a delta another package made, such as the dock placing a block the assistant adds in the view on screen, as `add_block_panels_to_view()` puts every new block in the active view today ([blockr.dock R/dock-board.R#L345-L363](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L345-L363)): through a hook its field registers, run where the delta is made and joined to the delta's undo step, as the changes of a tldraw after handler join theirs, or through a delta of its own once the first is announced, an undo step apart. The answer shapes `Field`, and whether a subscriber may call `apply()`, which the queue allows but whose rejection could then not be thrown to the caller.
 - How a delta that no command built, such as one the assistant's model writes, names the edit versions of the board it was built on, which the store keeps outside the board: by `apply()` taking that board and filling the versions in from it, as the registry does for a command, or by the store handing the versions out beside the board. The answer shapes `apply()` and the assistant's edit tool ([Assistant as a client extension](Rewrite-1.4)).
+- Whether every edit runs through the command registry, as [State in JS](Rewrite-1#proposal), [Client-owned board state](Rewrite-1.1#proposal) and condition 4 say, now that the assistant's tools include a delta typed by core's shapes beside the commands (above): through a command of core's that applies a delta it is given, so that the registry stays the only way in, or through `store.apply()` as a second way in, which those pages would then say. The answer decides how the assistant's edit tool applies its delta ([Assistant as a client extension](Rewrite-1.4)) and where the versions of the question above come from.
 
 <details><summary>Notes for implementers</summary>
 
