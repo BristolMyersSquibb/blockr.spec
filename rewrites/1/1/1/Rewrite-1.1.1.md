@@ -45,6 +45,8 @@ R holds no copy of the board, so nothing in R has to follow it: an R object eith
 ```ts
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
+interface Fields {}                     // empty in core, which packages add their fields to (below)
+
 interface Board {
   id: string;                           // set when the board is created, and kept by saving and opening
   registry_id: RegistryId;              // "blockr.dock-dock_board", the board's type
@@ -53,7 +55,7 @@ interface Board {
   links: Record<LinkId, Link>;
   stacks: Record<StackId, Stack>;
   options: Record<OptionId, Json>;      // each option's value, { n_rows: 50 }
-  fields: Record<FieldId, Json>;        // what packages add, by field id, such as the dock's views and the DAG's positions
+  fields: Partial<Fields> & Record<FieldId, unknown>;   // what packages add, by field id, such as the dock's views and the DAG's positions
 }
 ```
 
