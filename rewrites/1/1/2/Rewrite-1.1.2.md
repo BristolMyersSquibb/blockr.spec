@@ -1,5 +1,5 @@
 # Board updates: deltas, commands and undo
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the fields that packages such as the dock and its extensions add to it alike. It builds on the [document model](Rewrite-1.1.1) and shapes the store and the command registry, an item in the Work list of [Client-owned board state](Rewrite-1.1#work). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), and how a field is written to a file is the [serialization proposal](Rewrite-1.1.4).
 
@@ -12,7 +12,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 5. Anything can follow the board's changes as they happen, such as a session package saving drafts.
 6. Opening a board, at startup or later, replaces the document instead of changing it, and ends in the same place either way.
 7. A package adds state of its own to the board, such as the DAG's positions or blockr.md's document, without changing core, the front-end or another package, and every package reads and changes that state as it reads and changes core's objects.
-8. The assistant reads and changes what a package adds, and runs its commands, from what the package registers, with no code of its own for that package, as `new_ext_meta()` lets it drive an extension today.
+8. What a package registers describes itself, a field by its schema and a command by its description and args, so that another package reads, changes and runs it with no code of its own for that package, as `new_ext_meta()` lets the assistant drive any extension today.
 
 ## Today
 
@@ -48,7 +48,7 @@ interface Store {
   canRedo(origin?: Origin): boolean;
 
   register(field: Field): () => void;                        // adds a package's field to the board (below)
-  fields(): Field[];                                         // the registered fields, for the assistant's tools
+  fields(): Field[];                                         // the registered fields, with their schemas
 }
 ```
 
@@ -83,7 +83,7 @@ type FieldDelta =
 interface Field {
   id: FieldId;                                         // "blockr.dag-positions"
   kind: "collection" | "value";
-  schema: JsonSchema;                                  // an entry's or the value's, with descriptions and examples for a model
+  schema: JsonSchema;                                  // an entry's or the value's, with descriptions and examples
   initial?: Json;                                      // what a value holds on a board that has none; a collection starts empty
   expand?(delta: Delta, board: Board): FieldDelta | undefined;   // what follows in this field from a delta (below)
   check?(value: Json, board: Board): string[];         // what the schema cannot say, each failure in a sentence
@@ -103,11 +103,11 @@ store.register({
 });
 ```
 
-A field's `mod` gives an entry the keys its `set` names, as a link's `mod` does, and a `mod` or a value's `set` names the edit version of what it changes, as a block's `mod` does, so that the assistant's rewrite of blockr.md's document, built on what it read, is refused rather than applied over what the user typed since. A field belongs to the package that registers it, which alone says what it holds, through its schema and `check`, and what follows in it from a change anywhere in the board, through `expand`. Every other package changes it as it changes core's objects, through deltas and through the commands the field's package registers, and the store applies, checks and undoes a field's part of a delta as it does core's, so the assistant adds a block, links it and embeds its output in blockr.md's document in one delta, which one undo takes back. No field is closed to other packages, as `external_ctrl` closes an extension's other variables today: that opt-in exposed state held in reactive values, while a field is plain data that its schema and `check` keep valid whoever writes it.
+A field's `mod` gives an entry the keys its `set` names, as a link's `mod` does, and a `mod` or a value's `set` names the edit version of what it changes, as a block's `mod` does. A field belongs to the package that registers it, which alone says what it holds, through its schema and `check`, and what follows in it from a change anywhere in the board, through `expand`. Every other package changes it as it changes core's objects, through core's commands for fields and through those its own package registers (below), and the store applies, checks and undoes a field's part of a delta as it does core's, so the DAG's paste adds blocks, their links and their positions in one delta, which one undo takes back. No field is closed to other packages, as `external_ctrl` closes an extension's other variables today: that opt-in exposed state held in reactive values, while a field is plain data that its schema and `check` keep valid whoever writes it.
 
 What a package keeps about one of core's objects is an entry in a field of its own, keyed by the object's id, as the DAG keeps a block's position, so that core's objects hold only core's keys ([Document model](Rewrite-1.1.1#extending-cores-objects)) and a package fills in its entry for an object another package creates, through `expand` and in the same delta. The tldraw SDK lets an app add record types of its own in the same way, which then "live in the store like any other: validated, migrated, persisted, and synced according to the scope you pick" ([tldraw store](https://tldraw.dev/sdk-features/store)).
 
-A field's schema carries what a model needs to write it, in the `description` and `examples` keywords, as `new_ext_meta()` does today. The store keeps a field that no loaded package registered as it is, such as the dock's views on a dock board in a core app, and rejects a delta to it, since nothing could check one. When a field is registered, and whenever a board opens, the store fits the field to the board with `repair`, since the board may have been edited where the field's package was not loaded, which can leave the dock's views naming removed blocks.
+A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. The store keeps a field that no loaded package registered as it is, such as the dock's views on a dock board in a core app, and rejects a delta to it, since nothing could check one. When a field is registered, and whenever a board opens, the store fits the field to the board with `repair`, since the board may have been edited where the field's package was not loaded, which can leave the dock's views naming removed blocks.
 
 ### Applying a delta
 
@@ -118,7 +118,7 @@ store.apply(delta);
 The store expands a delta, checks it, commits it and tells whoever follows it:
 
 1. The store expands the delta with what follows from it. Core's part expands as today's augment step does, so removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)), and each field's part through the field's `expand`, a pure function from the delta and the board to a delta of that field alone, so the dock drops a removed block's panels and the DAG its position. It runs every `expand` again on what the last round added, until none adds anything, as `augment_board_update()` runs today ([#L2357-L2368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2357-L2368)).
-2. It checks the invariants of [Document model](Rewrite-1.1.1) on the result, each field's schema and `check`, and that every block, entry and value a `mod` or `set` changes is still at the edit version it names, and a failing check rejects the whole delta, so nothing is ever half applied, with an error that names each failure and its field, for the assistant to read back to its model.
+2. It checks the invariants of [Document model](Rewrite-1.1.1) on the result, each field's schema and `check`, and that every block, entry and value a `mod` or `set` changes is still at the edit version it names, and a failing check rejects the whole delta, so nothing is ever half applied, with an error that names each failure and its field.
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed entry comes back whole and in its place, and a changed key or value gets its old one.
 4. It hands the expanded delta and the new board to whoever follows the board.
 
@@ -130,7 +130,7 @@ Deltas apply one at a time, in the order `apply()` is called, so no write replac
 interface Command<A extends Json = Json, P = A> {
   id: string;                                  // "blockr.core-remove_block", named as a registry id is
   label: string;                               // for menus and a command palette
-  description?: string;                        // what it does and when to use it, for the assistant's tools
+  description?: string;                        // what it does and when to use it
   args?: JsonSchema;                           // for forms and the assistant's tools
   shortcut?: string;                           // "Mod+Backspace"
   enabled?(board: Board, args: A): boolean;
@@ -143,7 +143,7 @@ await commands.run("blockr.core-remove_block", { id: "b" });      // applies, as
 await commands.plan("blockr.dag-relayout", { direction: "LR" });  // returns the deltas without applying them
 ```
 
-Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools come from what packages register, with no code for any one of them ([Assistant as a client extension](Rewrite-1.4)): a delta typed by core's shapes, each block type's arg specs and each field's schema, and the commands, each named by its id, described by its `description` and typed by its `args`. Its staging is `commands.plan()`, with a commit applying what it planned as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
+Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from its type's arg specs and for a field from its schema, and its staging is `commands.plan()`, with a commit applying what it planned as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
 
 ### Opening a board
 
@@ -175,12 +175,11 @@ store.subscribe((change, board) => { /* ... */ });  // after every commit, with 
 
 ## Open questions
 
-- How a delta that no command built, such as one the assistant's model writes, names the edit versions of the board it was built on, which the store keeps outside the board: by `apply()` taking that board and filling the versions in from it, as the registry does for a command, or by the store handing the versions out beside the board. The answer shapes `apply()` and the assistant's edit tool ([Assistant as a client extension](Rewrite-1.4)).
-- Whether every edit runs through the command registry, as [State in JS](Rewrite-1#proposal), [Client-owned board state](Rewrite-1.1#proposal) and condition 4 say, now that the assistant's tools include a delta typed by core's shapes beside the commands (above): through a command of core's that applies a delta it is given, so that the registry stays the only way in, or through `store.apply()` as a second way in, which those pages would then say. The answer decides how the assistant's edit tool applies its delta ([Assistant as a client extension](Rewrite-1.4)) and where the versions of the question above come from.
+None.
 
 <details><summary>Notes for implementers</summary>
 
-Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields that deltas change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; the environment through which extensions read each other's state becomes `store.board().fields`; and the assistant's `list_extensions`, `describe_extension` and `modify_extension` give way to tools built from `store.fields()` and the command registry.
+Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields, which core's commands for fields change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; the environment through which extensions read each other's state becomes `store.board().fields`; and the assistant's `list_extensions`, `describe_extension` and `modify_extension` give way to the command registry, where core's commands for fields stand beside each package's own.
 
 The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
 
