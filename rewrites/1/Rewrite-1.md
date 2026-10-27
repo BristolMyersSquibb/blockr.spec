@@ -61,14 +61,13 @@ Translate rather than transliterate. The client follows established JS patterns,
 
 ## Migration
 
-The switch is one step, since a board mirrored in R would be two owners again. The new client and the slimmer core are built beside the current stack, on a `js-state` branch in every repo the rewrite changes, while main keeps the current stack until the switch. Block packages port one at a time, and deployments stay on the current stack until parity.
+The switch is one step, since a board mirrored in R would be two owners again. The new client and the slimmer core are built beside the current stack, on a `js-state` branch in every repo the rewrite changes, while main keeps the current stack until the switch. Block packages port one at a time.
 
 Documents written by today's `blockr_ser()` are the point of compatibility: they open in the new stack for block types that have been ported ([Serialization](Rewrite-1.1.4)), with the dock's views and layouts and the DAG's positions. App scripts keep calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and blocks stay S3 objects.
 
 ## Open questions
 
-- The parity list the switch waits for, and the order in which deployments move.
-- What is released while the rewrite runs, besides fixes from main.
+None.
 
 ## Parts
 
