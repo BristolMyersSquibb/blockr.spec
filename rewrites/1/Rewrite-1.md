@@ -7,8 +7,6 @@ State in JS moves board state from R to the browser: the client becomes the only
 
 Board state lives in R. The `board_server()` function of blockr.core holds the blocks and their args, links, stacks and options, and runs board management, block construction, demand and visibility gating and every block's UI logic as Shiny reactives in the session's R process, on its one thread. Evaluation, the only part that needs R, waits behind all of it.
 
-Each node the reactive core re-runs costs about 1.4 ms (Shiny 1.14 on the dev workspace; 1.7.5 and 1.11.1 measure the same), against about 0.15 µs for a JS signals library on the same machine, so an edit that re-runs a few hundred nodes is a visible pause before any evaluation starts.
-
 Much of core's recent work goes into working around this: deferred and prioritized construction ([blockr.core#243](https://github.com/BristolMyersSquibb/blockr.core/issues/243), [blockr.core#275](https://github.com/BristolMyersSquibb/blockr.core/issues/275)), the render gate ([blockr.core#257](https://github.com/BristolMyersSquibb/blockr.core/issues/257)), and the visibility channels [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) moves out of core. Where the client holds state too, the two copies need guarding: blockr.dplyr's `js-block.R` keeps an echo guard, message priorities, a client-side queue and a ready handshake ([blockr.core#317](https://github.com/BristolMyersSquibb/blockr.core/issues/317)) only to keep a block's state in step between JS and R. The dock, which draws the board from R with DOM operations, shows the same split: 37 of 100 defects in the shell's history are that protocol failing ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)).
 
 ## What must hold
@@ -22,13 +20,14 @@ Much of core's recent work goes into working around this: deferred and prioritiz
 
 ## Principles
 
-This is the second rewrite of blockr, and it must not undo what the first one fixed. The first blockr (2023 to 2024) built each block from fields, typed values from which the framework generated the block's UI and server, so a UI the field set lacked took a new field type, inputs derived from an upstream result could not be written, and a custom output meant overriding the generated server. The rewrite into blockr.core and the packages around it handed each block to its author, who writes its UI and logic as a Shiny module that the framework wraps, and replaced linear stacks, which passed results between them through a result field, with links between blocks.
+This is the second rewrite of blockr, and it must not undo what the first one fixed. The first blockr (2023 to 2024) built each block from fields, typed values from which the framework generated the block's UI and server. Logic between fields, such as one field's choices following another's selection, was hard to write, and a UI the field set lacked took a new field type. Inputs derived from an upstream result could not be written, and a custom output meant overriding the generated server. The rewrite into blockr.core and the packages around it handed each block to its author, who writes its UI and logic as a Shiny module that the framework wraps, and replaced linear stacks, which passed results between them through a result field, with links between blocks.
 
 Keep what has served us well:
 
 - Authors own their blocks. An author writes a block's UI and its logic, and core wraps them, supplying what every block shares through specific extension points, such as code generation, evaluation and display.
 - Core treats a block's UI as a black box. It assumes nothing that a notion of fields per block would afford, such as knowing a block's inputs, generating them or computing their attributes.
 - Two extension points, as blockr.dock's extensions have shown: a block, for logic that belongs to one block, and a board extension, for whatever shows or changes the board as a whole, such as the DAG, tools for bulk changes, AI that works on the whole board, and reports like blockr.md's.
+- Well-defined APIs. Keeping blockr in separate packages forced us to think through what each one offers the others.
 - A package plugs into another only through a hook the other offers, as `tabular_display()` is today, never by patching what it owns, in JS as in R.
 - One shared toolkit per language, used instead of ad-hoc helpers.
 - Gates that let nothing through: no lints, no failing tests and a clean check, in TypeScript as in R.
@@ -57,7 +56,7 @@ Translate rather than transliterate. The client follows established JS patterns,
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
 - The code a block shows and exports is the code that ran, since R builds every expression with the block type's `interpolate`. Limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
 - Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process. One small bridge module carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Rewrite-1.1)).
-- Collaboration is not built, but stays open: a delta names its origin ([Board updates](Rewrite-1.1.2)), and the dock's fields hold only what everyone who opens a board shares ([Client-drawn dock and extensions](Rewrite-1.2)). Early cutoff is not built either and can come later, opt-in per block type.
+- The assistant is a collaborator, editing the board beside the user, which is why collaboration shapes the design now: a delta names its origin, so the user and the assistant each undo their own steps ([Board updates](Rewrite-1.1.2)). Collaboration between people is not built, but stays open on the same terms, with the dock's fields holding only what everyone who opens a board shares ([Client-drawn dock and extensions](Rewrite-1.2)). Early cutoff is not built either and can come later, opt-in per block type.
 
 ## Migration
 
@@ -69,32 +68,6 @@ Documents written by today's `blockr_ser()` are the point of compatibility: they
 
 None.
 
-## Parts
-
-| Repo or area | Change | Page | Builds on |
-|---|---|---|---|
-| blockr.core | Rewritten | [Client-owned board state](Rewrite-1.1) | |
-| blockr.ui | Kept as the UI kit | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
-| blockr.dock | Rewritten | [Client-drawn dock and extensions](Rewrite-1.2) | blockr.core |
-| blockr.dplyr | Ported | Not written | blockr.core |
-| blockr.ggplot | Ported | Not written | blockr.core |
-| blockr.io | Ported | Not written | blockr.core |
-| blockr.dag | Rebuilt as a dock extension | [Client-drawn DAG extension](Rewrite-1.3) | blockr.dock |
-| blockr.assistant | Rebuilt as a dock extension | [Assistant as a client extension](Rewrite-1.4) | blockr.dock |
-| blockr.code | Rebuilt as a dock extension | [Code export as a client extension](Rewrite-1.5) | blockr.dock |
-| blockr.session | Rebuilt as a dock extension | [Session management as a client extension](Rewrite-1.6) | blockr.dock |
-| blockr.md | Rebuilt as a dock extension | Not written | blockr.dock |
-| blockr.dm | Ported | Not written | blockr.dplyr, blockr.io |
-| blockr | Carried over | None | blockr.dag, blockr.dplyr, blockr.ggplot, blockr.io |
-| blockr.cdex | Ported | Not written | blockr.dag, blockr.dm, blockr.session |
-| blockr.sandbox | Ported | Not written | blockr.dag, blockr.dm, blockr.session |
-| blockr.uat | Carried over | None | blockr, blockr.assistant, blockr.md, blockr.session |
-| typedjson | Kept, to read the files saved today ([Serialization](Rewrite-1.1.4)) | None | |
-| blockr.ai | Dropped, since one central assistant replaces its per-block AI control | None | |
-| reactives | No longer used, since R holds no reactive graph | None | |
-| dockViewR | No longer used | None | |
-| g6R | No longer used | None | |
-
 ## Conventions
 
 - Label: `js-state`, named after the integration branch, on every issue and on the thread.
@@ -103,17 +76,3 @@ None.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
-
-<details><summary>Notes for implementers</summary>
-
-Measurements behind the problem, on the 4-core dev workspace while idle (1 µs per empty R closure call there): one source, 1,000 dependents, one update. Shiny 1.14 spends 1,450 µs per `reactive()` node and 1,490 µs per `observe()`; Preact signals (`@preact/signals-core` 1.14.4) 0.17 and 0.12 µs. Per run, `Context$new()` alone takes 215 µs and `isolate(rv())` 947 µs, and `rLog$createContext()` runs reactlog bookkeeping, about a fifth of `Context$new()`, with reactlog off. A `reactive()` has no equality cutoff: downstream of one that recomputed to an identical value, an observer re-ran on both of two updates, where the Preact effect ran on neither.
-
-The first blockr at `061ac78`, its last commit before blockr.core: [`eval_set_field_value()`](https://github.com/BristolMyersSquibb/blockr/blob/061ac783f49cb98169e77c845ca851fe0a890354/R/field-core.R#L108-L132) calls a field's function-valued parts with the data and the other fields' values, matched by `formalArgs()`; [blockr#414](https://github.com/BristolMyersSquibb/blockr/issues/414) asks for a new field type for multi-line text, [blockr#433](https://github.com/BristolMyersSquibb/blockr/issues/433) for inputs derived from an upstream result, closed as not planned, and [blockr#378](https://github.com/BristolMyersSquibb/blockr/issues/378) for a default `generate_server()`, so that a block with an output of its own need not reimplement it; and [`new_result_field()`](https://github.com/BristolMyersSquibb/blockr/blob/061ac783f49cb98169e77c845ca851fe0a890354/R/fields.R#L284-L294) reuses one stack's result in another ([blockr#429](https://github.com/BristolMyersSquibb/blockr/issues/429)).
-
-Block packages surveyed on 2026-10-23 (blockr.dplyr, blockr.dm, blockr.ggplot, blockr.io, blockr.cdex and blockr.sandbox) ask the framework for expressions built from the data, such as dm's inferred keys and its value filter's branch on the input's class, which `interpolate(x, state, inputs)` keeps possible; controls whose choices and limits follow the data, through the block type's requests; UI code shared between packages, such as dm reusing blockr.dplyr's filter UI, through the host; writes, downloads and uploads, through expressions, outputs and requests; and S3 methods on blocks, through constructors. Every package that ships JS loses the plumbing that keeps two copies of state in step: echo guards, replay queues, and ready and mount handshakes.
-
-The workspace packages that import blockr.core, directly or through each other, on 2026-10-26: blockr.ai, blockr.assistant, blockr.cdex, blockr.code, blockr.dag, blockr, blockr.dm, blockr.dock, blockr.dplyr, blockr.ggplot, blockr.io, blockr.md, blockr.sandbox, blockr.session, blockr.uat and blockr.ui; blockr.core imports reactives and typedjson, blockr.dock dockViewR, and blockr.dag g6R.
-
-On blockr.core, main's protection is two rulesets on the default branch: `main queue`, a merge queue that merges with merge commits and requires `ci / lint`, `ci / smoke`, `ci / pkgdown-dev`, `ci / coverage`, `ci / check-all` and `revdep / revdep-all`, and `main review`, which requires one approving review. Adding `refs/heads/js-state` to each ruleset's `include` gives `js-state` the same. The `revdep-all` check passes when the revdep job is skipped, as it is with an empty list ([revdep.yaml#L387-L409](https://github.com/BristolMyersSquibb/blockr.ci/blob/b61f20b0edd729c273ed78ffe47025691ac6829c/.github/workflows/revdep.yaml#L387-L409)). A downstream's leg checks out its default branch unless the PR's deps block names another ref ([README.md#L1295-L1306](https://github.com/BristolMyersSquibb/blockr.ci/blob/b61f20b0edd729c273ed78ffe47025691ac6829c/README.md#L1295-L1306)), so once a downstream is listed, every PR into `js-state` names that downstream's `js-state` in its deps block.
-
-</details>
