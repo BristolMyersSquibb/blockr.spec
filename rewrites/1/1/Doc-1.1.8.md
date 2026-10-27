@@ -1,6 +1,7 @@
-Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
+# Front-ends and extension points for the client-owned board
+Status: draft. Design for [Client-owned board state](Doc-1.1).
 
-One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): core's basic front-end, how a front-end such as blockr.dock replaces it, and what front-ends and their extensions hook into. It builds on the [document model](Board-document-model) and on the [board updates](Board-updates-and-undo), evaluation ([Evaluation in the client](Evaluation-in-the-client)) and UI modules ([UI modules in JS](UI-modules-in-JS)) proposals. The dock's own contribution API, its panels, navbar items and sidebar sections, is [Dock and extensions in the browser](Dock-and-extensions-in-the-browser)'s.
+One of the API proposals for the client-owned board ([Client-owned board state](Doc-1.1)): core's basic front-end, how a front-end such as blockr.dock replaces it, and what front-ends and their extensions hook into. It builds on the [document model](Doc-1.1.1) and on the [board updates](Doc-1.1.2), evaluation ([Evaluation in the client](Doc-1.1.10)) and UI modules ([UI modules in JS](Doc-1.1.7)) proposals. The dock's own contribution API, its panels, navbar items and sidebar sections, is [Client-drawn dock and extensions](Doc-1.2)'s.
 
 ## What must hold
 
@@ -17,7 +18,7 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module registered for a board class, and the client picks the one registered for the most specific class in the board's class vector, as S3 dispatch would: the dock registers for `dock_board`, core's basic front-end for `board`. The page loads the front-end of the app's board class, and a board of another class is upgraded or drawn as the app's class when it is opened ([Board updates](Board-updates-and-undo)), so the front-end never changes while the page lives.
+A front-end is a module registered for a board class, and the client picks the one registered for the most specific class in the board's class vector, as S3 dispatch would: the dock registers for `dock_board`, core's basic front-end for `board`. The page loads the front-end of the app's board class, and a board of another class is upgraded or drawn as the app's class when it is opened ([Board updates](Doc-1.1.2)), so the front-end never changes while the page lives.
 
 ```ts
 registerFrontEnd("dock_board", {
@@ -43,15 +44,15 @@ A front-end decides where things go and core fills them: it gives `mountBlock()`
 
 ### Core's basic front-end
 
-Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It demands nothing of its own, since a board evaluates every block unless its `evaluation` option is lazy ([Evaluation in the client](Evaluation-in-the-client)), so a board served without the dock evaluates eagerly, as today.
+Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It demands nothing of its own, since a board evaluates every block unless its `evaluation` option is lazy ([Evaluation in the client](Doc-1.1.10)), so a board served without the dock evaluates eagerly, as today.
 
 ### Extensions
 
-An extension is a module too, registered with the front-end it extends, and works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen, panels, navbar items and sidebar sections, goes through the front-end's own API, which for the dock is [Dock and extensions in the browser](Dock-and-extensions-in-the-browser)'s. Its state lives in the fields of the board subclass whose front-end it extends, such as the dock board's ([Document model](Board-document-model)), and stays consistent through the hook the board updates proposal dispatches on the board's class ([Board updates](Board-updates-and-undo)). A file names the extension's constructor next to its state, as today ([Serialization](Board-serialization)), which the extension's package declares as a front-end declares the constructors of its classes (below).
+An extension is a module too, registered with the front-end it extends, and works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen, panels, navbar items and sidebar sections, goes through the front-end's own API, which for the dock is [Client-drawn dock and extensions](Doc-1.2)'s. Its state lives in the fields of the board subclass whose front-end it extends, such as the dock board's ([Document model](Doc-1.1.1)), and stays consistent through the hook the board updates proposal dispatches on the board's class ([Board updates](Doc-1.1.2)). A file names the extension's constructor next to its state, as today ([Serialization](Doc-1.1.4)), which the extension's package declares as a front-end declares the constructors of its classes (below).
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board class and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Board-serialization)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Board-updates-and-undo)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board class and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Doc-1.1.4)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Doc-1.1.2)).
 
 ## Open questions
 

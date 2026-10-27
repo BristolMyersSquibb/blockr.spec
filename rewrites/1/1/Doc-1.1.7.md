@@ -1,6 +1,7 @@
-Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
+# UI modules in JS: the host, React and packaging
+Status: draft. Design for [Client-owned board state](Doc-1.1).
 
-One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): the contract a JS module meets when a block, an option or an output needs more than core's input elements, the React SDK on top of it, and how packages ship their JS. It builds on the [document model](Board-document-model) and shapes the module loading ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)) and the React SDK ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)); the input elements composed in R are the UI-in-R proposal ([Input elements](Input-elements-for-block-UIs-written-in-R)).
+One of the API proposals for the client-owned board ([Client-owned board state](Doc-1.1)): the contract a JS module meets when a block, an option or an output needs more than core's input elements, the React SDK on top of it, and how packages ship their JS. It builds on the [document model](Doc-1.1.1) and shapes the module loading ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)) and the React SDK ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)); the input elements composed in R are the UI-in-R proposal ([Input elements](Doc-1.1.6)).
 
 ## What must hold
 

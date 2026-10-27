@@ -1,10 +1,11 @@
-Status: draft. Part of [State in JS](State-in-JS).
+# Client-drawn DAG extension
+Status: draft. Part of [State in JS](Doc-1).
 
-This part covers blockr.dag, which becomes a dock extension drawn in the browser. It builds on [Dock and extensions in the browser](Dock-and-extensions-in-the-browser).
+This part covers blockr.dag, which becomes a dock extension drawn in the browser. It builds on [Client-drawn dock and extensions](Doc-1.2).
 
 ## Problem
 
-The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and plugins through g6R ([`g6r.R#L284-L460`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/g6r.R#L284-L460)) and keeps block positions and layout settings as state of a Shiny-module extension, `new_dag_extension(positions, layout)` ([`ext.R#L37-L45`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L37-L45)). With the board a client document ([Board state owned by the client](Board-state-owned-by-the-client)) and the dock drawn in the browser ([Dock and extensions in the browser](Dock-and-extensions-in-the-browser)), there is no R board left for it to read or update.
+The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and plugins through g6R ([`g6r.R#L284-L460`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/g6r.R#L284-L460)) and keeps block positions and layout settings as state of a Shiny-module extension, `new_dag_extension(positions, layout)` ([`ext.R#L37-L45`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L37-L45)). With the board a client document ([Client-owned board state](Doc-1.1)) and the dock drawn in the browser ([Client-drawn dock and extensions](Doc-1.2)), there is no R board left for it to read or update.
 
 ## What must hold
 
@@ -32,7 +33,7 @@ The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and
 
 Today's behaviors in g6R are `zoom_canvas()`, `drag_canvas()`, `drag_element()`, `click_select(multiple = TRUE)`, `brush_select()`, `collapse_expand()`, `hover_activate()` and `create_edge()`, and its plugins a context menu, a toolbar, tooltips and a background ([`g6r.R#L284-L460`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/g6r.R#L284-L460)). Stacks are combos laid out with dagre, which does not know a combo's padding, so the spacing presets are tuned around it ([`layout.R#L66-L76`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/layout.R#L66-L76)).
 
-The dock coupling to replace is listed in [Dock and extensions in the browser](Dock-and-extensions-in-the-browser).
+The dock coupling to replace is listed in [Client-drawn dock and extensions](Doc-1.2).
 
 Versions on npm on 2026-10-24: `@xyflow/react` 12.12.0 (MIT), `elkjs` 0.12.0 (EPL-2.0 or GPL-3.0-or-later, so blockr.dag, GPL (>= 3), can bundle it under the GPL), `@antv/g6` 5.1.1 (MIT). Weekly downloads for 2026-10-16 to 22: `@xyflow/react` 9.0 million, `@antv/g6` 137,000. Gzipped sizes from bundlephobia: 59 KB and 390 KB.
 

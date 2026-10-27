@@ -1,6 +1,7 @@
-Status: draft. Design for [Board state owned by the client](Board-state-owned-by-the-client).
+# Input elements for block UIs written in R
+Status: draft. Design for [Client-owned board state](Doc-1.1).
 
-One of the API proposals for the client-owned board ([Board state owned by the client](Board-state-owned-by-the-client)): the input elements a block type composes its UI from in R, without writing JS. It shapes the element set ([blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). Modules for UIs that need more are the UI modules proposal ([UI modules in JS](UI-modules-in-JS)), and how a block type uses its UI is the block types proposal ([Block types in R](Block-types-in-R)).
+One of the API proposals for the client-owned board ([Client-owned board state](Doc-1.1)): the input elements a block type composes its UI from in R, without writing JS. It shapes the element set ([blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). Modules for UIs that need more are the UI modules proposal ([UI modules in JS](Doc-1.1.7)), and how a block type uses its UI is the block types proposal ([Block types in R](Doc-1.1.5)).
 
 ## What must hold
 
@@ -38,7 +39,7 @@ The first set follows from today's call sites:
 | `segmented_input()` | `Blockr.segmented` |
 | `file_input()`, an upload as a request carrying the file | `fileInput()` |
 
-Layout comes from containers: `block_inputs()` stacks its elements, a row places them side by side, and a gear tray with sections holds what is used less, as blockr.ui's gear tray does. A package with an input of its own, such as blockr.io's path picker, ships it as a module that the host offers to others ([UI modules in JS](UI-modules-in-JS)).
+Layout comes from containers: `block_inputs()` stacks its elements, a row places them side by side, and a gear tray with sections holds what is used less, as blockr.ui's gear tray does. A package with an input of its own, such as blockr.io's path picker, ships it as a module that the host offers to others ([UI modules in JS](Doc-1.1.7)).
 
 ### Data-dependent attributes
 
@@ -50,7 +51,7 @@ select_input("by", "Join by", multiple = TRUE, choices = \(x, y) intersect(colna
 select_input("column", "Column", choices = \(data, table) names(data[[table]]))
 ```
 
-Each function is a request of its block type, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block type whose input slot and state arg share a name is rejected when `block_type()` defines it, since a function's argument would not say which it means ([Block types in R](Block-types-in-R)).
+Each function is a request of its block type, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block type whose input slot and state arg share a name is rejected when `block_type()` defines it, since a function's argument would not say which it means ([Block types in R](Doc-1.1.5)).
 
 ### Options
 
