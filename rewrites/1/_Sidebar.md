@@ -2,7 +2,7 @@
 
 ### Parts
 
-- [Client-owned board state](Rewrite-1.1), draft
+- [Client-owned board state](Rewrite-1.1), review
 - [UI kit and design system for the client](Rewrite-1.7), draft
 - [Client-drawn dock and extensions](Rewrite-1.2), draft
 - [Client-drawn DAG extension](Rewrite-1.3), draft

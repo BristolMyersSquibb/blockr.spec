@@ -1,5 +1,5 @@
 # Client-owned board state
-Status: draft. Part of [State in JS](Rewrite-1).
+Status: review. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.core: the client's store, command registry and scheduler, the wire protocol and R's per-session evaluator, block types and the modules that draw their UIs, opening, saving and serving a board, and core's basic front-end with the API every front-end draws on. Every other part builds on it, and its design pages set out each API.
 
