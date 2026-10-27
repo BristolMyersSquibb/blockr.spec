@@ -101,14 +101,16 @@ R decodes client input into plain values only, strings, numbers, logicals, lists
 
 ### Locked boards
 
-A deployment locks a board through the `blockr.locked` option, as today, and R says so in its reply to `hello`. The client then offers no edits, since its store refuses every delta and every `store.open()` ([Board updates](Rewrite-1.1.2#the-store)) and a front-end draws no control that edits, but that stops only a client that plays by the rules, so R holds the lock as well. It keeps the recipes of the opening board, which it handed over once, and in a locked session:
+An app locks a board when it starts, as `blockr.locked` does today, and the lock stays as the app set it: R builds it with the opening board and holds it in every recipe, so nothing a client sends can loosen it. A lock fixes the board's blocks, links, stacks and options, and every state arg of every block at its opening value, except the args the app leaves open, such as a filter's value on a board whose readers may only filter. R sends the lock with its reply to `hello`, and the client keeps to it, since its store refuses every `store.open()` and every delta the lock does not leave open ([Board updates](Rewrite-1.1.2#the-store)) and a front-end draws no control for one. A front-end may lock more of what it alone governs, as the dock locks the arrangement of its panels today, which never reaches R ([Client-drawn dock and extensions](Rewrite-1.2)).
 
-- It evaluates a recipe only if it is one of them, with the same registry id and state and its inputs from the same blocks in the same slots.
-- It answers a block type's request with the state args of the block's opening recipe, whatever `args` holds.
+That stops only a client that plays by the rules, so R holds the lock in what it runs. It keeps the opening board's recipes, and in a locked session:
+
+- It evaluates a recipe only if it has the registry id and inputs of the block's opening recipe and the opening value of every arg the lock fixes.
+- It answers a block type's request with the opening value of every arg the lock fixes, whatever `args` holds.
 - It opens no board, whether `store.open()` sends one or a `hello` after a restart does, and builds the opening board from the app again instead.
 - It runs a package's request only if the package declares that request safe on a locked board, since a request may evaluate what the client sends, as an assistant's trial of proposed args would.
 
-Anything else is refused with an `error` that names the lock, while outputs are drawn as before, since an output request carries only values. A locked board thus runs no code beyond what its opening board holds, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks. Today the lock holds in R alone, through core's update gate, which drops every update that changes state ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)), and the dock, which freezes the inputs of every block ([blockr.dock R/board-server.R#L96-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L96-L99)).
+Anything else is refused with an `error` that names the lock, while outputs are drawn as before, since an output request carries only values. A locked board thus runs only its opening board's blocks, with every arg the app did not leave open at its opening value, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks. Today's lock leaves nothing open: core's update gate drops every update that changes state ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)), and the dock freezes the inputs of every block on a locked board ([blockr.dock R/board-server.R#L404-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L404-L433)).
 
 ### Versions
 
@@ -120,6 +122,8 @@ The client sends a message with `Shiny.setInputValue("blockr", message, { priori
 
 ## Open questions
 
+- How an app names the args its lock leaves open when it starts, such as through an argument of `serve()` or of a block's constructor.
+- Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block type declares safe.
 - Which JSON decoding R applies, jsonlite's as today or typedjson's, taken up by the [serialization proposal](Rewrite-1.1.4) and left open in [blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393).
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 - Whether R asking for missing inputs after a restart, as proposed, beats every request carrying the recipes of its whole upstream chain ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)).

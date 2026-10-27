@@ -50,7 +50,7 @@ interface Store {
 }
 ```
 
-Besides the board, the store keeps the undo and redo steps of each origin, the queue of deltas waiting to apply, its subscribers, the extensions registered per board class, and each block's edit version. On a locked board it refuses every delta and every `store.open()`, which R backs by evaluating only the opening board's recipes ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+Besides the board, the store keeps the undo and redo steps of each origin, the queue of deltas waiting to apply, its subscribers, the extensions registered per board class, and each block's edit version. On a locked board it refuses every `store.open()` and every delta the lock does not leave open, such as one that adds a block, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
 
