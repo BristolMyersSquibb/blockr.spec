@@ -1,15 +1,16 @@
 # UI modules in JS: the host, React and packaging
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the contract that the UI of every block, option and output meets, written in TSX as an app writes its `ui.tsx` in shinyreact's pattern, the React SDK on top of it, and how packages ship their UIs. It builds on the [document model](Rewrite-1.1.1) and shapes the module loading ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)) and the React SDK ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)). Ready-made components for form-like UIs are a later project of blockr.ui ([UI kit and design system for the client](Rewrite-1.7)).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the contract that the UI of every block, option and output meets, the React SDK on top of it, which blockr.ui ships with React, and how packages ship their UIs. It builds on the [document model](Rewrite-1.1.1) and shapes the module loading ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)) and the React SDK ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)). Ready-made components for form-like UIs are a later project of blockr.ui ([UI kit and design system for the client](Rewrite-1.7)).
 
 ## What must hold
 
-1. A block type's UI is one module per type, written in TSX and shipped inside its R package, and is loaded the first time a block of that type appears.
+1. A block type's UI is one ES module per type, shipped inside its R package and loaded the first time a block of that type appears.
 2. A module gets everything it shares with the page through the host it receives, except React, which reaches it through its build.
 3. The contract needs no framework, and React is the usual way to meet it, through a small SDK.
 4. One copy each of React, core's runtime and every shared module runs on the page.
 5. Core's runtime and every package's UIs ship inside their R packages, so installing a package pins the client code it runs.
+6. Core ships no React, and a block type whose UI is written in React works under every front-end, core's basic one included.
 
 ## Proposal
 
@@ -64,11 +65,11 @@ export const api = 1;
 export default blockModule(HeadUI);
 ```
 
-The hooks read like shinyreact's `useShinyInput()` and `useShinyOutputValue()` ([index.ts](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/pkg-js/src/shiny-react/index.ts)). React reaches the module through its build, from a global the dock fills before any module loads, through a preset core ships, so the bundle contains no React ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)).
+The hooks read like shinyreact's `useShinyInput()` and `useShinyOutputValue()` ([index.ts](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/pkg-js/src/shiny-react/index.ts)). React reaches the module through its build: blockr.ui ships the one copy of React with the SDK and puts it on a global before any module that uses it loads, and its build preset maps `react` to that copy, so a module's bundle contains no React ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)). The copy is blockr.ui's rather than core's or the dock's, since core ships no React and a React block UI has to find React under every front-end: a block package that writes its UI in React imports blockr.ui, as blockr.dplyr, blockr.dm and blockr.ggplot do today, so React is on the page wherever its blocks are, and the dock and its extensions use the same copy, since the dock imports blockr.ui too. React's major then moves with blockr.ui's, not with core's.
 
 ### Packaging
 
-A block type's UI is a TSX file in its package, as an app's is a `ui.tsx` in shinyreact's pattern ([README.md#L18-L22](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L18-L22)), written against the React SDK and the types that core ships inside blockr.core, as shinyreact ships its runtime as one bundle inside its R package ([README.md#L46](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L46)). Nothing is published to npm for now. In R, a block type names its UI in its `ui` field, and a package declares the modules it offers others, with their CSS beside them; R tells the client at startup where each is served ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), and the client imports each URL once and loads its CSS with it. A module of another package is reached through `host.module()`, along the R dependencies, as blockr.dm would reach blockr.dplyr's filter UI.
+A block type's UI is a module in its package, written against the types core ships inside blockr.core, and a UI in React is TSX, as an app's is a `ui.tsx` in shinyreact's pattern ([README.md#L18-L22](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L18-L22)), written against the React SDK that blockr.ui ships inside its own R package, as shinyreact ships its runtime with React as one bundle inside its R package ([README.md#L46](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L46)). Nothing is published to npm for now. In R, a block type names its UI in its `ui` field, and a package declares the modules it offers others, with their CSS beside them; R tells the client at startup where each is served ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), and the client imports each URL once and loads its CSS with it. A module of another package is reached through `host.module()`, along the R dependencies, as blockr.dm would reach blockr.dplyr's filter UI.
 
 ### Testing
 
@@ -76,6 +77,6 @@ Core's test helpers include a stub host, so a module mounts in a test runner wit
 
 ## Open questions
 
-- How a block type's TSX becomes the module the client loads: built by its package with core's preset, as shinyreact's bundler tier builds a `ui.tsx` with React externalized to its bundle's copy ([README.md#L42](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L42)), or compiled by core as it loads the UI, so that a type defined outside a package needs no build step and the definition a file holds can carry its UI ([Document model](Rewrite-1.1.1#block-types-outside-a-package)).
+- How a block type's TSX becomes the module the client loads: built by its package with blockr.ui's preset, as shinyreact's bundler tier builds a `ui.tsx` with React externalized to its bundle's copy ([README.md#L42](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/README.md#L42)), or compiled by core as it loads the UI, so that a type defined outside a package needs no build step and the definition a file holds can carry its UI ([Document model](Rewrite-1.1.1#block-types-outside-a-package)).
 - Whether a custom element should be a second form of the contract, beside `render()`.
 - Whether TanStack Query backs the host's cache of request answers ([blockr.core#398](https://github.com/BristolMyersSquibb/blockr.core/issues/398)).

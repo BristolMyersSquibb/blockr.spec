@@ -1,7 +1,7 @@
 # UI kit and design system for the client
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.ui: the design system that core's client, the dock and the extensions follow, the widgets block packages draw with today, and the table preview it adds to core's tabular display. It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
+This part covers blockr.ui: the design system that core's client, the dock and the extensions follow, the widgets block packages draw with today, the table preview it adds to core's tabular display, and the one copy of React on the page, with the React SDK that block UIs are written with. It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
 
 ## Problem
 
@@ -10,7 +10,8 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 ## What must hold
 
 1. The design system documented in blockr.ui stays valid, and core's client, the dock and the extensions follow it, as condition 6 of [State in JS](Rewrite-1#what-must-hold) has it.
-2. Whatever blockr.ui offers block UIs reaches them through the host, as any package's module does, and none of it is a page global.
+2. A block UI written in React gets React and the React SDK from blockr.ui through its build, under every front-end, core's basic one included, and the dock uses the same copy ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
+3. Whatever else blockr.ui offers block UIs reaches them through the host, as any package's module does, and none of it is a page global.
 
 ## Today
 
@@ -26,19 +27,20 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 ## Proposal
 
 - As the UI kit, blockr.ui keeps the design system that core's client, the dock and the extensions follow.
-- Block UIs are TSX written against core's module contract, as core's own are ([UI modules in JS](Rewrite-1.1.7)), so blockr.ui's widgets stop being page globals, and whatever blockr.ui offers block UIs from then on reaches them through the host.
+- Block UIs are modules written against core's contract ([UI modules in JS](Rewrite-1.1.7)), so blockr.ui's widgets stop being page globals, and whatever else blockr.ui offers block UIs from then on reaches them through the host.
+- The one copy of React on the page ships with blockr.ui, with the React SDK and the build preset that maps `react` to it, so that core ships no React while a block UI written in React still finds it under every front-end, since its package imports blockr.ui. The dock and its extensions use the same copy ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
 - Ready-made components for form-like block UIs are a later project of this part, still to be decided, and so are input elements composed in R on top of them ([Input elements for block UIs written in R](Rewrite-1.1.6)).
 
 ## Open questions
 
-- What blockr.ui offers TSX block UIs in place of its widgets, and when: ready-made components, the input elements of [Input elements for block UIs written in R](Rewrite-1.1.6) on top of them, or nothing until the block packages have ported. It decides whether blockr.dplyr, blockr.dm and blockr.ggplot port their UIs onto blockr.ui's components or write their own.
+- What else blockr.ui offers block UIs in place of its widgets, and when: ready-made components, the input elements of [Input elements for block UIs written in R](Rewrite-1.1.6) on top of them, or nothing until the block packages have ported. It decides whether blockr.dplyr, blockr.dm and blockr.ggplot port their UIs onto blockr.ui's components or write their own.
 - Where the design tokens live, since core's client follows them while blockr.ui builds on blockr.core, and how the client loads them, now that they no longer arrive as HTML dependencies of Shiny UI.
 - Where the table preview goes, now that a display is the client side of a block type's output rather than Shiny methods on core's hook ([Block types in R](Rewrite-1.1.5#cores-types-and-hooks)).
 - What becomes of the R helpers, which draw into Shiny UIs today.
 
 ## Work
 
-None yet, since the open questions decide it.
+- Ship React, one copy for the page, with the React SDK that block UIs are written with and the build preset that maps `react` to it, inside the R package, in blockr.ui
 
 ## Design pages
 

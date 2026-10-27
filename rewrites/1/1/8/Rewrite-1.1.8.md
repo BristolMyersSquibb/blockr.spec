@@ -44,7 +44,7 @@ A front-end decides where things go and core fills them: it gives `mountBlock()`
 
 ### Core's basic front-end
 
-Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It demands nothing of its own, since a board evaluates every block unless its `evaluation` option is lazy ([Evaluation in the client](Rewrite-1.1.10)), so a board served without the dock evaluates eagerly, as today.
+Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It demands nothing of its own, since a board evaluates every block unless its `evaluation` option is lazy ([Evaluation in the client](Rewrite-1.1.10)), so a board served without the dock evaluates eagerly, as today. It is written in plain TypeScript, as core's built-in block UIs are, since core ships no React, and it mounts a block UI written in React as the dock does, with the React that blockr.ui ships ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
 
 ### Extensions
 
@@ -56,5 +56,4 @@ The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `inse
 
 ## Open questions
 
-- Whether core's runtime ships React, so a block's React module also works under core's basic front-end, or whether the global stays the dock's to fill ([blockr.core#399](https://github.com/BristolMyersSquibb/blockr.core/issues/399)).
 - What core's basic front-end offers beyond cards, stacks and options, such as editing links, exporting code, or downloading and uploading a board.

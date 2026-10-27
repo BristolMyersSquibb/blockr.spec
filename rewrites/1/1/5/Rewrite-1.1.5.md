@@ -1,7 +1,7 @@
 # Block types in R for the client-owned board
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block type in R. It shapes the block type contract ([blockr.core#397](https://github.com/BristolMyersSquibb/blockr.core/issues/397)), a block type's output ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). A block type's UI, TSX that meets the module contract, is the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block type in R. It shapes the block type contract ([blockr.core#397](https://github.com/BristolMyersSquibb/blockr.core/issues/397)), a block type's output ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). A block type's UI, a module that meets the contract, is the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)).
 
 ## What must hold
 
@@ -30,7 +30,7 @@ head_block <- block_type(
   state       = function(n = 6L, direction = c("head", "tail")) {
     list(n = n, direction = match.arg(direction))
   },
-  ui          = js_module("head-block.tsx"),
+  ui          = js_module("head-block.js"),
   requests    = list(n_max = \(data) nrow(data)),
   interpolate = function(x, state, inputs) {
     fn <- if (identical(state$direction, "tail")) quote(utils::tail) else quote(utils::head)
@@ -49,7 +49,7 @@ A type's fields:
 - The `class` and `parent` arguments give the type's class, which with its parent's makes a block's class vector, `c("head_block", "transform_block", "block")`, and the type it inherits from. A field the type leaves out comes from its parent.
 - The `state` field is a function from the constructor's args to the block's state, with their defaults and checks. Called without args, it gives the state a new block starts with.
 - The `inputs` field names the data input slots, `"data"`, `c("x", "y")` for a merge, or `"...args"` for a variadic block. Every concrete type declares its own, since arity is not what a parent such as `transform_block` stands for.
-- The `ui` field names the type's UI, TSX written against the module contract ([UI modules in JS](Rewrite-1.1.7)), and the `requests` field takes a named list of R functions for whatever the UI asks of R, such as the head block's `n_max`, whose arguments name the inputs and state args they read.
+- The `ui` field names the type's UI, a module written against the contract of [UI modules in JS](Rewrite-1.1.7), in plain TypeScript as core's own are or in TSX with React, and the `requests` field takes a named list of R functions for whatever the UI asks of R, such as the head block's `n_max`, whose arguments name the inputs and state args they read.
 - The `expr` field takes a template, with `.(arg)` placeholders for state args and the inputs referred to as `expr_type` says, by `.(data)` placeholders or by symbol, as today, which the root type's `interpolate` fills in. A type whose expression changes shape with its state or its data, as the head block's does with its direction, gives an `interpolate` of its own instead.
 - The `validate`, `interpolate` and `evaluate` fields are the functions R evaluates a block with (below).
 - The `output` field describes a result for the client ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)), and the `options` field lists the board options the type ships ([Document model](Rewrite-1.1.1)).
