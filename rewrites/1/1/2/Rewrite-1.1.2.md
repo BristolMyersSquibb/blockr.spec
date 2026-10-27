@@ -1,5 +1,5 @@
 # Board updates: deltas, commands and undo
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the fields that packages such as the dock and its extensions add to it alike. It builds on the [document model](Rewrite-1.1.1) and shapes the store and the command registry, an item in the Work list of [Client-owned board state](Rewrite-1.1#work). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), and how a field is written to a file is the [serialization proposal](Rewrite-1.1.4).
 
@@ -176,6 +176,8 @@ store.subscribe((change, board) => { /* ... */ });  // after every commit, with 
 ## Open questions
 
 - How quickly edits must follow each other to merge into one undo step, and whether a block's UI or an extension can mark a series of edits as one step instead.
+- How a package adds what depends on its screen to a delta another package made, such as the dock placing a block the assistant adds in the view on screen, as `add_block_panels_to_view()` puts every new block in the active view today ([blockr.dock R/dock-board.R#L345-L363](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L345-L363)): through a hook its field registers, run where the delta is made and joined to the delta's undo step, as the changes of a tldraw after handler join theirs, or through a delta of its own once the first is announced, an undo step apart. The answer shapes `Field`, and whether a subscriber may call `apply()`, which the queue allows but whose rejection could then not be thrown to the caller.
+- How a delta that no command built, such as one the assistant's model writes, names the edit versions of the board it was built on, which the store keeps outside the board: by `apply()` taking that board and filling the versions in from it, as the registry does for a command, or by the store handing the versions out beside the board. The answer shapes `apply()` and the assistant's edit tool ([Assistant as a client extension](Rewrite-1.4)).
 
 <details><summary>Notes for implementers</summary>
 
