@@ -1,5 +1,5 @@
 # State in JS
-Status: draft.
+Status: review.
 
 State in JS moves board state from R to the browser: the client becomes the only writer of the board, and R evaluates what it is sent. Core is rewritten around a client-side store, the dock is drawn in the browser, the extensions are rebuilt on the dock's client API, and the block packages are ported to block types.
 
@@ -14,8 +14,8 @@ Much of core's recent work goes into working around this: deferred and prioritiz
 1. The client is the only writer of board state, opened boards and AI edits included.
 2. R holds results and no board state. It evaluates what it is sent, so losing the R process costs recomputation, never the board.
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen.
-4. Boards written by today's `blockr_ser()` open, for block types that have been ported.
-5. A full app is still defined by R code calling board and block constructors, and a block is still an S3 object.
+4. Boards written by today's `blockr_ser()` open, with the dock's views and layouts and the DAG's positions, for block types that have been ported ([Serialization](Rewrite-1.1.4)).
+5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
 6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so core's client, the dock and the extensions follow it.
 
 ## Principles
@@ -62,15 +62,13 @@ Translate rather than transliterate. The client follows established JS patterns,
 
 The switch is one step, since a board mirrored in R would be two owners again. The new client and the slimmer core are built beside the current stack, on a `js-state` branch in every repo the rewrite changes, while main keeps the current stack until the switch. Block packages port one at a time.
 
-Documents written by today's `blockr_ser()` are the point of compatibility: they open in the new stack for block types that have been ported ([Serialization](Rewrite-1.1.4)), with the dock's views and layouts and the DAG's positions. App scripts keep calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and blocks stay S3 objects.
-
 ## Open questions
 
 None.
 
 ## Conventions
 
-- Label: `js-state`, named after the integration branch, on every issue and on the thread.
+- Label: `js-state`, named after the integration branch, on every spec and issue and on the thread.
 - Integration branch: `js-state`, in every repo the rewrite changes and in every package between two of them, which needs one for its pins. The first PR in a repo to need it creates it from main, adds it to the branch filters of the repo's workflows, and gives it the rulesets main has. Its revdep check lists no downstream at first, and adds each one, checked at its own `js-state`, once that branch exists.
 - Versions: on `js-state` every package carries a 0.2 version, which the switch releases: 0.2.0, or the next patch above main's where main has already reached 0.2.0. So blockr.core goes from 0.1.4 to 0.2.0, and blockr.dock, whose main says 0.2.0, to 0.2.1. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
