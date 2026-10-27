@@ -1,7 +1,7 @@
 # Input elements for block UIs written in R
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the input elements a block type composes its UI from in R, without writing JS. It shapes the element set ([blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). Modules for UIs that need more are the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)), and how a block type uses its UI is the block types proposal ([Block types in R](Rewrite-1.1.5)).
+A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block type could compose its UI from in R, without writing TSX, which blockr.ui would build on core's module contract ([UI modules in JS](Rewrite-1.1.7)) once it ships ready-made components. Core ships none of it, and it shapes no issue yet. How a block type names its UI and its requests is the block types proposal ([Block types in R](Rewrite-1.1.5)).
 
 ## What must hold
 
@@ -55,7 +55,7 @@ Each function is a request of its block type, registered under the element's id 
 
 ### Options
 
-A board option's UI is composed from the same elements, bound to the option's value instead of a state arg, as [blockr.core#404](https://github.com/BristolMyersSquibb/blockr.core/issues/404) has it for `n_rows`:
+A board option's UI could be composed from the same elements, bound to the option's value instead of a state arg, as for `n_rows`:
 
 ```r
 new_board_option("n_rows", 50L, ui = numeric_input("n_rows", "Preview rows", min = 1L))
@@ -63,7 +63,7 @@ new_board_option("n_rows", 50L, ui = numeric_input("n_rows", "Preview rows", min
 
 ### Inside modules
 
-A module that draws most of its UI itself still mounts core's elements through its host, so a select looks and behaves the same in every block.
+A module that draws most of its UI itself could still mount the elements, through `host.module()`, so a select looks and behaves the same in every block.
 
 ## Open questions
 

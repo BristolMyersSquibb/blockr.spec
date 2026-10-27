@@ -1,7 +1,7 @@
 # Block types in R for the client-owned board
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block type in R. It shapes the block type contract ([blockr.core#397](https://github.com/BristolMyersSquibb/blockr.core/issues/397)), a block type's output ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). The input elements a UI is composed of are the UI-in-R proposal ([Input elements](Rewrite-1.1.6)), and JS modules for richer UIs are the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block type in R. It shapes the block type contract ([blockr.core#397](https://github.com/BristolMyersSquibb/blockr.core/issues/397)), a block type's output ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)) and the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). A block type's UI, TSX that meets the module contract, is the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)).
 
 ## What must hold
 
@@ -20,7 +20,7 @@ A block type calls `new_block(server, ui, class, ctor, ctor_pkg, dat_valid, allo
 
 ### The block type
 
-A block type is a value made by `block_type()`, holding everything that is the same for every block of the type, and its constructor is a function that `block_constructor()` makes from it. The head block, written to the new contract, with illustrative names for the input elements:
+A block type is a value made by `block_type()`, holding everything that is the same for every block of the type, and its constructor is a function that `block_constructor()` makes from it. The head block, written to the new contract, with illustrative names:
 
 ```r
 head_block <- block_type(
@@ -30,10 +30,8 @@ head_block <- block_type(
   state       = function(n = 6L, direction = c("head", "tail")) {
     list(n = n, direction = match.arg(direction))
   },
-  ui          = block_inputs(
-    numeric_input("n", "Number of rows", min = 1L, max = \(data) nrow(data)),
-    switch_input("direction", "Tail", on = "tail", off = "head")
-  ),
+  ui          = js_module("head-block.tsx"),
+  requests    = list(n_max = \(data) nrow(data)),
   interpolate = function(x, state, inputs) {
     fn <- if (identical(state$direction, "tail")) quote(utils::tail) else quote(utils::head)
     bbquote(.(fn)(.(data), n = .(n)), list(fn = fn, n = state$n))
@@ -51,14 +49,14 @@ A type's fields:
 - The `class` and `parent` arguments give the type's class, which with its parent's makes a block's class vector, `c("head_block", "transform_block", "block")`, and the type it inherits from. A field the type leaves out comes from its parent.
 - The `state` field is a function from the constructor's args to the block's state, with their defaults and checks. Called without args, it gives the state a new block starts with.
 - The `inputs` field names the data input slots, `"data"`, `c("x", "y")` for a merge, or `"...args"` for a variadic block. Every concrete type declares its own, since arity is not what a parent such as `transform_block` stands for.
-- The `ui` field takes the input elements composed in R or a JS module (`js_module("filter-block.js")`). A function in an element's attribute, such as `max = \(data) nrow(data)`, becomes a request of the type ([Input elements](Rewrite-1.1.6)), and the `requests` field takes a named list of further R functions for whatever else the UI asks of R, whose arguments name the inputs and state args they read.
+- The `ui` field names the type's UI, TSX written against the module contract ([UI modules in JS](Rewrite-1.1.7)), and the `requests` field takes a named list of R functions for whatever the UI asks of R, such as the head block's `n_max`, whose arguments name the inputs and state args they read.
 - The `expr` field takes a template, with `.(arg)` placeholders for state args and the inputs referred to as `expr_type` says, by `.(data)` placeholders or by symbol, as today, which the root type's `interpolate` fills in. A type whose expression changes shape with its state or its data, as the head block's does with its direction, gives an `interpolate` of its own instead.
 - The `validate`, `interpolate` and `evaluate` fields are the functions R evaluates a block with (below).
 - The `output` field describes a result for the client ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)), and the `options` field lists the board options the type ships ([Document model](Rewrite-1.1.1)).
 - The `eager` field, `FALSE` by default, has a block of the type demanded even in a board that evaluates lazily ([Evaluation in the client](Rewrite-1.1.10)), as a block that writes a file needs. It takes `TRUE` or a function of the state, so that a write block is demanded only while its auto mode is on.
 - The `dat_valid` and `expr_type` fields stay as they are, while `allow_empty_state`, `external_ctrl` and `block_metadata` go: the root type's `validate` accepts every state, every block's state can now be set from outside, and a type's metadata comes from its registration (below).
 
-Every function field takes the type as its first argument, `x`, as an S3 method takes its object, so that the root type's `interpolate` can fill in the template a child gives as `expr`, and a field can call its parent's, `x$parent$output(x, ...)`, as a method calls `NextMethod()`. A type's `options` add to its parent's instead of replacing them, as `board_options()` methods combine with `NextMethod()` today. The `block_type()` function checks a type when it is defined, such as that no input slot and state arg share a name ([Input elements](Rewrite-1.1.6)), so no block is checked for being well formed again.
+Every function field takes the type as its first argument, `x`, as an S3 method takes its object, so that the root type's `interpolate` can fill in the template a child gives as `expr`, and a field can call its parent's, `x$parent$output(x, ...)`, as a method calls `NextMethod()`. A type's `options` add to its parent's instead of replacing them, as `board_options()` methods combine with `NextMethod()` today. The `block_type()` function checks a type when it is defined, such as that no input slot and state arg share a name, since a request's arguments would not say which they mean, so no block is checked for being well formed again.
 
 ### Core's types and hooks
 
@@ -121,6 +119,6 @@ Core ships helpers to test a block type without Shiny: its `validate`, `interpol
 
 <details><summary>Notes for implementers</summary>
 
-A type defined outside a package, where the caller's `topenv()` is no namespace, keeps the call `block_type()` was made with, from `match.call()`, rather than having its value written out later. Written out, a field such as `ui` takes the internal layout of the core that saved it, `structure(list(structure(list(id = "n", label = "Rows", min = 1L), class = c("numeric_input", "input_element"))), class = "block_inputs")` where the developer wrote `block_inputs(numeric_input("n", "Rows", min = 1L))`, and a later core may lay it out differently. The definition is that call wrapped in `blockr.core::block_constructor()`, with the package objects it names qualified, `transform_block` as `blockr.core::transform_block`, and a parent type the script defines written as its own call, nested. Nothing else the call or its functions take from the script, such as a helper or a data frame, can go into a file, so `block_type()` warns about each such name when the type is defined, finding them with `codetools::findGlobals()` and resolving them from the caller's environment.
+A type defined outside a package, where the caller's `topenv()` is no namespace, keeps the call `block_type()` was made with, from `match.call()`, rather than having its value written out later. Written out, a field such as `parent` takes the whole parent type in the internal layout of the core that saved it, where the developer wrote `transform_block`, and a later core may lay it out differently. The definition is that call wrapped in `blockr.core::block_constructor()`, with the package objects it names qualified, `transform_block` as `blockr.core::transform_block`, and a parent type the script defines written as its own call, nested. Nothing else the call or its functions take from the script, such as a helper or a data frame, can go into a file, so `block_type()` warns about each such name when the type is defined, finding them with `codetools::findGlobals()` and resolving them from the caller's environment. A UI the type names by file, such as a TSX file beside the script, is the open question of [UI modules in JS](Rewrite-1.1.7#open-questions).
 
 </details>

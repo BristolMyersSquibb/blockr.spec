@@ -30,17 +30,17 @@ registerFrontEnd("dock_board", {
 
 ```ts
 interface CoreApi {
-  store: Store;                    // board(), subscribe(), apply(), open() (#406)
+  store: Store;                    // board(), subscribe(), apply(), open(), from Board updates
   commands: Commands;              // run(), plan() and the registry, for menus and shortcuts
-  scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() (#414)
+  scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   registry: Registry;              // block types, options and commands, for pickers and settings
-  mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI, elements or module
+  mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured and fetched
   mountOption(el: HTMLElement, option: OptionId): () => void; // an option's UI
 }
 ```
 
-A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's input elements or its module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output and redraws it when the block's version, an option or the size changes. A front-end draws a block's status and conditions from `scheduler.status()`, demands what it shows, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
+A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output and redraws it when the block's version, an option or the size changes. A front-end draws a block's status and conditions from `scheduler.status()`, demands what it shows, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
 
 ### Core's basic front-end
 

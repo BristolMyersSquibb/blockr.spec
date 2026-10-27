@@ -74,7 +74,7 @@ None.
 | Repo or area | Change | Page | Builds on |
 |---|---|---|---|
 | blockr.core | Rewritten | [Client-owned board state](Rewrite-1.1) | |
-| blockr.ui | Kept as the UI kit | Not written | blockr.core |
+| blockr.ui | Kept as the UI kit | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
 | blockr.dock | Rewritten | [Client-drawn dock and extensions](Rewrite-1.2) | blockr.core |
 | blockr.dplyr | Ported | Not written | blockr.core |
 | blockr.ggplot | Ported | Not written | blockr.core |

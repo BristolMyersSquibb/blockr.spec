@@ -29,7 +29,7 @@ type Origin = "user" | "assistant" | string;                 // a peer, once a s
 
 type Change =
   | { delta: Delta; origin: Origin }                         // a committed delta, as expanded
-  | { opened: Board; dropped: Dropped[] };                   // an opened board, and what R dropped (#405)
+  | { opened: Board; dropped: Dropped[] };                   // an opened board, and what R dropped, as in Document model
 
 interface Store {
   board(): Board;                                            // the current board, as a signal
@@ -44,19 +44,19 @@ interface Store {
   canRedo(origin?: Origin): boolean;
 
   extend(boardClass: string, ext: {
-    schema?: JsonSchema;                                     // validates the fields the subclass adds (#405)
+    schema?: JsonSchema;                                     // validates the fields the subclass adds, as in Document model
     expand?: (delta: Delta, board: Board) => Delta;          // its part of the expansion step, below
   }): void;
 }
 ```
 
-Besides the board, the store keeps the undo and redo steps of each origin, the queue of deltas waiting to apply, its subscribers, the extensions registered per board class, and each block's edit version.
+Besides the board, the store keeps the undo and redo steps of each origin, the queue of deltas waiting to apply, its subscribers, the extensions registered per board class, and each block's edit version. On a locked board it refuses every delta and every `store.open()`, which R backs by evaluating only the opening board's recipes ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
 
 ```ts
 interface Delta {
-  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { state?: Partial<State>; name?: string }>; rm?: BlockId[] };
+  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit: number; state?: Partial<State>; name?: string }>; rm?: BlockId[] };
   links?:    { add?: Record<LinkId, Link>; mod?: Record<LinkId, Partial<Link>>; rm?: LinkId[]; before?: Record<LinkId, LinkId> };
   stacks?:   { add?: Record<StackId, Stack>; mod?: Record<StackId, Partial<Stack>>; rm?: StackId[] };
   options?:  Record<OptionId, Json>;          // values to set
@@ -65,7 +65,7 @@ interface Delta {
 }
 ```
 
-The shape is today's payload, with three differences: a block's `mod` takes any of its state args, since every block can be controlled from outside; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields a board subclass adds are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today. A field a board subclass adds is set to its new value, so core needs to know nothing of its shape.
+The shape is today's payload, with four differences: a block's `mod` takes any of its state args, since every block can be controlled from outside; it names the block's edit version it was built on, which the command registry fills in and which counts only the block's own edits, so that a delta built on an older board is refused rather than applied over a newer edit; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields a board subclass adds are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today. A field a board subclass adds is set to its new value, so core needs to know nothing of its shape.
 
 ### Applying a delta
 
@@ -76,7 +76,7 @@ store.apply(delta);
 The store expands a delta, checks it, commits it and tells whoever follows it:
 
 1. The store expands the delta with what follows from it, as today's augment step does: removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)). For the fields a board subclass adds, the store calls the `expand` hook that `store.extend()` registered for the board's class, dispatched on its class vector, a pure function from the delta and the board to a delta of those fields, so the dock's method drops a removed block's panels and passes the delta on to its extensions, through which the DAG drops the block's position, and the store runs the hook until nothing changes, as `augment_board_update()` runs today ([#L2357-L2368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2357-L2368)).
-2. It checks the invariants of [Document model](Rewrite-1.1.1) on the result, and a failing check rejects the whole delta, so nothing is ever half applied.
+2. It checks the invariants of [Document model](Rewrite-1.1.1) on the result, and that every block a `mod` changes is still at the edit version the `mod` names, and a failing check rejects the whole delta, so nothing is ever half applied.
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo.
 4. It hands the expanded delta and the new board to whoever follows the board.
 

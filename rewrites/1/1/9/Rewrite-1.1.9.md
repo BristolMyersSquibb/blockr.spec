@@ -57,10 +57,10 @@ After a restart R holds no results, so it replies `missing` with the inputs it l
 
 ### Requests
 
-A block type's requests, the data-dependent attributes of its input elements among them, and a package's own requests share one kind, resolved through the registry by registry id or package and name. A request names the block results it reads in `reads`, and passes the state args its function names in `args`.
+A block type's requests and a package's own requests share one kind, resolved through the registry by registry id or package and name. A request names the block results it reads in `reads`, and passes the state args its function names in `args`.
 
 ```json
-{ "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n.max", "args": {},
+{ "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "args": {},
   "reads": [ { "slot": "data", "block": "a", "version": 2 } ] }
 { "id": "18", "status": "ok", "value": 150 }
 
@@ -98,6 +98,17 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 ### Decoding
 
 R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Document model](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. How R types survive JSON is a question for the [serialization proposal](Rewrite-1.1.4).
+
+### Locked boards
+
+A deployment locks a board through the `blockr.locked` option, as today, and R says so in its reply to `hello`. The client then offers no edits, since its store refuses every delta and every `store.open()` ([Board updates](Rewrite-1.1.2#the-store)) and a front-end draws no control that edits, but that stops only a client that plays by the rules, so R holds the lock as well. It keeps the recipes of the opening board, which it handed over once, and in a locked session:
+
+- It evaluates a recipe only if it is one of them, with the same registry id and state and its inputs from the same blocks in the same slots.
+- It answers a block type's request with the state args of the block's opening recipe, whatever `args` holds.
+- It opens no board, whether `store.open()` sends one or a `hello` after a restart does, and builds the opening board from the app again instead.
+- It runs a package's request only if the package declares that request safe on a locked board, since a request may evaluate what the client sends, as an assistant's trial of proposed args would.
+
+Anything else is refused with an `error` that names the lock, while outputs are drawn as before, since an output request carries only values. A locked board thus runs no code beyond what its opening board holds, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks. Today the lock holds in R alone, through core's update gate, which drops every update that changes state ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)), and the dock, which freezes the inputs of every block ([blockr.dock R/board-server.R#L96-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L96-L99)).
 
 ### Versions
 

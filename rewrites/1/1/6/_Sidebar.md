@@ -1,3 +1,3 @@
 **Top:** [Home](Home)
 
-**Up:** [Client-owned board state](Rewrite-1.1)
+**Up:** [UI kit and design system for the client](Rewrite-1.7)
