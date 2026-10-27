@@ -2,7 +2,7 @@
 
 ### Design pages
 
-- **Document model for the client-owned board**
+- Document model for the client-owned board
 - [Board updates: deltas, commands and undo](Rewrite-1.1.2)
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3)
 - [Serialization of the client-owned board](Rewrite-1.1.4)

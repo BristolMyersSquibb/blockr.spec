@@ -5,7 +5,7 @@
 - [Document model for the client-owned board](Rewrite-1.1.1)
 - [Board updates: deltas, commands and undo](Rewrite-1.1.2)
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3)
-- **Serialization of the client-owned board**
+- Serialization of the client-owned board
 - [Block types in R for the client-owned board](Rewrite-1.1.5)
 - [Input elements for block UIs written in R](Rewrite-1.1.6)
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7)

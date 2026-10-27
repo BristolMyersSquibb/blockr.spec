@@ -11,4 +11,4 @@
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7)
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8)
 - [Wire protocol between the client and R](Rewrite-1.1.9)
-- **Evaluation in the client: versions, claims and statuses**
+- Evaluation in the client: versions, claims and statuses

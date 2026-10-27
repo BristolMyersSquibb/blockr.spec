@@ -10,5 +10,5 @@
 - [Input elements for block UIs written in R](Rewrite-1.1.6)
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7)
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8)
-- **Wire protocol between the client and R**
+- Wire protocol between the client and R
 - [Evaluation in the client: versions, claims and statuses](Rewrite-1.1.10)

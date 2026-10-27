@@ -7,7 +7,7 @@
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3)
 - [Serialization of the client-owned board](Rewrite-1.1.4)
 - [Block types in R for the client-owned board](Rewrite-1.1.5)
-- **Input elements for block UIs written in R**
+- Input elements for block UIs written in R
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7)
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8)
 - [Wire protocol between the client and R](Rewrite-1.1.9)
