@@ -1,7 +1,7 @@
 # Defining a board in R for the client-owned board
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the R code that defines and launches an app, and how the board it builds becomes the client's opening board. It builds on the [document model](Rewrite-1.1.1) and the [serialization proposal](Rewrite-1.1.4), and shapes the store's opening document, the loader of saved boards, the evaluator and its Shiny bridge, and the port of core's built-in blocks, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How a block type is written is the block types proposal ([Block types in R](Rewrite-1.1.5)), and how a front-end draws the board is [Front-ends and extension points](Rewrite-1.1.8)'s.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the R code that defines and launches an app, and how the board it builds becomes the client's opening board. It builds on the [document model](Rewrite-1.1.1) and the [serialization proposal](Rewrite-1.1.4), and shapes serving a board with `serve()`, opening boards in R, writing saved boards in the client and porting core's built-in blocks, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How a block type is written is the block types proposal ([Block types in R](Rewrite-1.1.5)), and how a front-end draws the board is [Front-ends and extension points](Rewrite-1.1.8)'s.
 
 ## What must hold
 
@@ -11,6 +11,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 4. R's `blockr_ser()` and the client write the same file for the same board.
 5. Serving a single block while developing it, and serving a saved file, work as today.
 6. Data that a script hands to a board stays in R, so no document, file or request carries it.
+7. An app sets what it configures as today, through `blockr_option()`, and the board holds none of those settings, so its JSON describes the board in full.
 
 ## Today
 
@@ -50,7 +51,7 @@ The opening board is where every app meets R's lack of scalars, since R writes t
 
 ### The `serve()` generic
 
-The `serve()` generic and its three methods stay. For a board, `serve.board()` starts a Shiny app whose page loads core's client and the front-end registered for the registry id of the board's type, such as the dock for `blockr.dock-dock_board`, and whose server carries the protocol and evaluates. R reads that id off the board's constructor ([Document model](Rewrite-1.1.1#registry-ids)), and the `blockr_app_ui()` and `blockr_app_server()` methods go, since a front-end now registers on the client, for the registry id of the board type it draws ([Front-ends and extension points](Rewrite-1.1.8)). For a block, `serve.block(x, data = list(...))` serves a board of core's type, `blockr.core-board`, holding the block and a data block for each input, drawn by core's basic front-end. For a path, `serve()` keeps the file in place of the JSON it would write, and opens it with the migrations of [Serialization](Rewrite-1.1.4#migrations). The new stack's `serve()` has no `plugins` argument, since core keeps no plugin or extension type of its own: a plugin's logic becomes commands and its UI a dock extension, and the notes of [Client-drawn dock and extensions](Rewrite-1.2) map each of today's nine plugins to its new home.
+The `serve()` generic and its three methods stay. For a board, `serve.board()` starts a Shiny app whose page loads core's client and the front-end registered for the registry id of the board's type, such as the dock for `blockr.dock-dock_board`, and whose server carries the protocol and evaluates. R reads that id off the board's constructor ([Document model](Rewrite-1.1.1#registry-ids)), and the `blockr_app_ui()` and `blockr_app_server()` methods go, since a front-end now registers on the client, for the registry id of the board type it draws ([Front-ends and extension points](Rewrite-1.1.8)). Its `id`, the board's namespace today, becomes the id the JSON records for the board ([Document model](Rewrite-1.1.1#the-board)), drawn at random once per process where the script gives none, as today. For a block, `serve.block(x, data = list(...))` serves a board of core's type, `blockr.core-board`, holding the block and a static block for each input (below), drawn by core's basic front-end. For a path, `serve()` keeps the file in place of the JSON it would write, and opens it with the migrations of [Serialization](Rewrite-1.1.4#migrations). The new stack's `serve()` has no `plugins` argument, since core keeps no plugin or extension type of its own: a plugin's logic becomes commands and its UI a dock extension, and the notes of [Client-drawn dock and extensions](Rewrite-1.2) map each of today's nine plugins to its new home.
 
 ### Data passed to `serve()`
 
@@ -62,9 +63,15 @@ Both methods of `serve()` therefore take `data`, a named list that R keeps for t
 
 A board's options are declared as today, through `options = default_board_options()`, the `board_options()` methods of its board class and its extensions, and the `options` field of block types ([Block types in R](Rewrite-1.1.5#generics)). R collects them, with those of every type the registry holds, as `blockr_app_options()` collects them ([R/utils-serve.R#L172](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L172)), each time it opens a board, as for a file. What the board holds is their values ([Document model](Rewrite-1.1.1#options)).
 
+### App settings
+
+An app configures blockr as today, through `blockr_option()`: an R option `blockr.<name>` or an environment variable `BLOCKR_<NAME>`, which a deployment such as Connect sets without touching the script ([R/utils-misc.R#L247-L276](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-misc.R#L247-L276)). The packages the rewrite keeps read 56 of them, such as core's `show_conditions`, the dock's `view_tabs` and blockr.session's `session_mgmt_backend`. A setting is the app's, where a board option is the board's, so the board holds none of them, and its JSON describes the board in full. R reads the settings its own code needs where it needs them, as today, and sends the values of those the client reads with its reply to `hello` ([Wire protocol](Rewrite-1.1.9#handshake)), each package declaring which of its settings its client code reads. Core hands them to front-ends and extensions through `CoreApi` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)), so client code has them passed in rather than reading a global ([State in JS](Rewrite-1#principles)).
+
+A constructor argument that is a setting rather than state is lost to the JSON, which keeps an object's state and its constructor and nothing else. Such an argument becomes an option where it is a value, and moves to the code that calls it where it is a function. The function `new_assistant_extension()` takes as its `system_prompt` ([vignettes/intro.Rmd#L124-L153](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/vignettes/intro.Rmd#L124-L153)), which a board restored from a file loses already ([R/ext-server.R#L1229-L1231](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-server.R#L1229-L1231)), is R because ellmer runs the agent loop in R, and becomes JS logic of the assistant extension once that loop runs in the browser ([Assistant as a client extension](Rewrite-1.4)).
+
 ## Open questions
 
-- Where configuration that a constructor takes goes, since no JSON keeps it, such as the function `new_assistant_extension()` takes as its `system_prompt` ([vignettes/intro.Rmd#L124-L153](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/vignettes/intro.Rmd#L124-L153)): an option the app sets, or an argument of `serve()`. Today a board restored from a file falls back to the default prompt ([R/ext-server.R#L1229-L1231](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-server.R#L1229-L1231)), and written as JSON at startup, every board would. The args a lock leaves open are configuration of the same kind ([Wire protocol](Rewrite-1.1.9#open-questions)). It blocks writing the opening board.
+None.
 
 <details><summary>Notes for implementers</summary>
 

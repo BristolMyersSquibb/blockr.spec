@@ -34,6 +34,7 @@ interface CoreApi {
   commands: Commands;              // run(), plan() and the registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   registry: Registry;              // block types, options and commands, for pickers and settings
+  settings: Settings;              // the app's settings the client reads, by package, from the reply to hello
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured and fetched
   mountOption(el: HTMLElement, option: OptionId): () => void; // an option's UI
@@ -52,7 +53,7 @@ An extension is a module too, registered with the front-end it extends, and work
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board type and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board type and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
 
 ## Open questions
 

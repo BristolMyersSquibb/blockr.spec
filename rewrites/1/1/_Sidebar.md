@@ -6,7 +6,7 @@
 
 - [Document model for the client-owned board](Rewrite-1.1.1), review
 - [Board updates: deltas, commands and undo](Rewrite-1.1.2), draft
-- [Defining a board in R for the client-owned board](Rewrite-1.1.3), draft
+- [Defining a board in R for the client-owned board](Rewrite-1.1.3), review
 - [Serialization of the client-owned board](Rewrite-1.1.4), draft
 - [Block types in R for the client-owned board](Rewrite-1.1.5), draft
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7), draft
