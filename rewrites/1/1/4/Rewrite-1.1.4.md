@@ -19,12 +19,12 @@ The `blockr_ser()` function returns R lists, and the JSON is up to the caller. C
 
 ### Files
 
-A saved board keeps the shape `blockr_ser()` writes today: every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)). A file thus says how R calls the constructors that rebuild the board, as a startup script does ([Document model](Rewrite-1.1.1)). It is not the client's document: R turns a file into the document when it opens it ([Board updates](Rewrite-1.1.2)), and the client writes a file from the document and the registry export, which carries the constructor of every block type and of every board, stack, link and option class ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). A board subclass adds its own components as further nodes of the board's payload, in the same shape, as a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options` today, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)).
+A saved board keeps the shape `blockr_ser()` writes today: every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)). A file thus says how R calls the constructors that rebuild the board, as a startup script does ([Document model](Rewrite-1.1.1)). It is not the client's document: R turns a file into the document when it opens it ([Board updates](Rewrite-1.1.2)), and the client writes a file from the document and the registry export, which carries the constructor of every block type, or the definition of one defined outside a package, and of every board, stack, link and option class ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)). A board subclass adds its own components as further nodes of the board's payload, in the same shape, as a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options` today, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)).
 
 A file written by the new stack departs from today's in five places:
 
 - A `format` field gives the version of the file format. Today's files lack it, so the reader tells the two apart.
-- A block type registered outside a package has a `definition` in place of the serialized closure today's files hold: a string of R code that evaluates to its constructor ([Document model](Rewrite-1.1.1)).
+- A block type defined outside a package has a `definition` in place of the serialized closure today's files hold: the code the type was defined by, wrapped in `block_constructor()`, as a string that evaluates to its constructor ([Document model](Rewrite-1.1.1#block-types-outside-a-package)).
 - An option's payload holds its value, named after its constructor's arguments as today, and no longer its category and label, which its constructor supplies.
 - Links and the board carry a `name`, since every object has one ([Document model](Rewrite-1.1.1)): a link's sits in its payload, and the board's next to its `id`, in place of the `board_name` option.
 - Class vectors leave out `vctrs_vctr`, `vctrs_rcrd` and `list`, which only R's containers need: `blockr_deser()` dispatches on `blocks`, `link` or `block` without them, and the client has no R container classes to write.
@@ -45,7 +45,7 @@ A file written by the new stack departs from today's in five places:
         "b": {
           "object": ["my_block", "transform_block", "block"],
           "payload": { "n": 3, "block_name": "Mine" },
-          "constructor": { "object": "blockr_ctor", "definition": "function(n = 3L, ...) { … }" }
+          "constructor": { "object": "blockr_ctor", "definition": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", state = function(n = 3L) list(n = n), expr = quote(utils::head(.(data), n = .(n)))))" }
         }
       }
     },
@@ -78,7 +78,7 @@ A file written by the new stack departs from today's in five places:
 }
 ```
 
-Writing one is `JSON.stringify()` in the browser and reading one `JSON.parse()`. Opening one goes through R, as every opening of a board does ([Board updates](Rewrite-1.1.2)): R reads files of both stacks with `blockr_deser()`, which loads the packages their constructors name, evaluates a definition where the `load_definitions` option allows it and no type of the block's class is registered, so that a definition the app registers wins over the copy in the file, leaves unread the closures today's files hold, whose ported types it looks up by class ([Document model](Rewrite-1.1.1)), and runs the migrations below. Where a board is saved, to a download, Connect or a draft, is session management's ([Session management extension](Rewrite-1.6)): core owns what a saved board is, not saving it.
+Writing one is `JSON.stringify()` in the browser and reading one `JSON.parse()`. Opening one goes through R, as every opening of a board does ([Board updates](Rewrite-1.1.2)), whether `store.open()` sends it, the `hello` after R restarts or `serve()` given its path: R reads files of both stacks with `blockr_deser()`. On the way it registers every block's type, from the type's definition where the `load_definitions` option allows it and no type of the block's class is registered, or from the constructor of an installed package, which it loads. It leaves unread the closures today's files hold, drops what it cannot build ([Document model](Rewrite-1.1.1#the-board)) and runs the migrations below. Where a board is saved, to a download, Connect or a draft, is session management's ([Session management extension](Rewrite-1.6)): core owns what a saved board is, not saving it.
 
 ### State values between the client and R
 
@@ -94,7 +94,7 @@ A saved board holds each option with its value and its constructor, as it holds 
 
 ### Objects that cannot be rebuilt
 
-R drops, when it opens a file, every object it cannot rebuild, because the package its constructor names is not installed or no longer has the constructor, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or R does not evaluate its definition, together with the links and stack places that refer to a dropped block, and the fields a board subclass adds when its package is missing. It names each dropped object, with the package to install, so the client tells the user what did not open, and a board saved afterwards is written without them ([Document model](Rewrite-1.1.1)).
+R drops, when it opens a file, every object it cannot rebuild, because the package its constructor names is not installed or no longer has the constructor, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or R does not evaluate its definition, or it holds a closure from today's stack and no type of its class is registered, together with the links and stack places that refer to a dropped block, and the fields a board subclass adds when its package is missing. It names each dropped object, with the package to install, so the client tells the user what did not open, and a board saved afterwards is written without them ([Document model](Rewrite-1.1.1)).
 
 ## Open questions
 
