@@ -122,7 +122,8 @@ The client sends a message with `Shiny.setInputValue("blockr", message, { priori
 
 ## Open questions
 
-- How an app names the args its lock leaves open when it starts, such as through an argument of `serve()` or of a block's constructor.
+- How an app names the args its lock leaves open when it starts, such as through an argument of `serve()`, of a block's constructor, or the `blockr_option()` that sets the lock itself, as an app sets its other settings ([Defining a board in R](Rewrite-1.1.3#app-settings)).
+- Whether a locked board may still be restored, as [blockr.dock#123](https://github.com/BristolMyersSquibb/blockr.dock/issues/123) asked of today's lock, since a restored file comes from the client and so falls outside what R holds the lock to. It blocks locking a board when the app starts.
 - Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block type declares safe.
 - Which JSON decoding R applies, jsonlite's as today or typedjson's, taken up by the [serialization proposal](Rewrite-1.1.4) and left open in [blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393).
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
