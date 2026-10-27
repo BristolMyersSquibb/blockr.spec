@@ -5,14 +5,14 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 
 ## What must hold
 
-1. Every change to the board, to core's objects or to the state a package adds, is one delta in the `add`, `mod` and `rm` shape of today's `update()`, whoever makes it: a user's input, a menu, a shortcut, an extension or the assistant.
+1. Every change to the board, to core's objects or to the state a package adds, is one delta in the `add`, `mod` and `rm` shape of today's `update()`, whoever makes it: a user's input, a menu, a shortcut or an extension.
 2. A delta reaches everything in the board that refers to what it changes in the same step, so removing a block takes it out of the dock and the DAG at once, and undo brings it back in one step.
 3. A delta applies entirely or not at all.
-4. Menus, shortcuts, extensions and the assistant's tools all edit through one command registry, to which every package adds its own commands.
+4. Menus, shortcuts and extensions all edit through one command registry, to which every package adds its own commands.
 5. Anything can follow the board's changes as they happen, such as a session package saving drafts.
 6. Opening a board, at startup or later, replaces the document instead of changing it, and ends in the same place either way.
 7. A package adds state of its own to the board, such as the DAG's positions or blockr.md's document, without changing core, the front-end or another package, and every package reads and changes that state as it reads and changes core's objects.
-8. What a package registers describes itself, a field by its schema and a command by its description and args, so that another package reads, changes and runs it with no code of its own for that package, as `new_ext_meta()` lets the assistant drive any extension today.
+8. What a package registers describes itself, a field by its schema and a command by its description and args, so that another package reads, changes and runs it with no code of its own for that package, as `new_ext_meta()` describes an extension's state today.
 
 ## Today
 
@@ -29,7 +29,7 @@ The dock's actions are Shiny modules fired through counter-bumped reactive value
 The store is the TypeScript object in core's JS API that holds a board and through which every change to it passes. There is one per board, which core creates when it opens the page's board and hands to front-ends, extensions and block modules through `CoreApi` ([Front-ends and extension points](Rewrite-1.1.8)) and the module host ([UI modules in JS](Rewrite-1.1.7)), rather than a global, so that tests, and a page that shows two boards one day, can create more than one. The command registry is an object of its own (below).
 
 ```ts
-type Origin = "user" | "assistant" | string;                 // a peer, once a sync add-on exists
+type Origin = string;                                        // who made a delta, "user" unless its maker names another
 
 type Change =
   | { delta: Delta; origin: Origin }                         // a committed delta, as expanded
@@ -71,7 +71,7 @@ The shape is today's payload, with four differences: a block's `mod` takes any o
 
 ### Fields
 
-A field is state that a package adds to the board, such as the dock's views, the DAG's positions, blockr.md's document or the assistant's threads, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Document model](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, or a value, as the board's name is, which a delta sets:
+A field is state that a package adds to the board, such as the dock's views, the DAG's positions or blockr.md's document, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Document model](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, or a value, as the board's name is, which a delta sets:
 
 ```ts
 type Entry = Record<string, Json>;                     // a collection's entry is an object
@@ -131,7 +131,7 @@ interface Command<A extends Json = Json, P = A> {
   id: string;                                  // "blockr.core-remove_block", named as a registry id is
   label: string;                               // for menus and a command palette
   description?: string;                        // what it does and when to use it
-  args?: JsonSchema;                           // for forms and the assistant's tools
+  args?: JsonSchema;                           // for forms, and for a package that runs commands it does not know
   shortcut?: string;                           // "Mod+Backspace"
   enabled?(board: Board, args: A): boolean;
   prepare?(board: Board, args: A): Promise<P>; // what has to wait, such as a layout that elkjs returns as a promise
@@ -143,7 +143,7 @@ await commands.run("blockr.core-remove_block", { id: "b" });      // applies, as
 await commands.plan("blockr.dag-relayout", { direction: "LR" });  // returns the deltas without applying them
 ```
 
-Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from its type's arg specs and for a field from its schema, and its staging is `commands.plan()`, with a commit applying what it planned as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
+Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. A command is named by its id, described by its `description` and typed by its `args`, which for a block's state come from its type's arg specs and for a field from its schema, so that a package can run commands it does not know, and `commands.plan()` gives a command's deltas without applying them, for a package that stages edits and applies them later as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
 
 ### Opening a board
 
@@ -163,7 +163,7 @@ Where edits made without a field's package left the field naming removed blocks,
 
 ### Undo
 
-The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. Steps never merge. An input that changes with every keystroke or pointer move, a block's or an extension's, submits only once the user pauses or lets go, since each submit to a block has R evaluate everything downstream of it and each delta reaches every follower, so a burst of typing is one edit and one step. Edits that must undo together are one delta or one command, such as a `submit()` that sets several args.
+The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the steps of one origin undo apart from those of another. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. Steps never merge. An input that changes with every keystroke or pointer move, a block's or an extension's, submits only once the user pauses or lets go, since each submit to a block has R evaluate everything downstream of it and each delta reaches every follower, so a burst of typing is one edit and one step. Edits that must undo together are one delta or one command, such as a `submit()` that sets several args.
 
 ### Following the board
 
@@ -179,10 +179,10 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields, which core's commands for fields change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; the environment through which extensions read each other's state becomes `store.board().fields`; and the assistant's `list_extensions`, `describe_extension` and `modify_extension` give way to the command registry, where core's commands for fields stand beside each package's own.
+Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields, which core's commands for fields change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; and the environment through which extensions read each other's state becomes `store.board().fields`.
 
 The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
 
-The precedents for expanding in rounds: a tldraw after handler, such as one that deletes a frame when its last child goes, runs "when the outermost store operation completes, so changes made inside them belong to the same transaction and the same undo step" ([tldraw side effects](https://tldraw.dev/sdk-features/side-effects)), and ProseMirror calls a plugin's `appendTransaction` "again with the new state and new transactions" whenever another plugin appends one ([plugin.ts#L34-L40](https://github.com/ProseMirror/prosemirror-state/blob/ffad5d9450a0b93438be53a801deee1a223a81bf/src/plugin.ts#L34-L40)). VS Code has an extension describe a tool it offers a model in the terms a command uses here, a `modelDescription` and an `inputSchema` ([Language model tools](https://code.visualstudio.com/api/extension-guides/ai/tools)).
+The precedents for expanding in rounds: a tldraw after handler, such as one that deletes a frame when its last child goes, runs "when the outermost store operation completes, so changes made inside them belong to the same transaction and the same undo step" ([tldraw side effects](https://tldraw.dev/sdk-features/side-effects)), and ProseMirror calls a plugin's `appendTransaction` "again with the new state and new transactions" whenever another plugin appends one ([plugin.ts#L34-L40](https://github.com/ProseMirror/prosemirror-state/blob/ffad5d9450a0b93438be53a801deee1a223a81bf/src/plugin.ts#L34-L40)).
 
 </details>
