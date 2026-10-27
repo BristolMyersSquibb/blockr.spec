@@ -21,7 +21,7 @@ Conditions 1 to 6 of [State in JS](Rewrite-1#what-must-hold) rest on this part, 
 | Board and block servers, plugins, stack gating, notifications and the generics that draw UI | 7,358 | Replaced by the store and commands ([Board updates](Rewrite-1.1.2)), the scheduler ([Evaluation in the client](Rewrite-1.1.10)) and front-ends ([Front-ends and extension points](Rewrite-1.1.8)). The notes of [Client-drawn dock and extensions](Rewrite-1.2) give each plugin its new home |
 | Locked boards, through `blockr.locked` and `is_board_locked()` | 47 | Carried over, as a lock the app sets when it starts and R holds in every recipe ([Wire protocol](Rewrite-1.1.9#locked-boards)) |
 | Board options and their Shiny UIs | 1,274 | Constructors carried over, with their values in the document ([Document model](Rewrite-1.1.1#options)) and their UIs drawn in the client |
-| The `serve()` generic and board loaders | 525 | Carried over, serving core's client and the board's front-end ([Defining a board in R](Rewrite-1.1.3)) |
+| The `serve()` generic and board loaders | 525 | The generic carried over, serving core's client and the board's front-end, and the loaders as [Defining a board in R](Rewrite-1.1.3) decides |
 | Board, block, link and stack classes | 2,298 | Constructors carried over, for app scripts and for opening boards, while the live state moves to the client ([Document model](Rewrite-1.1.1)) |
 | The block class and its specializations, the registry, roclet and metadata, arg specs and evaluation | 3,114 | Replaced by `block_type()`, with the registry, the roclet and the arg specs carried over ([Block types in R](Rewrite-1.1.5)) |
 | Built-in blocks, with the tabular display and `str_value()` | 1,264 | Ported to block types ([Block types in R](Rewrite-1.1.5)) |
@@ -45,7 +45,7 @@ Conditions 1 to 6 of [State in JS](Rewrite-1#what-must-hold) rest on this part, 
 
 ## Open questions
 
-- The questions of the design pages that change what an issue asks, and so settle before the issues open: which JSON decoding R applies ([Wire protocol](Rewrite-1.1.9#open-questions)), how an app names what its lock leaves open, and whether an arg that becomes code may be left open ([Wire protocol](Rewrite-1.1.9#open-questions)), whether `serve()` keeps a loader that replaces the opening board for a session, how a data block names data that R keeps, and where configuration that a constructor takes goes ([Defining a board in R](Rewrite-1.1.3#open-questions)), where the card's summary comes from ([Block types in R](Rewrite-1.1.5#open-questions)), how a block type's TSX is built and whether a custom element is a second form of the module contract ([UI modules in JS](Rewrite-1.1.7#open-questions)), and what core's basic front-end offers ([Front-ends and extension points](Rewrite-1.1.8#open-questions)). Their other questions can be settled in the issues, by building or measuring.
+None.
 
 ## Work
 
@@ -64,7 +64,7 @@ Conditions 1 to 6 of [State in JS](Rewrite-1#what-must-hold) rest on this part, 
 - Write the UIs of core's built-in blocks and options in plain TypeScript, in blockr.core
 - Add front-end registration and `CoreApi`, with `mountBlock()`, `mountOutput()` and `mountOption()`, in blockr.core
 - Build core's basic front-end, in blockr.core
-- Serve a board with `serve()` as a page that loads core's client and the front-end of the board's type, and serve a block or a saved file as today, in blockr.core
+- Serve a board with `serve()` as a page that loads core's client and the front-end of the board's type, and serve a block or a saved file, in blockr.core
 - Remove the board and block servers, the plugins and the generics that draw UI from R, in blockr.core
 - Write the guide for block type authors, covering state shapes, building expressions from values, bounded requests, outputs, UI modules and testing, with a section on porting a block from `new_block()`, in blockr.core
 
