@@ -57,3 +57,4 @@ The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `inse
 ## Open questions
 
 - What core's basic front-end offers beyond cards, stacks and options, such as editing links, exporting code, or downloading and uploading a board.
+- How an extension replaces the opening board before anything is drawn or evaluated, as session management must for the board a URL names, which arrives a few round trips after the `hello` has brought the script's board, where today's `rack_loader()` resolves it before the page is drawn ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). It blocks adding front-end registration and `CoreApi`.
