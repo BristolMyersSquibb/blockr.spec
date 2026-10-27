@@ -97,7 +97,7 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 
 ### Decoding
 
-R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Document model](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. How R types survive JSON is a question for the [serialization proposal](Rewrite-1.1.4).
+R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Document model](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. Which decoding R applies, and so how R types survive JSON, is a question for the [serialization proposal](Rewrite-1.1.4#open-questions).
 
 ### Locked boards
 
@@ -118,13 +118,12 @@ The protocol version is one of three, apart from the JS API version modules decl
 
 ### The Shiny bridge
 
-The client sends a message with `Shiny.setInputValue("blockr", message, { priority: "event" })` and R answers with `session$sendCustomMessage("blockr", message)`. An evaluation runs as an `ExtendedTask`, which leaves the session's `busyCount` alone, so other messages are handled while it runs ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)). Leaving Shiny later replaces this module and nothing else.
+The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.stringify(message), { priority: "event" })`, for R to decode as [Serialization](Rewrite-1.1.4) has it, since Shiny's own decoding leaves every array a list and flattens a message that is itself an array. R answers with `session$sendCustomMessage("blockr", message)`. An evaluation runs as an `ExtendedTask`, which leaves the session's `busyCount` alone, so other messages are handled while it runs ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)). Leaving Shiny later replaces this module and nothing else.
 
 ## Open questions
 
 - How an app names the args its lock leaves open when it starts, such as through an argument of `serve()`, of a block's constructor, or the `blockr_option()` that sets the lock itself, as an app sets its other settings ([Defining a board in R](Rewrite-1.1.3#app-settings)).
 - Whether a locked board may still be restored, as [blockr.dock#123](https://github.com/BristolMyersSquibb/blockr.dock/issues/123) asked of today's lock, since a restored file comes from the client and so falls outside what R holds the lock to. It blocks locking a board when the app starts.
 - Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block type declares safe.
-- Which JSON decoding R applies, jsonlite's as today or typedjson's, taken up by the [serialization proposal](Rewrite-1.1.4) and left open in [blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393).
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 - Whether R asking for missing inputs after a restart, as proposed, beats every request carrying the recipes of its whole upstream chain ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)).
