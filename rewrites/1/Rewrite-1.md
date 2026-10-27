@@ -72,7 +72,7 @@ None.
 
 - Label: `js-state`, named after the integration branch, on every issue and on the thread.
 - Integration branch: `js-state`, in every repo the rewrite changes and in every package between two of them, which needs one for its pins. The first PR in a repo to need it creates it from main, adds it to the branch filters of the repo's workflows, and gives it the rulesets main has. Its revdep check lists no downstream at first, and adds each one, checked at its own `js-state`, once that branch exists.
-- Versions: on `js-state` a package carries the next minor version after main's, which the switch releases, so blockr.core goes from 0.1.4 to 0.2.0. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
+- Versions: on `js-state` every package carries a 0.2 version, which the switch releases: 0.2.0, or the next patch above main's where main has already reached 0.2.0. So blockr.core goes from 0.1.4 to 0.2.0, and blockr.dock, whose main says 0.2.0, to 0.2.1. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
