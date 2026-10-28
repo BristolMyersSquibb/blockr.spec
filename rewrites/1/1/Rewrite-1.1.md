@@ -64,7 +64,7 @@ None.
 - Write saved boards in the client, as the board with the versions of its packages and the definitions of block types defined outside a package, in blockr.core
 - Load a block type's UI module on first use and mount it with an injected host, and ship the TypeScript types modules are written against, with a stub of each host to test them, inside the R package, in blockr.core
 - Write the UIs of core's built-in blocks and its renderers for tables, printed text and plots in plain TypeScript, and define core's options there, each with its label, category, schema, UI and what a new value does, in blockr.core
-- Add front-end registration and `CoreApi`, with `mountBlock()`, `mountOutput()` and `mountOption()`, in blockr.core
+- Add front-end registration, startup modules and `CoreApi`, with `mountBlock()`, `mountOutput()` and `mountOption()`, and start the page in their order, in blockr.core
 - Build core's basic front-end, in blockr.core
 - Serve a board with `serve()` as a page that loads core's client and the front-end the board is made for, and serve a block or a saved file, in blockr.core
 - Remove the board and block servers, the plugins and the generics that draw UI from R, in blockr.core
@@ -78,7 +78,7 @@ None.
 - [Serialization of the client-owned board](Rewrite-1.1.4): saved files, state values between the client and R, and migrations
 - [Block types in R for the client-owned board](Rewrite-1.1.5): `block_type()`, core's types and hooks, registration, evaluation, generics and testing
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7): the host a module receives, startup modules, React, packaging and testing
-- [Front-ends and extension points for the client-owned board](Rewrite-1.1.8): registering a front-end, what core gives it, and core's basic front-end
+- [Front-ends and extension points for the client-owned board](Rewrite-1.1.8): registering a front-end, what core gives it, starting the page, core's basic front-end, extensions and renderers
 - [Wire protocol between the client and R](Rewrite-1.1.9): messages, the handshake, evaluation, requests, outputs, cancelling and decoding
 - [Evaluation in the client: versions, demand and statuses](Rewrite-1.1.10): versions, demand, invalidation, statuses and scheduling
 

@@ -20,7 +20,7 @@ The blockr.session package opens, saves, versions and shares boards from `manage
 - Session management is a dock extension, with navbar items for new, open, save and share and a panel or dialog for the board list and versions. Opening a board or a version runs core's command that replaces the board, and the extension updates the URL in place.
 - The rack layer becomes a TypeScript interface in the extension, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser. The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)), and a URL that names a record makes the extension load that record and replace the board, so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)), and a URL that names a record makes the extension load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
 - The extension provides the dock's storage service, in place of the default download and upload.
 
 ## Open questions

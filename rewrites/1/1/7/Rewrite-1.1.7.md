@@ -91,7 +91,7 @@ Only what core mounts inside a front-end's layout, written by another package, g
 
 ### Startup modules
 
-A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its fields and its commands ([Board updates](Rewrite-1.1.2#fields)), and putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet. The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
+A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its fields and its commands ([Board updates](Rewrite-1.1.2#fields)), putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)). The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
 
 ```ts
 export const api = 1;                                // the JS API major it was built against
