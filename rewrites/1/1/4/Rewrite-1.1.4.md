@@ -59,7 +59,7 @@ A block saved by an older version of its type migrates through the `blockr_deser
 
 ### Options
 
-A saved board holds each option's value under its id and nothing else of it, since R collects the board's options again when it opens it, as it collects them for an app's board, and gives each the value the file holds for its id, while the option itself, with its label and category, is what R sends the client ([Board objects](Rewrite-1.1.1#options)). In a file from today's stack, R ignores an option's category and label, since its constructor supplies them.
+A saved board holds each option's value under its id and nothing else of it, since R collects the board's options again when it opens it, as it collects them for an app's board, and gives each the value the file holds for its id, while the option itself, with its label and category, is defined in the client by the package that ships it ([Board objects](Rewrite-1.1.1#options)). In a file from today's stack, R ignores an option's category and label, since its constructor supplies them.
 
 ## Open questions
 

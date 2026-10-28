@@ -34,7 +34,7 @@ interface CoreApi {
   commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   blockRegistry: BlockRegistry;    // block types by registry id, for pickers
-  options: Record<OptionId, Option>; // the board's options, for settings
+  options: Record<OptionId, Option>; // the options packages define, by id, for settings
   settings: Settings;              // the app's settings the client reads, by package, from the reply to hello
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured and fetched
