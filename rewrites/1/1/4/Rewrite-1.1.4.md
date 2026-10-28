@@ -32,7 +32,7 @@ A board with two blocks, one of them of a type defined outside a package, a link
   },
   "board": {
     "id": "curious_otter",
-    "front_end": "blockr.core",
+    "front_end": "blockr.core-basic",
     "name": "Sales review",
     "blocks": {
       "a": { "registry_id": "blockr.core-dataset_block", "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris", "attrs": {} },

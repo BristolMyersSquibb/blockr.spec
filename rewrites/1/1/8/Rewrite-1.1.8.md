@@ -18,12 +18,16 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module registered under its package's name, as the dock registers as `blockr.dock` and core's basic front-end as `blockr.core`, and a board names the front-end it is made for in its `front_end` ([Board objects](Rewrite-1.1.1#the-board)). The page loads the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
+A front-end is a module that a package declares in R under a name, as a block type names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several: the dock declares `register_front_end("dock", js_module("dock.js"))` and is `blockr.dock-dock`, and core's basic front-end is `blockr.core-basic`. A board names the front-end it is made for by that id in its `front_end`, which the board's constructor sets, as `new_dock_board()` sets `blockr.dock-dock` ([Board objects](Rewrite-1.1.1#the-board)). The page loads the module of the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
+
+The module meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)): it exports the JS API major it was built against and a default whose `mount()` core calls, so it never names its own id.
 
 ```ts
-registerFrontEnd("blockr.dock", {
-  mount(el: HTMLElement, api: CoreApi): () => void { /* draw the board, return the cleanup */ }
-});
+export const api = 1;                                // the JS API major it was built against
+
+export default {
+  mount({ el, api }: { el: HTMLElement; api: CoreApi }): () => void { /* draw the board, return the cleanup */ }
+};
 ```
 
 ### What core gives a front-end
@@ -54,7 +58,7 @@ An extension is a module too, registered with the front-end it extends, and work
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its front-ends by name with their modules, the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
 
 ## Open questions
 
