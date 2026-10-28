@@ -56,6 +56,8 @@ interface BlockContext {
 }
 ```
 
+Core's public interfaces, the hosts and `CoreApi` alike, follow changes through a getter and a subscription, as `state()` and `on()` do here, while core derives its values with signals inside, as [State in JS](Rewrite-1#principles) has Shiny's reactives become signals. React's `useSyncExternalStore` takes such a pair as it is, and any other framework, or none, can use it, so no module depends on which signals library core uses.
+
 Core makes a host each time it mounts a module and drops it when the module unmounts, and a host keeps nothing of its own: the state is the store's, the status the scheduler's, and request answers, each block's last output and an output's `meta` are core's, so a module mounted again draws from them without asking R. A module stays mounted until the front-end calls the cleanup that mounting it returned, so the front-end decides how long a mount lasts. Dockview destroys a panel only when it is closed, which removes the panel and not its block, and a panel hidden behind another only has its element leave the page or stay in it hidden ([rendering.mdx#L15-L50](https://github.com/mathuo/dockview/blob/27a42c314a06ebc37f288d6d181d01b6cb84cd7a/packages/docs/docs/core/panels/rendering.mdx#L15-L50)), so a front-end that mounts a block's UI with its panel keeps it mounted through every switch between panels.
 
 A block with no mounted UI, such as one whose panel is closed, loses nothing: its state stays in the board, its status in the scheduler and its result in R, it evaluates whenever something demands it ([Evaluation in the client](Rewrite-1.1.10#demand)), and anything can invalidate it through `CoreApi` ([Evaluation in the client](Rewrite-1.1.10#invalidation)), where `host.invalidate()` is only its own UI's way to do so. What goes with a module is its own screen state, such as a scroll position or text not yet submitted, so a module submits an edit still pending when core unmounts it.
@@ -85,7 +87,7 @@ interface OutputHost {
 }
 ```
 
-What a block type's `output` returns names its kind in its `type`, as `{ "type": "blockr.core-table", ... }` does, and the renderer R picks for that kind draws it ([Front-ends and extension points](Rewrite-1.1.8#renderers)), so that a front-end or a UI kit changes how every table looks without touching a block type. Core asks R for an output and draws it again when the block's version, a board option, the element's size or the output's `meta` changes ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)). It keeps each block's last output with the version, board options, size and `meta` it was asked with, so that an output mounted again under the same ones, as when a panel reopens, draws without asking R. It keeps an output's `meta` per block for the page, beside the block's status, so that a panel mounted again keeps its page and sort, while the board holds none of it, so that nothing of it is saved or undone, as blockr.dm's table output keeps its table, page and sort in the Shiny session today ([R/dm-block.R#L504-L560](https://github.com/BristolMyersSquibb/blockr.dm/blob/4e2191a9a99bafd0a60f8b8ee301c9f9c3e7b8ee/R/dm-block.R#L504-L560)).
+What a block type's `output` returns names its kind in its `type`, as `{ "type": "blockr.core-table", ... }` does, and the renderer R picks for that kind draws it ([Front-ends and extension points](Rewrite-1.1.8#renderers)), so that a front-end or a UI kit changes how every table looks without touching a block type. Core asks R for an output and draws it again when the block's version, a board option, the element's size or the output's `meta` changes ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)). It keeps each block's last output with the version, board options, size and `meta` it was asked with, so that an output mounted again under the same ones, as when a panel reopens, draws without asking R. An output's `meta` has the shape its kind documents, as its description does, since R's `output` reads it and any renderer of the kind sets it, so that a UI kit's table and core's plain table page and sort through the same `meta`. Core keeps it per block for the page, beside the block's status, so that a panel mounted again keeps its page and sort, while the board holds none of it, so that nothing of it is saved or undone, as blockr.dm's table output keeps its table, page and sort in the Shiny session today ([R/dm-block.R#L504-L560](https://github.com/BristolMyersSquibb/blockr.dm/blob/4e2191a9a99bafd0a60f8b8ee301c9f9c3e7b8ee/R/dm-block.R#L504-L560)).
 
 Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer. A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board. A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a field it registers, keyed by stack id ([Board updates](Rewrite-1.1.2#fields)), as in this host for a note on each stack:
 
@@ -107,10 +109,11 @@ A package may declare in R one startup module, for what has to run before anythi
 export const api = 1;                                // the JS API major it was built against
 
 export default {
-  initialize({ core, signal }: { core: CoreApi; signal: AbortSignal }): void {
+  initialize({ core, signal }: { core: CoreApi; signal: AbortSignal }): void | Promise<string | void> {
     core.options.register(dataDir);                  // a board option it ships, such as blockr.io's data directory
     core.store.register(positions);                  // a field, such as the DAG's positions
     core.commands.register(relayout);                // a command, such as the DAG's relayout
+    // it may also resolve with a saved file's text, which core opens in place of the board R sent
   }
 };
 ```

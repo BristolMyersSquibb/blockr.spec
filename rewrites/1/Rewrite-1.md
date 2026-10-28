@@ -40,7 +40,7 @@ Translate rather than transliterate. The client follows established JS patterns,
 - Names follow each language, snake_case in R and camelCase in TypeScript, while the JSON between them keeps the snake_case it has today.
 - Core's type-stable helpers, such as `chr_ply()` and `lst_xtr()`, are not ported, since the type checker and the standard library do their work.
 - R's lack of scalars stays in R, which converts at the boundary, so the client sees plain JSON values.
-- Shiny's reactives become signals for derived values, with effects only at the edges.
+- Shiny's reactives become signals for derived values inside core, with effects only at the edges, while core's JS API follows changes through a getter and a subscription, which any framework can use ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 - R's conditions become exceptions within JS, and cross the boundary as data that keeps their class.
 - Dependencies are passed in, as the host and `CoreApi` are, rather than read from options or the session where needed.
 - What R gave for free is kept on purpose: copy-on-modify becomes a store that never changes a board in place, which read-only types enforce.

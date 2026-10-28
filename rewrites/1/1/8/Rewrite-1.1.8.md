@@ -47,7 +47,7 @@ export default {
 interface CoreApi {
   store: Store;                    // board(), subscribe(), apply(), open(), register(), from Board updates
   commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
-  scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
+  scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), subscribe(), from Evaluation in the client
   blockRegistry: BlockRegistry;    // the block registry's entries by registry id, for pickers
   options: Options;                // register() and the board options packages define, by id
   blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello

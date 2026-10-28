@@ -36,7 +36,7 @@ type Change =
   | { opened: Board; dropped: Dropped[] };                   // an opened board, and what R dropped, as in Board objects
 
 interface Store {
-  board(): Board;                                            // the current board, as a signal
+  board(): Board;                                            // the current board, whose changes subscribe() announces
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
   apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
@@ -189,7 +189,7 @@ The deltas of one command are one undo step, which `store.undo()` reverts and `s
 ### Following the board
 
 ```ts
-store.board();                                     // the current board, as a signal
+store.board();                                     // the current board
 store.board().fields["blockr.dag-positions"];       // a package's field, read as core's objects are
 store.subscribe((change, board) => { /* ... */ });  // after every commit, with the expanded delta, and every open
 ```

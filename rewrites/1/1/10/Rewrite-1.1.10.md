@@ -60,7 +60,8 @@ interface BlockStatus {
   summary: string | null;      // the result's summary from that reply, "<data.frame> [150 × 7]"
 }
 
-scheduler.status("b");          // a signal, read by whatever draws the block
+scheduler.status("b");                                         // the block's status now, read by whatever draws it
+scheduler.subscribe(changed => { /* redraw these blocks */ });  // after statuses change, naming the blocks whose status changed
 ```
 
 The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), with `invalid` in place of its `unset`, since a block type's `validate` says only whether a state can run ([Block types in R](Rewrite-1.1.5)). A reply of `ok` makes a block `ready`, `error` makes it `failed`, and `invalid` makes it `invalid`; it is `waiting` while an upstream block is `failed`, `invalid` or `waiting`, `stale` while a newer version exists than its latest reply was for, and `unevaluated` before its first reply. A cancelled evaluation leaves the block `stale`. The status of a block nothing demands keeps its latest reply, so a parked block that failed still reads `failed`.
