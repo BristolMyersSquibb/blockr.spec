@@ -8,7 +8,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 1. Boards written by today's `blockr_ser()` open in the new stack, with the dock's views and layouts and the DAG's positions, for block types that have been ported, through `blockr_deser()` and the migrations packages already have, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 2. A board saved by the new stack is written in the browser, so saving needs no R and works while R is busy or gone.
 3. The client's board holds state values its UI can use as they are, so an arg that is a vector is always an array, whatever its length.
-4. A file written by the new stack keeps the shape of today's, so that one reader opens both, and departs from it only where this proposal gives a reason.
+4. A file written by the new stack is the board as the client holds it, with only what R needs to rebuild it beside it, and names no R class or constructor, while R reads the files of both stacks.
 
 ## Today
 
@@ -18,57 +18,36 @@ The `blockr_ser()` function returns R lists, and the JSON is up to the caller. C
 
 ### Files
 
-A saved board keeps the shape `blockr_ser()` writes today: every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)). A file thus says how R calls the constructors that rebuild the board, as a startup script does ([Board objects](Rewrite-1.1.1)). It is not the client's board: R turns a file into the board when it opens it ([Board updates](Rewrite-1.1.2)), and the client writes a file from the board and what R sends with it: the block registry, with the constructor of every block type or the definition of one defined outside a package, and each front-end's constructors for its boards and stacks ([Board objects](Rewrite-1.1.1#what-lives-where)). The one other writer is R's `blockr_ser()`, for an app's opening board, and fixtures that both test suites round-trip keep the two in step ([Defining a board in R](Rewrite-1.1.3#writing-the-opening-board)). A board subclass adds its own components as further nodes of the board's payload, in the same shape, as a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options` today, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)).
+A file written by the new stack is the board as the client holds it ([Board objects](Rewrite-1.1.1#the-board)), under `board`, with three things beside it that R needs to rebuild it: `format`, the version of the file format, which today's files lack, so that R tells the two apart; `packages`, the version of every package that the board's block types, its front-end and its fields come from, which migrations key on; and `definitions`, the source of each block type defined outside a package, under its registry id ([Board objects](Rewrite-1.1.1#block-types-outside-a-package)). It names no R class or constructor, since the client holds none: when R opens the file, it maps each block's registry id to its type's constructor through its block registry, and the board's `front_end` to that front-end. The client writes it from its board and from the package versions and definitions R sends with the block registry, and the one other writer is R's `blockr_ser()`, for an app's opening board, which writes the same file for the same board, as fixtures that both test suites round-trip check ([Defining a board in R](Rewrite-1.1.3#writing-the-opening-board)).
 
-A file written by the new stack departs from today's in five places:
-
-- A `format` field gives the version of the file format. Today's files lack it, so the reader tells the two apart.
-- A block type defined outside a package has a `definition` in place of the serialized closure today's files hold: the code the type was defined by, wrapped in `block_constructor()`, as a string that evaluates to its constructor ([Board objects](Rewrite-1.1.1#block-types-outside-a-package)).
-- The board's options hold only their values, by id, as `{ "n_rows": 50 }`, since R collects the board's options again when it opens it ([Board objects](Rewrite-1.1.1#options)).
-- Links and the board carry a `name`, since every object has one ([Board objects](Rewrite-1.1.1)): a link's sits in its payload, and the board's next to its `id`, in place of the `board_name` option.
-- Class vectors leave out `vctrs_vctr`, `vctrs_rcrd` and `list`, which only R's containers need: `blockr_deser()` dispatches on `blocks`, `link` or `block` without them, and the client has no R container classes to write.
+A board with two blocks, one of them of a type defined outside a package, a link and an option:
 
 ```json
 {
   "format": 1,
-  "object": "board",
-  "payload": {
-    "blocks": {
-      "object": "blocks",
-      "payload": {
-        "a": {
-          "object": ["dataset_block", "data_block", "block"],
-          "payload": { "dataset": "iris", "package": "datasets", "block_name": "Iris" },
-          "constructor": { "object": "blockr_ctor", "constructor": "new_dataset_block", "package": "blockr.core", "version": "0.2.0" }
-        },
-        "b": {
-          "object": ["my_block", "transform_block", "block"],
-          "payload": { "n": 3, "block_name": "Mine" },
-          "constructor": { "object": "blockr_ctor", "definition": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", state = function(n = 3L) list(n = n), expr = quote(utils::head(.(data), n = .(n)))))" }
-        }
-      }
-    },
-    "links": {
-      "object": "links",
-      "payload": {
-        "ab": {
-          "object": "link",
-          "payload": { "from": "a", "to": "b", "input": "data", "name": "" },
-          "constructor": { "object": "blockr_ctor", "constructor": "new_link", "package": "blockr.core", "version": "0.2.0" }
-        }
-      }
-    },
-    "stacks": { "object": "stacks", "payload": {} },
-    "options": { "object": "board_options", "payload": { "n_rows": 50 } }
+  "packages": { "blockr.core": "0.2.0" },
+  "definitions": {
+    "my_block": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", state = function(n = 3L) list(n = n), expr = quote(utils::head(.(data), n = .(n)))))"
   },
-  "constructor": { "object": "blockr_ctor", "constructor": "new_board", "package": "blockr.core", "version": "0.2.0" },
-  "version": "0.2.0",
-  "id": "curious_otter",
-  "name": "Sales review"
+  "board": {
+    "id": "curious_otter",
+    "front_end": "blockr.core",
+    "name": "Sales review",
+    "blocks": {
+      "a": { "registry_id": "blockr.core-dataset_block", "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris" },
+      "b": { "registry_id": "my_block", "state": { "n": 3 }, "name": "Mine" }
+    },
+    "links": { "ab": { "from": "a", "to": "b", "input": "data", "name": "" } },
+    "stacks": {},
+    "options": { "n_rows": 50 },
+    "fields": {}
+  }
 }
 ```
 
-Writing one is `JSON.stringify()` in the browser and reading one `JSON.parse()`. Opening one goes through R, as every opening of a board does ([Board updates](Rewrite-1.1.2)), whether `store.open()` sends it, the `hello` after R restarts, or `serve()`, given a file's path or a board it writes as a file first ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): R reads files of both stacks with `blockr_deser()`. On the way it registers every block's type, from the type's definition where the `load_definitions` option allows it and no type of the block's class is registered, or from the constructor of an installed package, which it loads. It leaves unread the closures today's files hold, drops what it cannot rebuild and names it ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), and runs the block migrations below. It builds nothing from a package's fields and hands them to the client as saved, with the version that saved them, for the package to migrate in JS ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
+A file from today's stack has another shape, in which every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)), and a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options`, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)). R maps its constructors to registry ids and a front-end as it opens it ([Board objects](Rewrite-1.1.1#the-board)).
+
+Writing one is `JSON.stringify()` in the browser and reading one `JSON.parse()`. Opening one goes through R, as every opening of a board does ([Board updates](Rewrite-1.1.2)), whether `store.open()` sends it, the `hello` after R restarts, or `serve()`, given a file's path or a board it writes as a file first ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). R reads a file of the new stack by its ids, loading the packages that `packages` names, and one from today's stack with `blockr_deser()`, which dispatches on its class vectors. On the way it registers every block's type, from the type's definition where the `load_definitions` option allows it and no type of the block's class is registered, or from its installed package, which it loads. It leaves unread the closures today's files hold, drops what it cannot rebuild and names it ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), runs the block migrations below, and builds each R block with its type's constructor. It builds nothing from a package's fields and hands them to the client as saved, with the version that saved them, for the package to migrate in JS ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
 
 ### State values between the client and R
 
@@ -76,7 +55,7 @@ The client's board holds state as its UI wrote it, plain JSON. R decodes it with
 
 ### Migrations
 
-A block saved by an older version of its type migrates through the `blockr_deser()` methods its package has for the block's class, which can read the package version its `constructor` records or the shape of its payload, as blockr.dplyr's sixteen do ([R/legacy-deser.R#L30-L310](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/R/legacy-deser.R#L30-L310)). R runs them while it opens the board ([Board updates](Rewrite-1.1.2)), since the methods and the constructors live in R. A field migrates through the package that registers it, in JS, keyed by the version of that package the file records, as the dock's fields are by the version of blockr.dock the board's `constructor` records, and the dock's conversion of today's grids moves to the client, as [Client-drawn dock and extensions](Rewrite-1.2) has it.
+A block saved by an older version of its type migrates through the `blockr_deser()` methods its package has for the block's class, which R takes from the type's entry in its block registry where a file names only the registry id. A method can read the version of the package that saved the block, in `packages` or, in a file from today's stack, in its `constructor`, or the shape of its payload, as blockr.dplyr's sixteen do ([R/legacy-deser.R#L30-L310](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/R/legacy-deser.R#L30-L310)). R runs them while it opens the board ([Board updates](Rewrite-1.1.2)), since the methods and the constructors live in R. A field migrates through the package that registers it, in JS, keyed by the version of that package in `packages`, or in a file from today's stack the version its node's `constructor` records, as the dock's fields are by the version of blockr.dock the board's `constructor` records, and the dock's conversion of today's grids moves to the client, as [Client-drawn dock and extensions](Rewrite-1.2) has it.
 
 ### Options
 
@@ -84,7 +63,7 @@ A saved board holds each option's value under its id and nothing else of it, sin
 
 ## Open questions
 
-- How the fields packages register map onto the nodes a file holds, such as the DAG's positions onto the `positions` of its extension in the dock's `extensions`, which the loader and the client's writer both need: through a hook each package registers beside its fields, or by a convention, such as an extension's fields being its constructor's args ([Board updates](Rewrite-1.1.2#fields)). Either way R builds each extension as an R object, since it collects the options an extension ships from it ([blockr.dock R/utils-serve.R#L1-L9](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serve.R#L1-L9)), and [Front-ends and extension points](Rewrite-1.1.8#extensions) has a file name an extension's constructor next to its state, as today.
+- How a package reads its fields out of a file from today's stack, such as the DAG's positions out of the `positions` of its extension in the dock's `extensions`: through a hook each package registers beside its fields, or by a convention, such as an extension's fields being its constructor's args ([Board updates](Rewrite-1.1.2#fields)). A file of the new stack holds each field as the board does, so only reading today's files needs it. It leaves open, too, how R collects the options an extension ships ([blockr.dock R/utils-serve.R#L1-L9](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serve.R#L1-L9)) once a file names no extension's constructor: from the packages that `packages` names, or from the extensions the app runs.
 - Which one decoding R applies to the JSON the client sends, which the wire protocol leaves to this page ([Wire protocol](Rewrite-1.1.9#decoding)) and which blocks the protocol document's decoding and the guide for block type authors: jsonlite's `fromJSON()` simplifying neither data frames nor matrices, as blockr.session reads boards today, or typedjson in a mode that reads plain JSON, which 0.1.2 lacks, since its reader turns the string `"~:x"` into the symbol `x` (notes). Shiny's own decoding is ruled out, since it leaves every array a list and flattens a message that is itself an array (notes). A file from today's core needs typedjson's reader for the tags it holds, but in a mode that refuses code, since 0.1.2 also turns `{"~t":"language","~v":["~:Sys.getenv","HOME"]}` into a call that `bquote()` splices into a block's expression, whatever the `load_definitions` option says.
 
 <details><summary>Notes for implementers</summary>
