@@ -40,7 +40,7 @@ interface Store {
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
   apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
-  open(saved: Json): Promise<Dropped[]>;                     // has R open a saved board, then replaces the board
+  open(saved: string): Promise<Dropped[]>;                   // has R open a saved board, given as the file's text, then replaces the board
 
   undo(origin?: Origin): void;                               // reverts that origin's last step
   redo(origin?: Origin): void;
@@ -58,7 +58,7 @@ Besides the board, the store keeps the undo and redo steps of each origin, its s
 
 ```ts
 interface Delta {
-  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit?: number; state?: Partial<State>; name?: string }>; rm?: BlockId[] };
+  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit?: number; state?: Partial<State>; name?: string; attrs?: Record<string, Json> }>; rm?: BlockId[] };
   links?:    { add?: Record<LinkId, Link>; mod?: Record<LinkId, Partial<Link>>; rm?: LinkId[]; before?: Record<LinkId, LinkId> };
   stacks?:   { add?: Record<StackId, Stack>; mod?: Record<StackId, Partial<Stack>>; rm?: StackId[] };
   options?:  Record<OptionId, Json>;          // values to set
@@ -67,11 +67,11 @@ interface Delta {
 }
 ```
 
-The shape is today's payload, with four differences: a block's `mod` takes any of its state args, since every block can be controlled from outside; it names the block's edit version it was built on, which a command leaves out and the command registry fills in from the board `run()` read, and which counts only the block's own edits, so that a delta built on an older board is refused rather than applied over a newer edit; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields packages add are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today.
+The shape is today's payload, with four differences: a block's `mod` takes any of its state args and attributes, since every block can be controlled from outside; it names the block's edit version it was built on, which a command leaves out and the command registry fills in from the board `run()` read, and which counts only the block's own edits, so that a delta built on an older board is refused rather than applied over a newer edit; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields packages add are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today.
 
 ### Fields
 
-A field is state that a package adds to the board, such as the dock's views, the DAG's positions, blockr.md's document or the assistant's threads, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Board objects](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, or a value, as the board's name is, which a delta sets:
+A field is state that a package adds to the board, such as the dock's views, the DAG's positions, blockr.md's document or the assistant's threads, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Board objects](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, a value, as the board's name is, which a delta sets, or an attribute, a value that every block carries in its `attrs` under the field's name without its package, `visible` for `blockr.dock-visible`, which a block's `mod` sets ([Board objects](Rewrite-1.1.1#blocks)). Registering an attribute whose name another package registered fails:
 
 ```ts
 type Entry = Record<string, Json>;                     // a collection's entry is an object
@@ -82,13 +82,12 @@ type FieldDelta =
 
 interface Field {
   id: FieldId;                                         // "blockr.dag-positions"
-  kind: "collection" | "value";
+  kind: "collection" | "value" | "attribute";
   schema: JsonSchema;                                  // an entry's or the value's, with descriptions and examples
-  initial?: Json;                                      // what a value holds on a board that has none; a collection starts empty
+  initial?: Json;                                      // what a value holds on a board that has none, or an attribute on a block that has none; a collection starts empty
   expand?(delta: Delta, board: Board): FieldDelta | undefined;   // what follows in this field from a delta (below)
   check?(value: Json, board: Board): string[];         // what the schema cannot say, each failure in a sentence
   migrate?(saved: Json, version: string): Json;        // a value an older version of the package saved, in today's shape
-  repair?(value: Json, board: Board): Json;            // the value fitted to a board edited where the field was not registered
 }
 
 store.register({
@@ -108,7 +107,7 @@ A field's `mod` gives an entry the keys its `set` names, as a link's `mod` does,
 
 What a package keeps about one of core's objects is an entry in a field of its own, keyed by the object's id, as the DAG keeps a block's position, so that core's objects hold only core's keys ([Board objects](Rewrite-1.1.1#extending-cores-objects)) and a package fills in its entry for an object another package creates, through `expand` and in the same delta. The tldraw SDK lets an app add record types of its own in the same way, which then "live in the store like any other: validated, migrated, persisted, and synced according to the scope you pick" ([tldraw store](https://tldraw.dev/sdk-features/store)).
 
-A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. The store keeps a field that no loaded package registered as it is, with the version of the package that saved it, such as the dock's views on a dock board in a core app, and rejects a delta to it, since nothing could check one. When a field is registered, and whenever a board opens, the store brings the field from the version that saved it to today's shape with `migrate`, so a package reads every format it ever wrote in one place, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it, and then fits it to the board with `repair`, since the board may have been edited where the field's package was not loaded, which can leave the dock's views naming removed blocks.
+A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. When a board opens, the store drops every field and attribute that no package loaded in the app registered, such as the dock's views on a board opened in a core app, and names them with what R dropped, since the app can do nothing with them, so a board saved afterwards is written without them. Every package therefore registers its fields before the store opens a board, the front-end and every module it loads at startup before the opening board arrives. The store brings each field from the version that saved it to today's shape with `migrate`, so a package reads every format it ever wrote in one place, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it.
 
 ### Applying a delta
 
@@ -149,7 +148,7 @@ await commands.run("blockr.core-remove_block", { id: "b" });      // one step of
 await commands.plan("blockr.dag-relayout", { direction: "LR" });
 ```
 
-Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from its type's arg specs and for a field from its schema, and its staging is `commands.plan()`, with a commit passing what it planned to `store.apply()` as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
+Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries, set its value or set a block's attribute, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from the schema its type's UI ships, described by its arg specs, and for a field from its schema, and its staging is `commands.plan()`, with a commit passing what it planned to `store.apply()` as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
 
 ### Opening a board
 
@@ -157,15 +156,15 @@ Core's commands cover what its plugins and the dock's actions do today: add, rem
 await store.open(saved);   // replaces the board once R has opened it
 ```
 
-Opening a board replaces the board the store holds rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Board objects](Rewrite-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Rewrite-1.1.3)) and as a file from today's stack does already ([Serialization](Rewrite-1.1.4)). The `store.open()` call sends the board to R in a request of [Wire protocol](Rewrite-1.1.9), in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R loads the packages it names, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Rewrite-1.1.4)), builds its R board and replies with the board as it rebuilt it, each package's fields as they were saved, with the version that saved them, and the block registry's entries, and the store replaces its board and its block registry with them, while the options packages define stay as they are ([Board objects](Rewrite-1.1.1#options)). R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Board objects](Rewrite-1.1.1)).
+Opening a board replaces the board the store holds rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Board objects](Rewrite-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Rewrite-1.1.3)) and as a file from today's stack does already ([Serialization](Rewrite-1.1.4)). The `store.open()` call sends the board to R in a request of [Wire protocol](Rewrite-1.1.9), as the text of a saved file, which R parses ([Serialization](Rewrite-1.1.4#files)), and R loads the packages it names, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Rewrite-1.1.4)), builds its R board and replies with the board as it rebuilt it, each package's fields as they were saved, with the version that saved them, and the block registry's entries, and the store replaces its board and its block registry with them, while the options packages define stay as they are ([Board objects](Rewrite-1.1.1#options)). R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Board objects](Rewrite-1.1.1)).
 
 A board whose class differs from the app's opens the way S3 dispatch would treat it:
 
-- A board whose class vector contains the app's class, such as a dock board in a core app, opens as it is, drawn by the app's front-end, with the dock's fields kept as they are (above).
+- A board whose class vector contains the app's class, such as a dock board in a core app, opens as it is, drawn by the app's front-end, without the dock's fields and attributes, which the store drops (above).
 - A board whose class the app's class extends, such as a core board in a dock app, is converted while R opens it, through the app class's `as_*()` method, as `as_dock_board()` gives a plain board one default view ([blockr.dock R/dock-board.R#L176-L183](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L176-L183)), keeping the board's option values, which `as_dock_board()` drops today.
 - Any other board is refused, naming both classes.
 
-Where edits made without a field's package left the field naming removed blocks, the store repairs it as the board opens (above). Opening never changes the front-end, so the client redraws from the new board as after any other change, with no page reload, where a restore today is a `session$reload()` ([Client-owned board state](Rewrite-1.1)).
+Opening never changes the front-end, so the client redraws from the new board as after any other change, with no page reload, where a restore today is a `session$reload()` ([Client-owned board state](Rewrite-1.1)).
 
 ### Undo
 

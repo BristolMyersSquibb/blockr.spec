@@ -97,7 +97,7 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 
 ### Decoding
 
-R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Board objects](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. Which decoding R applies, and so how R types survive JSON, is a question for the [serialization proposal](Rewrite-1.1.4#open-questions).
+R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Board objects](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r) has it.
 
 ### Locked boards
 
