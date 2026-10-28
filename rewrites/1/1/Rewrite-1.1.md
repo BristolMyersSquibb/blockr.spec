@@ -54,7 +54,7 @@ None.
 - Add the block type's `output`, with the `tabular_output()` hook, a method for data frames and a default that prints, in blockr.core
 - Export the block registry to the client, each block type by registry id with its inputs, arg specs, eagerness, requests and UI, the schema of its state that its UI ships, and its definition where it was defined outside a package, and send with it the versions of R's packages and the modules packages offer each other, in blockr.core
 - Give boards and links a name, in place of the `board_name` option for the board, in blockr.core
-- Open boards in R, from an app script, a file of either stack or the client's own board: load the packages they name, register their block types, from definitions where `load_definitions` allows, migrate and convert them, drop and name what cannot be rebuilt, and reply with the board, in blockr.core
+- Open boards in R, from an app script, a file of either stack or the client's own board: parse a file of today's stack with typedjson in a mode that refuses code ([nbenn/typedjson#121](https://github.com/nbenn/typedjson/issues/121)), load the packages they name, register their block types, from definitions where `load_definitions` allows, migrate and convert them, drop and name what cannot be rebuilt, and reply with the board, in blockr.core
 - Build the per-session evaluator, which keeps each block's latest result by block id and version, and the Shiny bridge, in blockr.core
 - Build the client store, with deltas, undo and following the board, and the command registry with core's commands, in blockr.core
 - Lock a board when the app starts, in R's recipes and in the client's store, with the state args the app leaves open, in blockr.core
