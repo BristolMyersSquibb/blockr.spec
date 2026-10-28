@@ -91,7 +91,7 @@ Only what core mounts inside a front-end's layout, written by another package, g
 
 ### Startup modules
 
-A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its fields and its commands ([Board updates](Rewrite-1.1.2#fields)), and putting a library it shares with other packages' modules on the page, such as React (below). The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
+A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its fields and its commands ([Board updates](Rewrite-1.1.2#fields)), and putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet. The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
 
 ```ts
 export const api = 1;                                // the JS API major it was built against
@@ -108,6 +108,13 @@ export default {
 R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello` and to every opening of a board, since opening one loads the packages it names ([Board updates](Rewrite-1.1.2#opening-a-board)), and orders them so that each package's comes after those of the packages it depends on in R. Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads. It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every field and board option registered.
 
 Core initializes each package's startup module once per page and skips it when a later reply names the package again. A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy. A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, which the store names as it names any field no package registered ([Board updates](Rewrite-1.1.2#fields)).
+
+A package relies on the order only for the packages it imports in R, which is what a module needs as it loads, such as a library on another package's global. Between any other two packages the order is unspecified, and core keeps what they share independent of it:
+
+- A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a field's `expand` runs per delta and a command's `run()` per command. It reads no board there, since none is open at startup, and when an opening brings the package, the board R sent replaces the old one only after `initialize()`.
+- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#fields)).
+- A startup module that an opening brings runs just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the board options in its settings, reads them again then.
+- A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later. A stylesheet styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties.
 
 ### React
 

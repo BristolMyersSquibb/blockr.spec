@@ -41,6 +41,7 @@ interface CoreApi {
   blockRegistry: BlockRegistry;    // block types by registry id, for pickers
   options: Options;                // register() and the board options packages define, by id
   blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello
+  module<T = unknown>(id: string): Promise<T>;  // a module another package offers, by id
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by its kind's renderer
   mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's renderer
