@@ -4,4 +4,4 @@
 
 ### Design pages
 
-- [Input elements for block UIs written in R](Rewrite-1.1.6), draft
+- [Input elements for block UIs written in R](Rewrite-1.7.1), draft

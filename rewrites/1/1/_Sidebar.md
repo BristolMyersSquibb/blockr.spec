@@ -13,3 +13,5 @@
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8), draft
 - [Wire protocol between the client and R](Rewrite-1.1.9), draft
 - [Evaluation in the client: versions, claims and statuses](Rewrite-1.1.10), draft
+
+<!-- dropped: Rewrite-1.1.6 -->
