@@ -54,6 +54,7 @@ A type's fields:
 - The `validate`, `interpolate` and `evaluate` fields are the functions R evaluates a block with (below).
 - The `output` field describes a result for the client ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)), and the `options` field names the board options its blocks use, by the constructors that give each option's id and initial value, while the package that ships an option defines it in the client ([Board objects](Rewrite-1.1.1)).
 - The `eager` field, `FALSE` by default, has a block of the type demanded even in a board that evaluates lazily ([Evaluation in the client](Rewrite-1.1.10)), as a block that writes a file needs. It takes `TRUE` or a function of the state, so that a write block is demanded only while its auto mode is on.
+- The `migrate` field maps a state saved by an older version of the type's package to the current state, given that version, and R runs it on the state a file holds when it opens a board ([Serialization](Rewrite-1.1.4#migrations)). The root type's leaves a state as it is.
 - The `dat_valid` and `expr_type` fields stay as they are, while `allow_empty_state`, `external_ctrl` and `block_metadata` go: the root type's `validate` accepts every state, every block's state can now be set from outside, and a type's metadata comes from its registration (below).
 
 Every function field takes the type as its first argument, `x`, as an S3 method takes its object, so that the root type's `interpolate` can fill in the template a child gives as `expr`, and a field can call its parent's, `x$parent$output(x, ...)`, as a method calls `NextMethod()`. A type's `options` add to its parent's instead of replacing them, as `board_options()` methods combine with `NextMethod()` today. The `block_type()` function checks a type when it is defined, such as that no input slot and state arg share a name, since a request's arguments would not say which they mean, and that no state arg is called `block_name`, so no block is checked for being well formed again.
@@ -81,7 +82,7 @@ The `register_block()` and `register_blocks()` functions keep their arguments ([
 
 ### Evaluation
 
-R calls a constructor only where a board is built, in an app script and when a board is opened ([Board objects](Rewrite-1.1.1)), and keeps no block while the app runs. To evaluate a block, it looks the type up by the recipe's registry id and calls the type's functions with the recipe's state and inputs:
+R calls a constructor only where an app script builds a board, and where `blockr_deser()` converts a file from today's stack ([Board objects](Rewrite-1.1.1#the-board)), and keeps no block while the app runs. To evaluate a block, it looks the type up by the recipe's registry id and calls the type's functions with the recipe's state and inputs:
 
 - The `validate(x, state)` function checks a state before anything runs and returns `TRUE`, or `FALSE` with an optional `"message"` attribute, on which R runs nothing and replies `invalid` with the message ([Wire protocol](Rewrite-1.1.9)).
 - The `interpolate(x, state, inputs)` function builds the expression from the state and the data inputs, a pairlist named by slot, so a variadic block reads its arity off the names.
@@ -99,7 +100,7 @@ R keeps each block's latest result, with its version and expression, in an envir
 | none | the type's `validate` and `interpolate` |
 | `block_eval_trigger()` | gone, since options never re-evaluate and any component can invalidate a block |
 | `board_options(x)` | the type's `options`, while a board class keeps its own `board_options()` method |
-| `blockr_ser()`, `blockr_deser()` | kept, for files and migrations |
+| `blockr_ser()`, `blockr_deser()` | kept, `blockr_ser()` to write a script's board and `blockr_deser()` to convert files from today's stack, while a file of the new stack migrates through the type's `migrate` |
 | `block_summary(x, data)` | a request of every block type, answered from the result, for the card's header |
 | `block_server()`, `expr_server()`, `expr_ui()` | gone |
 | `block_inputs(x)` | the type's `inputs` |
