@@ -1,4 +1,4 @@
-# Document model for the client-owned board
+# Board objects: blocks, links, stacks, options and fields
 Status: settled on 2026-10-27. Design for [Client-owned board state](Rewrite-1.1).
 
 The first of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)). It covers the objects the client holds for a board, its blocks, links, stacks and options, how the board names the front-end it is made for and a block its type by registry id, and how packages extend these objects with fields of their own. It shapes the store, the TypeScript object in core's JS API that holds the board and through which every change to it passes (sketched in [Board updates](Rewrite-1.1.2)), exporting the block registry, opening a board in R and writing a saved board in the client, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How the board changes, through deltas, commands and undo, is the [board updates proposal](Rewrite-1.1.2), and the exact JSON format with its migrations is the [serialization proposal](Rewrite-1.1.4).

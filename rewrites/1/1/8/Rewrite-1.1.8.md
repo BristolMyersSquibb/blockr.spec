@@ -1,7 +1,7 @@
 # Front-ends and extension points for the client-owned board
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): core's basic front-end, how a front-end such as blockr.dock replaces it, and what front-ends and their extensions hook into. It builds on the [document model](Rewrite-1.1.1) and on the [board updates](Rewrite-1.1.2), evaluation ([Evaluation in the client](Rewrite-1.1.10)) and UI modules ([UI modules in JS](Rewrite-1.1.7)) proposals. The dock's own contribution API, its panels, navbar items and sidebar sections, is [Client-drawn dock and extensions](Rewrite-1.2)'s.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): core's basic front-end, how a front-end such as blockr.dock replaces it, and what front-ends and their extensions hook into. It builds on the [board objects proposal](Rewrite-1.1.1) and on the [board updates](Rewrite-1.1.2), evaluation ([Evaluation in the client](Rewrite-1.1.10)) and UI modules ([UI modules in JS](Rewrite-1.1.7)) proposals. The dock's own contribution API, its panels, navbar items and sidebar sections, is [Client-drawn dock and extensions](Rewrite-1.2)'s.
 
 ## What must hold
 
@@ -18,7 +18,7 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module registered under its package's name, as the dock registers as `blockr.dock` and core's basic front-end as `blockr.core`, and a board names the front-end it is made for in its `front_end` ([Document model](Rewrite-1.1.1#the-board)). The page loads the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
+A front-end is a module registered under its package's name, as the dock registers as `blockr.dock` and core's basic front-end as `blockr.core`, and a board names the front-end it is made for in its `front_end` ([Board objects](Rewrite-1.1.1#the-board)). The page loads the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
 
 ```ts
 registerFrontEnd("blockr.dock", {

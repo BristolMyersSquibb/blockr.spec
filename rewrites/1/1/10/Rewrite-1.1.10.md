@@ -1,7 +1,7 @@
 # Evaluation in the client: versions, claims and statuses
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [document model](Rewrite-1.1.1) and the [wire protocol proposal](Rewrite-1.1.9), and shapes the scheduler ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)). It replaces what [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) rework within the R board, evaluation demand and statuses, and keeps their terms.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [board objects proposal](Rewrite-1.1.1) and the [wire protocol proposal](Rewrite-1.1.9), and shapes the scheduler ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)). It replaces what [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) rework within the R board, evaluation demand and statuses, and keeps their terms.
 
 ## What must hold
 

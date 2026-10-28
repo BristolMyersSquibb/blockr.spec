@@ -36,7 +36,7 @@ Improve what has not, which the Problem above sets out: state kept in two places
 
 Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 
-- S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks the object up by id, as it looks up block types in the block registry and commands in the command registry, and what the methods did becomes data on one type, so an option is an instance of one `Option` type rather than a type of its own ([Document model](Rewrite-1.1.1#options)).
+- S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks the object up by id, as it looks up block types in the block registry and commands in the command registry, and what the methods did becomes data on one type, so an option is an instance of one `Option` type rather than a type of its own ([Board objects](Rewrite-1.1.1#options)).
 - Names follow each language, snake_case in R and camelCase in TypeScript, while the JSON between them keeps the snake_case it has today.
 - Core's type-stable helpers, such as `chr_ply()` and `lst_xtr()`, are not ported, since the type checker and the standard library do their work.
 - R's lack of scalars stays in R, which converts at the boundary, so the client sees plain JSON values.
@@ -47,7 +47,7 @@ Translate rather than transliterate. The client follows established JS patterns,
 
 ## Proposal
 
-- Each piece of state has one writer. The board is plain data held by a TypeScript store in core's JS API, and what R holds is either computed from one version of it, as a result is, or handed over once, as the opening board is, so nothing has to be kept in step with it. The table in [Document model](Rewrite-1.1.1#what-lives-where) gives each object, where it lives and for how long.
+- Each piece of state has one writer. The board is plain data held by a TypeScript store in core's JS API, and what R holds is either computed from one version of it, as a result is, or handed over once, as the opening board is, so nothing has to be kept in step with it. The table in [Board objects](Rewrite-1.1.1#what-lives-where) gives each object, where it lives and for how long.
 - Every edit, by the user, the assistant or an extension, is a versioned delta through one command registry in core, and the same deltas give undo ([Client-owned board state](Rewrite-1.1), [Board updates](Rewrite-1.1.2)).
 - Whatever does not need R moves to the browser. R is an evaluator, one process per session. A request carries the recipe, and a result is named by block id and version, never by process, so a lost process costs only recomputation, and putting several sessions on one process, or one session on several, stays a server-side change.
 - The client schedules: it bumps versions, tracks what is stale and what is demanded, and requests results in topological order, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Rewrite-1.1.10)).
@@ -73,5 +73,5 @@ None.
 - Versions: on `js-state` every package carries a 0.2 version, which the switch releases: 0.2.0, or the next patch above main's where main has already reached 0.2.0. So blockr.core goes from 0.1.4 to 0.2.0, and blockr.dock, whose main says 0.2.0, to 0.2.1. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
-- Terms: the table in [Document model](Rewrite-1.1.1#terms), whose names every page, spec and issue uses in the senses it gives.
+- Terms: the table in [Board objects](Rewrite-1.1.1#terms), whose names every page, spec and issue uses in the senses it gives.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
