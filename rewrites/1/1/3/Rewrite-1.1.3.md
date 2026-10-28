@@ -63,7 +63,7 @@ Both methods of `serve()` therefore take `data`, a named list that R keeps for t
 
 ### Options
 
-A board's options are declared as today, through `options = default_board_options()`, the `board_options()` methods of its board class and its extensions, and the `options` field of block types ([Block types in R](Rewrite-1.1.5#generics)). R collects them, with those of every type the block registry holds, as `blockr_app_options()` collects them ([R/utils-serve.R#L172](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L172)), each time it opens a board, as for a file. What the board holds is their values ([Board objects](Rewrite-1.1.1#options)).
+A board's options are declared as today, through `options = default_board_options()`, the `board_options()` methods of its board class and its extensions, and the `options` field of block types ([Block types in R](Rewrite-1.1.5#generics)). R collects them, with those of every type the block registry holds, as `blockr_app_options()` collects them ([R/utils-serve.R#L172](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L172)), each time it opens a board, as for a file. What the board holds is their values ([Board objects](Rewrite-1.1.1#options)). An option's constructor gives `new_board_option()` the schema of the option's value, with a description, beside its label, category and UI, since the client's `Option` carries it and the store checks every value a delta sets against it.
 
 ### App settings
 

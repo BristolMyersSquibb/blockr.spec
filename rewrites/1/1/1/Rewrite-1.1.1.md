@@ -19,6 +19,8 @@ A page of the rewrite uses these names in these senses only, and a new term is a
 
 | Term | Means |
 |---|---|
+| Block type | A value made by `block_type()`, defined once and held by the block registry under its registry id, through whose fields R evaluates every block of the type ([Block types in R](Rewrite-1.1.5#the-block-type)) |
+| Block | One instance of a block type, which the board holds as `{ registry_id, state, name }` ([Blocks](#blocks)). R makes an R block, with the type's constructor, only while it builds a board. A block is never a block type, which is always called one |
 | Block registry | R's registry of block types, filled by `register_block()`, whose entries R sends the client |
 | Registry id | A block type's id in the block registry, such as `blockr.core-head_block` |
 | Command registry | The client's registry of commands ([Board updates](Rewrite-1.1.2#commands)) |
