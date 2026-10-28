@@ -17,7 +17,7 @@ Today's assistant runs its agent loop in the session's R process through ellmer,
 
 - The agent loop runs in the browser, where the board it edits is, through the Vercel AI SDK (`ai`) or a provider's SDK, with the commands that core and the extensions register, and requests to R, as its tools, so that it changes what an extension adds, such as blockr.md's document or the DAG's layout, as it changes core's objects ([Board updates](Rewrite-1.1.2#fields)).
 - One edit tool takes a whole delta and applies it as one undoable step, rather than one tool per command, as Anthropic's guidance argues: "More tools don't always lead to better outcomes" ([Writing effective tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents)).
-- The edit tool claims the blocks it changed and everything downstream ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)), and returns once those versions have results.
+- The edit tool evaluates the blocks it changed and everything downstream in a one-off evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), and returns once those versions have results.
 - A visitor's own credential, such as a viewer OAuth token, may go to the browser, since "OAuth refresh tokens are never returned by Connect" and access tokens are "usually expiring within 24 hours" ([Connect](https://docs.posit.co/connect/user/oauth-integrations/)). A shared key, such as a company LLM key, stays in R behind a stateless proxy, where its calls wait behind evaluation in the session's one process ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)), a trade-off to revisit.
 
 ## Open questions

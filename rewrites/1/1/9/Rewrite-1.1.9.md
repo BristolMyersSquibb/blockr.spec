@@ -43,10 +43,11 @@ An evaluation request names the block and its version, carries the recipe, its r
   "inputs": [ { "slot": "x", "block": "a", "version": 2 }, { "slot": "y", "block": "b", "version": 3 } ] }
 ```
 
-R keeps the result, and the reply carries what the client shows about it: the expression R built, the conditions raised, and the standard output and error, all bounded.
+R keeps the result, and the reply carries what the client shows about it: the expression R built, the result's summary ([Block types in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
 
 ```json
 { "id": "17", "status": "ok", "block": "c", "version": 4, "expr": "merge(x, y, by = \"Species\", all.x = FALSE, all.y = FALSE)",
+  "summary": "<data.frame> [150 × 7]",
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "eval", "message": "..." } ],
   "dropped": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
@@ -78,10 +79,10 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "meta": {} }
-{ "id": "20", "status": "ok", "output": { "type": "table", "columns": [], "rows": [], "total": 150 } }
+{ "id": "20", "status": "ok", "output": { "type": "blockr.core-table", "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name, and a request may carry a binary body too, such as an uploaded file.
+A reply is JSON or a binary body with a MIME type and, for a download, a file name, and a request may carry a binary body too, such as an uploaded file. An output is a description in JSON whose `type` names its kind, which the renderer R picks for that kind draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG.
 
 ### Cancelling
 

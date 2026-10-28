@@ -52,7 +52,7 @@ Translate rather than transliterate. The client follows established JS patterns,
 - Whatever does not need R moves to the browser. R is an evaluator, one process per session. A request carries the recipe, and a result is named by block id and version, never by process, so a lost process costs only recomputation, and putting several sessions on one process, or one session on several, stays a server-side change.
 - The client schedules: it bumps versions, tracks what is stale and what is demanded, and requests results in topological order, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Rewrite-1.1.10)).
 - Core keeps no plugin or extension type of its own. The dock is a React app on core's JS API, and board extensions are ES modules that register with it, the only way to extend a board besides block types, with their logic on core's JS API and their UI in the dock's contribution points ([Client-drawn dock and extensions](Rewrite-1.2)).
-- Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy blockr.ui ships, so core ships none ([UI modules in JS](Rewrite-1.1.7)). A helper for authors new to JS, such as composing a UI in R from blockr.ui's components, is a later project for blockr.ui, built on that contract.
+- Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy blockr.ui ships, so core ships none ([UI modules in JS](Rewrite-1.1.7)). Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
 - The code a block shows and exports is the code that ran, since R builds every expression with the block type's `interpolate`. Limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
 - Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process. One small bridge module carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Rewrite-1.1)).
@@ -73,5 +73,26 @@ None.
 - Versions: on `js-state` every package carries a 0.2 version, which the switch releases: 0.2.0, or the next patch above main's where main has already reached 0.2.0. So blockr.core goes from 0.1.4 to 0.2.0, and blockr.dock, whose main says 0.2.0, to 0.2.1. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
-- Terms: the table in [Board objects](Rewrite-1.1.1#terms), whose names every page, spec and issue uses in the senses it gives.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
+
+### Terms
+
+Every page, spec and issue of the rewrite uses these names in these senses only, and a new term is agreed before it appears on a page.
+
+| Term | Means |
+|---|---|
+| Block type | A value made by `block_type()`, defined once and held by the block registry under its registry id, through whose fields R evaluates every block of the type ([Block types in R](Rewrite-1.1.5#the-block-type)) |
+| Block | One instance of a block type, which the board holds as `{ registry_id, state, name }` ([Blocks](Rewrite-1.1.1#blocks)). R makes an R block, with the type's constructor, only while it builds a board. A block is never a block type, which is always called one |
+| Block registry | R's registry of block types, filled by `register_block()`, whose entries R sends the client |
+| Registry id | A block type's id in the block registry, such as `blockr.core-head_block` |
+| Command registry | The client's registry of commands ([Board updates](Rewrite-1.1.2#commands)) |
+| Board | The client's board, the JSON object the store holds |
+| R board | The R object that an app script's constructors build, or that `blockr_deser()` builds from a file of today's stack, and that R drops once it has the board's JSON |
+| Board option | An option the user sees and changes while the app runs, an `Option` in the client, with an `id`, `label`, `category`, `schema` and `ui`, which the package that ships it defines in the client, and whose value the board holds under its id ([Options](Rewrite-1.1.1#options)) |
+| Blockr option | A value fixed when an app starts or is deployed, which `blockr_option()` reads from an R option `blockr.<name>` or an environment variable `BLOCKR_<NAME>`, and which the board never holds ([Defining a board in R](Rewrite-1.1.3#blockr-options)) |
+| Field | State that a package adds to the board, under a field id ([Board updates](Rewrite-1.1.2#fields)) |
+| Attribute | A value that a package keeps on every block, under a name it registers, which core carries on the block without reading it ([Blocks](Rewrite-1.1.1#blocks)) |
+| Front-end | The module that draws a board, which a package declares in R under a name, giving it an id such as `blockr.dock-dock`, and which a board names in its `front_end` ([Front-ends and extension points](Rewrite-1.1.8)) |
+| Output | What a block type's `output` returns for one result: a description in JSON whose `type` names its kind, `{pkg}-{name}`, such as `blockr.core-table`, a shape the package defining the kind documents ([Block types in R](Rewrite-1.1.5#outputs)) |
+| Renderer | A module that draws one kind of output or a board option's value, which a package declares in R, and of which R picks one for each kind and each board option ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
+| Demand | What an owner asks the scheduler to keep evaluated, a set of blocks or a rule over the board, until it releases it. The scheduler evaluates every demanded block and what feeds it, while a one-off evaluation brings some blocks up to date once ([Evaluation in the client](Rewrite-1.1.10#demand)) |

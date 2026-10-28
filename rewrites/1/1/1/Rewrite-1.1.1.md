@@ -13,25 +13,6 @@ The first of the API proposals for the client-owned board ([Client-owned board s
 
 ## Proposal
 
-### Terms
-
-A page of the rewrite uses these names in these senses only, and a new term is agreed before it appears on a page:
-
-| Term | Means |
-|---|---|
-| Block type | A value made by `block_type()`, defined once and held by the block registry under its registry id, through whose fields R evaluates every block of the type ([Block types in R](Rewrite-1.1.5#the-block-type)) |
-| Block | One instance of a block type, which the board holds as `{ registry_id, state, name }` ([Blocks](#blocks)). R makes an R block, with the type's constructor, only while it builds a board. A block is never a block type, which is always called one |
-| Block registry | R's registry of block types, filled by `register_block()`, whose entries R sends the client |
-| Registry id | A block type's id in the block registry, such as `blockr.core-head_block` |
-| Command registry | The client's registry of commands ([Board updates](Rewrite-1.1.2#commands)) |
-| Board | The client's board, the JSON object the store holds |
-| R board | The R object that an app script's constructors build, or that `blockr_deser()` builds from a file of today's stack, and that R drops once it has the board's JSON |
-| Board option | An option the user sees and changes while the app runs, an `Option` in the client, with an `id`, `label`, `category`, `schema` and `ui`, which the package that ships it defines in the client, and whose value the board holds under its id ([Options](#options)) |
-| Blockr option | A value fixed when an app starts or is deployed, which `blockr_option()` reads from an R option `blockr.<name>` or an environment variable `BLOCKR_<NAME>`, and which the board never holds ([Defining a board in R](Rewrite-1.1.3#blockr-options)) |
-| Field | State that a package adds to the board, under a field id ([Board updates](Rewrite-1.1.2#fields)) |
-| Attribute | A value that a package keeps on every block, under a name it registers, which core carries on the block without reading it ([Blocks](#blocks)) |
-| Front-end | The module that draws a board, which a package declares in R under a name, giving it an id such as `blockr.dock-dock`, and which a board names in its `front_end` ([Front-ends and extension points](Rewrite-1.1.8)) |
-
 ### What lives where
 
 Each piece of state has one writer. The board is the client's alone, and what R holds about it is either computed from one version of it, as a result is, or handed over once, as the opening board is. Neither is ever edited to follow the board, so nothing has to be kept in step with it. The board holds only what changes while the app runs, with the ids and types that say what each value belongs to, while what nothing changes stays out of it: a block type's UI travels in the block registry's entries R sends the client, and an option's label and the rest of its definition are the client's own, defined by the package that ships the option.
@@ -86,7 +67,7 @@ A board names its front-end by the front-end's id, `{pkg}-{name}` as a registry 
 
 R builds an R board only where an app script defines one, and converts it to JSON once, when `serve()` is called ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). A board given as JSON, the file `serve()` is given, the board `store.open()` sends ([Board updates](Rewrite-1.1.2)) and the one a client sends with `hello` after R restarts ([Wire protocol](Rewrite-1.1.9#handshake)), R opens without building one: it works on the JSON and sends it on. It reads a file of the new stack by its registry ids, building no R object, and one from today's stack with `blockr_deser()`, which dispatches on each object's class ([R/utils-serdes.R#L291-L301](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L291-L301)) and calls the constructor the file names or defines, and on the way makes sure every block's type is registered:
 
-1. A type defined outside a package is registered from the definition its blocks carry in place of a constructor's name (below).
+1. A type defined outside a package is registered from the definition the file holds for it under its registry id (below).
 2. A type from an installed package that nobody registered is registered from its constructor, once R has loaded the package.
 3. A block whose package is not installed, or no longer has its constructor, is dropped and named (below).
 

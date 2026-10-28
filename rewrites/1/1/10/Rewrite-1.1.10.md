@@ -1,14 +1,15 @@
-# Evaluation in the client: versions, claims and statuses
+# Evaluation in the client: versions, demand and statuses
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [board objects proposal](Rewrite-1.1.1) and the [wire protocol proposal](Rewrite-1.1.9), and shapes the scheduler ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)). It replaces what [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) rework within the R board, evaluation demand and statuses, and keeps their terms.
 
 ## What must hold
 
-1. A board evaluates every block, as boards do today, unless it opts into evaluating only what is demanded.
+1. A board evaluates every block, as boards do today, unless its front-end is lazy and demands only the blocks it shows.
 2. A board edit costs no R time beyond evaluating what is demanded and fetching outputs for what is on screen.
 3. Any component can demand a block or invalidate one without knowing who else does, and without saying why.
 4. A block's status, conditions and expression read the same whether or not it is demanded, as [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488) asks of the R board.
+5. A block that must run with nothing on screen, such as a write block in auto mode, runs under a lazy front-end too, and a component that needs current results, such as the code export, gets them without putting a block on screen.
 
 ## Proposal
 
@@ -18,18 +19,22 @@ Every block has a version, a number the client keeps for the session and never s
 
 ### Demand
 
-The scheduler evaluates what is demanded, and everything upstream of it. A board's `evaluation` option decides what that is: `"eager"`, the default, demands every block, and `"lazy"` demands only what the following ask for. The option configures the scheduler and never reaches a type's `interpolate`.
+The scheduler evaluates every block something demands, and everything upstream of it, and nothing else. A demand has an owner, which alone replaces or releases it, and every owner demands the same way, so core never learns why a block is demanded, as [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) has it for the R board:
 
-- A block of a type declared eager, such as one that writes a file, is always demanded, so it writes in a lazy board too. The type declares it through the `eager` field of `block_type()`, `TRUE` or a function of the block's state, so that a write block is demanded only while its auto mode is on ([Block types in R](Rewrite-1.1.5)), and the block registry carries it ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)).
-- A standing demand holds a set of blocks until its owner replaces or releases it, and all owners write the same owner-keyed set, as [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) has it for the R board. The dock demands what it shows, and core does not know why.
-- A one-off evaluation evaluates what is stale among some blocks and their upstream once, and resolves with their statuses, such as a code export that needs every block's current expression, or the assistant checking the descendants of a block it changed for new failures. A package request that names the blocks it reads evaluates them this way before it runs ([Wire protocol](Rewrite-1.1.9)).
+- A demand is a set of blocks, which its owner replaces or releases, such as what the dock shows, or a rule, a function of the board that the scheduler reads again after every change, such as blockr.io's demand for every write block whose `auto_write` is on. A rule is how a block keeps evaluating with nothing on screen, by its own state or by any setting, so a block type declares nothing about it ([Block types in R](Rewrite-1.1.5#the-block-type)), and a front-end or an extension can offer a pin on any block as a field it keeps and a rule that reads it ([Board updates](Rewrite-1.1.2#fields)).
+- Core demands every block, unless the front-end is lazy, demanding only the blocks it shows, as its package declares in R with the front-end ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)). The dock is lazy, and core's basic front-end, which shows every block, is not. A blockr option keeps core's demand on every block under a lazy front-end too, for an app that wants every result current.
+- A one-off evaluation evaluates what is stale among some blocks and their upstream once, and resolves with their statuses, such as a code export, which needs every block's current expression and names the blocks that end invalid or failed instead of giving code, or the assistant checking the descendants of a block it changed, hidden ones included, for new failures. A package request that names the blocks it reads evaluates them this way before it runs ([Wire protocol](Rewrite-1.1.9)).
 
 ```ts
-const demand = scheduler.demand("blockr.dock", ["a", "b"]);   // what the dock shows
-demand.set(["a", "c"]);                                       // replaced as the view changes
-demand.release();
+const shown = scheduler.demand("blockr.dock", ["a", "b"]);    // a set: what the dock shows
+shown.set(["a", "c"]);                                        // replaced as the view changes
+shown.release();
 
-const statuses = await scheduler.evaluate(["b", "c"]);        // once, resolving with their statuses
+scheduler.demand("blockr.io", board =>                        // a rule, read again after every change
+  Object.keys(board.blocks).filter(id =>
+    board.blocks[id].registry_id === "blockr.io-write_block" && board.blocks[id].state.auto_write === true));
+
+const statuses = await scheduler.evaluate(["b", "c"]);        // a one-off evaluation, resolving with their statuses
 ```
 
 ### Invalidation
@@ -52,6 +57,7 @@ interface BlockStatus {
   running: boolean;
   conditions: Condition[];     // from the latest reply, which replaces the ones before
   expr: string | null;         // the expression R built for that version
+  summary: string | null;      // the result's summary from that reply, "<data.frame> [150 × 7]"
 }
 
 scheduler.status("b");          // a signal, read by whatever draws the block
@@ -67,5 +73,5 @@ There is no early cutoff: a recomputed R result is a new object, so an identity 
 
 ## Open questions
 
-- Whether demands carry a priority, so the blocks the dock shows evaluate before what a code export evaluates in the background, and before the rest of an eager board.
-- Whether a lazy board evaluates the blocks nothing demands while R is idle, as today's background construction builds blocks ahead of need.
+- Whether demands carry a priority, so the blocks the dock shows evaluate before what a code export evaluates in the background, and before the rest of a board whose front-end is not lazy.
+- Whether the scheduler evaluates the blocks nothing demands while R is idle, as today's background construction builds blocks ahead of need.

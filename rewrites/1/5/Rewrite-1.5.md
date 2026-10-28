@@ -16,11 +16,11 @@ The code export shows a board's code in a modal: `generate_flat_code_server()` h
 ## Proposal
 
 - Generation is a request that blockr.code registers ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)): it carries the recipes, R calls each block's `expr_fn`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
-- The request claims the blocks it needs evaluated ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)), since a block whose `expr_fn` reads its inputs has code only once they exist.
+- The request has the blocks it needs evaluated first, in a one-off evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since a block whose `expr_fn` reads its inputs has code only once they exist.
 
 ## Open questions
 
-- How the request knows which blocks need their inputs: a flag in the block registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), or by claiming every block upstream of the code it shows.
+- How the request knows which blocks need their inputs: a flag in the block registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), or by evaluating every block upstream of the code it shows.
 
 ## Work
 
