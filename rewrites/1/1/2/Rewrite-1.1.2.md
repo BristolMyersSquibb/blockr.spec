@@ -39,7 +39,7 @@ interface Store {
   board(): Board;                                            // the current board, as a signal
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
-  apply(delta: Delta, origin?: Origin): void;                // expands, checks, commits and announces a delta, in order, or throws what rejected it
+  apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
   open(saved: Json): Promise<Dropped[]>;                     // has R open a saved board, then replaces the document
 
   undo(origin?: Origin): void;                               // reverts that origin's last step
@@ -52,7 +52,7 @@ interface Store {
 }
 ```
 
-Besides the board, the store keeps the undo and redo steps of each origin, the queue of deltas waiting to apply, its subscribers, the registered fields, and the edit version of each block and of each field's entries or value. On a locked board it refuses every `store.open()` and every delta the lock does not leave open, such as one that adds a block, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, the registered fields, and the edit version of each block and of each field's entries or value. On a locked board it refuses every `store.open()` and every delta the lock does not leave open, such as one that adds a block, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
 
@@ -122,7 +122,7 @@ The store expands a delta, checks it, commits it and tells whoever follows it:
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed entry comes back whole and in its place, and a changed key or value gets its old one.
 4. It hands the expanded delta and the new board to whoever follows the board.
 
-Deltas apply one at a time, in the order `apply()` is called, so no write replaces another. A subscriber does not apply a delta while it is told of one, since what follows from a delta is an `expand`, so `apply()` always applies at once and throws what rejects a delta.
+Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, none is committed unless all pass, and followers are told of each in turn. Each call to `apply()` applies in full before the next, so no write replaces another. A subscriber does not apply a delta while it is told of one, since what follows from a delta is an `expand`, so `apply()` always applies at once and throws what rejects a delta.
 
 ### Commands
 
@@ -138,12 +138,17 @@ interface Command<A extends Json = Json, P = A> {
   run(board: Board, args: P): Delta | Delta[]; // reads the board, returns deltas, changes nothing itself
 }
 
-commands.register(command);
-await commands.run("blockr.core-remove_block", { id: "b" });      // applies, as one undo step
-await commands.plan("blockr.dag-relayout", { direction: "LR" });  // returns the deltas without applying them
+interface Commands {
+  register(command: Command): () => void;
+  run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin
+  plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
+}
+
+await commands.run("blockr.core-remove_block", { id: "b" });      // one step of "user"
+await commands.plan("blockr.dag-relayout", { direction: "LR" });
 ```
 
-Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from its type's arg specs and for a field from its schema, and its staging is `commands.plan()`, with a commit applying what it planned as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
+Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set its state, append, prepend or insert one on a link, add, change, rename and remove links and stacks, rename the board, and set an option, and for every registered field, add, change and remove its entries or set its value, typed by the field's schema. Every package registers its own, such as the dock's view commands and the DAG's copy, cut, paste and relayout, and any package runs another's. Every edit runs through a command, whoever makes it, and the registry applies what the command returns with the origin `commands.run()` is given. A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to. The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from its type's arg specs and for a field from its schema, and its staging is `commands.plan()`, with a commit passing what it planned to `store.apply()` as one step. A front-end binds the shortcuts, and a block's `submit()` runs the command that sets its state.
 
 ### Opening a board
 
@@ -163,7 +168,7 @@ Where edits made without a field's package left the field naming removed blocks,
 
 ### Undo
 
-The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. Steps never merge. An input that changes with every keystroke or pointer move, a block's or an extension's, submits only once the user pauses or lets go, since each submit to a block has R evaluate everything downstream of it and each delta reaches every follower, so a burst of typing is one edit and one step. Edits that must undo together are one delta or one command, such as a `submit()` that sets several args.
+The deltas of one command are one undo step, which `store.undo()` reverts and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's. Undo applies the inverse the store kept, which needs no expansion since it was taken from the expanded delta, and covers the fields packages add as it covers core's objects. The inverse names the edit versions the step left, as a `mod` names those it was built on, so undo, and redo likewise, is refused where another origin has since changed the same block, entry or value, rather than setting it back over that change. Steps never merge. An input that changes with every keystroke or pointer move, a block's or an extension's, submits only once the user pauses or lets go, since each submit to a block has R evaluate everything downstream of it and each delta reaches every follower, so a burst of typing is one edit and one step. Edits that must undo together are one delta or one command, such as a `submit()` that sets several args.
 
 ### Following the board
 
@@ -181,7 +186,7 @@ None.
 
 Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields, which core's commands for fields change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; the environment through which extensions read each other's state becomes `store.board().fields`; and the assistant's `list_extensions`, `describe_extension` and `modify_extension` give way to the command registry, where core's commands for fields stand beside each package's own.
 
-The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
+The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Once a command's `prepare()` resolves, the registry checks `enabled()` again before it calls `run()`, since the board may have changed while the command waited. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
 
 The precedents for expanding in rounds: a tldraw after handler, such as one that deletes a frame when its last child goes, runs "when the outermost store operation completes, so changes made inside them belong to the same transaction and the same undo step" ([tldraw side effects](https://tldraw.dev/sdk-features/side-effects)), and ProseMirror calls a plugin's `appendTransaction` "again with the new state and new transactions" whenever another plugin appends one ([plugin.ts#L34-L40](https://github.com/ProseMirror/prosemirror-state/blob/ffad5d9450a0b93438be53a801deee1a223a81bf/src/plugin.ts#L34-L40)). VS Code has an extension describe a tool it offers a model in the terms a command uses here, a `modelDescription` and an `inputSchema` ([Language model tools](https://code.visualstudio.com/api/extension-guides/ai/tools)).
 
