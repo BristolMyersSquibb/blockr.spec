@@ -145,9 +145,27 @@ type Option = {                         // in the registry export
   id: OptionId;                         // "n_rows", stable, the key of the option's value in the board
   label: string;                        // "Preview rows", what the user sees
   category: string;                     // "Table options"
-  schema: JsonSchema;                   // the value's, with a description for a model
+  schema: JsonSchema;                   // which values it accepts, such as { enum: ["light", "dark"] }, with a description for a model
   ui: string;                           // the URL R serves its UI module at, which gets an option host
 };
+```
+
+The `n_rows` option, for example, is this instance, and the board holds only its value:
+
+```ts
+const n_rows: Option = {
+  id: "n_rows",
+  label: "Preview rows",
+  category: "Table options",
+  schema: {
+    type: "integer",
+    minimum: 0,                         // a count, as is_count() checks today
+    description: "How many rows of a table a block's output shows",
+  },
+  ui: "/blockr.core/options/n-rows.js",  // illustrative: wherever R serves the module
+};
+
+// and in the board: options: { n_rows: 50 }
 ```
 
 The id says which option it is and never changes, while the label is only what the user sees. Ids are unique: R collects one option per id, keeping the first, as `combine_board_options()` does today ([R/board-options.R#L435-L442](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-options.R#L435-L442)). The schema says which values an option takes, with a description for the assistant's model, as a field's schema does ([Board updates](Rewrite-1.1.2#fields)), and the store checks every value a delta sets against it (below). The option's UI module gets an option host with its value ([UI modules in JS](Rewrite-1.1.7)).
