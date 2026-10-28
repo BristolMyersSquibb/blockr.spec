@@ -38,8 +38,8 @@ interface CoreApi {
   commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   blockRegistry: BlockRegistry;    // block types by registry id, for pickers
-  options: Record<OptionId, Option>; // the options packages define, by id, for settings
-  settings: Settings;              // the app's settings the client reads, by package, from the reply to hello
+  options: Record<OptionId, Option>; // the board options packages define, by id
+  blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured and fetched
   mountOption(el: HTMLElement, option: OptionId): () => void; // an option's UI
@@ -58,7 +58,7 @@ An extension is a module too, registered with the front-end it extends, and work
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its front-ends by name with their modules, the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its front-ends by name with their modules, the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, the blockr options its client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
 
 ## Open questions
 

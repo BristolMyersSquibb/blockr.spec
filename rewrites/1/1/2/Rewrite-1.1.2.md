@@ -10,7 +10,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 3. A delta applies entirely or not at all.
 4. Menus, shortcuts, extensions and the assistant's tools all edit through one command registry, to which every package adds its own commands.
 5. Anything can follow the board's changes as they happen, such as a session package saving drafts.
-6. Opening a board, at startup or later, replaces the board instead of changing it, and ends in the same place either way.
+6. Opening a board, at startup or later, replaces the board instead of changing it, and leaves the app exactly as opening the same board in a fresh app would, so that nothing of the board it replaces lingers, the block types that board's file defined included.
 7. A package adds state of its own to the board, such as the DAG's positions or blockr.md's document, without changing core, the front-end or another package, and every package reads and changes that state as it reads and changes core's objects.
 8. What a package registers describes itself, a field by its schema and a command by its description and args, so that another package reads, changes and runs it with no code of its own for that package, as `new_ext_meta()` lets the assistant drive any extension today.
 

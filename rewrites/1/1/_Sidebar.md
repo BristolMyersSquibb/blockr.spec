@@ -6,7 +6,7 @@
 
 - [Board objects: blocks, links, stacks, options and fields](Rewrite-1.1.1), settled
 - [Board updates: deltas, commands and undo](Rewrite-1.1.2), settled
-- [Defining a board in R for the client-owned board](Rewrite-1.1.3), review
+- [Defining a board in R for the client-owned board](Rewrite-1.1.3), settled
 - [Serialization of the client-owned board](Rewrite-1.1.4), review
 - [Block types in R for the client-owned board](Rewrite-1.1.5), draft
 - [UI modules in JS: the host, React and packaging](Rewrite-1.1.7), draft

@@ -26,11 +26,11 @@ interface Progress { id: string; progress: { value?: number; message?: string } 
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the block registry's entries ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), the opening board, the one the app's startup script built ([Board objects](Rewrite-1.1.1)), and the values of the app's settings that the client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages it names are loaded and the block types it defines registered before any recipe names them, and replies with the board as it opened it in place of the startup script's.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the block registry's entries ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), the opening board, the one the app's startup script built ([Board objects](Rewrite-1.1.1)), and the values of the blockr options the client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages it names are loaded and the block types it defines registered before any recipe names them, and replies with the board as it opened it in place of the startup script's.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "binary", "progress"] }
-{ "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "block_registry": {}, "board": {}, "settings": {} }
+{ "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "block_registry": {}, "board": {}, "blockr_options": {} }
 ```
 
 ### Evaluating a block
@@ -122,7 +122,7 @@ The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.
 
 ## Open questions
 
-- How an app names the args its lock leaves open when it starts, such as through an argument of `serve()`, of a block's constructor, or the `blockr_option()` that sets the lock itself, as an app sets its other settings ([Defining a board in R](Rewrite-1.1.3#app-settings)).
+- How an app names the args its lock leaves open when it starts, such as through an argument of `serve()`, of a block's constructor, or the blockr option that sets the lock itself, `blockr.locked`, as an app sets its other blockr options ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
 - Whether a locked board may still be restored, as [blockr.dock#123](https://github.com/BristolMyersSquibb/blockr.dock/issues/123) asked of today's lock, since a restored file comes from the client and so falls outside what R holds the lock to. It blocks locking a board when the app starts.
 - Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block type declares safe.
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
