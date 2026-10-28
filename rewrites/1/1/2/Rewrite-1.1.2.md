@@ -1,5 +1,5 @@
 # Board updates: deltas, commands and undo
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-10-28. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the fields that packages such as the dock and its extensions add to it alike. It builds on the [document model](Rewrite-1.1.1) and shapes the store and the command registry, an item in the Work list of [Client-owned board state](Rewrite-1.1#work). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), and how a field is written to a file is the [serialization proposal](Rewrite-1.1.4).
 
@@ -58,7 +58,7 @@ Besides the board, the store keeps the undo and redo steps of each origin, its s
 
 ```ts
 interface Delta {
-  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit: number; state?: Partial<State>; name?: string }>; rm?: BlockId[] };
+  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit?: number; state?: Partial<State>; name?: string }>; rm?: BlockId[] };
   links?:    { add?: Record<LinkId, Link>; mod?: Record<LinkId, Partial<Link>>; rm?: LinkId[]; before?: Record<LinkId, LinkId> };
   stacks?:   { add?: Record<StackId, Stack>; mod?: Record<StackId, Partial<Stack>>; rm?: StackId[] };
   options?:  Record<OptionId, Json>;          // values to set
@@ -67,7 +67,7 @@ interface Delta {
 }
 ```
 
-The shape is today's payload, with four differences: a block's `mod` takes any of its state args, since every block can be controlled from outside; it names the block's edit version it was built on, which the command registry fills in and which counts only the block's own edits, so that a delta built on an older board is refused rather than applied over a newer edit; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields packages add are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today.
+The shape is today's payload, with four differences: a block's `mod` takes any of its state args, since every block can be controlled from outside; it names the block's edit version it was built on, which a command leaves out and the registry fills in from the board `run()` read, and which counts only the block's own edits, so that a delta built on an older board is refused rather than applied over a newer edit; a link's `mod` changes the link in place and keeps its id; and options, the board's name and the fields packages add are part of it, so nothing bypasses it. A link's placement among a variadic target's inputs is given by `before`, as today.
 
 ### Fields
 
@@ -77,8 +77,8 @@ A field is state that a package adds to the board, such as the dock's views, the
 type Entry = Record<string, Json>;                     // a collection's entry is an object
 
 type FieldDelta =
-  | { add?: Record<string, Entry>; mod?: Record<string, { edit: number; set: Entry }>; rm?: string[] }   // a collection's, by entry id
-  | { edit: number; set: Json };                                                                         // a value's
+  | { add?: Record<string, Entry>; mod?: Record<string, { edit?: number; set: Entry }>; rm?: string[] }   // a collection's, by entry id
+  | { edit?: number; set: Json };                                                                         // a value's
 
 interface Field {
   id: FieldId;                                         // "blockr.dag-positions"
@@ -87,6 +87,7 @@ interface Field {
   initial?: Json;                                      // what a value holds on a board that has none; a collection starts empty
   expand?(delta: Delta, board: Board): FieldDelta | undefined;   // what follows in this field from a delta (below)
   check?(value: Json, board: Board): string[];         // what the schema cannot say, each failure in a sentence
+  migrate?(saved: Json, version: string): Json;        // a value an older version of the package saved, in today's shape
   repair?(value: Json, board: Board): Json;            // the value fitted to a board edited where the field was not registered
 }
 
@@ -107,7 +108,7 @@ A field's `mod` gives an entry the keys its `set` names, as a link's `mod` does,
 
 What a package keeps about one of core's objects is an entry in a field of its own, keyed by the object's id, as the DAG keeps a block's position, so that core's objects hold only core's keys ([Document model](Rewrite-1.1.1#extending-cores-objects)) and a package fills in its entry for an object another package creates, through `expand` and in the same delta. The tldraw SDK lets an app add record types of its own in the same way, which then "live in the store like any other: validated, migrated, persisted, and synced according to the scope you pick" ([tldraw store](https://tldraw.dev/sdk-features/store)).
 
-A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. The store keeps a field that no loaded package registered as it is, such as the dock's views on a dock board in a core app, and rejects a delta to it, since nothing could check one. When a field is registered, and whenever a board opens, the store fits the field to the board with `repair`, since the board may have been edited where the field's package was not loaded, which can leave the dock's views naming removed blocks.
+A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. The store keeps a field that no loaded package registered as it is, with the version of the package that saved it, such as the dock's views on a dock board in a core app, and rejects a delta to it, since nothing could check one. When a field is registered, and whenever a board opens, the store brings the field from the version that saved it to today's shape with `migrate`, so a package reads every format it ever wrote in one place, as [Document model](Rewrite-1.1.1#extending-cores-objects) has it, and then fits it to the board with `repair`, since the board may have been edited where the field's package was not loaded, which can leave the dock's views naming removed blocks.
 
 ### Applying a delta
 
@@ -122,7 +123,7 @@ The store expands a delta, checks it, commits it and tells whoever follows it:
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed entry comes back whole and in its place, and a changed key or value gets its old one.
 4. It hands the expanded delta and the new board to whoever follows the board.
 
-Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, none is committed unless all pass, and followers are told of each in turn. Each call to `apply()` applies in full before the next, so no write replaces another. A subscriber does not apply a delta while it is told of one, since what follows from a delta is an `expand`, so `apply()` always applies at once and throws what rejects a delta.
+Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, none is committed unless all pass, and followers are told of each in turn. Each call to `apply()` applies in full before the next, so no write replaces another. A subscriber does not apply a delta while it is told of one, since what follows from a delta is an `expand`, and `apply()` called from one throws. So `apply()` always applies at once, and throws what rejects a delta.
 
 ### Commands
 
@@ -156,7 +157,7 @@ Core's commands cover what its plugins and the dock's actions do today: add, rem
 await store.open(saved);   // replaces the document once R has opened the board
 ```
 
-Opening a board replaces the document rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Document model](Rewrite-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Rewrite-1.1.3)) and as a file from today's stack does already ([Serialization](Rewrite-1.1.4)). The `store.open()` call sends the board to R in a request of [Wire protocol](Rewrite-1.1.9), in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R loads the packages its constructors name, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Rewrite-1.1.4)), builds its R board and replies with the board as it rebuilt it and with the registry, and the store replaces its document and its registry with them. R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Document model](Rewrite-1.1.1)).
+Opening a board replaces the document rather than changing it, so it is no delta: it starts a new undo history, and `store.subscribe()` tells followers of it without a delta, so a session package saving drafts sees the new board. A board may come from another app or from older versions of its packages, or define block types the R process has not registered ([Document model](Rewrite-1.1.1)), so opening one goes through R, within a session as at startup ([Defining a board in R](Rewrite-1.1.3)) and as a file from today's stack does already ([Serialization](Rewrite-1.1.4)). The `store.open()` call sends the board to R in a request of [Wire protocol](Rewrite-1.1.9), in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R loads the packages its constructors name, registers the block types it defines where the `load_definitions` option allows it, migrates blocks saved by older versions of their types ([Serialization](Rewrite-1.1.4)), builds its R board and replies with the board as it rebuilt it, each package's fields as they were saved, with the version that saved them, and the registry, and the store replaces its document and its registry with them. R drops what it cannot rebuild and names it in its reply, so the client tells the user what did not open ([Document model](Rewrite-1.1.1)).
 
 A board whose class differs from the app's opens the way S3 dispatch would treat it:
 
@@ -186,7 +187,7 @@ None.
 
 Today's extension mechanism maps onto this proposal: `external_ctrl` and the payload's `extensions` become fields, which core's commands for fields change; the description, per-variable arg specs, examples and guidance of `new_ext_meta()` become the `description` and `examples` keywords of each field's schema; the `views` the dock adds to the payload become the dock's fields and commands; its methods of `validate_board_update()`, `augment_board_update()` and `apply_board_update()` become schemas and checks, `expand`, and the store's own apply; the environment through which extensions read each other's state becomes `store.board().fields`; and the assistant's `list_extensions`, `describe_extension` and `modify_extension` give way to the command registry, where core's commands for fields stand beside each package's own.
 
-The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Once a command's `prepare()` resolves, the registry checks `enabled()` again before it calls `run()`, since the board may have changed while the command waited. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
+The store merges what each `expand` returns into the delta and stops once a round adds nothing new, so an `expand` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the fields that kept adding. An `expand` gets the board before the delta and a `check` the board after it. Once a command's `prepare()` resolves, the registry checks `enabled()` again before it calls `run()`, since the board may have changed while the command waited, and opening a board drops every command still in its `prepare()`. An `expand` leaves the edit versions out, as a command does, since it builds on the board the delta applies to. Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last. Every check runs on every delta, so a field's `check` looks up its entries rather than scanning the board. The inverse of a removal records each entry's place in its collection, so that undo puts it back where it was.
 
 The precedents for expanding in rounds: a tldraw after handler, such as one that deletes a frame when its last child goes, runs "when the outermost store operation completes, so changes made inside them belong to the same transaction and the same undo step" ([tldraw side effects](https://tldraw.dev/sdk-features/side-effects)), and ProseMirror calls a plugin's `appendTransaction` "again with the new state and new transactions" whenever another plugin appends one ([plugin.ts#L34-L40](https://github.com/ProseMirror/prosemirror-state/blob/ffad5d9450a0b93438be53a801deee1a223a81bf/src/plugin.ts#L34-L40)). VS Code has an extension describe a tool it offers a model in the terms a command uses here, a `modelDescription` and an `inputSchema` ([Language model tools](https://code.visualstudio.com/api/extension-guides/ai/tools)).
 
