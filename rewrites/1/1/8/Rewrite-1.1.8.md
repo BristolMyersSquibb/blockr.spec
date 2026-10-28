@@ -47,7 +47,7 @@ interface CoreApi {
 }
 ```
 
-A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output, draws it with the renderer R picked for its kind (below), and redraws it when the block's version, an option, the size or the output's `meta` changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
+A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same version, board options, size and `meta` ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R picked for its kind (below), and redraws it when the block's version, an option, the size or the output's `meta` changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
 
 ### Core's basic front-end
 
