@@ -113,7 +113,7 @@ A package relies on the order only for the packages it imports in R, which is wh
 
 - A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a field's `expand` runs per delta and a command's `run()` per command. It reads no board there, since none is open at startup, and when an opening brings the package, the board R sent replaces the old one only after `initialize()`.
 - Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#fields)).
-- A startup module that an opening brings runs just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the board options in its settings, reads them again then.
+- A startup module that an opening brings runs just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the board options in its settings, reads them again then. Only a startup module that runs as the page starts may name a board to open, and core ignores a board named by one that an opening brings, since that opening is under way.
 - A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later. A stylesheet styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties.
 
 ### React
