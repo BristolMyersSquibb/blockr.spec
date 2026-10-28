@@ -34,9 +34,9 @@ Keep what has served us well:
 
 Improve what has not, which the Problem above sets out: state kept in two places, UI logic in R's reactive graph with the workarounds its cost needs, and a dock drawn from R. The same goes for having two ways to extend a board, core's plugins beside the dock's extensions.
 
-Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R:
+Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 
-- S3 class vectors become types, with a discriminant field and interfaces, and registries keyed by id where R dispatches on class.
+- S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks an id up in a registry, and what the methods did becomes data on one type, so an option is an instance of one `Option` type rather than a type of its own ([Document model](Rewrite-1.1.1#options)).
 - Names follow each language, snake_case in R and camelCase in TypeScript, while the JSON between them keeps the snake_case it has today.
 - Core's type-stable helpers, such as `chr_ply()` and `lst_xtr()`, are not ported, since the type checker and the standard library do their work.
 - R's lack of scalars stays in R, which converts at the boundary, so the client sees plain JSON values.
