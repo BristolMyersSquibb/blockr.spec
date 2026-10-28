@@ -73,4 +73,5 @@ None.
 - Versions: on `js-state` every package carries a 0.2 version, which the switch releases: 0.2.0, or the next patch above main's where main has already reached 0.2.0. So blockr.core goes from 0.1.4 to 0.2.0, and blockr.dock, whose main says 0.2.0, to 0.2.1. A package requires its upstreams at their `js-state` versions, so that a build against main fails at install.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
+- Terms: the table in [Document model](Rewrite-1.1.1#terms), whose names every page, spec and issue uses in the senses it gives.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
