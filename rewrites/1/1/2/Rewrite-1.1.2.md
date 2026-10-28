@@ -49,6 +49,7 @@ interface Store {
 
   register(field: Field): () => void;                        // adds a package's field to the board (below)
   fields(): Field[];                                         // the registered fields, with their schemas
+  registerMigration(pkg: string, fn: Migration): () => void; // a package's one migration of its saved state (below)
 }
 ```
 
@@ -87,7 +88,6 @@ interface Field {
   initial?: Json;                                      // what a value holds on a board that has none, or an attribute on a block that has none; a collection starts empty
   expand?(delta: Delta, board: Board): FieldDelta | undefined;   // what follows in this field from a delta (below)
   check?(value: Json, board: Board): string[];         // what the schema cannot say, each failure in a sentence
-  migrate?(saved: Json, version: string): Json;        // a value an older version of the package saved, in today's shape
 }
 
 store.register({
@@ -107,7 +107,21 @@ A field's `mod` gives an entry the keys its `set` names, as a link's `mod` does,
 
 What a package keeps about one of core's objects is an entry in a field of its own, keyed by the object's id, as the DAG keeps a block's position, so that core's objects hold only core's keys ([Board objects](Rewrite-1.1.1#extending-cores-objects)) and a package fills in its entry for an object another package creates, through `expand` and in the same delta. The tldraw SDK lets an app add record types of its own in the same way, which then "live in the store like any other: validated, migrated, persisted, and synced according to the scope you pick" ([tldraw store](https://tldraw.dev/sdk-features/store)).
 
-A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today. When a board opens, the store drops every field and attribute that no package loaded in the app registered, such as the dock's views on a board opened in a core app, and names them with what R dropped, since the app can do nothing with them, so a board saved afterwards is written without them. Every package therefore registers its fields before the store opens a board, the front-end and every module it loads at startup before the opening board arrives. The store brings each field from the version that saved it to today's shape with `migrate`, so a package reads every format it ever wrote in one place, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it.
+A field's schema describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today, and its package ships it as JSON beside its module too, so that R writes the field by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
+
+A package migrates its saved state as a whole, so that it can rename, split and merge its fields, attributes and options between versions and still read every format it ever wrote, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it. It registers one migration, which reads everything a file holds for every package and returns its own package's state in today's shape:
+
+```ts
+type Saved = {
+  fields: Record<FieldId, Json>;                       // as the file holds them
+  attrs: Record<BlockId, Record<string, Json>>;        // every block's attributes
+  options: Record<OptionId, Json>;                     // every option value
+};
+
+type Migration = (saved: Saved, version: string) => Partial<Saved>;   // version: the package's, as the file records it
+```
+
+When a board opens, the store runs the migration of every package whose saved version differs from the one loaded, each on the same saved state, so their order does not matter and a package can take over state an earlier version of another kept, while each writes only its own package's fields, attributes and options. Only then does the store drop every field, attribute and option value that no package loaded in the app registered, such as the dock's views on a board opened in a core app, and names them with what R dropped, since the app can do nothing with them, so a board saved afterwards is written without them. Every package therefore registers its fields, attributes, options and migration before the store opens a board, the front-end and every module it loads at startup before the opening board arrives.
 
 ### Applying a delta
 

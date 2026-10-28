@@ -56,7 +56,8 @@ None.
 - Give boards and links a name, in place of the `board_name` option for the board, in blockr.core
 - Open boards in R, from an app script, a file of either stack or the client's own board: parse a file of today's stack with typedjson in a mode that refuses code ([nbenn/typedjson#121](https://github.com/nbenn/typedjson/issues/121)), load the packages they name, register their block types, from definitions where `load_definitions` allows, migrate and convert them, drop and name what cannot be rebuilt, and reply with the board, in blockr.core
 - Build the per-session evaluator, which keeps each block's latest result by block id and version, and the Shiny bridge, in blockr.core
-- Build the client store, with deltas, undo and following the board, and the command registry with core's commands, in blockr.core
+- Build the client store, with deltas, undo, following the board and each package's migration of its saved state, and the command registry with core's commands, in blockr.core
+- Write a board's JSON in R by schema, from a JSON Schema of the board generated from core's TypeScript types and the schemas block UIs and packages ship for block state and fields, in blockr.core
 - Lock a board when the app starts, in R's recipes and in the client's store, with the state args the app leaves open, in blockr.core
 - Build the client scheduler, with versions, demand, invalidation and statuses, in blockr.core
 - Write saved boards in the client, as the board with the versions of its packages and the definitions of block types defined outside a package, in blockr.core

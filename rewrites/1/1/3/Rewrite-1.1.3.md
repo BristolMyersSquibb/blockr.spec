@@ -8,7 +8,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 1. An app script keeps the shape it has today: `serve()` around a board constructor that takes blocks, links, stacks, options and, for the dock, extensions.
 2. The board the script builds reaches the client as the same JSON a saved board is, and R keeps nothing of it that an edit changes.
 3. A block type defined in the app script works where R evaluates no definition from a file, as in a deployment.
-4. R's `blockr_ser()` and the client write the same file for the same board.
+4. R's `blockr_ser()` and the client write the same file for the same board, wherever a schema gives each value's shape.
 5. Serving a single block while developing it, and serving a saved file, work as today.
 6. Data that a script hands to `serve()` stays in R, so no board, file or request carries it.
 7. An app sets its blockr options as today, through `blockr_option()`, and the board holds none of them, so its JSON describes the board in full.
@@ -50,7 +50,7 @@ The `loader` argument goes, since neither of today's loaders keeps its job: `sto
 
 ### Writing the opening board
 
-R's `blockr_ser()` writes the opening board and the client writes every board that is saved, so both write the format of [Serialization](Rewrite-1.1.4#files), the board with its `format`, the versions of its packages and the definitions of block types defined outside a package, and both must write the same file for the same board. Fixtures that both test suites round-trip hold the two together, as they do the messages of [Wire protocol](Rewrite-1.1.9): each is a board as constructor calls, the file R writes for it, and the board and block registry entries R opens that file to, from which the client must write the same file again.
+R's `blockr_ser()` writes the opening board and the client writes every board that is saved, so both write the format of [Serialization](Rewrite-1.1.4#files), the board with its `format`, the versions of its packages and the definitions of block types defined outside a package, and both must write the same file for the same board, which they do by the same schemas, those of the board, of each block type's state and of each field ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)). Fixtures that both test suites round-trip hold the two together, as they do the messages of [Wire protocol](Rewrite-1.1.9): each is a board as constructor calls, the file R writes for it, and the board and block registry entries R opens that file to, from which the client must write the same file again.
 
 The opening board is where every app meets R's lack of scalars, since R writes the state of the script's blocks: `new_merge_block(by = "Time")` holds `by` and `all_x` as vectors of length one, and the client needs the first as `["Time"]` and the second as `false`, which R writes by the schema that the merge block's UI ships for its state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
