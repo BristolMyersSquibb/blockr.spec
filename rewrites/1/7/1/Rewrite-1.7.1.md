@@ -37,7 +37,7 @@ The first set follows from today's call sites:
 | `numeric_input()` | `numericInput()` |
 | `switch_input()`, `checkbox_input()` | `bslib::input_switch()`, `Blockr.checkbox` |
 | `segmented_input()` | `Blockr.segmented` |
-| `file_input()`, an upload as a request carrying the file | `fileInput()` |
+| `file_input()`, an upload through the host ([UI modules in JS](Rewrite-1.1.7#the-contract)) | `fileInput()` |
 
 Layout comes from containers: `block_inputs()` stacks its elements, a row places them side by side, and a gear tray with sections holds what is used less, as blockr.ui's gear tray does. A package with an input of its own, such as blockr.io's path picker, ships it as a module that the host offers to others ([UI modules in JS](Rewrite-1.1.7)).
 

@@ -10,7 +10,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 ## What must hold
 
 1. The design system documented in blockr.ui stays valid, and core's client, the dock and the extensions follow it, as condition 6 of [State in JS](Rewrite-1#what-must-hold) has it.
-2. A block UI written in React gets React and the React SDK from blockr.ui through its build, under every front-end, core's basic one included, and the dock uses the same copy ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
+2. A block UI written in React gets React and the React SDK from blockr.ui through its build, under every front-end, core's basic one included, and the dock uses the same copy ([UI modules in JS](Rewrite-1.1.7#react)).
 3. Whatever else blockr.ui offers block UIs reaches them through the host, as any package's module does, and none of it is a page global.
 
 ## Today
@@ -28,7 +28,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 
 - As the UI kit, blockr.ui keeps the design system that core's client, the dock and the extensions follow.
 - Block UIs are modules written against core's contract ([UI modules in JS](Rewrite-1.1.7)), so blockr.ui's widgets stop being page globals, and whatever else blockr.ui offers block UIs from then on reaches them through the host.
-- The one copy of React on the page ships with blockr.ui, with the React SDK and the build preset that maps `react` to it, so that core ships no React while a block UI written in React still finds it under every front-end, since its package imports blockr.ui. The dock and its extensions use the same copy ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
+- The one copy of React on the page ships with blockr.ui, with the React SDK and the build preset that maps `react` to it, so that core ships no React while a block UI written in React still finds it under every front-end, since its package imports blockr.ui. The dock and its extensions use the same copy ([UI modules in JS](Rewrite-1.1.7#react)).
 - Ready-made components for form-like block UIs are a later project of this part, still to be decided, and so are input elements composed in R on top of them ([Input elements for block UIs written in R](Rewrite-1.7.1)).
 
 ## Open questions

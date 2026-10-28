@@ -21,13 +21,13 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 A front-end is a module that a package declares in R under a name, as a block type names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several: the dock declares `register_front_end("dock", js_module("dock.js"), lazy = TRUE)` and is `blockr.dock-dock`, lazy since it demands only the blocks it shows ([Evaluation in the client](Rewrite-1.1.10#demand)), and core's basic front-end is `blockr.core-basic`. A board names the front-end it is made for by that id in its `front_end`, which the board's constructor sets, as `new_dock_board()` sets `blockr.dock-dock` ([Board objects](Rewrite-1.1.1#the-board)). The page loads the module of the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
 
-The module meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)): it exports the JS API major it was built against and a default whose `mount()` core calls, so it never names its own id.
+The module meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls, so it never names its own id.
 
 ```ts
 export const api = 1;                                // the JS API major it was built against
 
 export default {
-  mount({ el, api }: { el: HTMLElement; api: CoreApi }): () => void { /* draw the board, return the cleanup */ }
+  render({ el, core, signal }: { el: HTMLElement; core: CoreApi; signal: AbortSignal }): () => void { /* draw the board, return the cleanup */ }
 };
 ```
 
@@ -39,7 +39,7 @@ interface CoreApi {
   commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
   blockRegistry: BlockRegistry;    // block types by registry id, for pickers
-  options: Record<OptionId, Option>; // the board options packages define, by id
+  options: Options;                // register() and the board options packages define, by id
   blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by its kind's renderer
@@ -47,11 +47,11 @@ interface CoreApi {
 }
 ```
 
-A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output, draws it with the renderer R picked for its kind (below), and redraws it when the block's version, an option or the size changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
+A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output, draws it with the renderer R picked for its kind (below), and redraws it when the block's version, an option, the size or the output's `meta` changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
 
 ### Core's basic front-end
 
-Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It is not lazy, since it shows every block, so core demands every block under it, and a board served without the dock evaluates every block, as today ([Evaluation in the client](Rewrite-1.1.10#demand)). It is written in plain TypeScript, as core's built-in block UIs are, since core ships no React, and it mounts a block UI written in React as the dock does, with the React that blockr.ui ships ([UI modules in JS](Rewrite-1.1.7#the-react-sdk)).
+Core's own front-end draws what today's does: a toolbar with adding a block and the board's options, stacks as groups, and a card per block with its name, a menu to rename or remove it, its UI and its output. It also draws each block's status and conditions on its card, which today's computes but does not show. It is not lazy, since it shows every block, so core demands every block under it, and a board served without the dock evaluates every block, as today ([Evaluation in the client](Rewrite-1.1.10#demand)). It is written in plain TypeScript, as core's built-in block UIs are, since core ships no React, and it mounts a block UI written in React as any front-end does, since the module brings its React from the one copy a package puts on the page ([UI modules in JS](Rewrite-1.1.7#react)).
 
 ### Extensions
 

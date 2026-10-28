@@ -100,7 +100,7 @@ A block's state is part of the board and its status is not, because the board ho
 | Undone | Yes | No |
 | Sent to a collaborator | Yes | No, since results are per session |
 
-A spreadsheet draws the same line between the formula in a cell and the value it shows, and today's R stack does too, keeping a block's result and status in the board server's reactives rather than on the block. Code that draws a block need not see the split, since the React SDK can hand a block's UI one object with its state, name and status ([UI modules in JS](Rewrite-1.1.7)).
+A spreadsheet draws the same line between the formula in a cell and the value it shows, and today's R stack does too, keeping a block's result and status in the board server's reactives rather than on the block. Code that draws a block need not see the split, since its host hands a block's UI its name and status beside its state ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Registry ids
 

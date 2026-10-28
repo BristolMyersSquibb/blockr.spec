@@ -17,7 +17,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 A message is an array of requests from the client, or of replies and progress notes from R, so several travel together. Every request has an id the client chooses, and its reply echoes it, so replies may arrive in any order.
 
 ```ts
-type Kind = "hello" | "evaluate" | "request" | "output" | "cancel" | "forget";
+type Kind = "hello" | "evaluate" | "request" | "output" | "upload" | "cancel" | "forget";
 
 interface Request { id: string; kind: Kind; long?: boolean }          // long lifts the timeout
 interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "missing" }
@@ -82,7 +82,7 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "status": "ok", "output": { "type": "blockr.core-table", "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name, and a request may carry a binary body too, such as an uploaded file. An output is a description in JSON whose `type` names its kind, which the renderer R picks for that kind draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG.
+A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `type` names its kind, which the renderer R picks for that kind draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. An `upload` carries a file the user picked, which R stores in the session's temporary directory, replying with its path, as Shiny's `fileInput()` does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Cancelling
 

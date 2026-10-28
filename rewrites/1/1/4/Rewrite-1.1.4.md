@@ -54,7 +54,7 @@ R reads a file of the new stack by its ids, loading the packages that `packages`
 
 ### State values between the client and R
 
-The client's board holds state as its UI wrote it, plain JSON, in the shape of the schema that the type's UI module declares in TypeScript and ships beside it as JSON Schema ([UI modules in JS](Rewrite-1.1.7#packaging)). The UI owns that shape, since R takes an arg in several forms and could declare them only through unions of types (notes), and the type's author makes the values fit the expression `interpolate` builds from them, since they enter through the UI.
+The client's board holds state as its UI wrote it, plain JSON, in the shape of the JSON Schema that the type's UI module ships beside it ([UI modules in JS](Rewrite-1.1.7#packaging)). The UI owns that shape, since R takes an arg in several forms and could declare them only through unions of types (notes), and the type's author makes the values fit the expression `interpolate` builds from them, since they enter through the UI.
 
 R decodes what the client sends with yyjsonr, turning neither an array of objects into a data frame nor an array of arrays into a matrix, and reading a 64-bit integer as a double: an array of one type becomes an atomic vector, an array of several types a list, an object a named list, and a string stays a string, so that nothing becomes code by being decoded ([Wire protocol](Rewrite-1.1.9#decoding)). A type's author writes `validate` and `interpolate` against that decoding, as a Shiny author writes against an input's value. The jsonlite package decodes the same, except that it turns `[1, "a"]` into `c("1", "a")` (notes).
 
