@@ -87,7 +87,17 @@ interface OutputHost {
 
 What a block type's `output` returns names its kind in its `type`, as `{ "type": "blockr.core-table", ... }` does, and the renderer R picks for that kind draws it ([Front-ends and extension points](Rewrite-1.1.8#renderers)), so that a front-end or a UI kit changes how every table looks without touching a block type. Core asks R for an output and draws it again when the block's version, a board option, the element's size or the output's `meta` changes ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)). It keeps each block's last output with the version, board options, size and `meta` it was asked with, so that an output mounted again under the same ones, as when a panel reopens, draws without asking R. It keeps an output's `meta` per block for the page, beside the block's status, so that a panel mounted again keeps its page and sort, while the board holds none of it, so that nothing of it is saved or undone, as blockr.dm's table output keeps its table, page and sort in the Shiny session today ([R/dm-block.R#L504-L560](https://github.com/BristolMyersSquibb/blockr.dm/blob/4e2191a9a99bafd0a60f8b8ee301c9f9c3e7b8ee/R/dm-block.R#L504-L560)).
 
-Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer. A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board. A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a field it registers, keyed by stack id ([Board updates](Rewrite-1.1.2#fields)).
+Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer. A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board. A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a field it registers, keyed by stack id ([Board updates](Rewrite-1.1.2#fields)), as in this host for a note on each stack:
+
+```ts
+// in the front-end's package, which registers the field "myfe-stack_notes" in its startup module
+const stackHost = (core: CoreApi, id: StackId) => ({
+  stack: () => core.store.board().stacks[id],
+  note: () => core.store.board().fields["myfe-stack_notes"]?.[id],
+  on: (fn: () => void) => core.store.subscribe(fn),
+  // and a way to write the note, through core's command for a field's entries, as one undo step
+});
+```
 
 ### Startup modules
 
