@@ -18,10 +18,10 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module registered for the registry id of the board type it draws, as the dock registers for `blockr.dock-dock_board` and core's basic front-end for `blockr.core-board` ([Document model](Rewrite-1.1.1#registry-ids)). The page loads the front-end of the app's board type, and a board of another type is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
+A front-end is a module registered under its package's name, as the dock registers as `blockr.dock` and core's basic front-end as `blockr.core`, and a board names the front-end it is made for in its `front_end` ([Document model](Rewrite-1.1.1#the-board)). The page loads the front-end the app's board is made for, and a board made for another is converted or drawn by it when it is opened ([Board updates](Rewrite-1.1.2#opening-a-board)), so the front-end never changes while the page lives.
 
 ```ts
-registerFrontEnd("blockr.dock-dock_board", {
+registerFrontEnd("blockr.dock", {
   mount(el: HTMLElement, api: CoreApi): () => void { /* draw the board, return the cleanup */ }
 });
 ```
@@ -31,9 +31,10 @@ registerFrontEnd("blockr.dock-dock_board", {
 ```ts
 interface CoreApi {
   store: Store;                    // board(), subscribe(), apply(), open(), register(), from Board updates
-  commands: Commands;              // run(), plan() and the registry, for menus and shortcuts
+  commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status(), from Evaluation in the client
-  registry: Registry;              // block types, options and commands, for pickers and settings
+  blockRegistry: BlockRegistry;    // block types by registry id, for pickers
+  options: Record<OptionId, Option>; // the board's options, for settings
   settings: Settings;              // the app's settings the client reads, by package, from the reply to hello
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured and fetched
@@ -53,7 +54,7 @@ An extension is a module too, registered with the front-end it extends, and work
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module, its board type and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which the registry export carries so that the client can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and the `callbacks` of `board_server()`. A front-end's R side shrinks to declaring its module and the constructors of the classes it adds, such as the dock's `new_dock_board()` and `new_dock_stack()`, which R sends the client so that it can name them in a file ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396), [Serialization](Rewrite-1.1.4)), the settings its client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)), and the `as_*()` method that upgrades a plain board to that class when one is opened ([Board updates](Rewrite-1.1.2)).
 
 ## Open questions
 

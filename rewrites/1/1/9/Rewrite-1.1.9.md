@@ -26,11 +26,11 @@ interface Progress { id: string; progress: { value?: number; message?: string } 
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), the opening board, the one the app's startup script built ([Document model](Rewrite-1.1.1)), and the values of the app's settings that the client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages its constructors name are loaded and the block types it defines registered before any recipe names them, and replies with the board as it rebuilt it in place of the startup script's.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the block registry's entries and the board's options ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), the opening board, the one the app's startup script built ([Document model](Rewrite-1.1.1)), and the values of the app's settings that the client reads ([Defining a board in R](Rewrite-1.1.3#app-settings)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages its constructors name are loaded and the block types it defines registered before any recipe names them, and replies with the board as it rebuilt it in place of the startup script's.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "binary", "progress"] }
-{ "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "registry": {}, "board": {}, "settings": {} }
+{ "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "block_registry": {}, "options": {}, "board": {}, "settings": {} }
 ```
 
 ### Evaluating a block
@@ -57,7 +57,7 @@ After a restart R holds no results, so it replies `missing` with the inputs it l
 
 ### Requests
 
-A block type's requests and a package's own requests share one kind, resolved through the registry by registry id or package and name. A request names the block results it reads in `reads`, and passes the state args its function names in `args`.
+A block type's requests and a package's own requests share one kind, resolved through the block registry by registry id, or by package and name. A request names the block results it reads in `reads`, and passes the state args its function names in `args`.
 
 ```json
 { "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "args": {},

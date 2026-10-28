@@ -1,11 +1,11 @@
 # Session management as a client extension
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.session, whose session management becomes a dock extension that makes its storage calls from the browser. It builds on [Client-drawn dock and extensions](Rewrite-1.2) and on core's command that replaces the document ([Client-owned board state](Rewrite-1.1)).
+This part covers blockr.session, whose session management becomes a dock extension that makes its storage calls from the browser. It builds on [Client-drawn dock and extensions](Rewrite-1.2) and on core's command that replaces the board ([Client-owned board state](Rewrite-1.1)).
 
 ## Problem
 
-The blockr.session package opens, saves, versions and shares boards from `manage_project()`, a replacement for core's `preserve_board()` plugin, with storage behind the rack layer, S3 generics over pins ([`rack.R#L154-L540`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/rack.R#L154-L540)), on Connect under each visitor's own account ([`backend.R#L1-L15`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/backend.R#L1-L15)). A Shiny board cannot be replaced in place, so opening another board or a new one is a `session$reload()` ([`server.R#L236-L246`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/server.R#L236-L246)), and `rack_loader()`, a `board_loader()` for `serve()`, picks the board to build from the URL at the request ([`server.R#L1182-L1207`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/server.R#L1182-L1207)). With the board a client document ([Client-owned board state](Rewrite-1.1)), and only what must run in R running there, none of this needs R: storage is calls to an API.
+The blockr.session package opens, saves, versions and shares boards from `manage_project()`, a replacement for core's `preserve_board()` plugin, with storage behind the rack layer, S3 generics over pins ([`rack.R#L154-L540`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/rack.R#L154-L540)), on Connect under each visitor's own account ([`backend.R#L1-L15`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/backend.R#L1-L15)). A Shiny board cannot be replaced in place, so opening another board or a new one is a `session$reload()` ([`server.R#L236-L246`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/server.R#L236-L246)), and `rack_loader()`, a `board_loader()` for `serve()`, picks the board to build from the URL at the request ([`server.R#L1182-L1207`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/server.R#L1182-L1207)). With the board held by the client ([Client-owned board state](Rewrite-1.1)), and only what must run in R running there, none of this needs R: storage is calls to an API.
 
 ## What must hold
 
@@ -17,10 +17,10 @@ The blockr.session package opens, saves, versions and shares boards from `manage
 
 ## Proposal
 
-- Session management is a dock extension, with navbar items for new, open, save and share and a panel or dialog for the board list and versions. Opening a board or a version runs core's command that replaces the document, and the extension updates the URL in place.
+- Session management is a dock extension, with navbar items for new, open, save and share and a panel or dialog for the board list and versions. Opening a board or a version runs core's command that replaces the board, and the extension updates the URL in place.
 - The rack layer becomes a TypeScript interface in the extension, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser. The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)), and a URL that names a record makes the extension load that record and replace the document, so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)), and a URL that names a record makes the extension load that record and replace the board, so `rack_loader()` goes.
 - The extension provides the dock's storage service, in place of the default download and upload.
 
 ## Open questions

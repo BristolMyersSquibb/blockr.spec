@@ -5,13 +5,13 @@ This part covers blockr.dag, which becomes a dock extension drawn in the browser
 
 ## Problem
 
-The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and plugins through g6R ([`g6r.R#L284-L460`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/g6r.R#L284-L460)) and keeps block positions and layout settings as state of a Shiny-module extension, `new_dag_extension(positions, layout)` ([`ext.R#L37-L45`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L37-L45)). With the board a client document ([Client-owned board state](Rewrite-1.1)) and the dock drawn in the browser ([Client-drawn dock and extensions](Rewrite-1.2)), there is no R board left for it to read or update.
+The DAG is an htmlwidget driven from R: blockr.dag configures G6's behaviors and plugins through g6R ([`g6r.R#L284-L460`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/g6r.R#L284-L460)) and keeps block positions and layout settings as state of a Shiny-module extension, `new_dag_extension(positions, layout)` ([`ext.R#L37-L45`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L37-L45)). With the board held by the client ([Client-owned board state](Rewrite-1.1)) and the dock drawn in the browser ([Client-drawn dock and extensions](Rewrite-1.2)), there is no R board left for it to read or update.
 
 ## What must hold
 
-1. The DAG draws the document's blocks, links and stacks in the browser, without g6R, and follows every delta.
+1. The DAG draws the board's blocks, links and stacks in the browser, without g6R, and follows every delta.
 2. Its gestures, such as drawing a link, moving a block into a stack or removing one, run core's commands, so undo and save cover them.
-3. Positions and layout settings are fields of the DAG's in the document ([Board updates](Rewrite-1.1.2#fields)), and boards saved today open with theirs.
+3. Positions and layout settings are the DAG's fields in the board ([Board updates](Rewrite-1.1.2#fields)), and boards saved today open with theirs.
 4. What blockr.dag offers today carries over: zoom and pan, dragging blocks, click and brush selection, drawing a link by dragging, highlighting on hover, the context menu, the toolbar, tooltips, and stacks that collapse and expand.
 
 ## Proposal

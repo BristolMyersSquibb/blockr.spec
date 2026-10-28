@@ -5,12 +5,12 @@ This part covers blockr.code, whose code export becomes a dock extension with ge
 
 ## Problem
 
-The code export shows a board's code in a modal: `generate_flat_code_server()` has every block server constructed, waits until each block's state is ready and no block has an error, and joins the `expr` reactives of the block servers into a script with `export_wrapped_code()` ([`plugin.R#L44-L82`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L44-L82)). The issue [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8) moves it from a core plugin to a dock extension on today's stack. With the board a client document ([Client-owned board state](Rewrite-1.1)), there are no block servers to read expressions from.
+The code export shows a board's code in a modal: `generate_flat_code_server()` has every block server constructed, waits until each block's state is ready and no block has an error, and joins the `expr` reactives of the block servers into a script with `export_wrapped_code()` ([`plugin.R#L44-L82`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L44-L82)). The issue [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8) moves it from a core plugin to a dock extension on today's stack. With the board held by the client ([Client-owned board state](Rewrite-1.1)), there are no block servers to read expressions from.
 
 ## What must hold
 
-1. The code extension is a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) that shows the code of the board in the document.
-2. R generates it from the document's recipes with each block's `expr_fn`, so the code shown is the code that runs ([Client-owned board state](Rewrite-1.1)).
+1. The code extension is a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) that shows the code of the board.
+2. R generates it from the board's recipes with each block's `expr_fn`, so the code shown is the code that runs ([Client-owned board state](Rewrite-1.1)).
 3. A block that cannot give code yet, with an unset arg, an error or inputs still unevaluated, is named in the answer instead of the script, as `code_export_state()` reports `"blocked"` today.
 
 ## Proposal
@@ -20,7 +20,7 @@ The code export shows a board's code in a modal: `generate_flat_code_server()` h
 
 ## Open questions
 
-- How the request knows which blocks need their inputs: a flag in the registry export ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), or by claiming every block upstream of the code it shows.
+- How the request knows which blocks need their inputs: a flag in the block registry ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)), or by claiming every block upstream of the code it shows.
 
 ## Work
 

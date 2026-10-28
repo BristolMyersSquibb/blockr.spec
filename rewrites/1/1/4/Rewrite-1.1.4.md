@@ -1,7 +1,7 @@
 # Serialization of the client-owned board
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a board is written to a file and read back, and how state values travel between the client and R. It builds on the [document model](Rewrite-1.1.1), which says what the board holds, and shapes opening boards in R, exporting the registry, writing saved boards in the client and the JSON decoding of the wire protocol document, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R opens a board is the [board updates proposal](Rewrite-1.1.2#opening-a-board), and where a board is saved, to a download, Connect or a draft, is session management's ([Session management as a client extension](Rewrite-1.6)): core owns what a saved board is, not saving it.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a board is written to a file and read back, and how state values travel between the client and R. It builds on the [document model](Rewrite-1.1.1), which says what the board holds, and shapes opening boards in R, exporting the block registry, writing saved boards in the client and the JSON decoding of the wire protocol document, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R opens a board is the [board updates proposal](Rewrite-1.1.2#opening-a-board), and where a board is saved, to a download, Connect or a draft, is session management's ([Session management as a client extension](Rewrite-1.6)): core owns what a saved board is, not saving it.
 
 ## What must hold
 
@@ -18,13 +18,13 @@ The `blockr_ser()` function returns R lists, and the JSON is up to the caller. C
 
 ### Files
 
-A saved board keeps the shape `blockr_ser()` writes today: every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)). A file thus says how R calls the constructors that rebuild the board, as a startup script does ([Document model](Rewrite-1.1.1)). It is not the client's document: R turns a file into the document when it opens it ([Board updates](Rewrite-1.1.2)), and the client writes a file from the document and the registry export, which carries the constructor of every block type, or the definition of one defined outside a package, and of every board, stack, link and option class ([Document model](Rewrite-1.1.1#what-lives-where)). The one other writer is R's `blockr_ser()`, for an app's opening board, and fixtures that both test suites round-trip keep the two in step ([Defining a board in R](Rewrite-1.1.3#writing-the-opening-board)). A board subclass adds its own components as further nodes of the board's payload, in the same shape, as a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options` today, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)).
+A saved board keeps the shape `blockr_ser()` writes today: every object, the board, its blocks, links, stacks and options and the collections that hold them, is an `object`, its class vector, a `payload`, its constructor's args, and a `constructor`, the function with its package and that package's version at save time ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)). A file thus says how R calls the constructors that rebuild the board, as a startup script does ([Document model](Rewrite-1.1.1)). It is not the client's board: R turns a file into the board when it opens it ([Board updates](Rewrite-1.1.2)), and the client writes a file from the board and what R sends with it: the block registry, with the constructor of every block type or the definition of one defined outside a package, and each front-end's constructors for its boards and stacks ([Document model](Rewrite-1.1.1#what-lives-where)). The one other writer is R's `blockr_ser()`, for an app's opening board, and fixtures that both test suites round-trip keep the two in step ([Defining a board in R](Rewrite-1.1.3#writing-the-opening-board)). A board subclass adds its own components as further nodes of the board's payload, in the same shape, as a dock board writes `extensions`, `views` and `grids` next to `blocks`, `links`, `stacks` and `options` today, each extension with its class, its state and its constructor ([blockr.dock R/utils-serdes.R#L47-L95](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L47-L95)).
 
 A file written by the new stack departs from today's in five places:
 
 - A `format` field gives the version of the file format. Today's files lack it, so the reader tells the two apart.
 - A block type defined outside a package has a `definition` in place of the serialized closure today's files hold: the code the type was defined by, wrapped in `block_constructor()`, as a string that evaluates to its constructor ([Document model](Rewrite-1.1.1#block-types-outside-a-package)).
-- An option's payload holds its value, named after its constructor's arguments as today, and no longer its category and label, which its constructor supplies.
+- The board's options hold only their values, by id, as `{ "n_rows": 50 }`, since R collects the board's options again when it opens it ([Document model](Rewrite-1.1.1#options)).
 - Links and the board carry a `name`, since every object has one ([Document model](Rewrite-1.1.1)): a link's sits in its payload, and the board's next to its `id`, in place of the `board_name` option.
 - Class vectors leave out `vctrs_vctr`, `vctrs_rcrd` and `list`, which only R's containers need: `blockr_deser()` dispatches on `blocks`, `link` or `block` without them, and the client has no R container classes to write.
 
@@ -59,16 +59,7 @@ A file written by the new stack departs from today's in five places:
       }
     },
     "stacks": { "object": "stacks", "payload": {} },
-    "options": {
-      "object": "board_options",
-      "payload": [
-        {
-          "object": ["n_rows_option", "board_option"],
-          "payload": { "value": 50 },
-          "constructor": { "object": "blockr_ctor", "constructor": "new_n_rows_option", "package": "blockr.core", "version": "0.2.0" }
-        }
-      ]
-    }
+    "options": { "object": "board_options", "payload": { "n_rows": 50 } }
   },
   "constructor": { "object": "blockr_ctor", "constructor": "new_board", "package": "blockr.core", "version": "0.2.0" },
   "version": "0.2.0",
@@ -89,7 +80,7 @@ A block saved by an older version of its type migrates through the `blockr_deser
 
 ### Options
 
-A saved board holds each option with its value and its constructor, as it holds a block, so R rebuilds an option that a block package or an extension ships as it rebuilds a block, and hands the client its value, while its label and category travel in the registry export ([Document model](Rewrite-1.1.1#options)). In a file from today's stack, R ignores an option's category and label, since its constructor supplies them.
+A saved board holds each option's value under its id and nothing else of it, since R collects the board's options again when it opens it, as it collects them for an app's board, and gives each the value the file holds for its id, while the option itself, with its label and category, is what R sends the client ([Document model](Rewrite-1.1.1#options)). In a file from today's stack, R ignores an option's category and label, since its constructor supplies them.
 
 ## Open questions
 
