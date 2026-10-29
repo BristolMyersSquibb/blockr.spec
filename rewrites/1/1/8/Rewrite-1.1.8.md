@@ -20,7 +20,7 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module that a package declares in R under a name when it loads, as a block type names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the front-end it builds on, as a block type names its parent, and the function that converts a board made for that one:
+A front-end is a module that a package declares in R under a name when it loads, as a block type names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the front-end it builds on, and the function that converts a board made for that one:
 
 ```r
 register_front_end(

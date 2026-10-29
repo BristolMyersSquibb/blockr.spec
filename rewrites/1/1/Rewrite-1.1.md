@@ -50,7 +50,7 @@ None.
 ## Work
 
 - Write the wire protocol as a versioned document with fixtures that the R and the JS test suites both round-trip, covering the handshake, evaluation, requests, outputs, cancelling, forgetting and the JSON decoding, in blockr.core
-- Define block types with `block_type()` and `block_constructor()`, register them by type under `{pkg}-{name}` ids, port core's specializations and built-in blocks to them, and ship helpers that test a type without Shiny, in blockr.core
+- Define block types with `block_type()` and `block_constructor()`, register them by type under `{pkg}-{name}` ids, port core's built-in blocks to them, dropping the specializations, and ship helpers that test a type without Shiny, in blockr.core
 - Add the block type's `output`, with core's output families for tables, text and plots, the `tabular_output()` hook, a method for data frames and a default that prints, in blockr.core
 - Let packages declare renderers for output families and for board options, and pick one for each from the blockr options, the front-end, other packages and the defining package, in blockr.core
 - Export the block registry to the client, each block type by registry id with its inputs, arg specs, requests and UI, the schema of its state that its UI ships, and its definition where it was defined outside a package, and send with it the versions of R's packages and the modules packages offer each other and the renderers R picks, in blockr.core

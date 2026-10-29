@@ -28,7 +28,7 @@ A board with two blocks, one of them of a type defined outside a package, a link
   "format": 1,
   "packages": { "blockr.core": "0.2.0" },
   "definitions": {
-    "my_block": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", expr = function(n = 3L) bquote(utils::head(data, n = .(n)))))"
+    "my_block": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", inputs = \"data\", expr = function(n = 3L) bquote(utils::head(data, n = .(n)))))"
   },
   "board": {
     "id": "curious_otter",
