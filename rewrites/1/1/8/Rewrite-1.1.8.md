@@ -48,7 +48,7 @@ interface CoreApi {
   blockRegistry: BlockRegistry;    // the block registry's entries by registry id, for pickers
   options: Options;                // register() and the board options packages define, by id
   blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello
-  lock: Lock | null;               // what a locked board fixes and leaves open, from the reply to hello
+  lock: Lock | null;               // the blocks a locked board leaves open, { open: ["f"] }, from the reply to hello
   request<T = Json>(pkg: string, name: string, args?: Json, reads?: BlockId[]): Promise<T | Blob>;   // a package's request, which evaluates the blocks it reads first
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
@@ -63,7 +63,7 @@ A front-end decides where things go and core fills them: it gives `mountBlock()`
 
 Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package R has loaded, one at a time, then opens the board R sent, or the one a startup module names in its place (below), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered, while the scheduler sends nothing to R until `render()` has returned, so that what the front-end first shows is evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)). A front-end's package registers what the front-end adds, such as the dock's fields and commands, from its startup module, so the front-end's module only draws.
 
-A startup module's `initialize()` may resolve with the text of a saved file, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). Should two resolve with a board, core opens the one R sent and names both packages.
+A startup module's `initialize()` may resolve with the text of a saved file, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except on a locked board, which loads no other board, where core keeps the board R sent and names the package ([Wire protocol](Rewrite-1.1.9#locked-boards)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). Should two resolve with a board, core opens the one R sent and names both packages.
 
 ### Core's basic front-end
 
