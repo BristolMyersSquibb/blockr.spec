@@ -3,6 +3,11 @@
 # hourly run brings edits made on the wiki into main; .github/wiki-sync.sh says
 # how the two stay on one line of history. This job is the only check the
 # queue requires, since a group it has pushed has to be merged.
+#
+# It pushes to the wiki with WIKI_TOKEN, a fine-grained token on
+# BristolMyersSquibb/blockr with Contents read and write, which is enough to
+# push the workflow files there too, and to main with SPEC_DEPLOY_KEY, the
+# private half of this repo's deploy key, which main's ruleset lets past.
 name: Deploy wiki
 
 on:
