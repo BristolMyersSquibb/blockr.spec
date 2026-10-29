@@ -16,7 +16,7 @@ The code export shows a board's code in a modal: `generate_flat_code_server()` h
 ## Proposal
 
 - Generation is a request that blockr.code registers ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)): it carries the recipes, R builds each block's expression from its class's `expr`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
-- The request has the blocks it needs evaluated first, in a one-off evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since only an evaluation tells whether a stale block's state still runs, while building the expression itself needs no data, as a class's `expr` builds it from the state alone ([Block classes in R](Rewrite-1.1.5#evaluation)).
+- The request has the blocks it needs evaluated first, in a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since only an evaluation tells whether a stale block's state still runs, while building the expression itself needs no data, as a class's `expr` builds it from the state alone ([Block classes in R](Rewrite-1.1.5#evaluation)).
 
 ## Open questions
 
@@ -28,6 +28,6 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The generator in `R/code.R` stays, `export_wrapped_code(expressions, board)` ([`code.R#L1-L16`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/code.R#L1-L16)), with styler, xml2 and downlit for formatting and highlighting. The "Evaluate blocks" button of today's modal, which sends `evaluate` for every block, becomes that one-off evaluation.
+The generator in `R/code.R` stays, `export_wrapped_code(expressions, board)` ([`code.R#L1-L16`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/code.R#L1-L16)), with styler, xml2 and downlit for formatting and highlighting. The "Evaluate blocks" button of today's modal, which sends `evaluate` for every block, becomes that one-time evaluation.
 
 </details>
