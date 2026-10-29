@@ -68,7 +68,7 @@ The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/d
 
 ### Scheduling
 
-After every delta, the scheduler works out what is demanded and what feeds it, and sends the stale blocks among them to R in topological order, in one message, since R makes a request wait for an input still computing. When a block's version changes while R evaluates it, the scheduler cancels that evaluation where the capability allows and drops its reply in any case. Outputs are fetched by whatever draws them, once a block is `ready`. After R restarts, every demanded block is evaluated again, and R asks for the inputs it lacks.
+After every delta, the scheduler works out what is demanded and what feeds it, and sends the stale blocks among them to R in topological order, in one message, since R makes a request wait for an input still computing. When a block's version changes while R evaluates it, the scheduler cancels that evaluation where the capability allows and drops its reply in any case. Outputs are fetched by whatever draws them, once a block is `ready`. After the `hello` of a new session, which holds no results, every demanded block is evaluated again, with everything upstream, in one message, while front-ends keep drawing the last outputs core holds ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 
 There is no early cutoff: a recomputed R result is a new object, so an identity check would not fire, and hashing results costs time in proportion to their size. Cutoff can come later, opt-in per block class.
 

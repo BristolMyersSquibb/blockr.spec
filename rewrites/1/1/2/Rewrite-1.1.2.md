@@ -53,7 +53,7 @@ interface Store {
 }
 ```
 
-Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, the registered fields, and the edit version of each block and of each field's entries or value. On a locked board it refuses every `store.open()` and every delta the lock does not leave open, such as one that adds a block, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, the registered fields, and the edit version of each block and of each field's entries or value. On a locked board it refuses every `store.open()` and every delta the lock does not leave open, such as one that adds a block or changes a locked block's state, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
 
@@ -72,7 +72,7 @@ The shape is today's payload, with four differences: a block's `mod` takes any o
 
 ### Fields
 
-A field is state that a package adds to the board, such as the dock's views, the DAG's positions, blockr.md's document or the assistant's threads, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Board objects](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, a value, as the board's name is, which a delta sets, or an attribute, a value that every block carries in its `attrs` under the field's name without its package, `visible` for `blockr.dock-visible`, which a block's `mod` sets ([Board objects](Rewrite-1.1.1#blocks)). Registering an attribute whose name another package registered fails:
+A field is state that a package adds to the board, such as the dock's views, the DAG's positions, blockr.md's document or the assistant's threads, and registers with the store when its module loads. The board holds each field under its id in `fields` ([Board objects](Rewrite-1.1.1#extending-cores-objects)), and the id is named as a registry id is, `{pkg}-{name}`, so that two packages that do not know of each other cannot clash. A field is a collection, entries keyed by id in insertion order, as the board's blocks are, which a delta changes by `add`, `mod` and `rm`, a value, as the board's name is, which a delta sets, or an attribute, a value that every block carries in its `attrs` under the field's name without its package, `visible` for core's `blockr.core-visible`, which a block's `mod` sets ([Board objects](Rewrite-1.1.1#blocks)). Registering an attribute whose name another package registered fails:
 
 ```ts
 type Entry = Record<string, Json>;                     // a collection's entry is an object

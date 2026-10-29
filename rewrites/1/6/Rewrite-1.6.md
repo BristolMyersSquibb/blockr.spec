@@ -27,6 +27,7 @@ The blockr.session package opens, saves, versions and shares boards from `manage
 
 - Whether the tier on the app's own Connect key survives: that key works for every visitor and cannot go to the browser, so its calls would stay in R.
 - Whether drafts go to the backend, recoverable from any device as today, or to the browser's own storage.
+- Whether where boards are saved to and opened from becomes an interface of core, which the save and open controls of every front-end call, with download and upload as core's default and session management's storage in its place, rather than the dock's storage service. Session management replaces core's `preserve_board()` plugin today, and core keeps no plugin type of its own ([Client-owned board state](Rewrite-1.1)), while its controls are no panel, so it may fit core's surface better than the dock's, and it would then need no dock, and core's basic front-end would open and save through it too ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)). It blocks rebuilding session management, and settles where its controls and its storage service live.
 
 ## Work
 
