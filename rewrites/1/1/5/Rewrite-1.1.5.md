@@ -240,7 +240,7 @@ dm_block <- block_type(
   }
 )
 
-register_renderer("dm", js_module("dm-output.js"), families = "blockr.dm-dm")   # in .onLoad()
+register_renderer("dm", js_module("dm-output.js"), family = "blockr.dm-dm")   # in .onLoad()
 ```
 
 ### Generics
