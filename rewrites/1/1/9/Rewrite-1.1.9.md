@@ -69,7 +69,7 @@ A block type's requests and a package's own requests share one kind, resolved th
   "reads": [ { "block": "a", "version": 2 }, { "block": "b", "version": 3 } ] }
 ```
 
-The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's, and never caches a package's, since one may write. A package request that names blocks has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
+The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's, and never caches a package's, since one may write. A request that reads blocks, a block type's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
 
 ### Outputs
 
