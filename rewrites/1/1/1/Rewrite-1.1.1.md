@@ -78,7 +78,7 @@ Collections are keyed by id and ordered by insertion, as `blockr_ser()` writes t
 ### Blocks
 
 ```ts
-type Block = {
+type Block = {                          // held under its id in board.blocks
   registry_id: RegistryId;              // "blockr.core-head_block"
   state: Record<string, Json>;          // { n: 10, direction: "head" }
   name: string;                         // "Head", today's block_name
@@ -117,20 +117,19 @@ R evaluates a definition only where no block class of the block's class name is 
 ### Links
 
 ```ts
-interface Link {
-  name: string;                         // "", until the user names it
+interface Link {                        // held under its id in board.links
   from: BlockId;                        // "a"
   to: BlockId;                          // "c"
   input: string;                        // "x"
 }
 ```
 
-A link carries a name, empty until the user gives it one, and no class, which a link cannot keep even today: the `links()` record keeps each link's fields as columns but drops its class and constructor ([R/links-class.R#L15-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L15-L47)), and a link read out of it is rebuilt by `new_link()` ([#L277-L292](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L277-L292)). So every link `blockr_ser()` writes is a plain `link` made by `new_link()`, and so is a link read from a file that names a subclass. A package that keeps more about a link keeps it in a field of its own, keyed by the link's id (below). Its input is always resolved for a target of fixed arity, so filling in a unary target's only input is the job of the command that adds the link, not of the board. For a variadic target, an empty input appends positionally, in link order, as today ([R/board-server.R#L1215-L1242](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L1215-L1242)).
+A link carries no name, as today, and no class, which a link cannot keep even today: the `links()` record keeps each link's fields as columns but drops its class and constructor ([R/links-class.R#L15-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L15-L47)), and a link read out of it is rebuilt by `new_link()` ([#L277-L292](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L277-L292)). So every link `blockr_ser()` writes is a plain `link` made by `new_link()`, and so is a link read from a file that names a subclass. A package that keeps more about a link keeps it in a field of its own, keyed by the link's id (below). Its input is always resolved for a target of fixed arity, so filling in a unary target's only input is the job of the command that adds the link, not of the board. For a variadic target, an empty input appends positionally, in link order, as today ([R/board-server.R#L1215-L1242](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L1215-L1242)).
 
 ### Stacks
 
 ```ts
-interface Stack {
+interface Stack {                       // held under its id in board.stacks
   name: string;
   blocks: BlockId[];
 }
@@ -193,7 +192,7 @@ A field that refers to blocks stays consistent through the update that removes o
 
 ### Ids
 
-Every object, the board, a block, a link or a stack, has an id and a name. The id identifies the object: references and collection keys use it, it never changes, and it is unique within its collection. The name is what the user calls the object: free text the user can change at any time and nothing refers to, so renaming a block changes its name, as today. The client generates ids for new objects, and a board's when it creates the board, in the adjective and animal style of today's `rand_names()` ([R/utils-misc.R#L66-L103](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-misc.R#L66-L103)). An id is any string that is not empty and not made of digits alone, since a JS object, `JSON.parse()` included, puts keys that look like integers first, whatever the order they were inserted in. Nothing else about an id needs a rule: exported code backticks an id that is not a syntactic name, and the client escapes ids in CSS selectors or keeps them out of element ids, while the Shiny input names that [blockr.core#390](https://github.com/BristolMyersSquibb/blockr.core/issues/390) shows breaking are gone, since every message travels through one input ([Wire protocol](Rewrite-1.1.9)). Opening a board with an id made of digits alone fails with an error that names the id.
+Every object, the board, a block, a link or a stack, has an id, and all but a link have a name. The id identifies the object, and is the key the board holds a block, a link or a stack under, so none of them repeats it: references and collection keys use it, it never changes, and it is unique within its collection. The name is what the user calls the object: free text the user can change at any time and nothing refers to, so renaming a block changes its name, as today. The client generates ids for new objects, and a board's when it creates the board, in the adjective and animal style of today's `rand_names()` ([R/utils-misc.R#L66-L103](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-misc.R#L66-L103)). An id is any string that is not empty and not made of digits alone, since a JS object, `JSON.parse()` included, puts keys that look like integers first, whatever the order they were inserted in. Nothing else about an id needs a rule: exported code backticks an id that is not a syntactic name, and the client escapes ids in CSS selectors or keeps them out of element ids, while the Shiny input names that [blockr.core#390](https://github.com/BristolMyersSquibb/blockr.core/issues/390) shows breaking are gone, since every message travels through one input ([Wire protocol](Rewrite-1.1.9)). Opening a board with an id made of digits alone fails with an error that names the id.
 
 ### What the store checks
 
