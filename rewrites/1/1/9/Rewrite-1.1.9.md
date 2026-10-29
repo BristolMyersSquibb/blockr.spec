@@ -1,5 +1,5 @@
 # Wire protocol between the client and R
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-10-29. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the messages the client and R exchange, and what R does with each. It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [block classes](Rewrite-1.1.5) proposals, and shapes writing the wire protocol, building the per-session evaluator and the Shiny bridge, and locking a board when the app starts, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R evaluates a block with its class and describes its output is [Block classes in R](Rewrite-1.1.5)'s, how R decodes state values is the [serialization proposal](Rewrite-1.1.4)'s, how a module sends requests through its host is [UI modules in JS](Rewrite-1.1.7)'s, and what the client does with replies, its revisions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)).
 
