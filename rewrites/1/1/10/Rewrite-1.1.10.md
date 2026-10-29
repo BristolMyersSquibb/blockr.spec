@@ -64,7 +64,7 @@ scheduler.status("b");                                         // the block's st
 scheduler.subscribe(changed => { /* redraw these blocks */ });  // after statuses change, naming the blocks whose status changed
 ```
 
-The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), with `invalid` in place of its `unset`, since a block type's `validate` says only whether a state can run ([Block types in R](Rewrite-1.1.5)). A reply of `ok` makes a block `ready`, `error` makes it `failed`, and `invalid` makes it `invalid`; it is `waiting` while an upstream block is `failed`, `invalid` or `waiting`, `stale` while a newer version exists than its latest reply was for, and `unevaluated` before its first reply. A cancelled evaluation leaves the block `stale`. The status of a block nothing demands keeps its latest reply, so a parked block that failed still reads `failed`.
+The names are those of [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), with `invalid` in place of its `unset`, since a block type's `expr` says only whether a state can run, by signalling `invalid()` or using an arg the state leaves unset ([Block types in R](Rewrite-1.1.5)). A reply of `ok` makes a block `ready`, `error` makes it `failed`, and `invalid` makes it `invalid`; it is `waiting` while an input is unlinked or an upstream block is `failed`, `invalid` or `waiting`, `stale` while a newer version exists than its latest reply was for, and `unevaluated` before its first reply. A cancelled evaluation leaves the block `stale`. The status of a block nothing demands keeps its latest reply, so a parked block that failed still reads `failed`.
 
 ### Scheduling
 

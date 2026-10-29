@@ -35,7 +35,7 @@ A connection starts with a `hello`, after MCP's `initialize`: the client names t
 
 ### Evaluating a block
 
-An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, so R binds them like the pairlist a type's `interpolate` receives. A positional input of a variadic block has an empty slot.
+An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, whose results R binds to the inputs' names to evaluate the expression the block type's `expr` gives ([Block types in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot.
 
 ```json
 { "id": "17", "kind": "evaluate", "block": "c", "version": 4,
@@ -52,13 +52,13 @@ R keeps the result, and the reply carries what the client shows about it: the ex
   "dropped": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
 
-A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: validating the state, building the expression, validating the data, or evaluating. The status is `invalid` when the block type's `validate` returns `FALSE`, with the message it attaches, which R checks before running anything ([Block types in R](Rewrite-1.1.5)). A request on a version that is still computing waits for it.
+A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: building the expression, validating the data, or evaluating. The status is `invalid` when the block type's `expr` signals `invalid()`, with its message, or uses an arg the state leaves unset, naming it, before anything runs ([Block types in R](Rewrite-1.1.5)). A request on a version that is still computing waits for it.
 
 After a restart R holds no results, so it replies `missing` with the inputs it lacks, and the client sends their evaluation requests first and then asks again; that costs one round trip, and only after a restart.
 
 ### Requests
 
-A block type's requests and a package's own requests share one kind, resolved through the block registry by registry id, or by package and name. A request names the block results it reads in `reads`, and passes the state args its function names in `args`.
+A block type's requests and a package's own requests share one kind, resolved through the block registry by registry id, or by package and name. A request names the block results it reads in `reads`, and passes in `args` the state args its function names and the parameters the UI gives it ([Block types in R](Rewrite-1.1.5#requests)).
 
 ```json
 { "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "args": {},
@@ -69,7 +69,7 @@ A block type's requests and a package's own requests share one kind, resolved th
   "reads": [ { "block": "a", "version": 2 }, { "block": "b", "version": 3 } ] }
 ```
 
-The client caches a block type's answers by registry id, name, args and the versions read, and never caches a package's, since one may write. A package request that names blocks has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
+The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's, and never caches a package's, since one may write. A package request that names blocks has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
 
 ### Outputs
 
@@ -79,10 +79,10 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "meta": {} }
-{ "id": "20", "status": "ok", "output": { "type": "blockr.core-table", "columns": [], "rows": [], "total": 150 } }
+{ "id": "20", "status": "ok", "output": { "family": ["blockr.core-table"], "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `type` names its kind, which the renderer R picks for that kind draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. An `upload` carries a file the user picked, which R stores in the session's temporary directory, replying with its path, as Shiny's `fileInput()` does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` lists its output families, most specific first, which the renderer R picked for the first of them that has one draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. An `upload` carries a file the user picked, which R stores in the session's temporary directory, replying with its path, as Shiny's `fileInput()` does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Cancelling
 

@@ -9,7 +9,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 2. A front-end draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block type works in every front-end.
 3. A front-end and its extensions work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
-5. A front-end or any other package can replace the renderer that draws a kind of output or a board option, and an app picks among them through a blockr option, with no change to a block type.
+5. A front-end or any other package can replace the renderer that draws an output family or a board option, and an app picks among them through a blockr option, with no change to a block type.
 6. A startup module can open another board in place of the opening board before anything is drawn or evaluated, as `rack_loader()` resolves the board a URL names before today's page is drawn.
 
 ## Today
@@ -55,12 +55,12 @@ interface CoreApi {
   request<T = Json>(pkg: string, name: string, args?: Json, reads?: BlockId[]): Promise<T | Blob>;   // a package's request, which evaluates the blocks it reads first
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
-  mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by its kind's renderer
+  mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by its family's renderer
   mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's renderer
 }
 ```
 
-A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same version, board options, size and `meta` ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R picked for its kind (below), and redraws it when the block's version, a board option, the size or the output's `meta` changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so. It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and it and its extensions reach R through `request()`, as code export and session management do ([Wire protocol](Rewrite-1.1.9#requests)).
+A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's. The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same version, board options, size and `meta` ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R picked for the first of its output families that has one (below), and redraws it when the block's version, a board option, the size or the output's `meta` changes. A front-end draws a block's status, conditions and summary from `scheduler.status()`, demands what it shows if it is lazy, and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so. It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and it and its extensions reach R through `request()`, as code export and session management do ([Wire protocol](Rewrite-1.1.9#requests)).
 
 ### Starting the page
 
@@ -80,18 +80,18 @@ An extension is registered with the front-end it extends by its package's startu
 
 ### Renderers
 
-A renderer is a module that draws one kind of output ([Block types in R](Rewrite-1.1.5#outputs)) or a board option's value. A package declares its renderers in R, as it declares a front-end, each for the kinds or board options it draws: core declares a plain renderer for each kind it defines, blockr.ui declares its table preview for `blockr.core-table`, and a front-end may declare renderers of its own. R picks one renderer for each kind and each board option, the first of the one a blockr option names for it, the front-end's and another package's, and otherwise the renderer of the package that defines the kind, while a board option keeps the `ui` its definition gives ([Board objects](Rewrite-1.1.1#options)). Two renderers at one step are an error naming both, which the app settles with the blockr option. R sends the client the renderers it picked with the block registry's entries, and collects the board options they bring as it collects a block type's ([Defining a board in R](Rewrite-1.1.3#options)). So an app, a front-end or a UI kit changes how every table looks without touching a block type, as a JupyterLab extension replaces the renderer of a MIME type by registering its own ([registry.ts#L232-L258](https://github.com/jupyterlab/jupyterlab/blob/a877aee5ac6f490272a5ac18ac16b62b0deb1223/packages/rendermime/src/registry.ts#L232-L258)):
+A renderer is a module that draws one output family ([Block types in R](Rewrite-1.1.5#outputs)) or a board option's value. A package declares its renderers in R, as it declares a front-end, each for the output families or board options it draws: core declares a plain renderer for each family it defines, blockr.ui declares its table preview for `blockr.core-table`, and a front-end may declare renderers of its own. R picks one renderer for each output family and each board option, the first of the one a blockr option names for it, the front-end's and another package's, and otherwise the renderer of the package that defines the family, while a board option keeps the `ui` its definition gives ([Board objects](Rewrite-1.1.1#options)). The client draws an output with the renderer of the first of its families that has one, so that a family extending another, such as a lazy table extending `blockr.core-table`, is drawn as its parent where no package declares a renderer for it ([Block types in R](Rewrite-1.1.5#outputs)). Two renderers at one step are an error naming both, which the app settles with the blockr option. R sends the client the renderers it picked with the block registry's entries, and collects the board options they bring as it collects a block type's ([Defining a board in R](Rewrite-1.1.3#options)). So an app, a front-end or a UI kit changes how every table looks without touching a block type, as a JupyterLab extension replaces the renderer of a MIME type by registering its own ([registry.ts#L232-L258](https://github.com/jupyterlab/jupyterlab/blob/a877aee5ac6f490272a5ac18ac16b62b0deb1223/packages/rendermime/src/registry.ts#L232-L258)):
 
 ```r
 # blockr.ui: a richer table for every block whose output is a table
 register_renderer("table_preview", js_module("table-preview.js"),
-                  kinds = "blockr.core-table", options = new_page_size_option)
+                  families = "blockr.core-table", options = new_page_size_option)
 
 # an app that wants core's plain table anyway
 options(blockr.renderers = c("blockr.core-table" = "blockr.core-basic_table"))
 ```
 
-A renderer gets an output host, or for a board option an option host ([UI modules in JS](Rewrite-1.1.7#the-contract)), through which it draws an output nested in its own, such as the table in blockr.dm's view of a dm, with the renderer R picked for that output's kind. A block's UI has no renderer, since it ships the schema of its block's state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), so a different UI makes a type derived from the block's ([Block types in R](Rewrite-1.1.5#cores-types-and-hooks)).
+A renderer gets an output host, or for a board option an option host ([UI modules in JS](Rewrite-1.1.7#the-contract)), through which it draws an output nested in its own, such as the table in blockr.dm's view of a dm, with the renderer R picked for that output's family. A block's UI has no renderer, since it ships the schema of its block's state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), so a different UI makes a type derived from the block's ([Block types in R](Rewrite-1.1.5#cores-types-and-hooks)).
 
 ### What goes from R
 

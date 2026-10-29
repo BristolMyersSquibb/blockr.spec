@@ -28,7 +28,7 @@ A board with two blocks, one of them of a type defined outside a package, a link
   "format": 1,
   "packages": { "blockr.core": "0.2.0" },
   "definitions": {
-    "my_block": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", state = function(n = 3L) list(n = n), expr = quote(utils::head(.(data), n = .(n)))))"
+    "my_block": "blockr.core::block_constructor(blockr.core::block_type(\"my_block\", parent = blockr.core::transform_block, inputs = \"data\", expr = function(n = 3L) bquote(utils::head(data, n = .(n)))))"
   },
   "board": {
     "id": "curious_otter",
@@ -54,9 +54,9 @@ R reads a file of the new stack by its ids, loading the packages that `packages`
 
 ### State values between the client and R
 
-The client's board holds state as its UI wrote it, plain JSON, in the shape of the JSON Schema that the type's UI module ships beside it ([UI modules in JS](Rewrite-1.1.7#packaging)). The UI owns that shape, since R takes an arg in several forms and could declare them only through unions of types (notes), and the type's author makes the values fit the expression `interpolate` builds from them, since they enter through the UI.
+The client's board holds state as its UI wrote it, plain JSON, in the shape of the JSON Schema that the type's UI module ships beside it ([UI modules in JS](Rewrite-1.1.7#packaging)). The UI owns that shape, since R takes an arg in several forms and could declare them only through unions of types (notes), and the type's author makes the values fit the expression its `expr` builds from them, since they enter through the UI.
 
-R decodes what the client sends with yyjsonr, turning neither an array of objects into a data frame nor an array of arrays into a matrix, and reading a 64-bit integer as a double: an array of one type becomes an atomic vector, an array of several types a list, an object a named list, and a string stays a string, so that nothing becomes code by being decoded ([Wire protocol](Rewrite-1.1.9#decoding)). A type's author writes `validate` and `interpolate` against that decoding, as a Shiny author writes against an input's value. The jsonlite package decodes the same, except that it turns `[1, "a"]` into `c("1", "a")` (notes).
+R decodes what the client sends with yyjsonr, turning neither an array of objects into a data frame nor an array of arrays into a matrix, and reading a 64-bit integer as a double: an array of one type becomes an atomic vector, an array of several types a list, an object a named list, and a string stays a string, so that nothing becomes code by being decoded ([Wire protocol](Rewrite-1.1.9#decoding)). A type's author writes `expr` against that decoding, as a Shiny author writes against an input's value. The jsonlite package decodes the same, except that it turns `[1, "a"]` into `c("1", "a")` (notes).
 
 R writes state only where it makes it: for an app's opening board ([Defining a board in R](Rewrite-1.1.3)), for a block whose type's `migrate` gives it a new state, and for every block of a file from today's stack, which R converts through R objects (below). R opens a board of the new stack on its JSON, building no R board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), so every other state passes through R as the client wrote it, and comes back to the client unchanged. Where R writes state, it writes each value by the schema of its type's state, which R sends with the type's registry entry, since R's lack of scalars stays in R ([State in JS](Rewrite-1#principles)): a value of length one as an array where the schema has an array, and bare where the schema has a scalar or allows either, as the union `string | string[]` does, as condition 3 asks. A type whose UI ships no schema has such values written bare, so its UI takes either form. The arg specs keep describing args for models and tools ([Client-owned board state](Rewrite-1.1)), while the schema gives their shapes.
 

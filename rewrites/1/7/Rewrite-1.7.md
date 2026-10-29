@@ -1,7 +1,7 @@
 # UI kit and design system for the client
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.ui: the design system that core's client, the dock and the extensions follow, the widgets block packages draw with today, the table preview it adds as a renderer of core's table kind, and the one copy of React on the page, with the React SDK that block UIs are written with. It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
+This part covers blockr.ui: the design system that core's client, the dock and the extensions follow, the widgets block packages draw with today, the table preview it adds as a renderer of the output family `blockr.core-table`, and the one copy of React on the page, with the React SDK that block UIs are written with. It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
 
 ## Problem
 
@@ -20,7 +20,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 | Design tokens, the theme and base CSS, fonts, icons and the design system article | 1,223 of CSS, 10 fonts, 19 icons | Carried over, as the design system the client follows |
 | Widgets on `window.Blockr`, such as `Blockr.Select`, `Blockr.textCommit` and `Blockr.gearTray`, with their types and CSS | 3,628 of JS, 2,194 of CSS | Open (below), since they reach block UIs as page globals |
 | R helpers that draw them into Shiny UIs: the gear tray, action menu, dropdown, shortcut hints and block marks | 646 of R | Open (below), since nothing in R draws UI |
-| The table preview, a display for core's `tabular_display()` hook, with its render engine | 916 of R, 94 of JS, 322 of CSS | Carried over as a renderer of core's table kind, which takes the place of core's plain table wherever blockr.ui is loaded ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
+| The table preview, a display for core's `tabular_display()` hook, with its render engine | 916 of R, 94 of JS, 322 of CSS | Carried over as a renderer of the output family `blockr.core-table`, which takes the place of core's plain table wherever blockr.ui is loaded ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
 | Asset dependencies and the package's own files | 423 of R | Replaced by however the client loads blockr.ui's assets (below) |
 | Fixes to Shiny's behaviour: the recalculating fade, empty input batches, and the gear tray's input binding | 285 of JS | Dropped, unless the bridge needs one, since no Shiny input or output draws the board |
 
@@ -40,7 +40,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 ## Work
 
 - Ship React, one copy for the page, with the React SDK that block UIs are written with and the build preset that maps `react` to it, inside the R package, in blockr.ui
-- Port the table preview to a renderer of core's table kind, paging and sorting through the output's `meta`, in blockr.ui
+- Port the table preview to a renderer of the output family `blockr.core-table`, paging and sorting through the output's `meta`, in blockr.ui
 
 ## Design pages
 
