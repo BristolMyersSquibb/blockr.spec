@@ -1,0 +1,53 @@
+# Deploys main to the wiki of BristolMyersSquibb/blockr, where the pages are
+# read. Every commit since BASE reaches the wiki without .github/, so no
+# workflow file lands there and WIKI_TOKEN needs no Workflows permission. The
+# push is a fast-forward, so an edit made on the wiki itself makes it fail
+# until that edit is copied here and the workflow is run with force.
+name: Deploy wiki
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Overwrite the wiki, once its own edits are copied here
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-wiki
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          # Otherwise git sends this repo's token to the wiki, not WIKI_TOKEN.
+          persist-credentials: false
+
+      - name: Push to the wiki
+        env:
+          # The wiki's master when this repo was made from it: history up to
+          # here is the wiki's own, and reaches it unchanged.
+          BASE: 956944740a0f4cfab13aa2fd99aee9c57e45c7b2
+          FORCE: ${{ inputs.force }}
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: |
+          git checkout -q -B deploy
+          if [ "$(git rev-parse HEAD)" != "$BASE" ]; then
+            FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --prune-empty \
+              --index-filter 'git rm -r -q --cached --ignore-unmatch .github' \
+              -- "$BASE..deploy"
+          fi
+          force=
+          if [ "$FORCE" = true ]; then force=--force; fi
+          git push $force \
+            "https://x-access-token:$WIKI_TOKEN@github.com/BristolMyersSquibb/blockr.wiki.git" \
+            deploy:master
