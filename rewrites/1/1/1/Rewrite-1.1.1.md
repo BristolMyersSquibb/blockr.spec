@@ -15,21 +15,21 @@ The first of the API proposals for the client-owned board ([Client-owned board s
 
 ### What lives where
 
-Each piece of state has one writer. The board is the client's alone, and what R holds about it is either computed from one version of it, as a result is, or handed over once, as the opening board is. Neither is ever edited to follow the board, so nothing has to be kept in step with it. The board holds only what changes while the app runs, with the ids and registry ids that say what each value belongs to, while what nothing changes stays out of it: a block class's UI travels in the block registry's entries R sends the client, and an option's label and the rest of its definition are the client's own, defined by the package that ships the option.
+Each piece of state has one writer. The board is the client's alone, and what R holds about it is either computed from the board at one moment, as a result is, or handed over once, as the opening board is. Neither is ever edited to follow the board, so nothing has to be kept in step with it. The board holds only what changes while the app runs, with the ids and registry ids that say what each value belongs to, while what nothing changes stays out of it: a block class's UI travels in the block registry's entries R sends the client, and an option's label and the rest of its definition are the client's own, defined by the package that ships the option.
 
 | Object | Where | Lives | What it is for |
 |---|---|---|---|
 | Board, with its blocks, links, stacks and option values | The client, in the store | Until another board is opened, and in files | The only copy of what the user built (this proposal) |
 | Store | The client, one per board | The page | Holds the board and applies every change to it, with undo ([Board updates](Rewrite-1.1.2)) |
 | Command registry | The client | The page | The edits that menus, shortcuts, extensions and the assistant run ([Board updates](Rewrite-1.1.2)) |
-| Scheduler | The client | The page | Versions, statuses, conditions and demand, computed from the board and R's replies ([Evaluation in the client](Rewrite-1.1.10)) |
+| Scheduler | The client | The page | Revisions, statuses, conditions and demand, computed from the board and R's replies ([Evaluation in the client](Rewrite-1.1.10)) |
 | Block registry entries | The client | The page | Each block class by registry id, with its UI, inputs and arg specs, the schema of its state that its UI ships, and its definition where it was defined outside a package, which R sends with the versions of its packages when the client connects and whenever a board opens, for neither side to edit ([Block classes in R](Rewrite-1.1.5#registration)) |
 | Options | The client | The page | Each option's definition, an `Option`, which the package that ships the option registers from its JS, for neither side to edit, while the board holds its value ([Options](#options)) |
 | Blockr options | The client | The page | The values of the blockr options that front-ends and extensions read, as R sends them with its reply to `hello`, for neither side to edit, while the board holds none of them ([Defining a board in R](Rewrite-1.1.3#blockr-options)) |
 | Front-end and extensions | The client | The page | Draw the board and work on it through the store, commands, demand and requests, keeping their own state in the board ([Front-ends and extension points](Rewrite-1.1.8)) |
 | Block registry | R | The process, and a class a file defines until another board opens | Each registered block class, a value holding its UI, inputs, requests, options and the functions that evaluate its blocks, with its constructor and metadata ([Block classes in R](Rewrite-1.1.5)) |
 | R board | R | While R converts it | Built by an app script's constructor calls, whose options R collects and whose block classes it registers, or from a file of today's stack, then converted to the client's board and dropped, so it never exists beside the client's board |
-| Results | R | Until the client forgets the block | For each block R has evaluated, the version, value and expression of its latest evaluation, with the previous value kept while the next computes. They hold no state, which each evaluation brings, so they cannot fall out of step with the board ([Block classes in R](Rewrite-1.1.5#evaluation)) |
+| Results | R | Until the client forgets the block | For each block R has evaluated, the revision, value and block expression of its latest evaluation, with the previous value kept while the next computes. They hold no state, which each evaluation brings, so they cannot fall out of step with the board ([Block classes in R](Rewrite-1.1.5#evaluation)) |
 | Saved board | A file | As long as the file | The board, with the versions of the packages that saved it and the source of block classes defined outside a package, written by the client and read by R ([Serialization](Rewrite-1.1.4#files)) |
 
 ### Objects in R
@@ -39,7 +39,7 @@ R holds no copy of the board, so nothing in R has to follow it: an R object eith
 - An R board, with its blocks, links, stacks and options, exists only while R converts it to the client's board: the one an app script builds with constructors, whose options R collects and whose block classes it registers, and the one `blockr_deser()` builds from a file of today's stack. R hands it to the client as its board and drops it, while a board given as JSON of the new stack it opens without building one ([Board updates](Rewrite-1.1.2#opening-a-board)). Its S3 classes do their work there, in the constructors, in `blockr_deser()` and in collecting options, and none of them reaches the client, whose board names block classes by registry id (below).
 - A block class is a value, defined once with `new_block_class()` and held by the block registry: its UI, inputs, requests and options, and the functions that validate a state, build the expression and evaluate it ([Block classes in R](Rewrite-1.1.5)). Nothing about a class is copied into a block.
 - A block, as its constructor returns it, holds its state and name and refers to its class. R builds blocks only where a board is built, in an app script and when a board is opened, and keeps none while the app runs.
-- Results are an environment keyed by block id, holding for each block R has evaluated the version, value and expression of its latest evaluation, with the previous value kept while the next computes. They hold no state: an evaluation brings the recipe's state, from which the class's `expr` builds the block expression that `block_eval()` runs, and the coercion its class names makes an output from a result ([Wire protocol](Rewrite-1.1.9#outputs)). R drops a block's results when the client says the block is gone ([Wire protocol](Rewrite-1.1.9)).
+- Results are an environment keyed by block id, holding for each block R has evaluated the revision, value and block expression of its latest evaluation, with the previous value kept while the next computes. They hold no state: an evaluation brings the recipe's state, from which the class's `expr` builds the block expression that `block_eval()` runs, and the coercion its class names makes an output from a result ([Wire protocol](Rewrite-1.1.9#outputs)). R drops a block's results when the client says the block is gone ([Wire protocol](Rewrite-1.1.9)).
 - A request carries the current state it needs: an evaluation its recipe ([Wire protocol](Rewrite-1.1.9)), a block class's request the state args its function names, and an output request the board's option values.
 
 ### The board
@@ -92,7 +92,7 @@ A block's state is its constructor's args and nothing else, so calling its class
 
 A block's state is part of the board and its status is not, because the board holds what someone wrote, while the scheduler holds what is computed from it, beside the board and keyed by block id ([Evaluation in the client](Rewrite-1.1.10)). Both change while the app runs, so what separates them is where they come from:
 
-| | State | Status, version and result |
+| | State | Status, revision and result |
 |---|---|---|
 | Written by | The user or the assistant, through a command | The scheduler, from R's replies |
 | Can be recomputed | No, it is the source | Yes, by evaluating again |

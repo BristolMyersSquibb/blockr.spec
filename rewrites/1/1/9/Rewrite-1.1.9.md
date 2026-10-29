@@ -1,7 +1,7 @@
 # Wire protocol between the client and R
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the messages the client and R exchange, and what R does with each. It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [block classes](Rewrite-1.1.5) proposals, and shapes writing the wire protocol, building the per-session evaluator and the Shiny bridge, and locking a board when the app starts, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R evaluates a block with its class and describes its output is [Block classes in R](Rewrite-1.1.5)'s, how R decodes state values is the [serialization proposal](Rewrite-1.1.4)'s, how a module sends requests through its host is [UI modules in JS](Rewrite-1.1.7)'s, and what the client does with replies, its versions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the messages the client and R exchange, and what R does with each. It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [block classes](Rewrite-1.1.5) proposals, and shapes writing the wire protocol, building the per-session evaluator and the Shiny bridge, and locking a board when the app starts, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R evaluates a block with its class and describes its output is [Block classes in R](Rewrite-1.1.5)'s, how R decodes state values is the [serialization proposal](Rewrite-1.1.4)'s, how a module sends requests through its host is [UI modules in JS](Rewrite-1.1.7)'s, and what the client does with replies, its revisions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)).
 
 ## What must hold
 
@@ -29,7 +29,7 @@ A reply's status belongs to its request alone: an `error` carries the conditions
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the values of the blockr options the client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)), the lock where the app locks the board (below), and the opening board, the one the app script built ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the values of the blockr options the client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)), the lock where the app locks the board (below), and the opening board, the one the app script built ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, which the client counts as linked ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "binary", "progress"] }
@@ -51,26 +51,26 @@ The `store.open()` call sends an `open`, which carries a saved board as the file
 
 ### Evaluating a block
 
-An evaluation request names the block and its version and carries the recipe: the block's registry id and state, and its inputs as upstream blocks and versions, in slot order, whose ids R puts in the expression the block class's `expr` gives, evaluating it with each upstream result bound to its id ([Block classes in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot. A one-off evaluation's parameters, such as the write block's `save`, travel in the request's `params`, which R passes to `block_eval()` ([Evaluation in the client](Rewrite-1.1.10#demand), [Block classes in R](Rewrite-1.1.5#evaluation)).
+An evaluation request names the block and its revision and carries the recipe: the block's registry id and state, and its inputs as upstream blocks and revisions, in slot order, whose ids R puts in the expression the block class's `expr` gives, evaluating it with each upstream result bound to its id ([Block classes in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot. A one-time evaluation's parameters, such as the write block's `save`, travel in the request's `params`, which R passes to `block_eval()` ([Evaluation in the client](Rewrite-1.1.10#demand), [Block classes in R](Rewrite-1.1.5#evaluation)).
 
 ```json
-{ "id": "17", "kind": "evaluate", "block": "c", "version": 4,
+{ "id": "17", "kind": "evaluate", "block": "c", "revision": 4,
   "recipe": { "registry_id": "blockr.core-merge_block", "state": { "by": ["Species"], "all_x": false, "all_y": false },
-              "inputs": [ { "slot": "x", "block": "a", "version": 2 }, { "slot": "y", "block": "b", "version": 3 } ] } }
+              "inputs": [ { "slot": "x", "block": "a", "revision": 2 }, { "slot": "y", "block": "b", "revision": 3 } ] } }
 ```
 
 R keeps the result, and the reply carries what the client shows about it: the expression R built, the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
 
 ```json
-{ "id": "17", "status": "ok", "block": "c", "version": 4, "expr": "merge(a, b, by = \"Species\", all.x = FALSE, all.y = FALSE)",
+{ "id": "17", "status": "ok", "block": "c", "revision": 4, "expr": "merge(a, b, by = \"Species\", all.x = FALSE, all.y = FALSE)",
   "summary": "<data.frame> [150 × 7]",
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "evaluate", "message": "..." } ],
   "omitted": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
 
-A reply keeps the first few conditions of each severity and counts the rest in `omitted`, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)). The phase names the class's function that raised a condition: `expr`, which builds the expression, `inputs`, whose body checks the data, or `evaluate`. The status is `invalid` when the block class's `expr` signals `invalid()`, with its message, or uses an arg the state leaves unset, naming it, before anything runs ([Block classes in R](Rewrite-1.1.5#expressions)). A request on a version that is still computing waits for it.
+A reply keeps the first few conditions of each severity and counts the rest in `omitted`, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)). The phase names the class's function that raised a condition: `expr`, which builds the expression, `inputs`, whose body checks the data, or `evaluate`. The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)). A request on a revision that is still computing waits for it.
 
-R replies `missing` to any request that names a block version it does not hold, such as a result it has forgotten or replaced, naming the blocks and versions it lacks, and the client has a block evaluated again where that version is still its current one, then asks again. A new session holds no results, so after its `hello` the client queues every demanded block again, with everything upstream ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+R replies `missing` to any request that names a block's revision it does not hold, such as a result it has forgotten or replaced, naming the blocks and revisions it lacks, and the client has a block evaluated again where that revision is still its current one and reads `ready`, then asks again, while a request that reads a block that is `failed`, `invalid` or `waiting` is never sent ([Evaluation in the client](Rewrite-1.1.10#demand)). A new session holds no results, so after its `hello` the client queues every demanded block again, with everything upstream ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
 ### Requests
 
@@ -78,21 +78,21 @@ A block class's requests and a package's own requests share one kind, resolved b
 
 ```json
 { "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "args": {},
-  "reads": [ { "slot": "data", "block": "a", "version": 2 } ] }
+  "reads": [ { "slot": "data", "block": "a", "revision": 2 } ] }
 { "id": "18", "status": "ok", "value": 150 }
 
 { "id": "19", "kind": "request", "package": "blockr.code", "name": "code", "args": {},
-  "reads": [ { "block": "a", "version": 2 }, { "block": "b", "version": 3 } ] }
+  "reads": [ { "block": "a", "revision": 2 }, { "block": "b", "revision": 3 } ] }
 ```
 
-The client caches a block class's answers by registry id, name, args, options and the versions read, except a volatile request's or an action's, and never caches a package's, since an action and a package's request may write. A package registers its requests in R as it loads, as it declares its renderers ([Front-ends and extension points](Rewrite-1.1.8#renderers)), and R calls one with its `args` and the results it reads, each with the expression R built for it. A request that reads blocks, a block class's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)). No request times out, since no reply is lost on a live connection and giving up on a request frees nothing in R, which runs it when its turn comes: a block class's request is bounded by its author ([Client-owned board state](Rewrite-1.1#proposal)), and any request may send progress, as blockr.md's export to PowerPoint would, which shows that a long one is still running.
+The client caches a block class's answers by registry id, name, args, options and the revisions read, except a volatile request's or an action's, and never caches a package's, since an action and a package's request may write. A package registers its requests in R as it loads, as it declares its renderers ([Front-ends and extension points](Rewrite-1.1.8#renderers)), and R calls one with its `args` and the results it reads, each with the expression R built for it. A request that reads blocks, a block class's or a package's, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)). No request times out, since no reply is lost on a live connection and giving up on a request frees nothing in R, which runs it when its turn comes: a block class's request is bounded by its author ([Client-owned board state](Rewrite-1.1#proposal)), and any request may send progress, as blockr.md's export to PowerPoint would, which shows that a long one is still running.
 
 ### Outputs
 
-An output request asks for the output that the generic its block class names in `output` makes from the block's result at a version ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's `meta`, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the generic its block class names in `output` makes from the block's result at a revision ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's `meta`, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
-{ "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },
+{ "id": "20", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "meta": {} }
 { "id": "20", "status": "ok", "output": { "renderer": "blockr.core-basic_table", "columns": [], "rows": [], "total": 150 } }
@@ -102,11 +102,11 @@ An output is a description in JSON whose `renderer` names the renderer R picked 
 
 ### One request at a time
 
-R runs a session's requests one at a time, in the order they arrive, so that a request on a version still computing waits for it, as the scheduler's topological order relies on ([Evaluation in the client](Rewrite-1.1.10#scheduling)), and a request that reads results waits behind a running evaluation. R keeps the queue itself, and runs each request as a function that returns a promise of its reply, so that where a request runs is R's choice: in the session's process for now, where it holds the process until it ends, and in a worker process later, such as a mirai daemon, which no message notices. A request's promise resolves to its reply whatever the block or the request's function did, an `error` included, and rejects only when R itself fails. Between two requests, R returns to its event loop and handles the messages that came in meanwhile, so that a `cancel` or a `forget` drops a queued request before it starts, and a request that starts before its `cancel` arrives costs only time, since the client drops every reply for a version it has superseded ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+R runs a session's requests one at a time, in the order they arrive, so that a request on a revision still computing waits for it, as the scheduler's topological order relies on ([Evaluation in the client](Rewrite-1.1.10#scheduling)), and a request that reads results waits behind a running evaluation. R keeps the queue itself, and runs each request as a function that returns a promise of its reply, so that where a request runs is R's choice: in the session's process for now, where it holds the process until it ends, and in a worker process later, such as a mirai daemon, which no message notices. A request's promise resolves to its reply whatever the block or the request's function did, an `error` included, and rejects only when R itself fails. Between two requests, R returns to its event loop and handles the messages that came in meanwhile, so that a `cancel` or a `forget` drops a queued request before it starts, and a request that starts before its `cancel` arrives costs only time, since the client drops every reply for a revision it has superseded ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
 ### Cancelling
 
-A `cancel` names a request, and R drops it if it has not started, or stops it where a worker runs it that can, as mirai's `stop_mirai()` interrupts a running task, and replies `cancelled` to it, if both sides named the capability. In the session's process, a request that has started runs to its end, since R reads no message while it runs, and a promise cannot be cancelled, so that stopping a running request is up to whatever runs it. Its reply is then the one it would have had, which the client keeps where the block's version is still current and drops where it has been superseded. The client cancels an evaluation whose version it has since superseded, and one that keeps a more urgent evaluation waiting, as the scheduler decides ([Evaluation in the client](Rewrite-1.1.10#scheduling)), but never a one-off evaluation with parameters, which may write and so runs once per call ([Evaluation in the client](Rewrite-1.1.10#demand)).
+A `cancel` names a request, and R drops it if it has not started, or stops it where a worker runs it that can, as mirai's `stop_mirai()` interrupts a running task, and replies `cancelled` to it, if both sides named the capability. In the session's process, a request that has started runs to its end, since R reads no message while it runs, and a promise cannot be cancelled, so that stopping a running request is up to whatever runs it. Its reply is then the one it would have had, which the client keeps where the block's revision is still current and drops where it has been superseded. The client cancels an evaluation whose revision it has since superseded, and one that keeps a more urgent evaluation waiting, as the scheduler decides ([Evaluation in the client](Rewrite-1.1.10#scheduling)), but never a one-time evaluation with parameters, which may write and so runs once per call ([Evaluation in the client](Rewrite-1.1.10#demand)).
 
 ### Forgetting blocks
 
@@ -126,7 +126,7 @@ An app locks a board when it starts, through the blockr option `blockr.locked` a
 
 That stops only a client that plays by the rules, so R holds the lock in what it runs, comparing nothing a client sends. When the app starts, it builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the block expression it evaluates, such as `f <- dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again. In a locked session:
 
-- It evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the versions of the inputs, which say only which of its own results to bind, and the state and parameters of a block left open.
+- It evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the revisions of the inputs, which say only which of its own results to bind, and the state and parameters of a block left open.
 - It answers a block class's request with a locked block's opening state and the board's opening option values, whatever the request holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
 - It runs a block class's action only if its class declares that it may run on a locked board, as it answers a request.
 - It opens no board, refusing every `open` and ignoring a board that a `hello` carries, so that a client starting a new session keeps its own board, and with it a reader's choices in the blocks left open.
@@ -166,7 +166,7 @@ The lock leaves whole blocks open rather than single args, which a later minor v
 
 ### Versions
 
-The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format and package versions a saved board records ([Serialization](Rewrite-1.1.4#files)) and a block's version, which names its result ([Evaluation in the client](Rewrite-1.1.10#versions)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
+The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format and package versions a saved board records ([Serialization](Rewrite-1.1.4#files)) and a block's revision, which names its result ([Evaluation in the client](Rewrite-1.1.10#revisions)). Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
 
 ### The Shiny bridge
 
