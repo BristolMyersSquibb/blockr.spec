@@ -58,6 +58,53 @@ A type has no say in when its blocks are evaluated: a block that must run with n
 
 The functions R runs a block's expression and outputs its result with, `evaluate`, `summary` and `output`, take the type as their first argument, `x`, as an S3 method takes its object, so that a field can call its parent's, `x$parent$output(x, ...)`, as a method calls `NextMethod()`. The other function fields name what they read instead: `expr` the state args, a request the inputs and state args it reads, `migrate` the state and the version that saved it, and `dat_valid` the inputs and state args it reads. A type's `options` add to its parent's instead of replacing them, as `board_options()` methods combine with `NextMethod()` today. The `block_type()` function checks a type when it is defined, so that no block is checked for being well formed again: that no state arg is `...` or `block_name`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that the arguments of `dat_valid` and of each request name inputs or state args, but for a request's parameters, which have a default; that `expr`, called without args, returns an expression or cannot run yet; and, once it reads the schema the type's UI ships, that the schema's properties are the state args. All but the last two read only `inputs` and the formals of the functions.
 
+A sketch of `block_type()`, in which a field a type leaves out is its parent's and the checks run for every type with an `expr`:
+
+```r
+block_type <- function(class, parent = NULL, inputs = NULL, expr = NULL,
+                       ui = NULL, requests = NULL, dat_valid = NULL,
+                       evaluate = NULL, summary = NULL, output = NULL,
+                       options = list(), migrate = NULL) {
+
+  own <- Filter(Negate(is.null), list(
+    inputs = inputs, expr = expr, ui = ui, requests = requests,
+    dat_valid = dat_valid, evaluate = evaluate, summary = summary,
+    output = output, migrate = migrate
+  ))
+
+  type <- if (is.null(parent)) list() else unclass(parent)  # a field left out is the parent's
+  type[names(own)] <- own
+  type$class <- c(class, parent$class)
+  type$parent <- parent
+  type$options <- c(parent$options, options)
+
+  if (!is.null(type$expr)) {
+    state_args <- names(formals(type$expr))
+    known <- c(type$inputs, state_args)
+    stopifnot(
+      "no state arg is ... or block_name" = !any(c("...", "block_name") %in% state_args),
+      "no input shares a state arg's name" = !any(type$inputs %in% state_args),
+      "dat_valid names only inputs and state args" =
+        is.null(type$dat_valid) || all(names(formals(type$dat_valid)) %in% known)
+    )
+    for (f in type$requests) {
+      params <- setdiff(names(formals(f)), known)
+      stopifnot("a request's other args are parameters, with defaults" =
+        all(nzchar(vapply(formals(f)[params], deparse, ""))))
+    }
+    res <- tryCatch(type$expr(), invalid = function(e) NULL, missingArgError = function(e) NULL)
+    stopifnot("expr() gives an expression" = is.null(res) || is.language(res) || is.character(res))
+    # and, once it reads the schema the UI ships, that its properties are the state args
+  }
+
+  if (!isNamespace(topenv(parent.frame()))) {
+    attr(type, "call") <- match.call()  # the type's definition, for a file (notes)
+  }
+
+  structure(type, class = "block_type")
+}
+```
+
 ### Expressions
 
 What a type's `expr` returns is the block's expression: a call, which its author builds with any tool, `bquote()`, `rlang::expr()` or `call()`, or a string, such as from `sprintf()`, which R parses. Each input appears in it by its name, and only the state is put into it, so that the head block's expression for `n = 10L` is `utils::head(data, n = 10L)` whatever block it is linked to, and R evaluates it with `data` bound to the upstream block's result, as core evaluates a block today (below). R runs exactly that expression, so the code a block shows and exports is the code that ran. Since `expr` never sees an input's data, a type whose expression depends on the data says so in the expression, as `utils::head(data, n = min(10L, nrow(data)))` caps `n` at the rows it gets, or gets what it needs into its state through a request. R calls `expr` with the args the block's state holds, so a body that uses an unset arg makes R reply `invalid`, naming the arg, as the merge block's does until its `by` is set:
