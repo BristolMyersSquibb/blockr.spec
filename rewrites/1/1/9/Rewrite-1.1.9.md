@@ -79,10 +79,10 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "meta": {} }
-{ "id": "20", "status": "ok", "output": { "family": ["blockr.core-table"], "columns": [], "rows": [], "total": 150 } }
+{ "id": "20", "status": "ok", "output": { "family": "blockr.core-table", "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` lists its output families, most specific first, which the renderer R picked for the first of them that has one draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. A request may carry a file as a binary body, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` names its output family, which the renderer R picked for that family draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. A request may carry a file as a binary body, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Cancelling
 
