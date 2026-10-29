@@ -1,5 +1,5 @@
 # Evaluation in the client: revisions, demand and statuses
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-10-29. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what the client tracks about evaluation, and the API front-ends and extensions use to ask for it. It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [wire protocol](Rewrite-1.1.9) proposals, and shapes building the client scheduler, an item in the Work list of [Client-owned board state](Rewrite-1.1#work). The messages that carry an evaluation are the wire protocol's, a front-end demands the blocks it shows as [Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end) has it, and core fetches and draws a block's output as [UI modules in JS](Rewrite-1.1.7#the-contract) has it. It moves into the client the demand and statuses that today's board server has from [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) and [blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488), and keeps the statuses' names.
 
