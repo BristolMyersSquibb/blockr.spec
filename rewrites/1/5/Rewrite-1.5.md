@@ -28,6 +28,6 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The generator in `R/code.R` stays, `export_wrapped_code(expressions, board)` ([`code.R#L1-L16`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/code.R#L1-L16)), with styler, xml2 and downlit for formatting and highlighting. The "Evaluate blocks" button of today's modal, which sends `evaluate` for every block, becomes the claim.
+The generator in `R/code.R` stays, `export_wrapped_code(expressions, board)` ([`code.R#L1-L16`](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/code.R#L1-L16)), with styler, xml2 and downlit for formatting and highlighting. The "Evaluate blocks" button of today's modal, which sends `evaluate` for every block, becomes that one-off evaluation.
 
 </details>

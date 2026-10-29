@@ -89,7 +89,7 @@ The client caches a block class's answers by registry id, name, args, options an
 
 ### Outputs
 
-An output request asks for what the block class's `output(x, result, options, info, meta)` returns for the block's result at a version ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's `meta`, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the generic its block class names in `output` makes from the block's result at a version ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's `meta`, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },

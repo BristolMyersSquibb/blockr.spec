@@ -34,6 +34,8 @@ Keep what has served us well:
 
 Improve what has not, which the Problem above sets out: state kept in two places, UI logic in R's reactive graph with the workarounds its cost needs, and a dock drawn from R. The same goes for having two ways to extend a board, core's plugins beside the dock's extensions.
 
+Keep edge cases out of core. An edge case goes through an escape hatch core already has, such as a demand, a request, or a method of a generic, as a write block's manual save goes through a `block_eval()` method and a one-off evaluation with a parameter ([Block classes in R](Rewrite-1.1.5#evaluation)), and core grows a new capability only where none fits, and then a general one.
+
 Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 
 - S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks the object up by id, as it looks up block classes in the block registry and commands in the command registry, and what the methods did becomes data on one type, so an option is an instance of one `Option` type rather than a type of its own ([Board objects](Rewrite-1.1.1#options)).
@@ -85,6 +87,8 @@ Every page, spec and issue of the rewrite uses these names in these senses only,
 | Block | One instance of a block class, which the board holds as `{ registry_id, state, name }` ([Blocks](Rewrite-1.1.1#blocks)). R makes an R block, with the class's constructor, only while it builds a board. A block is never a block class, which is always called one |
 | Block registry | R's registry of block classes, filled by `register_block()`, whose entries R sends the client |
 | Registry id | A block class's id in the block registry, such as `blockr.core-head_block` |
+| Block expression | The R expression R evaluates for a block and an exported script holds for it, built from what its class's `expr` returns with the upstream blocks' ids in place of its inputs' placeholders, or, where R cannot put them in, a function of the block's inputs called with those ids ([Block classes in R](Rewrite-1.1.5#expressions)) |
+| Placeholder | An input written as `.(data)` in what a class's `expr` returns, which R replaces with the upstream block's id, or with the input's default while the input is unlinked ([Block classes in R](Rewrite-1.1.5#expressions)) |
 | Command registry | The client's registry of commands ([Board updates](Rewrite-1.1.2#commands)) |
 | Board | The client's board, the JSON object the store holds |
 | R board | The R object that an app script's constructors build, or that `blockr_deser()` builds from a file of today's stack, and that R drops once it has the board's JSON |
@@ -94,8 +98,8 @@ Every page, spec and issue of the rewrite uses these names in these senses only,
 | Attribute | A value that a package keeps on every block, under a name it registers, which core carries on the block without reading it ([Blocks](Rewrite-1.1.1#blocks)) |
 | Front-end | The module that draws a board, which a package declares in R under a name, giving it an id such as `blockr.dock-dock`, and which a board names in its `front_end` ([Front-ends and extension points](Rewrite-1.1.8)) |
 | Startup module | The one module a package may declare in R for what has to run before anything mounts, which core initializes with `CoreApi`, one package at a time in the order of their R dependencies, before the front-end mounts and before the store opens a board ([UI modules in JS](Rewrite-1.1.7#startup-modules)) |
-| Output | What a block class's `output` returns for one result: a description in JSON whose `family` names its output family ([Block classes in R](Rewrite-1.1.5#outputs)) |
-| Output family | What an output holds, named `{pkg}-{name}` as a registry id is, such as `blockr.core-table`, and documented by the package that defines it, which R picks one renderer for ([Block classes in R](Rewrite-1.1.5#outputs)) |
+| Output | An object of an output family's class, which the family's generic makes from one result and R sends as JSON, with its class as its `family` ([Block classes in R](Rewrite-1.1.5#outputs)) |
+| Output family | A class of outputs, named `{pkg}-{name}` as a registry id is, such as `blockr.core-table`, which the package that defines it documents and gives a constructor and a generic that makes an output from a result, which a block class names by its generic, and which R picks one renderer for ([Block classes in R](Rewrite-1.1.5#outputs)) |
 | Renderer | A module that draws one output family or a board option's value, which a package declares in R, and of which R picks one for each output family and each board option ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
 | Lock | What an app fixes when it starts, and R holds in what it runs so that no client can loosen it: a locked board loads no other board and keeps everything core keeps in it, and every block keeps its opening state but those whose inputs show, as core's attribute `visible` says on the board the app script built, while a front-end may lock more of what it alone governs, such as the dock the arrangement of its panels ([Wire protocol](Rewrite-1.1.9#locked-boards)) |
-| Demand | What an owner asks the scheduler to keep evaluated, a set of blocks or a rule over the board, until it releases it. The scheduler evaluates every demanded block and what feeds it, while a one-off evaluation brings some blocks up to date once ([Evaluation in the client](Rewrite-1.1.10#demand)) |
+| Demand | What an owner asks the scheduler to keep evaluated, a set of blocks or a function of the board, until it releases it. The scheduler evaluates every demanded block and what feeds it, while a one-off evaluation brings some blocks up to date once ([Evaluation in the client](Rewrite-1.1.10#demand)) |
