@@ -5,7 +5,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 
 ## What must hold
 
-1. A block class's UI is one ES module, shipped inside its R package, or carried by its definition for a class defined outside a package, and loaded the first time core mounts a block of that class.
+1. A block class's UI is one ES module, shipped inside its R package, or in a file the script names for a class defined outside a package, and loaded the first time core mounts a block of that class.
 2. A module gets everything it shares with the page through the host it receives, except a library it imports as it loads, such as React, which reaches it through its build.
 3. The contract needs no framework, so a UI in plain TypeScript and one in React meet it alike.
 4. One copy each of React, core's runtime and every shared module runs on the page.
@@ -147,7 +147,7 @@ A block class's UI is an ES module in its package's `inst/`, written against the
 
 In R, a block class names its UI in its `ui` field ([Block classes in R](Rewrite-1.1.5#the-block-class)), and a package declares the modules it offers others and its renderers ([Front-ends and extension points](Rewrite-1.1.8#renderers)), each under a name that gives it an id, `{pkg}-{name}`, as a registry id is. R tells the client where each module is served, with the block registry's entries, when the client connects and whenever a board opens ([Block classes in R](Rewrite-1.1.5#registration)), and the client imports each URL once and loads the CSS beside a module with it. A module of another package is reached through `host.module()` by its id, along the R dependencies, as blockr.dm reuses blockr.dplyr's filter UI today through its HTML dependency ([R/dm-filter-block.R#L173-L191](https://github.com/BristolMyersSquibb/blockr.dm/blob/4e2191a9a99bafd0a60f8b8ee301c9f9c3e7b8ee/R/dm-filter-block.R#L173-L191)).
 
-A block class defined outside a package names a plain JS module, whose text its definition carries ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)), so that a saved file brings the class's UI along, and core imports it once R has registered the class. R registers such a class from a file only where the `load_definitions` option allows it, so the JS a file carries runs under the same opt-in as its R.
+A block class defined outside a package names a plain JS module by its path, which R serves once the script has registered the class, as it serves a package's modules, while a file holds none of it ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)). R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads. A package ships the JSON Schema of each field it registers beside the startup module that registers it, in the same way ([Board updates](Rewrite-1.1.2#fields)).
 
@@ -165,7 +165,7 @@ An element that has left the page measures 0 by 0, as dockview warns of a hidden
 
 Only running the startup modules and their `initialize()` follows the order, so core can fetch every one at once, such as with `<link rel="modulepreload">`. R orders them by the `Depends` and `Imports` of each package's DESCRIPTION, since the namespaces R has loaded come in no order of their own.
 
-The module of a class defined outside a package is written into its definition as the file's text, read when `new_block_class()` is called, rather than as the path the script gave, which does not exist where the file is opened. R can serve that text at a URL of its own, as it serves a package's modules, so that the client imports every module alike, and a page whose content security policy forbids `blob:` scripts loads it too.
+R serves the module of a class defined outside a package at a URL of its own, read from the path the script gave, as it serves a package's modules, so that the client imports every module alike, and a page whose content security policy forbids `blob:` scripts loads it too.
 
 An import map, which would let a module import `react` with no build step, was weighed for shinyreact and not chosen: injecting one is fragile with the order in which htmltools assembles the page head, and Vite's dev server does not resolve bare specifiers against a page's import map ([js-distribution decision](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/decisions/2026-08-17-js-distribution.md)).
 
