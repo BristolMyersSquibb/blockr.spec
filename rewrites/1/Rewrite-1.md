@@ -76,6 +76,7 @@ None.
 - Pins: a package's `js-state` pins each upstream's in `Remotes:`, as `BristolMyersSquibb/blockr.core@js-state`, and so does every package between them, since pak cannot resolve one package at two refs. The pins come out at the switch.
 - Thread: [blockr#502](https://github.com/orgs/BristolMyersSquibb/discussions/502), where comments on any page go.
 - Issue footer: "Branch from `js-state` and open the PR against it, creating the branch from main if this is the first PR to need it: that branch collects the client-owned board until the switch, and main keeps the current stack."
+- Code: the R code on the pages sketches what an API looks like and how it behaves, and is not to be carried over verbatim. It does not follow the patterns and utilities the blockr packages have settled on, internal ones such as blockr.core's `chr_ply()` family, `coal()` and `blockr_abort()`, which a sketch writes as `vapply()`, `is.null(x) ||` and `stop()`, and third-party ones such as rlang, vctrs and cli, so an implementation adapts it to the package it lands in. Adapting it is no departure from the pages.
 
 ### Terms
 
