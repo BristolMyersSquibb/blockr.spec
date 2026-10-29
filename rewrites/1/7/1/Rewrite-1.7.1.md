@@ -43,7 +43,7 @@ Layout comes from containers: `block_inputs()` stacks its elements, a row places
 
 ### Data-dependent attributes
 
-An attribute is a value or an R function. A function's arguments name what it reads, an input slot or a state arg, and nothing else:
+An attribute is a value or an R function. A function's arguments name what it reads, an input or a state arg, and nothing else:
 
 ```r
 select_input("x", "X axis", choices = \(data) colnames(data))
@@ -51,7 +51,7 @@ select_input("by", "Join by", multiple = TRUE, choices = \(x, y) intersect(colna
 select_input("column", "Column", choices = \(data, table) names(data[[table]]))
 ```
 
-Each function is a request of its block class, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the revision of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block class whose input slot and state arg share a name is rejected when `new_block_class()` defines it, since a function's argument would not say which it means ([Block classes in R](Rewrite-1.1.5)).
+Each function is a request of its block class, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the revision of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block class whose input and state arg share a name is rejected when `new_block_class()` defines it, since a function's argument would not say which it means ([Block classes in R](Rewrite-1.1.5)).
 
 ### Options
 
