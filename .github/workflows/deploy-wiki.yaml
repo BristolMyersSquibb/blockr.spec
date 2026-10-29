@@ -1,22 +1,22 @@
-# Deploys main to the wiki of BristolMyersSquibb/blockr, where the pages are
-# read. Every commit since BASE reaches the wiki without .github/, so no
-# workflow file lands there and WIKI_TOKEN needs no Workflows permission. The
-# push is a fast-forward, so an edit made on the wiki itself makes it fail
-# until that edit is copied here and the workflow is run with force.
+# Publishes main to the wiki of BristolMyersSquibb/blockr, where the pages are
+# read. The merge queue pushes each group to the wiki before merging it, and an
+# hourly run brings edits made on the wiki into main; .github/wiki-sync.sh says
+# how the two stay on one line of history. This job is the only check the
+# queue requires, since a group it has pushed has to be merged.
 name: Deploy wiki
 
 on:
-  push:
+  pull_request:
     branches: [main]
+  merge_group:
+  schedule:
+    - cron: "17 * * * *"
   workflow_dispatch:
     inputs:
-      force:
-        description: Overwrite the wiki, once its own edits are copied here
+      reset:
+        description: Reset the wiki to main, dropping a commit a merge queue run left there
         type: boolean
         default: false
-
-concurrency:
-  group: deploy-wiki
 
 permissions:
   contents: read
@@ -26,28 +26,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Nothing to deploy yet
+        if: github.event_name == 'pull_request'
+        run: echo "The merge queue pushes this PR to the wiki before merging it."
+
       - uses: actions/checkout@v5
+        if: github.event_name != 'pull_request'
         with:
           fetch-depth: 0
           # Otherwise git sends this repo's token to the wiki, not WIKI_TOKEN.
           persist-credentials: false
 
-      - name: Push to the wiki
+      - name: Sync the wiki and main
+        if: github.event_name != 'pull_request'
         env:
-          # The wiki's master when this repo was made from it: history up to
-          # here is the wiki's own, and reaches it unchanged.
-          BASE: 956944740a0f4cfab13aa2fd99aee9c57e45c7b2
-          FORCE: ${{ inputs.force }}
-          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_KEY: ${{ secrets.SPEC_DEPLOY_KEY }}
+          WIKI: https://x-access-token:${{ secrets.WIKI_TOKEN }}@github.com/BristolMyersSquibb/blockr.wiki.git
+          SPEC: git@github.com:BristolMyersSquibb/blockr.spec.git
+          MODE: ${{ github.event_name == 'merge_group' && 'queue' || inputs.reset && 'reset' || 'sync' }}
         run: |
-          git checkout -q -B deploy
-          if [ "$(git rev-parse HEAD)" != "$BASE" ]; then
-            FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --prune-empty \
-              --index-filter 'git rm -r -q --cached --ignore-unmatch .github' \
-              -- "$BASE..deploy"
-          fi
-          force=
-          if [ "$FORCE" = true ]; then force=--force; fi
-          git push $force \
-            "https://x-access-token:$WIKI_TOKEN@github.com/BristolMyersSquibb/blockr.wiki.git" \
-            deploy:master
+          # The deploy key is what may push to main past its ruleset.
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          gh api meta --jq '.ssh_keys[] | "github.com \(.)"' > ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes"
+          bash .github/wiki-sync.sh "$MODE"
