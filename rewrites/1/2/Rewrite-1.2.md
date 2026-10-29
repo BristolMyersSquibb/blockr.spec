@@ -29,12 +29,14 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 - Extensions are few and integrate with the dock's chrome, so unlike block UIs, which keep the framework-free contract of [Client-owned board state](Rewrite-1.1), they use React directly. Their components render inside the dock's React tree, where hooks fail on a second copy ([React](https://react.dev/warnings/invalid-hook-call-warning)), so they are built with the same preset as block UIs, which maps `react` to the one copy blockr.ui ships, the copy the dock itself uses ([UI modules in JS](Rewrite-1.1.7#react)). An extension with state of its own, such as the DAG's layout settings, keeps it in fields it registers with core's store, which other extensions and the assistant change as they change core's objects ([Board updates](Rewrite-1.1.2#fields)), and declares the majors of the core and dock APIs it was built against.
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), the code extension ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt after the dock. This part settles only the API they build on, and leaves libraries, agent design and their R requests to them.
 - The dock draws block cards, with the header of [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) and status from core, and mounts each block's UI component from core's block registry. During the migration, classic R-authored block UIs are parked and adopted as in [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493).
+- A block card's sections show as core's attribute `visible` says, which the card's toggles set, where today the dock keeps that attribute itself, and on a locked board the card offers no toggle, since the blocks whose inputs show are the ones the lock leaves open ([Wire protocol](Rewrite-1.1.9#locked-boards)), while whatever else the dock locks, such as the arrangement of its panels, is its own.
 - From [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493), the hosting of classic block UIs and the CEDX measurement carry over. Its bridge, shinyreact, and its criterion of reusing the dock's model in R do not.
 
 ## Open questions
 
 - Panel kinds: one per board, like the assistant's, or one per block, and whether commands can open panels.
 - How the navbar order and narrow-window behavior of [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) become client API.
+- What the dock locks beyond what core's lock fixes, such as resizing or rearranging its panels, and whether a deployment chooses it. It blocks the dock's part of the lock.
 
 ## Work
 
