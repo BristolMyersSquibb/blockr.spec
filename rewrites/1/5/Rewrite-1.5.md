@@ -10,13 +10,13 @@ The code export shows a board's code in a modal: `generate_flat_code_server()` h
 ## What must hold
 
 1. The code extension is a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) that shows the code of the board.
-2. R generates it from the board's recipes with each block type's `expr`, so the code shown is the code that runs ([Client-owned board state](Rewrite-1.1)).
+2. R generates it from the board's recipes with each block class's `expr`, so the code shown is the code that runs ([Client-owned board state](Rewrite-1.1)).
 3. A block that cannot give code yet, with an unset arg or an error, is named in the answer instead of the script, as `code_export_state()` reports `"blocked"` today.
 
 ## Proposal
 
-- Generation is a request that blockr.code registers ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)): it carries the recipes, R builds each block's expression from its type's `expr`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
-- The request has the blocks it needs evaluated first, in a one-off evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since only an evaluation tells whether a stale block's state still runs, while building the expression itself needs no data, as a type's `expr` builds it from the state alone ([Block types in R](Rewrite-1.1.5#evaluation)).
+- Generation is a request that blockr.code registers ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)): it carries the recipes, R builds each block's expression from its class's `expr`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
+- The request has the blocks it needs evaluated first, in a one-off evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since only an evaluation tells whether a stale block's state still runs, while building the expression itself needs no data, as a class's `expr` builds it from the state alone ([Block classes in R](Rewrite-1.1.5#evaluation)).
 
 ## Open questions
 

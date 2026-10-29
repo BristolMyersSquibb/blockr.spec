@@ -1,11 +1,11 @@
 # Input elements for block UIs written in R
 Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7).
 
-A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block type could compose its UI from in R, without writing TSX, which blockr.ui would build on core's module contract ([UI modules in JS](Rewrite-1.1.7)) once it ships ready-made components. Core ships none of it, and it shapes no issue yet. How a block type names its UI and its requests is the block types proposal ([Block types in R](Rewrite-1.1.5)).
+A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block class could compose its UI from in R, without writing TSX, which blockr.ui would build on core's module contract ([UI modules in JS](Rewrite-1.1.7)) once it ships ready-made components. Core ships none of it, and it shapes no issue yet. How a block class names its UI and its requests is the block classes proposal ([Block classes in R](Rewrite-1.1.5)).
 
 ## What must hold
 
-1. A block type whose UI is a form of common inputs is written in R alone, as most block UIs are today.
+1. A block class whose UI is a form of common inputs is written in R alone, as most block UIs are today.
 2. Every element is bound to one state arg, or to an option's value, and an attribute that depends on the data is an R function whose arguments name what it reads.
 3. The first set covers what core's built-in blocks and the block packages draw today.
 4. R holds no reactive graph, since the client tracks what each attribute reads.
@@ -37,7 +37,7 @@ The first set follows from today's call sites:
 | `numeric_input()` | `numericInput()` |
 | `switch_input()`, `checkbox_input()` | `bslib::input_switch()`, `Blockr.checkbox` |
 | `segmented_input()` | `Blockr.segmented` |
-| `file_input()`, an upload through an action of its block type ([UI modules in JS](Rewrite-1.1.7#the-contract)) | `fileInput()` |
+| `file_input()`, an upload through an action of its block class ([UI modules in JS](Rewrite-1.1.7#the-contract)) | `fileInput()` |
 
 Layout comes from containers: `block_inputs()` stacks its elements, a row places them side by side, and a gear tray with sections holds what is used less, as blockr.ui's gear tray does. A package with an input of its own, such as blockr.io's path picker, ships it as a module that the host offers to others ([UI modules in JS](Rewrite-1.1.7)).
 
@@ -51,7 +51,7 @@ select_input("by", "Join by", multiple = TRUE, choices = \(x, y) intersect(colna
 select_input("column", "Column", choices = \(data, table) names(data[[table]]))
 ```
 
-Each function is a request of its block type, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block type whose input slot and state arg share a name is rejected when `block_type()` defines it, since a function's argument would not say which it means ([Block types in R](Rewrite-1.1.5)).
+Each function is a request of its block class, registered under the element's id and attribute, such as `n.max`. The client asks R for it again when the version of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function. An attribute that depends only on state, such as whether to show a field, goes through the same mechanism. A block class whose input slot and state arg share a name is rejected when `new_block_class()` defines it, since a function's argument would not say which it means ([Block classes in R](Rewrite-1.1.5)).
 
 ### Options
 

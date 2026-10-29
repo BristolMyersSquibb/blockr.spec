@@ -44,7 +44,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 
 ## Design pages
 
-- [Input elements for block UIs written in R](Rewrite-1.7.1): input elements composed in R, with data-dependent attributes as requests of the block type, for the later project
+- [Input elements for block UIs written in R](Rewrite-1.7.1): input elements composed in R, with data-dependent attributes as requests of the block class, for the later project
 
 <details><summary>Notes for implementers</summary>
 

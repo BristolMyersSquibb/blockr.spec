@@ -6,10 +6,10 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 ## What must hold
 
 1. Core ships a basic front-end that draws any board, so a board serves without blockr.dock, and a front-end replaces it entirely, so that none of it runs underneath another, as core's stack generics run underneath the dock today.
-2. A front-end draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block type works in every front-end.
+2. A front-end draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block class works in every front-end.
 3. A front-end and its extensions work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
-5. A front-end or any other package can replace the renderer that draws an output family or a board option, and an app picks among them through a blockr option, with no change to a block type.
+5. A front-end or any other package can replace the renderer that draws an output family or a board option, and an app picks among them through a blockr option, with no change to a block class.
 6. A startup module can open another board in place of the opening board before anything is drawn or evaluated, as `rack_loader()` resolves the board a URL names before today's page is drawn.
 
 ## Today
@@ -20,7 +20,7 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module that a package declares in R under a name when it loads, as a block type names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the front-end it builds on, and the function that converts a board made for that one:
+A front-end is a module that a package declares in R under a name when it loads, as a block class names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the front-end it builds on, and the function that converts a board made for that one:
 
 ```r
 register_front_end(
@@ -80,7 +80,7 @@ An extension is registered with the front-end it extends by its package's startu
 
 ### Renderers
 
-A renderer is a module that draws one output family ([Block types in R](Rewrite-1.1.5#outputs)) or a board option's value. A package declares its renderers in R, as it declares a front-end, each for the one output family or board option it draws, with the board options it uses, as a block type names its own, and one module may stand behind several renderers: core declares a plain renderer for each family it defines, blockr.ui declares its table preview for `blockr.core-table`, and a front-end may declare renderers of its own. R picks one renderer for each output family and each board option, the first of the one a blockr option names for it, the front-end's and another package's, and otherwise the renderer of the package that defines the family, while a board option keeps the `ui` its definition gives ([Board objects](Rewrite-1.1.1#options)). The client draws an output with the renderer R picked for its one family, and a package that needs to show more than a family holds takes a family of its own, whose renderer nests the shared part ([Block types in R](Rewrite-1.1.5#outputs)), so that another package replaces a family's renderer through R's pick, or composes it by nesting, and never extends the family. Two renderers at one step are an error naming both, which the app settles with the blockr option. R sends the client the renderers it picked with the block registry's entries, and collects the board options they bring as it collects a block type's ([Defining a board in R](Rewrite-1.1.3#options)). So an app, a front-end or a UI kit changes how every table looks without touching a block type, as a JupyterLab extension replaces the renderer of a MIME type by registering its own ([registry.ts#L232-L258](https://github.com/jupyterlab/jupyterlab/blob/a877aee5ac6f490272a5ac18ac16b62b0deb1223/packages/rendermime/src/registry.ts#L232-L258)):
+A renderer is a module that draws one output family ([Block classes in R](Rewrite-1.1.5#outputs)) or a board option's value. A package declares its renderers in R, as it declares a front-end, each for the one output family or board option it draws, with the board options it uses, as a block class names its own, and one module may stand behind several renderers: core declares a plain renderer for each family it defines, blockr.ui declares its table preview for `blockr.core-table`, and a front-end may declare renderers of its own. R picks one renderer for each output family and each board option, the first of the one a blockr option names for it, the front-end's and another package's, and otherwise the renderer of the package that defines the family, while a board option keeps the `ui` its definition gives ([Board objects](Rewrite-1.1.1#options)). The client draws an output with the renderer R picked for its one family, and a package that needs to show more than a family holds takes a family of its own, whose renderer nests the shared part ([Block classes in R](Rewrite-1.1.5#outputs)), so that another package replaces a family's renderer through R's pick, or composes it by nesting, and never extends the family. Two renderers at one step are an error naming both, which the app settles with the blockr option. R sends the client the renderers it picked with the block registry's entries, and collects the board options they bring as it collects a block class's ([Defining a board in R](Rewrite-1.1.3#options)). So an app, a front-end or a UI kit changes how every table looks without touching a block class, as a JupyterLab extension replaces the renderer of a MIME type by registering its own ([registry.ts#L232-L258](https://github.com/jupyterlab/jupyterlab/blob/a877aee5ac6f490272a5ac18ac16b62b0deb1223/packages/rendermime/src/registry.ts#L232-L258)):
 
 ```r
 # blockr.ui: a richer table for every block whose output is a table
@@ -91,7 +91,7 @@ register_renderer("table_preview", js_module("table-preview.js"),
 options(blockr.renderers = c("blockr.core-table" = "blockr.core-basic_table"))
 ```
 
-A renderer gets an output host, or for a board option an option host ([UI modules in JS](Rewrite-1.1.7#the-contract)), through which it draws an output nested in its own, such as the table in blockr.dm's view of a dm, with the renderer R picked for that output's family. A block's UI has no renderer, since it ships the schema of its block's state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), so a different UI makes a type derived from the block's ([Block types in R](Rewrite-1.1.5#cores-types-and-hooks)).
+A renderer gets an output host, or for a board option an option host ([UI modules in JS](Rewrite-1.1.7#the-contract)), through which it draws an output nested in its own, such as the table in blockr.dm's view of a dm, with the renderer R picked for that output's family. A block's UI has no renderer, since it ships the schema of its block's state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), so a different UI makes a block class of its own, built from the fields of the block's ([Block classes in R](Rewrite-1.1.5#cores-classes-and-hooks)).
 
 ### What goes from R
 

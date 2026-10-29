@@ -26,7 +26,7 @@ interface Progress { id: string; progress: { value?: number; message?: string } 
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the block registry's entries ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)) with the startup modules of the packages it has loaded ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the opening board, the one the app script built ([Board objects](Rewrite-1.1.1)), and the values of the blockr options the client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages it names are loaded and the block types it defines registered before any recipe names them, and replies with the board as it opened it in place of the app script's.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own, the block registry's entries ([blockr.core#396](https://github.com/BristolMyersSquibb/blockr.core/issues/396)) with the startup modules of the packages it has loaded ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the opening board, the one the app script built ([Board objects](Rewrite-1.1.1)), and the values of the blockr options the client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)). Both sides use only the capabilities both named, such as cancelling, binary bodies and progress, so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page. A client that holds a board already, as after R restarts, sends it with its `hello`, in the form of a saved file ([Serialization](Rewrite-1.1.4)), and R opens it as `store.open()` does ([Board updates](Rewrite-1.1.2)), so that the packages it names are loaded and the block classes it defines registered before any recipe names them, and replies with the board as it opened it in place of the app script's.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "binary", "progress"] }
@@ -35,7 +35,7 @@ A connection starts with a `hello`, after MCP's `initialize`: the client names t
 
 ### Evaluating a block
 
-An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, whose ids R puts in the expression the block type's `expr` gives, evaluating it with each upstream result bound to its id ([Block types in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot.
+An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, whose ids R puts in the expression the block class's `expr` gives, evaluating it with each upstream result bound to its id ([Block classes in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot.
 
 ```json
 { "id": "17", "kind": "evaluate", "block": "c", "version": 4,
@@ -43,7 +43,7 @@ An evaluation request names the block and its version, carries the recipe, its r
   "inputs": [ { "slot": "x", "block": "a", "version": 2 }, { "slot": "y", "block": "b", "version": 3 } ] }
 ```
 
-R keeps the result, and the reply carries what the client shows about it: the expression R built, the result's summary ([Block types in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
+R keeps the result, and the reply carries what the client shows about it: the expression R built, the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
 
 ```json
 { "id": "17", "status": "ok", "block": "c", "version": 4, "expr": "merge(a, b, by = \"Species\", all.x = FALSE, all.y = FALSE)",
@@ -52,13 +52,13 @@ R keeps the result, and the reply carries what the client shows about it: the ex
   "dropped": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
 
-A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: building the expression, validating the data, or evaluating. The status is `invalid` when the block type's `expr` signals `invalid()`, with its message, or uses an arg the state leaves unset, naming it, before anything runs ([Block types in R](Rewrite-1.1.5)). A request on a version that is still computing waits for it.
+A reply keeps the first few conditions of each severity and counts the rest, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics. The phase says where a condition came from: building the expression, validating the data, or evaluating. The status is `invalid` when the block class's `expr` signals `invalid()`, with its message, or uses an arg the state leaves unset, naming it, before anything runs ([Block classes in R](Rewrite-1.1.5)). A request on a version that is still computing waits for it.
 
 After a restart R holds no results, so it replies `missing` with the inputs it lacks, and the client sends their evaluation requests first and then asks again; that costs one round trip, and only after a restart.
 
 ### Requests
 
-A block type's requests and a package's own requests share one kind, resolved through the block registry by registry id, or by package and name. A request names the block results it reads in `reads`, and passes in `args` the state args its function names and the parameters the UI gives it ([Block types in R](Rewrite-1.1.5#requests)).
+A block class's requests and a package's own requests share one kind, resolved through the block registry by registry id, or by package and name. A request names the block results it reads in `reads`, and passes in `args` the state args its function names and the parameters the UI gives it ([Block classes in R](Rewrite-1.1.5#requests)).
 
 ```json
 { "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "args": {},
@@ -69,11 +69,11 @@ A block type's requests and a package's own requests share one kind, resolved th
   "reads": [ { "block": "a", "version": 2 }, { "block": "b", "version": 3 } ] }
 ```
 
-The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's or an action's, and never caches a package's, since an action and a package's request may write. A request that reads blocks, a block type's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
+The client caches a block class's answers by registry id, name, args and the versions read, except a volatile request's or an action's, and never caches a package's, since an action and a package's request may write. A request that reads blocks, a block class's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
 
 ### Outputs
 
-An output request asks for what the block type's `output(x, result, options, info, meta)` returns for the block's result at a version ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)), with the board's option values, what the client measured for the output's element, and what the output's own client side keeps ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)):
+An output request asks for what the block class's `output(x, result, options, info, meta)` returns for the block's result at a version ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)), with the board's option values, what the client measured for the output's element, and what the output's own client side keeps ([blockr.core#401](https://github.com/BristolMyersSquibb/blockr.core/issues/401)):
 
 ```json
 { "id": "20", "kind": "output", "block": "b", "version": 4, "options": { "n_rows": 50 },
@@ -82,7 +82,7 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "status": "ok", "output": { "family": "blockr.core-table", "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` names its output family, which the renderer R picked for that family draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. A request may carry a file as a binary body, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` names its output family, which the renderer R picked for that family draws ([Block classes in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. A request may carry a file as a binary body, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Cancelling
 
@@ -98,7 +98,7 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 
 ### Decoding
 
-R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block type registered outside a package where the `load_definitions` option allows it ([Board objects](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r) has it.
+R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, and opening a board may evaluate the definition of a block class registered outside a package where the `load_definitions` option allows it ([Board objects](Rewrite-1.1.1)), so keeping the R process within bounds is the deployment's job. R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r) has it.
 
 ### Locked boards
 
@@ -107,9 +107,9 @@ An app locks a board when it starts, as `blockr.locked` does today, and the lock
 That stops only a client that plays by the rules, so R holds the lock in what it runs. It keeps the opening board's recipes, and in a locked session:
 
 - It evaluates a recipe only if it has the registry id and inputs of the block's opening recipe and the opening value of every arg the lock fixes.
-- It answers a block type's request with the opening value of every arg the lock fixes, whatever `args` holds.
+- It answers a block class's request with the opening value of every arg the lock fixes, whatever `args` holds.
 - It opens no board, whether `store.open()` sends one or a `hello` after a restart does, and builds the opening board from the app again instead.
-- It runs a block type's action only if its type declares it safe on a locked board, with the opening value of every arg the lock fixes.
+- It runs a block class's action only if its class declares it safe on a locked board, with the opening value of every arg the lock fixes.
 - It runs a package's request only if the package declares that request safe on a locked board, since a request may evaluate what the client sends, as an assistant's trial of proposed args would.
 
 Anything else is refused with an `error` that names the lock, while outputs are drawn as before, since an output request carries only values. A locked board thus runs only its opening board's blocks, with every arg the app did not leave open at its opening value, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks. Today's lock leaves nothing open: core's update gate drops every update that changes state ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)), and the dock freezes the inputs of every block on a locked board ([blockr.dock R/board-server.R#L404-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L404-L433)).
@@ -126,6 +126,6 @@ The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.
 
 - How an app names the args its lock leaves open when it starts, such as through an argument of `serve()`, of a block's constructor, or the blockr option that sets the lock itself, `blockr.locked`, as an app sets its other blockr options ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
 - Whether a locked board may still be restored, as [blockr.dock#123](https://github.com/BristolMyersSquibb/blockr.dock/issues/123) asked of today's lock, since a restored file comes from the client and so falls outside what R holds the lock to. It blocks locking a board when the app starts.
-- Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block type declares safe.
+- Whether an arg that a block parses into code, as most of blockr.dplyr's builders do, may be left open at all, since it runs whatever a reader types into it, or only args that its block class declares safe.
 - Whether a binary body travels on Shiny through a session-scoped URL from `session$registerDataObj()` or as base64 on the websocket, to measure, and which Arrow writer serializes tables ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 - Whether R asking for missing inputs after a restart, as proposed, beats every request carrying the recipes of its whole upstream chain ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)).
