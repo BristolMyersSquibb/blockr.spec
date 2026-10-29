@@ -26,7 +26,7 @@ A front-end is a module that a package declares in R under a name when it loads,
 register_front_end("dock", js_module("dock.js"), options = dock_board_options)
 ```
 
-The dock is then `blockr.dock-dock`, and core's basic front-end is `blockr.core-basic`. A board names the front-end it is made for by that id in its `front_end`, which the board's constructor sets, as `new_dock_board()` sets `blockr.dock-dock` ([Board objects](Rewrite-1.1.1#the-board)). The page loads the module of the front-end the app's board is made for, and that front-end draws every board opened later, whatever front-end it was made for, so the front-end never changes while the page lives ([Board updates](Rewrite-1.1.2#opening-a-board)): the store drops the state of packages the app does not load, and a front-end fills in its own state where a board lacks it, from its package's migration, as the dock gives a core board one default view, where today a restore reloads the page for the restored board's class (Today). Nothing in R converts a board, and R never needs a board's constructor to open one, nor builds a board to learn about a front-end.
+The dock is then `blockr.dock-dock`, and core's basic front-end is `blockr.core-basic`. A board names the front-end it is made for by that id in its `front_end`, which the board's constructor sets, as `new_dock_board()` sets `blockr.dock-dock` ([Board objects](Rewrite-1.1.1#the-board)). The page names the module of the front-end the app's board is made for, which core imports once every startup module has initialized (below), and that front-end draws every board opened later, whatever front-end it was made for, so the front-end never changes while the page lives ([Board updates](Rewrite-1.1.2#opening-a-board)): the store drops the state of packages the app does not load, and a front-end fills in its own state where a board lacks it, from its package's migration, as the dock gives a core board one default view, where today a restore reloads the page for the restored board's class (Today). Nothing in R converts a board, and R never needs a board's constructor to open one, nor builds a board to learn about a front-end.
 
 The module meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls, so it never names its own id.
 
@@ -49,11 +49,17 @@ interface CoreApi {
   options: Options;                // register() and the board options packages define, by id
   blockrOptions: BlockrOptions;    // the blockr options the client reads, by package, from the reply to hello
   lock: Lock | null;               // the blocks a locked board leaves open, { open: ["f"] }, from the reply to hello
-  request<T = Json>(extension: string, name: string, args?: Json, reads?: BlockId[]): Promise<T | Blob>;   // an extension's request, by the extension's id, which evaluates the blocks it reads first
+  request<T = Json>(extension: string, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // an extension's request, by the extension's id
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by the renderer R names in it
-  mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's renderer
+  mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's UI, or the renderer R picked for it
+}
+
+interface RequestOpts {
+  reads?: BlockId[];                                         // the blocks it reads, which core has evaluated first
+  signal?: AbortSignal;                                      // cancels it, as a cancel does on the wire
+  progress?(note: { value?: number; message?: string }): void;   // each progress note R sends for it
 }
 ```
 
@@ -61,7 +67,7 @@ A front-end decides where things go and core fills them: it gives `mountBlock()`
 
 ### Starting the page
 
-Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package R has loaded, one at a time, then opens the board R sent, or the one a startup module names in its place (below), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered, while the scheduler sends nothing to R until `render()` has returned, so that what the front-end first shows is evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)). A front-end's package registers what the front-end adds, such as the dock's fields and commands, from its startup module, so the front-end's module only draws.
+Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package R has loaded, one at a time, then imports the front-end's module, since a module's imports run as it loads and may need what a startup module puts on the page, such as React ([UI modules in JS](Rewrite-1.1.7#react)), then opens the board R sent, or the one a startup module names in its place (below), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered. The scheduler sends nothing to R until `render()` has returned, or resolved where it is async, so a front-end demands what it first shows within `render()`, from the board, rather than from an effect that runs once it has drawn, as a React app's would, and those blocks are evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)). A front-end's package registers what the front-end adds, such as the dock's fields and commands, from its startup module, and subscribes to the store there too, so that it sees the board R sent open, with what R dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the front-end's module only draws.
 
 A startup module's `initialize()` may resolve with the text of a saved file, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except on a locked board, which loads no other board, where core keeps the board R sent and names the package ([Wire protocol](Rewrite-1.1.9#locked-boards)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)). Should two resolve with a board, core opens the one R sent and names both packages.
 
@@ -73,7 +79,7 @@ It shows every block, so it demands every block, and a board served without the 
 
 ### Extensions
 
-An extension is registered with the front-end it extends by its package's startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen goes through the front-end's contribution points, which for the dock are [Client-drawn dock and extensions](Rewrite-1.2)'s. Its state lives in fields it registers with the store, which other extensions and the assistant change as they change core's objects, and which stay consistent through the `expand` each field registers ([Board updates](Rewrite-1.1.2#fields)). A file holds those fields within the board and the version of the extension's package in its `packages`, while R reads the state a file from today's stack keeps next to the extension's constructor into the same fields ([Serialization](Rewrite-1.1.4#files)).
+An extension is registered with the front-end it extends by its package's startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), under an id, `{pkg}-{name}`, by which its package registers its requests in R and `request()` names them ([Wire protocol](Rewrite-1.1.9#requests)), while how a package declares an extension is [Client-drawn dock and extensions](Rewrite-1.2)'s, since only the dock takes extensions. It works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback. What it contributes to the screen goes through the front-end's contribution points, which for the dock are [Client-drawn dock and extensions](Rewrite-1.2)'s. Its state lives in fields it registers with the store, which other extensions and the assistant change as they change core's objects, and which stay consistent through the `expand` each field registers ([Board updates](Rewrite-1.1.2#fields)). A file holds those fields within the board and the version of the extension's package in its `packages`, while R reads the state a file from today's stack keeps next to the extension's constructor into the same fields ([Serialization](Rewrite-1.1.4#files)).
 
 ### Renderers
 
@@ -93,6 +99,10 @@ A renderer gets an output host, or for a board option an option host ([UI module
 ### What goes from R
 
 The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and so do the `callbacks` through which a front-end hooks into `board_server()`, which goes with the board server ([Client-owned board state](Rewrite-1.1#today)). A front-end's R side shrinks to declaring its front-ends with their modules and the board options they require (above), its startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), any renderers of its own (above), the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, whose state R writes as the front-end's fields ([Board objects](Rewrite-1.1.1#extending-cores-objects)), and the blockr options its client reads ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
+
+### Testing
+
+Core ships, beside the stubs of its hosts ([UI modules in JS](Rewrite-1.1.7#testing)), a `CoreApi` for tests whose store, commands and scheduler are core's own and whose replies from R come from fixtures, those the wire protocol's tests round-trip ([Wire protocol](Rewrite-1.1.9)), so that a front-end, an extension or a startup module runs in a test runner on a board, needing neither R nor a browser.
 
 ## Open questions
 
