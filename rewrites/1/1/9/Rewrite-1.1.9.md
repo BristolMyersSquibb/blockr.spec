@@ -124,9 +124,9 @@ R decodes client input into plain values only, strings, numbers, logicals, lists
 
 An app locks a board when it starts, through the blockr option `blockr.locked` as today, and the lock stays as the app set it, so that nothing a client sends can loosen it. A locked board loads no other board and keeps everything core keeps in it, its name and its blocks, links, stacks and options, as the app built them, and every block keeps its opening state but those whose inputs show, as core's attribute `visible` says on the board the app script built, which R reads once, when the app starts ([Board objects](Rewrite-1.1.1#blocks)). So a board whose readers may only change a filter shows the inputs of that filter alone, and on a locked board a block whose script set no visibility shows only its output, so that `blockr.locked = TRUE` alone locks every block, as the dock does today, and an app opens a block by showing its inputs. On a locked board the store refuses every change to `visible`, and R never reads it after startup, so nothing a client says about what it shows reaches the lock, while on a board that is not locked, what a block shows locks nothing. What other packages keep, their fields and the attributes of blocks, is for their own locks, as the dock locks the arrangement of its panels today, which never reaches R ([Client-drawn dock and extensions](Rewrite-1.2)). R sends the lock with its reply to `hello`, and the client keeps to it: its store refuses every `store.open()` and every delta the lock does not leave open ([Board updates](Rewrite-1.1.2#the-store)), a front-end draws no control for one, and whether a locked board shows saving and restoring at all is the front-end's and session management's to decide ([Session management as a client extension](Rewrite-1.6)).
 
-That stops only a client that plays by the rules, so R holds the lock in what it runs, comparing nothing a client sends. When the app starts, it builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the line it evaluates, such as `f <- dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again. In a locked session:
+That stops only a client that plays by the rules, so R holds the lock in what it runs, comparing nothing a client sends. When the app starts, it builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the block expression it evaluates, such as `f <- dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again. In a locked session:
 
-- It evaluates a locked block with the line it built at startup, and a block left open with a line it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the versions of the inputs, which say only which of its own results to bind, and the state of a block left open.
+- It evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the versions of the inputs, which say only which of its own results to bind, and the state of a block left open.
 - It answers a block class's request with a locked block's opening state and the board's opening option values, whatever the request holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
 - It runs a block class's action only if its class declares that it may run on a locked board, as it answers a request.
 - It opens no board, refusing every `open` and ignoring a board that a `hello` carries, so that a client starting a new session keeps its own board, and with it a reader's choices in the blocks left open.
@@ -145,18 +145,18 @@ lock_board <- function(board, open = character()) {        # once, when the app 
     cls    <- block_registry[[blk$registry_id]]
     inputs <- upstream_ids(board$links, id)                  # slot -> upstream id, list(data = "a")
     list(cls = cls, inputs = inputs,
-         line = if (!id %in% open) build_line(cls, blk$state, inputs))
+         expression = if (!id %in% open) build_block_expression(cls, blk$state, inputs))
   })
 }
 
-line_for <- function(req, lock = NULL) {                     # for every evaluation
+block_expression_for <- function(req, lock = NULL) {         # for every evaluation
   if (is.null(lock)) {                                       # an unlocked board: the request's recipe
     rec <- req$recipe
-    return(build_line(block_registry[[rec$registry_id]], rec$state, slot_ids(rec$inputs)))
+    return(build_block_expression(block_registry[[rec$registry_id]], rec$state, slot_ids(rec$inputs)))
   }
   fixed <- lock[[req$block]]
   if (is.null(fixed)) refuse("The locked board has no block ", req$block)
-  fixed$line %||% build_line(fixed$cls, req$recipe$state, fixed$inputs)   # a block left open: its state from the request
+  fixed$expression %||% build_block_expression(fixed$cls, req$recipe$state, fixed$inputs)   # a block left open: its state from the request
 }
 ```
 
