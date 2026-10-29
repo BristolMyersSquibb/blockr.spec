@@ -188,7 +188,7 @@ requests = list(
 )
 ```
 
-Core keeps each answer by registry id, name, state args, parameters and the versions of the inputs read, as a snapshot of them, so that reopening a column's dropdown is answered without asking R, and data that changes behind an input, such as a database's, is read again once something invalidates the block that reads it ([Evaluation in the client](Rewrite-1.1.10#invalidation)). A request wrapped in `volatile()` is never kept and goes to R every time, which suits a cheap lookup outside the board, such as a directory listing, and nothing expensive.
+Core keeps each answer by registry id, name, state args, parameters and the versions of the inputs read, as a snapshot of them, so that reopening a column's dropdown is answered without asking R, and data that changes behind an input, such as a database's, is read again once something invalidates the block that reads it ([Evaluation in the client](Rewrite-1.1.10#invalidation)). A request wrapped in `volatile()` is never kept and goes to R every time, which suits a cheap lookup outside the board, such as a directory listing, and nothing expensive. A request wrapped in `action()` acts rather than reads, such as a write block's manual save, which writes once per click outside the block's expression, or an upload, which receives the file the user picked, keeps it where its package decides and returns its path for the block's state: R runs it once per call and it may write, core never keeps or merges its answer, and on a locked board R runs it only if the type declares it safe there ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Core's types and hooks
 

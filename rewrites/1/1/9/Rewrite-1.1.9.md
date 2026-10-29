@@ -17,7 +17,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 A message is an array of requests from the client, or of replies and progress notes from R, so several travel together. Every request has an id the client chooses, and its reply echoes it, so replies may arrive in any order.
 
 ```ts
-type Kind = "hello" | "evaluate" | "request" | "output" | "upload" | "cancel" | "forget";
+type Kind = "hello" | "evaluate" | "request" | "output" | "cancel" | "forget";
 
 interface Request { id: string; kind: Kind; long?: boolean }          // long lifts the timeout
 interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "missing" }
@@ -69,7 +69,7 @@ A block type's requests and a package's own requests share one kind, resolved th
   "reads": [ { "block": "a", "version": 2 }, { "block": "b", "version": 3 } ] }
 ```
 
-The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's, and never caches a package's, since one may write. A request that reads blocks, a block type's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
+The client caches a block type's answers by registry id, name, args and the versions read, except a volatile request's or an action's, and never caches a package's, since an action and a package's request may write. A request that reads blocks, a block type's or a package's, has them evaluated first, even off screen, as a one-off evaluation does ([Evaluation in the client](Rewrite-1.1.10)). A request that may run long, such as blockr.md's export to PowerPoint, says so with `long`, and R can send progress for it.
 
 ### Outputs
 
@@ -82,7 +82,7 @@ An output request asks for what the block type's `output(x, result, options, inf
 { "id": "20", "status": "ok", "output": { "family": ["blockr.core-table"], "columns": [], "rows": [], "total": 150 } }
 ```
 
-A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` lists its output families, most specific first, which the renderer R picked for the first of them that has one draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. An `upload` carries a file the user picked, which R stores in the session's temporary directory, replying with its path, as Shiny's `fileInput()` does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A reply is JSON or a binary body with a MIME type and, for a download, a file name. An output is a description in JSON whose `family` lists its output families, most specific first, which the renderer R picked for the first of them that has one draws ([Block types in R](Rewrite-1.1.5#outputs)), and it may come with one binary body, such as a plot's PNG. A request may carry a file as a binary body, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 ### Cancelling
 
@@ -109,6 +109,7 @@ That stops only a client that plays by the rules, so R holds the lock in what it
 - It evaluates a recipe only if it has the registry id and inputs of the block's opening recipe and the opening value of every arg the lock fixes.
 - It answers a block type's request with the opening value of every arg the lock fixes, whatever `args` holds.
 - It opens no board, whether `store.open()` sends one or a `hello` after a restart does, and builds the opening board from the app again instead.
+- It runs a block type's action only if its type declares it safe on a locked board, with the opening value of every arg the lock fixes.
 - It runs a package's request only if the package declares that request safe on a locked board, since a request may evaluate what the client sends, as an assistant's trial of proposed args would.
 
 Anything else is refused with an `error` that names the lock, while outputs are drawn as before, since an output request carries only values. A locked board thus runs only its opening board's blocks, with every arg the app did not leave open at its opening value, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks. Today's lock leaves nothing open: core's update gate drops every update that changes state ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)), and the dock freezes the inputs of every block on a locked board ([blockr.dock R/board-server.R#L404-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L404-L433)).
