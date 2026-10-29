@@ -35,7 +35,7 @@ A connection starts with a `hello`, after MCP's `initialize`: the client names t
 
 ### Evaluating a block
 
-An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, whose results R binds to the inputs' names to evaluate the expression the block type's `expr` gives ([Block types in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot.
+An evaluation request names the block and its version, carries the recipe, its registry id and state, and names its inputs as upstream blocks and versions, in slot order, whose ids R puts in the expression the block type's `expr` gives, evaluating it with each upstream result bound to its id ([Block types in R](Rewrite-1.1.5#evaluation)). A positional input of a variadic block has an empty slot.
 
 ```json
 { "id": "17", "kind": "evaluate", "block": "c", "version": 4,
@@ -46,7 +46,7 @@ An evaluation request names the block and its version, carries the recipe, its r
 R keeps the result, and the reply carries what the client shows about it: the expression R built, the result's summary ([Block types in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
 
 ```json
-{ "id": "17", "status": "ok", "block": "c", "version": 4, "expr": "merge(x, y, by = \"Species\", all.x = FALSE, all.y = FALSE)",
+{ "id": "17", "status": "ok", "block": "c", "version": 4, "expr": "merge(a, b, by = \"Species\", all.x = FALSE, all.y = FALSE)",
   "summary": "<data.frame> [150 × 7]",
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "eval", "message": "..." } ],
   "dropped": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
