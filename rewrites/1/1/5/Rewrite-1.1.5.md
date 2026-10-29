@@ -90,7 +90,7 @@ block_type <- function(class, parent = NULL, inputs = NULL, expr = NULL,
     for (f in type$requests) {
       params <- setdiff(names(formals(f)), known)
       stopifnot("a request's other args are parameters, with defaults" =
-        all(nzchar(vapply(formals(f)[params], deparse, ""))))
+        all(nzchar(vapply(formals(f)[params], deparse1, ""))))
     }
     res <- tryCatch(type$expr(), invalid = function(e) NULL, missingArgError = function(e) NULL)
     stopifnot("expr() gives an expression" = is.null(res) || is.language(res) || is.character(res))
@@ -102,6 +102,49 @@ block_type <- function(class, parent = NULL, inputs = NULL, expr = NULL,
   }
 
   structure(type, class = "block_type")
+}
+```
+
+A sketch of `block_constructor()`, which takes the block's state from the frame `expr` ran in and leaves out an arg that is still unset, with `invalid()`:
+
+```r
+block_constructor <- function(type) {
+
+  stopifnot("an abstract type has no constructor" = !is.null(type$expr))
+
+  args <- formals(type$expr)
+  state_args <- as.character(names(args))
+  has_default <- nzchar(vapply(args, deparse1, ""))
+
+  build <- function(env) {  # env is the constructor's frame
+    given <- Filter(function(arg) !eval(call("missing", as.name(arg)), env), state_args)
+    frame <- NULL
+    framed <- type$expr     # a copy of expr that hands over its frame as it exits
+    body(framed) <- bquote({
+      on.exit(.(function(e) frame <<- e)(environment()))
+      .(body(type$expr))
+    })
+    tryCatch(
+      do.call(framed, mget(given, env), quote = TRUE),
+      invalid = function(e) NULL, missingArgError = function(e) NULL
+    )
+    unset <- vapply(state_args, function(arg) eval(call("missing", as.name(arg)), frame), NA)
+    block <- structure(
+      mget(state_args[has_default | !unset], frame),  # the state, as the checks left it
+      block_name = env$block_name, block_type = type, class = type$class
+    )
+    attrs <- eval(quote(list(...)), env)
+    attributes(block)[names(attrs)] <- attrs
+    block
+  }
+
+  ctor <- function() build(environment())
+  formals(ctor) <- c(args, alist(block_name = NULL, ... = ))
+  ctor
+}
+
+invalid <- function(message) {
+  stop(structure(class = c("invalid", "error", "condition"), list(message = message, call = NULL)))
 }
 ```
 
@@ -226,7 +269,7 @@ None.
 
 A type defined outside a package, where the caller's `topenv()` is no namespace, keeps the call `block_type()` was made with, from `match.call()`, rather than having its value written out later. Written out, a field such as `parent` takes the whole parent type in the internal layout of the core that saved it, where the developer wrote `transform_block`, and a later core may lay it out differently. The definition is that call wrapped in `blockr.core::block_constructor()`, with the package objects it names qualified, `transform_block` as `blockr.core::transform_block`, and a parent type the script defines written as its own call, nested. Nothing else the call or its functions take from the script, such as a helper or a data frame, can go into a file, so `block_type()` warns about each such name when the type is defined, finding them with `codetools::findGlobals()` and resolving them from the caller's environment. A UI the type names by file is a plain JS module, which goes into the definition as the file's text, so that a file brings the UI along, since core loads JS only ([UI modules in JS](Rewrite-1.1.7#packaging)).
 
-The constructor takes the state from the frame `expr` ran in, which it keeps by calling a copy of `expr` whose body starts with an `on.exit()` that hands over `environment()`, so that what the checks in `expr` change, such as `match.arg()` picking `"head"` out of `c("head", "tail")`, is the state the block holds, as `initial_block_state()` reads a block's state from its server's environment today ([R/block-class.R#L719-L725](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-class.R#L719-L725)). An arg without a default stays out of the state while `missing()` finds it missing in the frame, so one the body assigns, such as a value it works out, is in it. The frame is kept when `expr` signals `invalid()` too, so a type checks its args before it signals. R tells a body's use of an unset arg by the class `missingArgError`, which R 4.5.0 added, and in older R by the error's message, translated as R translates it. R puts the upstream ids in place of `...` wherever it is an argument of a call, but not inside a function the expression defines, whose `...` is its own.
+The constructor takes the state from the frame `expr` ran in, through a copy of `expr` that hands the frame over as it exits (above), so that what the checks in `expr` change, such as `match.arg()` picking `"head"` out of `c("head", "tail")`, is the state the block holds, as `initial_block_state()` reads a block's state from its server's environment today ([R/block-class.R#L719-L725](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-class.R#L719-L725)). An arg without a default stays out of the state while `missing()` finds it missing in the frame, so one the body assigns, such as a value it works out, is in it. The frame is kept when `expr` signals `invalid()` too, so a type checks its args before it signals. R tells a body's use of an unset arg by the class `missingArgError`, which R 4.5.0 added, and in older R by the error's message, translated as R translates it. R puts the upstream ids in place of `...` wherever it is an argument of a call, but not inside a function the expression defines, whose `...` is its own.
 
 Today `register_block()` builds a block to read its classes and, without `arguments`, its arg specs, and checks the specs' examples against it ([R/block-registry.R#L143-L162](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L143-L162)). The type gives the first two, and the examples are checked by calling `expr` with them instead.
 
