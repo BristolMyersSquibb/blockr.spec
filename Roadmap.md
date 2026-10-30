@@ -5,7 +5,7 @@ This page says when the parts of [State in JS](Rewrite-1) are specced and implem
 
 ## State in JS
 
-In its spec week a part settles with its design pages, and its spec and issues are opened. In its implementation week the issues are fixed on the `js-state` branches. Each part is specced after the parts it builds on. Buffer weeks follow blockr.core and blockr.dock, which the later parts build on, and the last part. Weeks are ISO weeks.
+In its spec week a part first lists what its repo does today and where each piece goes, carried over, replaced or dropped, then settles with its design pages, and its spec and issues are opened. In its implementation week the issues are fixed on the `js-state` branches. Each part is specced after the parts it builds on. Buffer weeks follow blockr.core and blockr.dock, which the later parts build on, and the last part. Weeks are ISO weeks.
 
 | Weeks | From | Work | Page |
 |---|---|---|---|
@@ -20,8 +20,8 @@ In its spec week a part settles with its design pages, and its spec and issues a
 | 1–2 | 2027-01-04 | Spec and implement blockr.session | [Session management as a client extension](Rewrite-1.6) |
 | 3 | 2027-01-18 | Spec and implement blockr.dag | [Client-drawn DAG extension](Rewrite-1.3) |
 | 4 | 2027-01-25 | Spec and implement blockr.code | [Code export as a client extension](Rewrite-1.5) |
-| 5 | 2027-02-01 | Buffer, and the fully functional POC at its end | |
-| 6–13 | 2027-02-08 | Run down the tail of problems, aiming at light BMS deployments by the end of Q1 | |
+| 5 | 2027-02-01 | Buffer, the parity list the switch waits for, and the fully functional POC at the week's end | [Migration](Rewrite-1#migration) |
+| 6–13 | 2027-02-08 | Run down the tail of problems against the parity list, aiming at light BMS deployments by the end of Q1 | |
 
 The fully functional POC is every part implemented on `js-state`, with blockr.dplyr, blockr.io and blockr.ggplot ported, so that a board of their blocks runs in the dock with the DAG, the assistant, code export and session management. It is due on 2027-02-05. How long the tail of problems after it runs is the largest unknown, so the goal of light BMS deployments on the new stack by the end of Q1 2027 is tentative, and they may not cover all of the CEDX board.
 
@@ -29,7 +29,7 @@ The switch is not scheduled yet. It waits for CRAN as well as for the code: eigh
 
 ## Block packages
 
-The block packages port to block classes beside the parts from week 46, once core's block classes, outputs and UI modules are implemented and its guide for porting a block from `new_block()` is written, and their UIs written in React from week 48, once blockr.ui ships React. Each ports after the packages it builds on. The first are blockr.dplyr, blockr.io and blockr.ggplot, by week 5, for the fully functional POC. The rest follow for the CEDX board, which lives in blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot. Beside them, blockr.ops, which reads and writes boards, follows the new format ([Serialization of the client-owned board](Rewrite-1.1.4)), and in Q1 2027 a package for authoring reports becomes available for the new stack, whether blockr.md or another. Who ports each package, and how the ports are reviewed, AI review included, is still to be settled.
+The block packages port to block classes beside the parts from week 46, once core's block classes, outputs and UI modules are implemented and its guide for porting a block from `new_block()` is written. Their UIs follow from week 48, once blockr.ui ships React and its spec has settled what it offers block UIs, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#open-questions)). Each ports after the packages it builds on. The first are blockr.dplyr, blockr.io and blockr.ggplot, by week 5, for the fully functional POC, and blockr.dplyr starts in week 46 with its hardest blocks, which test core's block classes before the dock is built on them. The rest follow for the CEDX board, which lives in blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot. Beside them, blockr.ops, which reads and writes boards, follows the new format ([Serialization of the client-owned board](Rewrite-1.1.4)), and in Q1 2027 a package for authoring reports becomes available for the new stack, whether blockr.md or another. Who ports each package, and how the ports are reviewed, AI review included, is settled by week 46, when the ports start.
 
 | Package | Builds on, besides blockr.core | Exported block constructors |
 |---|---|---|
@@ -54,11 +54,13 @@ Shiny stays host and transport through State in JS, since on Connect it gives ea
 
 ### Python
 
-Look into a Python process in R's place: one that evaluates what the client sends over the wire protocol ([Wire protocol between the client and R](Rewrite-1.1.9)), starts an app as `serve()` does in R, and runs blocks written in Python. What a block class looks like in Python comes first, and with it whether one board can mix R and Python blocks, which moves results between processes.
+Look into a Python process in R's place: one that evaluates what the client sends over the wire protocol ([Wire protocol between the client and R](Rewrite-1.1.9)), starts an app as `serve()` does in R, and runs blocks written in Python. What a block class looks like in Python comes first, and with it whether one board can mix R and Python blocks, which moves results between processes and splits the code a board exports between two languages.
 
 ### A server of our own
 
 A server-side component of our own would sit between the client and the processes that evaluate, shaped as a proxy in Go or as a scheduler in Node, which is still open. Above all it would let a board use several R and Python processes, and backends other than a process, such as a database, where data locality decides where a block is evaluated, so that data moves as little as possible. It would also open the way to collaboration, whose relay State in JS keeps open ([State in JS](Rewrite-1#proposal)), to an MCP endpoint, and to what the client cannot do alone, such as holding the provider credentials of the assistant's proxy ([Assistant as a client extension](Rewrite-1.4)) and making the calls on an app's own Connect key ([Session management as a client extension](Rewrite-1.6)).
+
+Some of it needs no server: R may already run a request in a worker rather than the session's process ([Wire protocol between the client and R](Rewrite-1.1.9#what-must-hold)), and a block whose result is a lazy table, as dbplyr makes, would leave its work to the database. What needs a server is what is shared across sessions or outlives a page: collaboration, headless use such as the MCP endpoint, and placing work across evaluators. Which shape depends on whether the server reads the board. Ordering deltas, applying an agent's commands or scheduling without a page takes core's store, commands and scheduler, which are TypeScript and run in Node if they stay free of the browser. A proxy in Go suits a server that only routes, authenticates and manages processes, and would need hosting outside Connect, which runs Node.js servers but, as far as we found, not Go.
 
 ### A desktop app
 
@@ -66,6 +68,6 @@ Look into a desktop app that wraps the client in a shell such as Electron, so th
 
 <details><summary>Sources</summary>
 
-The block constructors are the `export(new_*_block)` lines in each package's `NAMESPACE` on main on 2026-10-29, at blockr.dplyr `68e1b54`, blockr.io `acadbb2`, blockr.ggplot `289cb60`, blockr.dm `8b37981`, blockr.viz `332ce57`, blockr.stats `268259d`, blockr.extra `c99bce6` and blockr.pharma `22c6c03`, and what a package builds on is its `Imports`. On CRAN on 2026-10-29: blockr 0.1.0, blockr.core 0.1.3, blockr.dag 0.1.5, blockr.dock 0.1.2, blockr.dplyr 0.1.0, blockr.ggplot 0.1.0, blockr.io 0.1.0 and blockr.session 0.1.0. The reusable `ci.yaml` of blockr.ci runs no Node step. The packages the stack depends on are the recursive `Depends`, `Imports` and `LinkingTo` of blockr.core, blockr.dock, blockr.dplyr, blockr.io, blockr.ggplot, blockr.ui, blockr.dag, blockr.session, blockr.code, blockr.assistant, blockr.dm and blockr.ai on main on 2026-10-30, 126 packages, of which the webR repository for R 4.6 lacked `reactives`, `tomledit` and `yaml12`.
+The block constructors are the `export(new_*_block)` lines in each package's `NAMESPACE` on main on 2026-10-29, at blockr.dplyr `68e1b54`, blockr.io `acadbb2`, blockr.ggplot `289cb60`, blockr.dm `8b37981`, blockr.viz `332ce57`, blockr.stats `268259d`, blockr.extra `c99bce6` and blockr.pharma `22c6c03`, and what a package builds on is its `Imports`. On CRAN on 2026-10-29: blockr 0.1.0, blockr.core 0.1.3, blockr.dag 0.1.5, blockr.dock 0.1.2, blockr.dplyr 0.1.0, blockr.ggplot 0.1.0, blockr.io 0.1.0 and blockr.session 0.1.0. The reusable `ci.yaml` of blockr.ci runs no Node step. The packages the stack depends on are the recursive `Depends`, `Imports` and `LinkingTo` of blockr.core, blockr.dock, blockr.dplyr, blockr.io, blockr.ggplot, blockr.ui, blockr.dag, blockr.session, blockr.code, blockr.assistant, blockr.dm and blockr.ai on main on 2026-10-30, 126 packages, of which the webR repository for R 4.6 lacked `reactives`, `tomledit` and `yaml12`. Connect runs Node.js HTTP servers on its Advanced tier ([Node.js in the Connect user guide](https://docs.posit.co/connect/user/nodejs/)), and we found nothing on Go.
 
 </details>
