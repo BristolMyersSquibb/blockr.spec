@@ -58,7 +58,7 @@ None.
 - Open boards in R, from an app script, a file of either stack or the client's own board: parse a file of today's stack with typedjson in a mode that refuses code ([nbenn/typedjson#121](https://github.com/nbenn/typedjson/issues/121)), load the packages they name, register their block classes, migrate and convert them, drop and name what cannot be rebuilt, and reply with the board, in blockr.core
 - Build the per-session evaluator, which keeps each block's latest result by block id and revision, and the Shiny bridge, in blockr.core
 - Build the client store, with deltas, undo, following the board and each package's migration of its saved state, and the command registry with core's commands, in blockr.core
-- Write a board's JSON in R by schema, from a JSON Schema of the board generated from core's TypeScript types and the schemas block UIs and packages ship for block state and fields, in blockr.core
+- Write a board's JSON in R by schema, from a JSON Schema of the board generated from core's TypeScript types and the schemas block UIs and packages ship for block state and the front-end's state, in blockr.core
 - Lock a board when the app starts, in R's recipes and in the client's store, leaving open the blocks whose inputs show, as core's attribute `visible` says, in blockr.core
 - Build the client scheduler, with revisions, demand, invalidation and statuses, in blockr.core
 - Write saved boards in the client, as the board with the versions of its packages, in blockr.core
@@ -72,8 +72,8 @@ None.
 
 ## Design pages
 
-- [Board objects: blocks, links, stacks, options and fields](Rewrite-1.1.1): the objects the client holds for a board, how a board names its front-end and a block its class, and how packages extend them
-- [Board updates: deltas, commands and undo](Rewrite-1.1.2): the store, deltas, the fields packages add, commands, opening a board, undo, and following the board
+- [Board objects: blocks, links, stacks, options and the front-end](Rewrite-1.1.1): the objects the client holds for a board, how a board names its front-end and a block its class, and the state the front-end and its extensions keep
+- [Board updates: deltas, commands and undo](Rewrite-1.1.2): the store, deltas, the front-end's state and attributes, commands, opening a board, undo, and following the board
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3): the app script, the opening board, `serve()` and options
 - [Serialization of the client-owned board](Rewrite-1.1.4): saved files, state values between the client and R, and migrations
 - [Block classes in R for the client-owned board](Rewrite-1.1.5): `new_block_class()`, core's classes and hooks, registration, evaluation, generics and testing

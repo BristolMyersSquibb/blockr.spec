@@ -11,7 +11,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 4. One copy each of React, core's runtime and every shared module runs on the page.
 5. Core's runtime and every package's UIs ship inside their R packages, so installing a package pins the client code it runs.
 6. Core ships no React, and a block class whose UI is written in React works under every front-end, core's basic one included.
-7. What a package registers in the client, its board options, fields and commands, is registered before the store opens a board, however late R loads the package.
+7. What a package registers in the client, its board options, its keys of the front-end's state, its attributes and its commands, is registered before the store opens a board, however late R loads the package.
 
 ## Proposal
 
@@ -104,21 +104,21 @@ An output names in its `renderer` the renderer R picked for its output class, as
 
 A renderer reports what the user does on an output, such as selecting a bar of a chart, through `emit()`, in the shape its output class's contract gives, and changes nothing itself, so that an extension may hear it through `CoreApi` and edit the board with commands ([Front-ends and extension points](Rewrite-1.1.8#extensions)). Drill-down is built that way: a selection sets the clicked block's state, so that it shapes the block's result and reaches what is linked downstream, or another block's, such as a cohort filter upstream, which is external control rather than a link, since a link there would close a cycle, as blockr.viz sends such a claim over a channel of its own today ([R/ctrl-send.R#L1-L27](https://github.com/BristolMyersSquibb/blockr.viz/blob/332ce573ffafa86f5a41dc400b0f85e6800128f7/R/ctrl-send.R#L1-L27)). [Client-drawn dock and extensions](Rewrite-1.2) takes the extension up, and a link of its own for such edits is in the [Backlog](Backlog#control-links).
 
-Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer. A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board. A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a field it registers, keyed by stack id ([Board updates](Rewrite-1.1.2#fields)), as in this host for a note on each stack:
+Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer. A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board. A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a key of its own state, keyed by stack id ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)), as in this host for a note on each stack:
 
 ```ts
-// in the front-end's package, which registers the field "myfe-stack_notes" in its startup module
+// in the front-end's package, which registers the key stack_notes of its state in its startup module
 const stackHost = (core: CoreApi, id: StackId) => ({
   stack: () => core.store.board().stacks[id],
-  note: () => core.store.board().fields["myfe-stack_notes"]?.[id],
+  note: () => core.store.board().front_end.state.stack_notes?.[id],
   on: (fn: () => void) => core.store.subscribe(fn),
-  // and a way to write the note, through core's command for a field's entries, as one undo step
+  // and a way to write the note, through core's command for the entries of a key of the front-end's state, as one undo step
 });
 ```
 
 ### Startup modules
 
-A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its fields and its commands ([Board updates](Rewrite-1.1.2#fields)), putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)). The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
+A package may declare in R one startup module, for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#options)), its keys of the front-end's state, its attributes and its commands ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)), putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)). The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
 
 ```ts
 export const api = 1;                                // the JS API major it was built against
@@ -126,21 +126,21 @@ export const api = 1;                                // the JS API major it was 
 export default {
   initialize({ core, signal }: { core: CoreApi; signal: AbortSignal }): void | Promise<string | void> {
     core.options.register(dataDir);                  // a board option it ships, such as blockr.io's data directory
-    core.store.register(positions);                  // a field, such as the DAG's positions
+    core.store.register(positions);                  // a key of the front-end's state, such as the DAG's positions
     core.commands.register(relayout);                // a command, such as the DAG's relayout
     // it may also resolve with a saved file's text, which core opens in place of the board R sent
   }
 };
 ```
 
-R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello` and to every opening of a board, since opening one loads the packages it names ([Board updates](Rewrite-1.1.2#opening-a-board)), and orders them so that each package's comes after those of the packages it depends on in R. Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads. It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every field and board option registered.
+R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello` and to every opening of a board, since opening one loads the packages it names ([Board updates](Rewrite-1.1.2#opening-a-board)), and orders them so that each package's comes after those of the packages it depends on in R. Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads. It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every key of the front-end's state, attribute and board option registered.
 
-Core initializes each package's startup module once per page and skips it when a later reply names the package again. A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy. A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, which the store names as it names any field no package registered ([Board updates](Rewrite-1.1.2#fields)).
+Core initializes each package's startup module once per page and skips it when a later reply names the package again. A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy. A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, which the store names as it names any key of the front-end's state that no package registered ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)).
 
 A package relies on the order only for the packages it imports in R, which is what a module needs as it loads, such as a library on another package's global. Between any other two packages the order is unspecified, and core keeps what they share independent of it:
 
-- A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a field's `expand` runs per delta and a command's `run()` per command. It reads no board there, since none is open at startup, and when an opening brings the package, the board R sent replaces the old one only after `initialize()`.
-- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#fields)).
+- A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a key's `expand` runs per delta and a command's `run()` per command. It reads no board there, since none is open at startup, and when an opening brings the package, the board R sent replaces the old one only after `initialize()`.
+- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)).
 - A startup module that an opening brings runs just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the board options in its settings, reads them again then. Only a startup module that runs as the page starts may name a board to open, and core ignores a board named by one that an opening brings, since that opening is under way.
 - A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later. A stylesheet styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties.
 
@@ -158,7 +158,7 @@ In R, a block class names its UI in its `ui` field ([Block classes in R](Rewrite
 
 A block class defined outside a package names a plain JS module by its path, which R serves once the script has registered the class, as it serves a package's modules, while a file holds none of it ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 
-A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)). R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads. A package ships the JSON Schema of each field it registers beside the startup module that registers it, in the same way ([Board updates](Rewrite-1.1.2#fields)).
+A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)). R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads. A package ships the JSON Schema of each key of the front-end's state that it registers beside the startup module that registers it, in the same way ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)).
 
 ### Testing
 
