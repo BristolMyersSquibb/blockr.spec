@@ -1,5 +1,5 @@
 # Roadmap
-Revised on 2026-10-29.
+Revised on 2026-10-30.
 
 This page says when the parts of [State in JS](Rewrite-1) are specced and implemented, when the block packages port to block classes, and what comes after the switch. The rewrite's pages hold its design and this page only its schedule, so a date that moves here changes no page there.
 
@@ -60,8 +60,12 @@ Look into a Python process in R's place: one that evaluates what the client send
 
 A server-side component of our own would sit between the client and the processes that evaluate, shaped as a proxy in Go or as a scheduler in Node, which is still open. Above all it would let a board use several R and Python processes, and backends other than a process, such as a database, where data locality decides where a block is evaluated, so that data moves as little as possible. It would also open the way to collaboration, whose relay State in JS keeps open ([State in JS](Rewrite-1#proposal)), to an MCP endpoint, and to what the client cannot do alone, such as holding the provider credentials of the assistant's proxy ([Assistant as a client extension](Rewrite-1.4)) and making the calls on an app's own Connect key ([Session management as a client extension](Rewrite-1.6)).
 
+### A desktop app
+
+Look into a desktop app that wraps the client in a shell such as Electron, so that boards run on a laptop without hosting, with packaging as the only work each platform needs. Since R only evaluates, behind one bridge module ([State in JS](Rewrite-1#proposal)), the shell needs only an R the bridge can reach: a portable R bundled with the app, as [shinyelectron](https://r-pkg.thecoatlessprofessor.com/shinyelectron/) bundles one for Shiny apps on macOS and Windows but not yet on Linux, or R compiled to WebAssembly by [webR](https://docs.r-wasm.org/webr/latest/), which runs one build everywhere and whose repository holds all but three of the packages the stack depends on. Either way the data comes to the laptop, the opposite of the data locality a server of our own aims for.
+
 <details><summary>Sources</summary>
 
-The block constructors are the `export(new_*_block)` lines in each package's `NAMESPACE` on main on 2026-10-29, at blockr.dplyr `68e1b54`, blockr.io `acadbb2`, blockr.ggplot `289cb60`, blockr.dm `8b37981`, blockr.viz `332ce57`, blockr.stats `268259d`, blockr.extra `c99bce6` and blockr.pharma `22c6c03`, and what a package builds on is its `Imports`. On CRAN on 2026-10-29: blockr 0.1.0, blockr.core 0.1.3, blockr.dag 0.1.5, blockr.dock 0.1.2, blockr.dplyr 0.1.0, blockr.ggplot 0.1.0, blockr.io 0.1.0 and blockr.session 0.1.0. The reusable `ci.yaml` of blockr.ci runs no Node step.
+The block constructors are the `export(new_*_block)` lines in each package's `NAMESPACE` on main on 2026-10-29, at blockr.dplyr `68e1b54`, blockr.io `acadbb2`, blockr.ggplot `289cb60`, blockr.dm `8b37981`, blockr.viz `332ce57`, blockr.stats `268259d`, blockr.extra `c99bce6` and blockr.pharma `22c6c03`, and what a package builds on is its `Imports`. On CRAN on 2026-10-29: blockr 0.1.0, blockr.core 0.1.3, blockr.dag 0.1.5, blockr.dock 0.1.2, blockr.dplyr 0.1.0, blockr.ggplot 0.1.0, blockr.io 0.1.0 and blockr.session 0.1.0. The reusable `ci.yaml` of blockr.ci runs no Node step. The packages the stack depends on are the recursive `Depends`, `Imports` and `LinkingTo` of blockr.core, blockr.dock, blockr.dplyr, blockr.io, blockr.ggplot, blockr.ui, blockr.dag, blockr.session, blockr.code, blockr.assistant, blockr.dm and blockr.ai on main on 2026-10-30, 126 packages, of which the webR repository for R 4.6 lacked `reactives`, `tomledit` and `yaml12`.
 
 </details>
