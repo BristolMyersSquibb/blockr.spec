@@ -5,7 +5,7 @@ State in JS moves board state from R to the browser: the client becomes the only
 
 ## Problem
 
-Board state lives in R. The `board_server()` function of blockr.core holds the blocks and their args, links, stacks and options, and runs board management, block construction, demand and visibility gating and every block's UI logic as Shiny reactives in the session's R process, on its one thread. Evaluation, the only part that needs R, waits behind all of it.
+Board state lives in R. The `board_server()` function of blockr.core holds the blocks and their args, links, stacks and board options, and runs board management, block construction, demand and visibility gating and every block's UI logic as Shiny reactives in the session's R process, on its one thread. Evaluation, the only part that needs R, waits behind all of it.
 
 Much of core's recent work goes into working around this: deferred and prioritized construction ([blockr.core#243](https://github.com/BristolMyersSquibb/blockr.core/issues/243), [blockr.core#275](https://github.com/BristolMyersSquibb/blockr.core/issues/275)), the render gate ([blockr.core#257](https://github.com/BristolMyersSquibb/blockr.core/issues/257)), and the visibility channels [blockr#489](https://github.com/orgs/BristolMyersSquibb/discussions/489) moves out of core. Where the client holds state too, the two copies need guarding: blockr.dplyr's `js-block.R` keeps an echo guard, message priorities, a client-side queue and a ready handshake ([blockr.core#317](https://github.com/BristolMyersSquibb/blockr.core/issues/317)) only to keep a block's state in step between JS and R. The dock, which draws the board from R with DOM operations, shows the same split: 37 of 100 defects in the shell's history are that protocol failing ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)).
 
@@ -38,13 +38,13 @@ Keep edge cases out of core. An edge case goes through an escape hatch core alre
 
 Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 
-- S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks the object up by id, as it looks up block classes in the block registry and commands in the command registry, and what the methods did becomes data on one type, so an option is an instance of one `Option` type rather than a type of its own ([Board objects](Rewrite-1.1.1#board-options)).
+- S3 classes stay in R and in the files R reads. Where R dispatches on a class, the client looks the object up by id, as it looks up block classes in the block registry and commands in the command registry, and what the methods did becomes data on one type, so a board option is an instance of one `Option` type rather than a type of its own ([Board objects](Rewrite-1.1.1#board-options)).
 - Names follow each language, snake_case in R and camelCase in TypeScript, while the JSON between them keeps the snake_case it has today.
 - Core's type-stable helpers, such as `chr_ply()` and `lst_xtr()`, are not ported, since the type checker and the standard library do their work.
 - R's lack of scalars stays in R, which converts at the boundary, so the client sees plain JSON values.
 - Shiny's reactives become signals for derived values inside core, with effects only at the edges, while core's JS API follows changes through a getter and a subscription, which any framework can use ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 - R's conditions become exceptions within JS, and cross the boundary as data that keeps their class.
-- Dependencies are passed in, as the host and `CoreApi` are, rather than read from options or the session where needed.
+- Dependencies are passed in, as the host and `CoreApi` are, rather than read from R options or the session where needed.
 - What R gave for free is kept on purpose: copy-on-modify becomes a store that never changes a board in place, which read-only types enforce.
 
 ## Proposal
