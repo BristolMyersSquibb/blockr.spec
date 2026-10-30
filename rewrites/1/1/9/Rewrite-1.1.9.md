@@ -80,7 +80,7 @@ A request asks R for an answer its caller needs, rather than for a block's resul
 ```json
 { "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "args": {},
   "reads": [ { "input": "data", "block": "a", "revision": 2 } ] }
-{ "id": "18", "status": "ok", "value": 150 }
+{ "id": "18", "status": "ok", "value": [150] }
 
 { "id": "19", "kind": "request", "option": "data_dir", "name": "list_dir", "args": { "path": "~" } }
 { "id": "20", "kind": "request", "extension": "blockr.code-code", "name": "script", "args": {},
@@ -110,7 +110,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "params": {} }
-{ "id": "21", "status": "ok", "output": { "renderer": "blockr.core-basic_table", "columns": {}, "rows": [], "total": 150 } }
+{ "id": "21", "status": "ok", "output": { "renderer": "blockr.core-basic_table", "columns": [], "rows": [], "total": 150 } }
 ```
 
 An output is a description in JSON whose `renderer` names the renderer R picked for its output class, which the client mounts to draw it ([Front-ends and extension points](Rewrite-1.1.8#renderers)). Any reply may come with one binary body, such as a plot's PNG beside its output, or a file a block class's request answers with, and a request may carry one, as an upload action does ([UI modules in JS](Rewrite-1.1.7#the-contract)). The reply or request announces it in `body`, with its MIME type and, for a download, a file name, as `"body": { "type": "image/png" }`, and the bytes travel beside it as the Shiny bridge carries them (below), so that no message depends on how.
