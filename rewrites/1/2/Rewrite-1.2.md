@@ -36,7 +36,8 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 - Panel kinds: one per board, like the assistant's, or one per block, and whether commands can open panels.
 - How the navbar order and narrow-window behavior of [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) become client API.
-- How drill-down runs as an extension: one that hears what renderers emit through `CoreApi` ([UI modules in JS](Rewrite-1.1.7#the-contract)) and sets, with commands, the clicked block's state or a target's, such as a cohort filter's, keeping which block's selections go where in a field of its own, in place of blockr.viz's bridge, while a link of its own for such edits is a later addition ([Later additions](Later-additions#control-links)). It blocks porting blockr.viz's drill.
+- How drill-down runs as an extension that hears what renderers emit through `CoreApi` ([UI modules in JS](Rewrite-1.1.7#the-contract)) and sets block state with commands. Two things are open: where it keeps which block's selections go to which, as its extension state, with the UI to bind them through the dock's contribution points, such as a block menu's "Send selections to", and how a target turns a selection into its state, which belongs to the target's block class, as a hook that R answers where it needs the data, as blockr.dm's drill filter needs the dm to place a column ([Block classes in R](Rewrite-1.1.5)). A link of its own for such edits is in the [Backlog](Backlog#control-links). It blocks porting blockr.viz's drill.
+- Whether the dock and extensions have attributes beside their state, as a block has `visible`, such as which of the dock's panels show, and whether others change them as they change a block's. It blocks nothing yet.
 - What the dock locks beyond what core's lock fixes, such as resizing or rearranging its panels, and whether a deployment chooses it. It blocks the dock's part of the lock.
 
 ## Work

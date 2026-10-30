@@ -1,4 +1,4 @@
-# Later additions
+# Backlog
 Revised on 2026-10-30.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec. Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason. The large projects after State in JS are on the [roadmap](Roadmap#after-state-in-js).
