@@ -93,7 +93,7 @@ What R runs for the client comes in these flavors, which differ in who defines a
 |---|---|---|---|---|---|
 | Evaluation | The block's class, through its `expr` and `block_eval()` ([Block classes in R](Rewrite-1.1.5#evaluation)) | The scheduler, for demand and one-time evaluations ([Evaluation in the client](Rewrite-1.1.10#demand)) | Its reply sets the block's status, and R keeps the result | No | From the block expression R built at startup, for a locked block |
 | Evaluation with parameters | A `block_eval()` method of the block's class, such as the write block's | A one-time evaluation with parameters, such as a save button's | No, it runs once per call | Yes | With its parameters only for a block left open |
-| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, options, size and `meta` | No | With the opening option values |
+| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, options, size and parameters | No | With the opening option values |
 | Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, options and the revisions read | No | With a locked block's opening state and the opening option values |
 | Volatile request | A request the class wraps in `volatile()` | The block's UI, through its host | No | No | As a block class's request |
 | Action | A request the class wraps in `action()`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
@@ -104,12 +104,12 @@ An option or an extension declares for each of its requests, as its package regi
 
 ### Outputs
 
-An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's `meta`, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the board's option values, what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
-  "meta": {} }
+  "params": {} }
 { "id": "21", "status": "ok", "output": { "renderer": "blockr.core-basic_table", "columns": {}, "rows": [], "total": 150 } }
 ```
 

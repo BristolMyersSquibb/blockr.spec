@@ -52,7 +52,7 @@ A class's fields:
 
 A class has no say in when its blocks are evaluated: a block that must run with nothing on screen, such as a write block in auto mode, is demanded by its package in the client ([Evaluation in the client](Rewrite-1.1.10#demand)), and a block whose block expression must run only when its UI asks, such as a write block in manual mode, has a `block_eval()` method that runs it only with the parameter the UI's one-time evaluation passes (below).
 
-The function fields name what they read: `expr` the state args, a request the inputs, state args and options it reads, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `meta` (below). How R evaluates a block, migrates a state a file saved and describes a result are generics rather than fields: `block_eval()` and `block_migrate()` dispatch on the block's class, which R gives a block made from the recipe's state, and `block_summary()` on the result's class (below). The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `visible`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the class's options, but for its parameters, which have a default; that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`; and, once it reads the schema the class's UI ships, that the schema's properties are the state args. All but the last two read only the class's fields and the formals of its functions.
+The function fields name what they read: `expr` the state args, a request the inputs, state args and options it reads, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below). How R evaluates a block, migrates a state a file saved and describes a result are generics rather than fields: `block_eval()` and `block_migrate()` dispatch on the block's class, which R gives a block made from the recipe's state, and `block_summary()` on the result's class (below). The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `visible`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the class's options, but for its parameters, which have a default; that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`; and, once it reads the schema the class's UI ships, that the schema's properties are the state args. All but the last two read only the class's fields and the formals of its functions.
 
 A sketch of `new_block_class()`, in which a field a class leaves out is `NULL`:
 
@@ -206,7 +206,7 @@ R keeps each block's latest result, with its revision, its block expression and 
 
 ### Outputs
 
-An output is an S3 object of an output class, whose class vector ends in `block_output`. The package that defines an output class documents it, as a MIME type's owner does, and defines it in R with two functions: a constructor, which makes an output of the class and checks the fields it documents, and a coercion, a generic that makes one from a result, dispatching on the result's class, as `new_board()` and `as_board()` pair today. A block class names the coercion its results are shown through in its `output` field, and R calls it with the block's result and what the renderer asks with, its `options`, `info` and `meta` (below), and sends the output as JSON, naming the renderer R picked for it (below), with at most one binary body and its MIME type, such as a plot's PNG ([Wire protocol](Rewrite-1.1.9#outputs)). Core defines three output classes: `table_output`, a table's columns, the rows of one page and its total row count, made by `new_table_output()` and, from a result, by `as_table_output()`; `text_output`, made by `new_text_output()` and `as_text_output()`, which prints any result; and `plot_output`, made by `new_plot_output()` and `as_plot_output()`, which prints a ggplot again and runs a base plot's block expression again, since a recording keeps the colours it was drawn in, both at the size `info` gives and with thematic set to its theme, so that a theme switch redraws every plot on screen with no new revision, where today the block re-evaluates when the theme changes ([R/plot-block.R#L59-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L59-L68)). The table output, with illustrative bodies:
+An output is an S3 object of an output class, whose class vector ends in `block_output`. The package that defines an output class gives it a contract, as a MIME type's owner does, and defines it in R with two functions: a constructor, which makes an output of the class and checks the fields its contract gives, and a coercion, a generic that makes one from a result, dispatching on the result's class, as `new_board()` and `as_board()` pair today. A block class names the coercion its results are shown through in its `output` field, and R calls it with the block's result and what the renderer asks with, its `options`, `info` and `params` (below), and sends the output as JSON, naming the renderer R picked for it (below), with at most one binary body and its MIME type, such as a plot's PNG ([Wire protocol](Rewrite-1.1.9#outputs)). Core defines three output classes: `table_output`, a table's columns, the rows of one page and its total row count, made by `new_table_output()` and, from a result, by `as_table_output()`; `text_output`, made by `new_text_output()` and `as_text_output()`, which prints any result; and `plot_output`, made by `new_plot_output()` and `as_plot_output()`, which prints a ggplot again and runs a base plot's block expression again, since a recording keeps the colours it was drawn in, both at the size `info` gives and with thematic set to its theme, so that a theme switch redraws every plot on screen with no new revision, where today the block re-evaluates when the theme changes ([R/plot-block.R#L59-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L59-L68)). The table output, with illustrative bodies:
 
 ```r
 new_block_output <- function(x, class) structure(x, class = c(class, "block_output"))
@@ -217,13 +217,13 @@ new_table_output <- function(columns, rows, total, ..., class = character()) {
   new_block_output(list(columns = as.list(columns), rows = rows, total = total, ...), c(class, "table_output"))
 }
 
-as_table_output <- function(result, options, info, meta) UseMethod("as_table_output")
+as_table_output <- function(result, options, info, params) UseMethod("as_table_output")
 
-as_table_output.data.frame <- function(result, options, info, meta) {
-  size <- meta$page_size %||% options$n_rows
-  page <- meta$page %||% 1L
+as_table_output.data.frame <- function(result, options, info, params) {
+  size <- params$page_size %||% options$n_rows
+  page <- params$page %||% 1L
   ord <- seq_len(nrow(result))
-  if (length(meta$sort)) ord <- order(result[[meta$sort$column]], decreasing = isTRUE(meta$sort$desc))
+  if (length(params$sort)) ord <- order(result[[params$sort$column]], decreasing = isTRUE(params$sort$desc))
   idx <- ord[(page - 1L) * size + seq_len(size)]
   new_table_output(
     columns = vapply(result, function(col) class(col)[1L], ""),
@@ -239,9 +239,29 @@ For a head block's result, the first seven rows of `iris`, with `n_rows` at 3 an
 {"renderer":"blockr.core-basic_table","columns":{"Sepal.Length":"numeric","Sepal.Width":"numeric","Petal.Length":"numeric","Petal.Width":"numeric","Species":"factor"},"rows":[[4.6,3.1,1.5,0.2,"setosa"],[5,3.6,1.4,0.2,"setosa"],[5.4,3.9,1.7,0.4,"setosa"]],"total":7}
 ```
 
+The contract is what a renderer of the class is written against: a TypeScript type of the JSON the class's outputs are sent as, one of the parameters its coercion reads, and fixtures of sample outputs, which R's constructor writes and every renderer of the class is tested on. The defining package ships them beside its renderer, as core ships the types modules are written against ([UI modules in JS](Rewrite-1.1.7#packaging)), and a subclass's types extend its class's, as its class vector does. Core's contract for table outputs:
+
+```ts
+interface BlockOutput {
+  renderer: string;                      // the renderer R picked, which R adds to every output
+}
+
+interface TableOutput extends BlockOutput {
+  columns: Record<string, string>;       // each column's class in R, { Species: "factor" }
+  rows: Json[][];                        // one page of rows, in the order of columns
+  total: number;                         // the total row count
+}
+
+interface TableParams {
+  page?: number;                         // 1 unless the renderer pages
+  page_size?: number;                    // n_rows unless the renderer sets one
+  sort?: { column: string; desc?: boolean };
+}
+```
+
 What draws an output is a renderer, a module that a package declares in R for an output class, of which R picks one per class, from the app's blockr options, the front-end, other packages and the package that defines the class, in that order, and names in each output the one it picked for the most specific class in the output's class vector that has one, as S3 dispatch would ([Front-ends and extension points](Rewrite-1.1.8#renderers)). The client mounts the renderer an output names, so neither class vectors nor dispatch reach it, as [State in JS](Rewrite-1#principles) keeps them in R. An output class is the contract of the package that defines it, and only that package adds fields to it, in a later version whose new fields older renderers skip, as both sides of the protocol ignore fields they do not know ([Wire protocol](Rewrite-1.1.9#versions)). Another package extends it with a subclass, whose outputs hold everything the class holds, such as a lazy table's output that adds the SQL behind its page in its database's dialect, of class `c("lazy_table_output", "table_output", "block_output")`, so a renderer of the subclass draws what it adds, and where no package declares one, the class's renderer draws what the class holds. A lazy table with nothing more to show is a table output, which R pages in the database, as blockr.ui's table preview pages one today ([R/table-preview-engine.R#L67-L68](https://github.com/BristolMyersSquibb/blockr.ui/blob/9bd8312a3408bbcbabff2b57d1d3fd5681843c94/R/table-preview-engine.R#L67-L68)). So a block class never names what draws its output, and blockr.ui's table preview takes the place of core's plain table for every block whose output is a table output.
 
-The `meta` is what the renderer keeps and R reads, such as the page a table shows and its sort, which the renderer changes through its host, asking R for the output again, so a table output holds the page `meta` asks for, sorted as it says, with `n_rows` rows to a page unless it gives a page size. A board option the coercion reads, such as `n_rows`, is part of the class's contract, so every renderer of the class brings it ([Front-ends and extension points](Rewrite-1.1.8#renderers)). A renderer draws an output nested in its own through its host, with the renderer R names in the nested output. An output that is composite rather than an extension of another nests the outputs it holds: the output blockr.dm draws today through `block_ui()` and `block_output()` methods ([R/dm-block.R#L504-L627](https://github.com/BristolMyersSquibb/blockr.dm/blob/8b37981838cfac63a5d40e270a19857e5ef9ea90/R/dm-block.R#L504-L627)) becomes, with illustrative names, an output class of its own, whose coercion makes a dm's output and nests the selected table's, and whose renderer draws the diagram and has the table drawn by the app's renderer for table outputs:
+An output's parameters are what its renderer keeps and the coercion reads, such as the page a table shows and its sort, which the renderer changes through its host, asking R for the output again, so a table output holds the page its parameters ask for, sorted as they say, with `n_rows` rows to a page unless they give a page size. A board option the coercion reads, such as `n_rows`, is part of the class's contract, so every renderer of the class brings it ([Front-ends and extension points](Rewrite-1.1.8#renderers)). A renderer draws an output nested in its own through its host, with the renderer R names in the nested output. An output that is composite rather than an extension of another nests the outputs it holds: the output blockr.dm draws today through `block_ui()` and `block_output()` methods ([R/dm-block.R#L504-L627](https://github.com/BristolMyersSquibb/blockr.dm/blob/8b37981838cfac63a5d40e270a19857e5ef9ea90/R/dm-block.R#L504-L627)) becomes, with illustrative names, an output class of its own, whose coercion makes a dm's output and nests the selected table's, and whose renderer draws the diagram and has the table drawn by the app's renderer for table outputs:
 
 ```r
 new_dm_output <- function(diagram, preview = NULL) {
@@ -249,12 +269,12 @@ new_dm_output <- function(diagram, preview = NULL) {
   new_block_output(list(diagram = diagram, preview = preview), "dm_output")
 }
 
-as_dm_output <- function(result, options, info, meta) UseMethod("as_dm_output")
+as_dm_output <- function(result, options, info, params) UseMethod("as_dm_output")
 
-as_dm_output.dm <- function(result, options, info, meta) {
+as_dm_output.dm <- function(result, options, info, params) {
   new_dm_output(
     diagram = dm_keylines_meta(result),
-    preview = if (length(meta$table)) as_table_output(result[[meta$table]], options, info, meta$preview)
+    preview = if (length(params$table)) as_table_output(result[[params$table]], options, info, params$preview)
   )
 }
 
@@ -269,7 +289,7 @@ register_renderer("dm", js_module("dm-output.js"), class = "dm_output")   # in .
 |---|---|
 | `block_output(x, result, session)` | gone, since a class names its output's coercion in `output`, which makes an output from a result, while its name becomes the base of every output class (above) |
 | `block_ui(id, x)`, `block_render_trigger()` | gone, since a renderer draws the output and options are arguments |
-| `tabular_output(x, result, block, session)` | `as_table_output(result, options, info, meta)`, the coercion to a table output, dispatching on the result rather than a display (above) |
+| `tabular_output(x, result, block, session)` | `as_table_output(result, options, info, params)`, the coercion to a table output, dispatching on the result rather than a display (above) |
 | `tabular_display()`, `tabular_ui()`, `tabular_trigger()`, `tabular_options()` | gone, with the display classes and the `tabular_display` blockr option, since a renderer of table outputs takes a display's place, with the board options it brings (above) |
 | `block_eval(x, expr, env, ...)` | kept, dispatching on the block's class, with core's method keeping what the block expression draws (above) |
 | none | `interpolate(x, inputs)`, a generic on the class of what `expr` returns, which makes the block expression from it with the upstream ids by input, and whose method a package adds for a class of its own that inherits from `blockr_expr` (above) |
