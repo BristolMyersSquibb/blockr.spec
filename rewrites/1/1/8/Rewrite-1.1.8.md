@@ -120,6 +120,8 @@ The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `inse
 
 Core ships, beside the stubs of its hosts ([UI modules in JS](Rewrite-1.1.7#testing)), a `CoreApi` for tests whose store, commands and scheduler are core's own and whose replies from R come from fixtures, those the wire protocol's tests round-trip ([Wire protocol](Rewrite-1.1.9)), so that a front-end, an extension or a startup module runs in a test runner on a board, needing neither R nor a browser.
 
+End-to-end tests run an app with R and a browser, through shinytest2 to start with, and core exports what they check. R exports each block's latest result through `exportTestValues()`, as `blockr_test_exports()` does today ([R/utils-serve.R#L310-L331](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L310-L331)), which Shiny does only in the test mode shinytest2 starts an app in, and the client exposes the board and each block's status, read only, for `AppDriver$get_js()` to read, since they now live in the client.
+
 ## Open questions
 
 None.

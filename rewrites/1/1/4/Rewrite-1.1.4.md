@@ -1,7 +1,7 @@
 # Serialization of the client-owned board
 Status: settled on 2026-10-28. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a board is written to a file and read back, and how state values travel between the client and R. It builds on the [board objects proposal](Rewrite-1.1.1), which says what the board holds, and shapes opening boards in R, exporting the block registry, writing saved boards in the client and the JSON decoding of the wire protocol document, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R opens a board is the [board updates proposal](Rewrite-1.1.2#opening-a-board), and where a board is saved, to a download, Connect or a draft, is session management's ([Session management as a client extension](Rewrite-1.6)): core owns what a saved board is, not saving it.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a board is written to a file and read back, and how state values travel between the client and R. It builds on the [board objects proposal](Rewrite-1.1.1), which says what the board holds, and shapes opening boards in R, exporting the block registry, writing a board's JSON in R by schema, writing saved boards in the client and the JSON decoding of the wire protocol document, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). How R opens a board is the [board updates proposal](Rewrite-1.1.2#opening-a-board), and where a board is saved, to Connect or a draft, is session management's ([Session management as a client extension](Rewrite-1.6)), beside the download that core's basic front-end offers ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)): core owns what a saved board is, and saves one itself only as a download.
 
 ## What must hold
 
@@ -35,7 +35,7 @@ A board with two blocks, one of them of a class defined outside a package, a lin
       "a": { "registry_id": "blockr.core-dataset_block", "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris", "attrs": {} },
       "b": { "registry_id": "my_block", "state": { "n": 3 }, "name": "Mine", "attrs": {} }
     },
-    "links": { "ab": { "from": "a", "to": "b", "input": "data", "name": "" } },
+    "links": { "ab": { "from": "a", "to": "b", "input": "data" } },
     "stacks": {},
     "options": { "n_rows": 50 }
   }
@@ -64,7 +64,7 @@ A block saved by an older version of its class migrates through `block_migrate()
 
 ### Options
 
-A saved board holds each option's value under its id and nothing else of it. When R opens a board, it collects again the options that the board's parts require, its front-end and the block classes the block registry holds, as it collects them for an app's board, keeping one per id, gives each one the file lacks its initial value and passes the values the file holds through, while the package that ships an option defines it in the client ([Board objects](Rewrite-1.1.1#options)). A package's migration converts its options' values with the rest of its state (above), and the store then drops and names a value that no option claims, as it drops a key of the front-end's state that no loaded package registered, while an option that a part requires but no installed package defines is an error naming both. In a file from today's stack, R ignores an option's category and label, since its definition supplies them.
+A saved board holds each option's value under its id and nothing else of it. When R opens a board, it collects again the options that the board's parts require, its front-end, the block classes the block registry holds and the renderers R picks, as it collects them for an app's board, keeping one per id, gives each one the file lacks its initial value and passes the values the file holds through, while the package that ships an option defines it in the client ([Board objects](Rewrite-1.1.1#options)). A package's migration converts its options' values with the rest of its state (above), and the store then drops and names a value that no option claims, as it drops a key of the front-end's state that no loaded package registered, while an option that a part requires but no installed package defines is an error naming both. In a file from today's stack, R ignores an option's category and label, since its definition supplies them.
 
 ## Open questions
 
