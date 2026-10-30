@@ -40,7 +40,7 @@ R holds no copy of the board, so nothing in R has to follow it: an R object eith
 - A block class is a value, defined once with `new_block_class()` and held by the block registry: its UI, inputs, requests and options, and the functions that validate a state, build the expression and evaluate it ([Block classes in R](Rewrite-1.1.5)). Nothing about a class is copied into a block.
 - A block, as its constructor returns it, holds its state and name and refers to its class. R builds blocks only where a board is built, in an app script and when a board is opened, and keeps none while the app runs.
 - Results are an environment keyed by block id, holding for each block R has evaluated the revision, value, block expression and registry id of its latest evaluation, with the previous value kept while the next computes. They hold no state: an evaluation brings the recipe's state, from which the class's `expr` builds the block expression that `block_eval()` runs, and the coercion its class names makes an output from a result ([Wire protocol](Rewrite-1.1.9#outputs)). R drops a block's results when the client says the block is gone ([Wire protocol](Rewrite-1.1.9)).
-- A request carries the current state it needs: an evaluation its recipe ([Wire protocol](Rewrite-1.1.9)), a block class's request the state args its function names, and an output request the board's option values.
+- A request carries the current state it needs: an evaluation its recipe ([Wire protocol](Rewrite-1.1.9)), a block class's request the state args its function names, and an output request, or a request of its output class, the board's option values.
 
 ### The board
 
