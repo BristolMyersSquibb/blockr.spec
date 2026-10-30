@@ -21,7 +21,7 @@ Conditions 1 to 6 of [State in JS](Rewrite-1#what-must-hold) rest on this part, 
 | Board and block servers, plugins, stack gating, notifications and the generics that draw UI | 7,358 | Replaced by the store and commands ([Board updates](Rewrite-1.1.2)), the scheduler ([Evaluation in the client](Rewrite-1.1.10)) and front-ends ([Front-ends and extension points](Rewrite-1.1.8)). The notes of [Client-drawn dock and extensions](Rewrite-1.2) give each plugin its new home |
 | The JS of today's UI, `changeBoardTitle.js`, `minimalPreviewWidth.js` and `moveBlockUi.js` | 55 of JS | Replaced by core's client ([Front-ends and extension points](Rewrite-1.1.8)) |
 | Locked boards, through `blockr.locked` and `is_board_locked()` | 47 | Carried over, as a lock the app sets when it starts and R holds in every recipe, under which a board loads no other, where today's dock restores any ([Wire protocol](Rewrite-1.1.9#locked-boards)) |
-| Board options and their Shiny UIs | 1,274 | Constructors carried over, with their values in the board ([Board objects](Rewrite-1.1.1#options)) and their UIs drawn in the client |
+| Board options and their Shiny UIs | 1,274 | Constructors carried over, with their values in the board ([Board objects](Rewrite-1.1.1#board-options)) and their UIs drawn in the client |
 | The `serve()` generic and board loaders | 525 | The generic carried over, serving core's client and the board's front-end, while the loaders go, since the store opens a board in place ([Defining a board in R](Rewrite-1.1.3)), and `blockr_test_exports()` gives way to what core exports for end-to-end tests ([Front-ends and extension points](Rewrite-1.1.8#testing)) |
 | Board, block, link and stack classes | 2,298 | Constructors and accessors carried over, for app scripts and for opening boards, and setters and modifiers dropped, while the live state moves to the client ([Board objects](Rewrite-1.1.1), [Defining a board in R](Rewrite-1.1.3#the-script)) |
 | The block class and its specializations, the block registry, roclet and metadata, arg specs and evaluation | 3,114 | Replaced by `new_block_class()`, with the block registry, the roclet and the arg specs carried over ([Block classes in R](Rewrite-1.1.5)) |
@@ -76,7 +76,7 @@ None.
 
 ## Design pages
 
-- [Board objects: blocks, links, stacks, options and the front-end](Rewrite-1.1.1): the objects the client holds for a board, how a board names its front-end and a block its class, and the state the front-end and its extensions keep
+- [Board objects: blocks, links, stacks, board options and the front-end](Rewrite-1.1.1): the objects the client holds for a board, how a board names its front-end and a block its class, and the state the front-end and its extensions keep
 - [Board updates: deltas, commands and undo](Rewrite-1.1.2): the store, deltas, the front-end's state and attributes, commands, opening a board, undo, and following the board
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3): the app script, the opening board and how R writes it, `serve()`, data passed to it, board options and blockr options
 - [Serialization of the client-owned board](Rewrite-1.1.4): saved files, state values between the client and R, and migrations
