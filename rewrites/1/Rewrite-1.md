@@ -16,7 +16,7 @@ Much of core's recent work goes into working around this: deferred and prioritiz
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen, except what an app has R evaluate in the background while it has nothing else to run ([Evaluation in the client](Rewrite-1.1.10#demand)).
 4. Boards written by today's `blockr_ser()` open, with the dock's views and layouts and the DAG's positions, for block classes that have been ported ([Serialization](Rewrite-1.1.4)).
 5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
-6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so core's client, the dock and the extensions follow it.
+6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the extensions follow it, while core's client builds on Tailwind CSS ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
 
 ## Principles
 
@@ -79,3 +79,4 @@ None.
 - Terms: the [Glossary](Glossary), whose names every page, spec and issue of the rewrite uses in the senses it gives.
 - Backlog: the [Backlog](Backlog) lists the small and medium additions beyond parity that are not ready for a spec, each with what it would remove and what it would cost.
 - Code: the R code on the pages sketches what an API looks like and how it behaves, and is not to be carried over verbatim. It does not follow the patterns and utilities the blockr packages have settled on, internal ones such as blockr.core's `chr_ply()` family, `coal()` and `blockr_abort()`, which a sketch writes as `vapply()`, `is.null(x) ||` and `stop()`, and third-party ones such as rlang, vctrs and cli, so an implementation adapts it to the package it lands in. Adapting it is no departure from the pages.
+- TypeScript: client code is strict TypeScript, or JS checked through `// @ts-check`, gated in each package's CI by `tsc`, typescript-eslint and Vitest on happy-dom, and a package that builds bundles its modules with esbuild into `inst/`, which it commits, while CI checks that a rebuild changes nothing there ([UI modules in JS](Rewrite-1.1.7#packaging)).

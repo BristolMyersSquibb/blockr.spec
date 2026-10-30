@@ -2,7 +2,7 @@
 
 ### Parts
 
-- [Client-owned board state](Rewrite-1.1), review
+- [Client-owned board state](Rewrite-1.1), settled
 - [Client-drawn dock and extensions](Rewrite-1.2), draft
 - [Client-drawn DAG extension](Rewrite-1.3), draft
 - [Assistant as a client extension](Rewrite-1.4), draft

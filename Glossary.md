@@ -6,7 +6,7 @@ Every page, spec and issue of the rewrites uses these names in these senses only
 | Term | Means |
 |---|---|
 | Block class | A value made by `new_block_class()`, defined once and held by the block registry under its registry id, through whose fields R evaluates every block of the class ([Block classes in R](Rewrite-1.1.5#the-block-class)) |
-| Block | One instance of a block class, which the board holds as `{ registry_id, state, name }` ([Blocks](Rewrite-1.1.1#blocks)). R makes an R block, with the class's constructor, only while it builds a board. A block is never a block class, which is always called one |
+| Block | One instance of a block class, which the board holds as `{ registry_id, state, name, attrs }` ([Blocks](Rewrite-1.1.1#blocks)). R makes an R block, with the class's constructor, only while it builds a board. A block is never a block class, which is always called one |
 | Block state | A block's values for the formals of its class's `expr`, its state args, such as a head block's `n`, which a user sets through the block's UI and the board holds as the block's `state`. It is one of the two sorts of input a block has, beside its data inputs ([Block classes in R](Rewrite-1.1.5#the-block-class)) |
 | Data input | One of the inputs a block's class declares in `inputs`, such as a head block's `data`, which a link binds to an upstream block's result. It is one of the two sorts of input a block has, beside its block state ([Block classes in R](Rewrite-1.1.5#the-block-class)) |
 | Block registry | R's registry of block classes, filled by `register_block()`, whose entries R sends the client |
