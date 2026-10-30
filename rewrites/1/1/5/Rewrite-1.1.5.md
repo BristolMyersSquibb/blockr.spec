@@ -1,5 +1,5 @@
 # Block classes in R for the client-owned board
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-10-30. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block class in R, and how R evaluates a block with it. It shapes defining block classes, a block class's output, exporting the block registry, the per-session evaluator and the guide for block class authors, each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). A block class's UI, a module that meets the contract, is the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)), the messages that carry a block's recipe and its result are the [wire protocol proposal](Rewrite-1.1.9), how state values travel between the client and R is the [serialization proposal](Rewrite-1.1.4), which renderer draws an output is [Front-ends and extension points](Rewrite-1.1.8#renderers)'s, and when a block is evaluated is the [evaluation proposal](Rewrite-1.1.10).
 
