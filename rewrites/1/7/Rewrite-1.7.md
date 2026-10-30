@@ -40,7 +40,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 ## Work
 
 - Ship React, one copy for the page, with the React SDK that block UIs are written with and the build preset that maps `react` to it, inside the R package, in blockr.ui
-- Port the table preview to a renderer of the output class `table_output`, paging and sorting through the output's `meta`, in blockr.ui
+- Port the table preview to a renderer of the output class `table_output`, paging and sorting through the output's parameters, in blockr.ui
 
 ## Design pages
 
