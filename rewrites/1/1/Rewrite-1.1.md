@@ -1,5 +1,5 @@
 # Client-owned board state
-Status: settled on 2026-10-30. Part of [State in JS](Rewrite-1).
+Status: implementing in [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503). Part of [State in JS](Rewrite-1).
 
 This part covers blockr.core: the client's store, command registry and scheduler, the wire protocol and R's per-session evaluator, block classes and the modules that draw their UIs, opening, saving and serving a board, and core's basic front-end with the API every front-end draws on. Every other part builds on it, and its design pages set out each API.
 
@@ -50,29 +50,7 @@ None.
 
 ## Work
 
-- Set up the TypeScript toolchain of core's client, as the conventions of [State in JS](Rewrite-1#conventions) give it, building its modules and their CSS, from Tailwind CSS, into `inst/` and gating its type check, lint and tests in the repo's CI, in blockr.core
-- Write the wire protocol as a versioned document with fixtures that the R and the JS test suites both round-trip, covering the handshake, opening a board, evaluation, requests, outputs, cancelling, forgetting and the JSON decoding, in blockr.core
-- Define block classes with `new_block_class()` and `block_constructor()`, register them by class under `{pkg}-{name}` ids, port core's built-in blocks to them, dropping the specializations, and ship helpers that test a class without Shiny, in blockr.core
-- Add output classes on the base class `block_output`, each a constructor and a coercion, registered with the JSON Schema of their outputs and their requests, with core's for tables, text and plots, `as_table_output()` with a method for data frames, and `as_text_output()`, which prints any result, in blockr.core
-- Let packages declare renderers for output classes and for board options, pick one for each from the blockr options, the front-end, other packages and the defining package, and name in each output the one for the most specific class that has one, in blockr.core
-- Export the block registry to the client, each block class by registry id with its inputs, arg specs, requests, UI and the schema of its state that its UI ships, and send with it the versions of R's packages and the modules packages offer each other and the renderers R picks, in blockr.core
-- Give boards a name, in place of the `board_name` board option, and the id that `serve()` takes today, in blockr.core
-- Write a board's JSON in R by schema, from a JSON Schema of the board generated from core's TypeScript types and the schemas block UIs and packages ship for block state, the front-end's state and board options, in blockr.core
-- Open boards in R, from an app script, a file of either stack or the client's own board: parse a file of today's stack with typedjson in a mode that refuses code ([nbenn/typedjson#121](https://github.com/nbenn/typedjson/issues/121)), load the packages they name, register their block classes, migrate and convert them, drop and name what cannot be rebuilt, and reply with the board, in blockr.core
-- Build the per-session evaluator, which keeps each block's latest result by block id and revision and runs the requests packages register, and the Shiny bridge, in blockr.core
-- Build the client store, with deltas, undo, following the board and each package's migration of its saved state, and the command registry with core's commands, in blockr.core
-- Lock a board when the app starts, in R's recipes and in the client's store, leaving open the blocks whose inputs show, as core's attribute `visible` says, in blockr.core
-- Build the client scheduler, with revisions, demand, invalidation and statuses, in blockr.core
-- Write saved boards in the client, as the board with the versions of its packages, in blockr.core
-- Load a block class's UI module on first use and mount it with an injected host, and ship the TypeScript types modules are written against, with a stub of each host to test them, inside the R package, in blockr.core
-- Write the UIs of core's built-in blocks and its renderers for tables, printed text and plots in plain TypeScript with Tailwind CSS, and define core's board options there, each with its label, category, schema, UI and what a new value does, in blockr.core
-- Add front-end registration, startup modules, the modules packages offer each other and the blockr options their clients read, as packages declare them in R, and `CoreApi`, with `mountBlock()`, `mountOutput()` and `mountOption()`, start the page in their order, and ship a `CoreApi` for tests that answers for R from fixtures, in blockr.core
-- Build core's basic front-end on Tailwind CSS, in blockr.core
-- Serve a board with `serve()` as a page that loads core's client and the front-end the board is made for, and serve a block or a saved file, in blockr.core
-- Export what end-to-end tests check, each block's result from R and the board and statuses from the client, and port core's shinytest2 tests to it, in blockr.core
-- Remove the board and block servers, the plugins and the generics that draw UI from R, in blockr.core
-- Write the guide for block class authors, covering state shapes, building expressions from values, bounded requests, outputs, UI modules and testing, with a section on porting a block from `new_block()`, in blockr.core
-- Write the migration notes for app scripts: the board's id and name in place of `serve()`'s `id` and the `board_name` board option, the static block's expression in place of its data, and the `plugins`, `options` and `loader` arguments that `serve()` drops, in blockr.core
+The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503) holds the Work list from here, each item with its issue.
 
 ## Design pages
 
