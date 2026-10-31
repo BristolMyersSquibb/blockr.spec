@@ -13,14 +13,14 @@ The blockr.session package opens, saves, versions and shares boards from `manage
 2. The browser makes every storage call. R takes part once per session, to exchange the visitor's credential, which only the content's process receives.
 3. A URL still names a board by `board_name`, `user` and `version`, and a new board gets a fresh id, so saving it forks a record instead of overwriting the one served.
 4. Unsaved work survives a crash, as the drafts of `session_autosave` do today.
-5. Records saved today open ([blockr.core#402](https://github.com/BristolMyersSquibb/blockr.core/issues/402)).
+5. Records saved today open ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)).
 
 ## Proposal
 
 - Session management is a dock extension, with navbar items for new, open, save and share and a panel or dialog for the board list and versions. Opening a board or a version runs core's command that replaces the board, and the extension updates the URL in place.
 - The rack layer becomes a TypeScript interface in the extension, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser. The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#394](https://github.com/BristolMyersSquibb/blockr.core/issues/394)), and a URL that names a record makes the extension load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the extension load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
 - The extension provides the dock's storage service, in place of the default download and upload.
 
 ## Open questions

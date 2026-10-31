@@ -1,7 +1,7 @@
 # Board updates: deltas, commands and undo
 Status: settled on 2026-10-28. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the front-end's state, with what its extensions carry, alike. It builds on the [board objects proposal](Rewrite-1.1.1) and shapes the store and the command registry, an item in the Work list of [Client-owned board state](Rewrite-1.1#work). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), and how the front-end's state is written to a file is the [serialization proposal](Rewrite-1.1.4).
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the front-end's state, with what its extensions carry, alike. It builds on the [board objects proposal](Rewrite-1.1.1) and shapes the store ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), opening boards in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)) and locking a board ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work). Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), and how the front-end's state is written to a file is the [serialization proposal](Rewrite-1.1.4).
 
 ## What must hold
 

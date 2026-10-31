@@ -15,7 +15,7 @@ The code export shows a board's code in a modal: `generate_flat_code_server()` h
 
 ## Proposal
 
-- Generation is a request that blockr.code registers ([blockr.core#393](https://github.com/BristolMyersSquibb/blockr.core/issues/393)): it carries the recipes, R builds each block's expression from its class's `expr`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
+- Generation is a request that blockr.code registers ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)): it carries the recipes, R builds each block's expression from its class's `expr`, and `export_wrapped_code()` joins the expressions, formatted and highlighted in R as today.
 - The request has the blocks it needs evaluated first, in a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)), since only an evaluation tells whether a stale block's state still runs, while building the expression itself needs no data, as a class's `expr` builds it from the state alone ([Block classes in R](Rewrite-1.1.5#evaluation)).
 
 ## Open questions
