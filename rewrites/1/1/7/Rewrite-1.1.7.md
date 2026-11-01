@@ -48,7 +48,7 @@ interface BlockHost<S extends State = State> {
 
 interface BlockContext {
   name: string;                                      // "Head"
-  status: BlockStatus;                               // its status, revision, conditions and block expression, as the scheduler has them
+  status: BlockStatus;                               // its status, revision, conditions and summary, as the scheduler has them
   inputs: { input: string; revision: number }[];     // its linked inputs, in the order of its class's inputs, whose revisions say when the data changed
   options: Record<OptionId, Json>;                   // the values of the board options its class names
 }

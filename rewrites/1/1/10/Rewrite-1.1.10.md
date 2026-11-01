@@ -8,7 +8,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 1. A board evaluates what its front-end shows, every block under core's basic front-end and what is on screen under the dock, as boards do today.
 2. A board edit costs no R time beyond evaluating what is demanded and fetching outputs for what is on screen, except what an app has R evaluate in the background, which starts only while R has nothing else to run.
 3. Any front-end, extension or package can demand a block or invalidate one without knowing who else does, and without saying why.
-4. A block's status, conditions, block expression and summary read the same whether or not it is demanded, as they do on today's board ([blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488)), so whatever reads neither `stale` nor `unevaluated` holds for the block's current revision.
+4. A block's status, conditions and summary read the same whether or not it is demanded, as they do on today's board ([blockr#488](https://github.com/orgs/BristolMyersSquibb/discussions/488)), so whatever reads neither `stale` nor `unevaluated` holds for the block's current revision.
 5. A block that must run with nothing on screen, such as a write block in auto mode, runs whatever the front-end shows, and a component that needs current results, such as the code export, gets them without putting a block on screen.
 6. At startup, the blocks the front-end shows and everything upstream of them are evaluated before any other block, so that first paint waits for no block off screen, as today's core builds their servers first ([blockr.core#243](https://github.com/BristolMyersSquibb/blockr.core/issues/243)).
 
@@ -70,7 +70,6 @@ interface BlockStatus {
   omitted: { warning: number; message: number };   // the conditions that reply counted rather than kept
   stdout: string;                                  // its standard output and error, bounded
   stderr: string;
-  expr: string | null;                             // the block expression R built for that revision
   summary: string | null;                          // the result's summary from that reply, "<data.frame> [150 × 7]"
 }
 
@@ -85,7 +84,7 @@ The names are today's ([R/block-server.R#L20-L71](https://github.com/BristolMyer
 3. It is `stale` while its revision is newer than its latest reply's, whether anything demands it or not.
 4. It is what that reply says: `ready` for `ok`, `failed` for `error` and `invalid` for `invalid`.
 
-A reply of `cancelled` or `missing` counts as none, since the scheduler sends again what it still needs, where a `missing` has it evaluate again a block R names whose current revision reads `ready`, and so had a result that R has lost, never one that reads `failed` or `invalid`, which had none. A block nothing demands reads the same way, so one that failed and has not changed since still reads `failed`, and a `stale` block keeps its latest reply's conditions, so one that failed before it went stale shows why. The conditions of an `invalid` reply hold the message of its `invalid()` or name the unset arg. While a block is `waiting`, its status holds no block expression or summary, and as its conditions only one the scheduler writes, of the phase `status`, naming the unlinked input or the upstream block that keeps it waiting, as today's board server records a note for `waiting` and `unset` with no result ([R/block-server.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L66-L71)).
+A reply of `cancelled` or `missing` counts as none, since the scheduler sends again what it still needs, where a `missing` has it evaluate again a block R names whose current revision reads `ready`, and so had a result that R has lost, never one that reads `failed` or `invalid`, which had none. A block nothing demands reads the same way, so one that failed and has not changed since still reads `failed`, and a `stale` block keeps its latest reply's conditions, so one that failed before it went stale shows why. The conditions of an `invalid` reply hold the message of its `invalid()` or name the unset arg. While a block is `waiting`, its status holds no summary, and as its conditions only one the scheduler writes, of the phase `status`, naming the unlinked input or the upstream block that keeps it waiting, as today's board server records a note for `waiting` and `unset` with no result ([R/block-server.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L66-L71)).
 
 ### Scheduling
 
