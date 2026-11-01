@@ -59,11 +59,10 @@ An evaluation request names the block and its revision and carries the recipe: t
               "inputs": [ { "input": "x", "block": "a", "revision": 2 }, { "input": "y", "block": "b", "revision": 3 } ] } }
 ```
 
-R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request needs (below), and the reply carries what the client shows about it: the block expression R built, without the assignment to the block's id that an exported script adds, the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
+R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and an extension's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded. It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a client extension](Rewrite-1.5)).
 
 ```json
-{ "id": "17", "status": "ok", "block": "c", "revision": 4, "expr": "merge(a, b, by = \"Species\", all.x = FALSE, all.y = FALSE)",
-  "summary": "<data.frame> [150 × 7]",
+{ "id": "17", "status": "ok", "block": "c", "revision": 4, "summary": "<data.frame> [150 × 7]",
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "block_eval", "message": "..." } ],
   "omitted": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
 ```
