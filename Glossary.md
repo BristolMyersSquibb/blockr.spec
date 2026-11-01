@@ -1,5 +1,5 @@
 # Glossary
-Revised on 2026-10-30.
+Revised on 2026-11-01.
 
 Every page, spec and issue of the rewrites uses these names in these senses only, and a new term is agreed before it appears on a page. The terms outlast the rewrite that brought them in, so they live here rather than on a rewrite's root, and [State in JS](Rewrite-1) brought in these.
 
@@ -16,7 +16,7 @@ Every page, spec and issue of the rewrites uses these names in these senses only
 | Interpolation | Filling in placeholders such that we get a quoted expression that can be evaluated in the context of data, the block expression: R calls a class's `expr` with the block state, and the generic `interpolate()` turns what `expr` returns into the block expression, dispatching on its class ([Block classes in R](Rewrite-1.1.5#expressions)) |
 | Command registry | The client's registry of commands ([Board updates](Rewrite-1.1.2#commands)) |
 | Board | The client's board, the JSON object the store holds |
-| R board | The R object that an app script's constructors build, or that `blockr_deser()` builds from a file of today's stack, and that R drops once it has the board's JSON |
+| R board | The R object that an app script's constructors build, and that R drops once it has the board's JSON |
 | Board option | An option the user sees and changes while the app runs, an `Option` in the client, with an `id`, `label`, `category`, `schema` and `ui`, which the package that ships it defines in the client, and whose value the board holds under its id. Unlike a blockr option, it changes while the app runs and is saved and undone with the board ([Board options](Rewrite-1.1.1#board-options)) |
 | Blockr option | A value fixed when an app starts or is deployed, which `blockr_option()` reads from an R option `blockr.<name>` or an environment variable `BLOCKR_<NAME>`, and which the board never holds. Unlike a board option, the user never changes it, and no file saves it ([Defining a board in R](Rewrite-1.1.3#blockr-options)) |
 | Extension state | What an extension carries, as a block carries its state, such as the DAG's positions, blockr.md's document or the assistant's threads, which the front-end's state holds, since an extension extends a front-end, as the dock keeps it under `extensions` by each extension's id, and which is saved and undone with the board and open to external control ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)) |
