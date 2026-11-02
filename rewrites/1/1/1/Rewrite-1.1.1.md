@@ -152,15 +152,16 @@ type Option = {                         // as the package that ships it register
   label: string;                        // "Preview rows", what the user sees
   category: string;                     // "Table options"
   schema: JsonSchema;                   // which values it accepts, such as { enum: ["light", "dark"] }, with a description for a model
+  default: Json | (() => Promise<Json>);   // what is taken where the board holds no value, or a function that core calls when first needed
   ui: OptionModule;                     // its UI module, which gets an `OptionHost`
   onChange?(value: Json, api: CoreApi): void;   // what a new value does on the page, such as switching the theme
 };
 ```
 
-The `n_rows` board option, for example, is this instance, which blockr.core's JS registers, and the board holds only its value:
+The `n_rows` board option, for example, is the instance this constructor makes, which blockr.core's JS registers, taking its default from a blockr option as `new_n_rows_option(value = blockr_option("n_rows", 50L))` does in R today, and the board holds only its value:
 
 ```ts
-const n_rows: Option = {
+const nRows = (core: CoreApi): Option => ({
   id: "n_rows",
   label: "Preview rows",
   category: "Table options",
@@ -169,13 +170,14 @@ const n_rows: Option = {
     minimum: 0,                         // a count, as is_count() checks today
     description: "How many rows of a table a block's output shows",
   },
+  default: () => core.blockrOption("n_rows", 50),   // the blockr option n_rows where it is set, else 50
   ui: nRowsInput,                       // the module blockr.core ships for it
-};
+});
 
 // and in the board, once something sets it: options: { n_rows: 25 }
 ```
 
-The id says which board option it is and never changes, while the label is only what the user sees. Ids are unique: R collects one board option per id, keeping the first, as `combine_board_options()` does today ([R/board-options.R#L435-L442](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-options.R#L435-L442)), and the client holds one definition per id. The schema says which values a board option takes, with a description for the assistant's model, as the schema of a key of the front-end's state does ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)), and the store checks every value a delta sets against it (below), while R writes a value a script gives by the copy of the schema that the board option's package ships beside its startup module ([UI modules in JS](Rewrite-1.1.7#packaging)). The board option's UI module gets an `OptionHost` with its value ([UI modules in JS](Rewrite-1.1.7)).
+The id says which board option it is and never changes, while the label is only what the user sees. Ids are unique: R collects one board option per id, keeping the first, as `combine_board_options()` does today ([R/board-options.R#L435-L442](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-options.R#L435-L442)), and the client holds one definition per id. The schema says which values a board option takes, with a description for the assistant's model, as the schema of a key of the front-end's state does ([Board updates](Rewrite-1.1.2#the-front-ends-state-and-attributes)), and the store checks every value a delta sets against it (below), while R writes a value a script gives by the copy of the schema that the board option's package ships beside its startup module ([UI modules in JS](Rewrite-1.1.7#packaging)). The board option's UI module gets an `OptionHost` with its value ([UI modules in JS](Rewrite-1.1.7)). A definition's `default` is a value, or a function that core calls the first time something needs the default and whose result it keeps, so that a definition takes its default from a blockr option through `CoreApi.blockrOption()` only when the default is first needed ([Defining a board in R](Rewrite-1.1.3#blockr-options)), and nothing is read while the page starts.
 
 The user does not rename a board option, so its label, which its definition sets, takes the place of a name. The board's own name, which core's board option `board_name` holds today, becomes the board's `name`.
 

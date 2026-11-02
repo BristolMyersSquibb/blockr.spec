@@ -75,7 +75,7 @@ A board option's UI, or the renderer that replaces it, gets an `OptionHost`, whi
 ```ts
 interface OptionHost<V extends Json = Json> {
   readonly option: OptionId;
-  value(): V;                                        // the board option's value in the board
+  value(): V;                                        // the board option's value in the board, or else its default, announced through "value" once resolved
   on(event: "value", fn: () => void): () => void;
   submit(value: V): Promise<void>;                   // runs core's command that sets a board option
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
