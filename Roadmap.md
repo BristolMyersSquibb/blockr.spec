@@ -50,7 +50,7 @@ None of this is specced or scheduled yet. Each becomes a rewrite or a spec of it
 
 ### Leaving Shiny
 
-Shiny stays host and transport through State in JS, since on Connect it gives each session its own process, and one bridge module carries the protocol ([State in JS](Rewrite-1#proposal)). Leaving Shiny replaces that module with a transport of our own, and needs another way to give each session its own process.
+Shiny stays host and transport through State in JS, since on Connect it gives each session its own process, and one module, the Shiny transport, carries the protocol ([State in JS](Rewrite-1#proposal)). Leaving Shiny replaces that module with a transport of our own, and needs another way to give each session its own process.
 
 ### Python
 
@@ -64,7 +64,7 @@ Some of it needs no server: R may already run a request in a worker rather than 
 
 ### A desktop app
 
-Look into a desktop app that wraps the client in a shell such as Electron, so that boards run on a laptop without hosting, with packaging as the only work each platform needs. Since R only evaluates, behind one bridge module ([State in JS](Rewrite-1#proposal)), the shell needs only an R the bridge can reach: a portable R bundled with the app, as [shinyelectron](https://r-pkg.thecoatlessprofessor.com/shinyelectron/) bundles one for Shiny apps on macOS and Windows but not yet on Linux, or R compiled to WebAssembly by [webR](https://docs.r-wasm.org/webr/latest/), which runs one build everywhere and whose repository holds all but three of the packages the stack depends on. Either way the data comes to the laptop, the opposite of the data locality a server of our own aims for.
+Look into a desktop app that wraps the client in a shell such as Electron, so that boards run on a laptop without hosting, with packaging as the only work each platform needs. Since R only evaluates, behind one transport ([State in JS](Rewrite-1#proposal)), the shell needs only an R that a transport can reach: a portable R bundled with the app, as [shinyelectron](https://r-pkg.thecoatlessprofessor.com/shinyelectron/) bundles one for Shiny apps on macOS and Windows but not yet on Linux, or R compiled to WebAssembly by [webR](https://docs.r-wasm.org/webr/latest/), which runs one build everywhere and whose repository holds all but three of the packages the stack depends on. Either way the data comes to the laptop, the opposite of the data locality a server of our own aims for.
 
 <details><summary>Sources</summary>
 
