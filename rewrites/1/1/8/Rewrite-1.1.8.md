@@ -21,10 +21,10 @@ Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover 
 
 ### Registering a front-end
 
-A front-end is a module that a package declares in R under a name when it loads, as a block class names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the board class the front-end draws, and the board options it requires, which R gives a board it opens as JSON, since such a board has no class for `board_options()` to dispatch on ([Defining a board in R](Rewrite-1.1.3#board-options)):
+A front-end is a module that a package declares in R under a name when it loads, as a block class names its UI module, so that its id is `{pkg}-{name}`, as a registry id is, and a package can ship several. The declaration also names the board class the front-end draws and, by their constructors, as a block class's requests name theirs, the board options it requires, which R gives a board it opens as JSON, since such a board has no class for `board_options()` to dispatch on ([Defining a board in R](Rewrite-1.1.3#board-options)):
 
 ```r
-register_front_end("dock", js_module("dock.js"), class = "dock_board", options = dock_board_options)
+register_front_end("dock", js_module("dock.js"), class = "dock_board", options = list(new_compact_option, new_sync_rails_option))
 ```
 
 The dock is then `blockr.dock-dock`, and core's basic front-end is `blockr.core-basic`, which core declares for `board`. A board names the front-end it is made for by that id in its `front_end.id`, which R picks wherever it holds the board as an R object, the one an app script builds and the one `blockr_deser()` builds from a file of today's stack: it takes the front-end declared for the most specific class in the board's class vector, as it picks a renderer for an output (below), so that a board class extending `dock_board` that no package declares a front-end for is drawn by the dock, and every board by core's basic front-end at least. Two front-ends declared for one class are an error naming both, and a board given as JSON keeps the id it holds, since it carries no class ([Board objects](Rewrite-1.1.1#the-board)).
