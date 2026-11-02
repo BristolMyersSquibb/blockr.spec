@@ -22,7 +22,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 | R helpers that draw them into Shiny UIs: the gear tray, action menu, dropdown, shortcut hints and block marks | 646 of R | Open (below), since nothing in R draws UI |
 | The table preview, a display for core's `tabular_display()` hook, with its render engine | 916 of R, 94 of JS, 322 of CSS | Carried over as a renderer of the output class `table_output`, which takes the place of core's plain table wherever blockr.ui is loaded ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
 | Asset dependencies and the package's own files | 423 of R | Replaced by however the client loads blockr.ui's assets (below) |
-| Fixes to Shiny's behaviour: the recalculating fade, empty input batches, and the gear tray's input binding | 285 of JS | Dropped, unless the bridge needs one, since no Shiny input or output draws the board |
+| Fixes to Shiny's behaviour: the recalculating fade, empty input batches, and the gear tray's input binding | 285 of JS | Dropped, unless the Shiny transport needs one, since no Shiny input or output draws the board |
 
 ## Proposal
 

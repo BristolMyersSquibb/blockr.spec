@@ -30,7 +30,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), the code extension ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt after the dock. This part settles only the API they build on, and leaves libraries, agent design and their R requests to them.
 - The dock draws block cards, with the header of [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) and status from core, and mounts each block's UI component from core's block registry. During the migration, classic R-authored block UIs are parked and adopted as in [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493).
 - A block card's sections show as core's attribute `visible` says, which the card's toggles set, where today the dock keeps that attribute itself, and on a locked board the card offers no toggle, since the blocks whose inputs show are the ones the lock leaves open ([Wire protocol](Rewrite-1.1.9#locked-boards)), while whatever else the dock locks, such as the arrangement of its panels, is its own.
-- From [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493), the hosting of classic block UIs and the CEDX measurement carry over. Its bridge, shinyreact, and its criterion of reusing the dock's model in R do not.
+- From [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493), the hosting of classic block UIs and the CEDX measurement carry over. Its transport, shinyreact, and its criterion of reusing the dock's model in R do not.
 
 ## Open questions
 
