@@ -20,12 +20,10 @@ Much of core's recent work goes into working around this: deferred and prioritiz
 
 ## Principles
 
-This is the second rewrite of blockr, and it must not undo what the first one fixed. The first blockr (2023 to 2024) built each block from fields, typed values from which the framework generated the block's UI and server. Logic between fields, such as one field's choices following another's selection, was hard to write, and a UI the field set lacked took a new field type. Inputs derived from an upstream result could not be written, and a custom output meant overriding the generated server. The rewrite into blockr.core and the packages around it handed each block to its author, who writes its UI and logic as a Shiny module that the framework wraps, and replaced linear stacks, which passed results between them through a result field, with links between blocks.
+This is the second rewrite of blockr, and it must not undo what the first one fixed: the rewrite into blockr.core and the packages around it handed each block to its author ([Principles](Principles#authors-own-their-blocks-and-core-treats-a-blocks-ui-as-a-black-box)), and replaced linear stacks, which passed results between them through a result field, with links between blocks.
 
 Keep what has served us well:
 
-- Authors own their blocks. An author writes a block's UI and its logic, and core wraps them, supplying what every block shares through specific extension points, such as code generation, evaluation and display.
-- Core treats a block's UI as a black box. It assumes nothing that a notion of fields per block would afford, such as knowing a block's inputs, generating them or computing their attributes.
 - Two extension points, as blockr.dock's extensions have shown: a block, for logic that belongs to one block, and a board extension, for whatever shows or changes the board as a whole, such as the DAG, tools for bulk changes, AI that works on the whole board, and reports like blockr.md's.
 - Well-defined APIs. Keeping blockr in separate packages forced us to think through what each one offers the others.
 - A package plugs into another only through a hook the other offers, as `tabular_display()` is today, never by patching what it owns, in JS as in R.
@@ -34,7 +32,7 @@ Keep what has served us well:
 
 Improve what has not, which the Problem above sets out: state kept in two places, UI logic in R's reactive graph with the workarounds its cost needs, and a dock drawn from R. The same goes for having two ways to extend a board, core's plugins beside the dock's extensions.
 
-Keep edge cases out of core. An edge case goes through an escape hatch core already has, such as a demand, a request, or a method of a generic, as a write block's manual save goes through a `block_eval()` method and a one-time evaluation with a parameter ([Block classes in R](Rewrite-1.1.5#evaluation)), and core grows a new capability only where none fits, and then a general one.
+Keep edge cases out of core ([Principles](Principles#core-gives-a-basic-implementation-and-ways-to-extend-it)).
 
 Translate rather than transliterate. The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 

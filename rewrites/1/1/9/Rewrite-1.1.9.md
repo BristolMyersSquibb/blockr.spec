@@ -7,7 +7,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 
 1. Everything the client and R say to each other is one of a few message kinds, written down in a versioned document with fixtures that the R and the JS test suites both round-trip.
 2. A client that starts a new session with the board it holds loses only recomputation, since what a request needs to rebuild a result travels with it or can be asked for, except a file that an action keeps for the session alone, such as an upload in the session's temporary directory.
-3. R decodes what the client sends as data only, never as code.
+3. R decodes what the client sends into plain values, so the protocol itself turns no value into code.
 4. Shiny only carries the messages, so replacing it replaces one module.
 5. Whether R runs a request in the session's process or in a worker process is R's own choice, which changes no message.
 
@@ -145,7 +145,7 @@ When blocks leave the board, the client sends a `forget` naming them, and R drop
 
 ### Decoding
 
-R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. That is the protocol's only safety, since a block may still parse a string into code, so keeping the R process within bounds is the deployment's job. R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r) has it.
+R decodes client input into plain values only, strings, numbers, logicals, lists and typed atomic vectors, never closures, calls, symbols or environments, so nothing becomes code by being decoded and `bquote()` keeps a value a value. This protects nothing: a block may parse a string into code, so a board runs arbitrary R code, and the deployment sandboxes the R process ([Principles](Principles#a-board-runs-arbitrary-r-code-and-the-deployment-sandboxes-the-r-process)). R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r) has it.
 
 ### Locked boards
 
@@ -189,7 +189,7 @@ block_expression_for <- function(req, lock = NULL) {         # for every evaluat
 }
 ```
 
-A block left open may parse what a reader types into code, as most of blockr.dplyr's builders do, and then runs whatever a reader types. Core decides nothing about what is safe to run: an app that serves a locked board to readers it does not trust hardens the R process, such as by running it in a sandbox like bubblewrap, since limiting what the R process may do is the deployment's job ([Client-owned board state](Rewrite-1.1#proposal)).
+A block left open may parse what a reader types into code, as most of blockr.dplyr's builders do, and then runs whatever a reader types. A lock is no sandbox, and core decides nothing about what is safe to run: the deployment sandboxes the R process, for a locked board as for any other ([Principles](Principles#a-board-runs-arbitrary-r-code-and-the-deployment-sandboxes-the-r-process)).
 
 The lock leaves whole blocks open rather than single args, which a later minor version of the protocol can add, since only the lock's shape in the reply to `hello` would change. Today a locked core board drops every update that changes the board, while a block's own inputs stay editable unless a front-end reports them hidden through core's `frozen` channel ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386), [R/block-server.R#L143-L153](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L143-L153)), and the dock freezes every block on a locked board, and on any board a block whose card hides its inputs, from what the client reports its cards show ([blockr.dock R/board-server.R#L386-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L386-L433)). The dock keeps saving and restoring in locked mode, which restores any board, since "locking is about preventing layout / structural mutations, not blocking a wholesale state import/export" ([blockr.dock#125](https://github.com/BristolMyersSquibb/blockr.dock/pull/125)), where a locked board here loads none.
 

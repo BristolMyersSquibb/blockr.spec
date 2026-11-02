@@ -9,7 +9,7 @@ One of the API proposals for the client-owned board ([Client-owned board state](
 2. A board saved by the new stack is written in the browser, so saving needs no R and works while R is busy or gone.
 3. The client's board holds state values its UI can use as they are, so an arg that is a vector is always an array, whatever its length.
 4. A file written by the new stack is the board as the client holds it, with only what opening it needs beside it, and names no R class or constructor, while a file of today's stack is converted to one outside core.
-5. Reading a file runs no code from it, as condition 3 of [Wire protocol](Rewrite-1.1.9#what-must-hold) asks of everything the client sends.
+5. Reading a file decodes it into plain values, as condition 3 of [Wire protocol](Rewrite-1.1.9#what-must-hold) has it for what the client sends.
 
 ## Today
 
