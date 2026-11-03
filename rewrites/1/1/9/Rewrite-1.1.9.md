@@ -116,7 +116,7 @@ A board option or an extension declares for each of its requests, as its package
 
 ### Outputs
 
-An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the board option values, what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
