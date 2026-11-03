@@ -66,7 +66,7 @@ A board takes no data from `serve()`, since its data comes from its data blocks,
 
 ### Board options
 
-A board holds a board option's value only once something sets it, the app script or, while the app runs, a command, and until then whatever needs the board option takes the `default` of its definition, which the package that ships the board option defines in the client with the rest of it, its label, category, schema, UI and what a new value does ([Board objects](Rewrite-1.1.1#board-options)). For the board a script builds, R names each board option that the script gives, as `new_board(options = new_n_rows_option(25))` gives `n_rows`, by its id with that value, and no other, since a board option's constructor takes its value alone and computes nothing, while a saved file holds the values it was saved with.
+A board option comes onto the board, with the `default` of its definition, when the client first needs a component that requires it, such as a renderer, and the package that ships the board option defines it in the client, its label, category, schema, UI and what a new value does ([Board objects](Rewrite-1.1.1#board-options)). A script gives a board option only to set a value other than its default. For the board a script builds, R names each board option that the script gives, as `new_board(options = new_n_rows_option(25))` gives `n_rows`, by its id with that value, and no other, since a board option's constructor takes its value alone and computes nothing, while a saved file holds the values it was saved with.
 
 ### Blockr options
 

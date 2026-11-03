@@ -64,7 +64,7 @@ The properties of board classes and the blocks' states migrate in JS, as the cli
 
 ### Board options
 
-A saved board holds each board option's value under its id and nothing else of it, so a board opened from one keeps the values it was saved with, and holds none for a board option that nothing set, whose definition gives its `default` to whatever needs it, as for any board ([Board objects](Rewrite-1.1.1#board-options)). No migration converts a board option's value (above): the store drops a value that no board option claims or that its schema refuses, as it drops a key of the front-end's state that no loaded package registered, without naming it, while a board option that something needs but no loaded package defines is an error naming it. The conversion of a file from today's stack drops a board option's category and label, since its definition supplies them.
+A saved board holds each board option's value under its id and nothing else of it. It holds every value that the board held, whether a command set it or a component added it with its default, so a board opened from one gets back the values it was saved with, whatever its page then shows ([Board objects](Rewrite-1.1.1#board-options)). No migration converts a board option's value (above): the store drops a value that no board option claims or that its schema refuses, as it drops a property that the class the board is built as does not define, without naming it, while a board option that a component requires but no loaded package defines is an error naming it. The conversion of a file from today's stack drops a board option's category and label, since its definition supplies them.
 
 ## Open questions
 
