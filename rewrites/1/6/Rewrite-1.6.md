@@ -52,6 +52,6 @@ On Connect a renamed record changes its content title through the API, tags go t
 Pins has clients for R and Python only, and npm has none, so the Connect backend writes and reads pin bundles itself, including those of records saved today.
 
 Drafts are rack records with `draft = TRUE`, written every `session_autosave` seconds when that blockr option is set and kept for `session_draft_ttl` days, 7 by default ([`draft.R#L1-L30`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/draft.R#L1-L30)).
-The navbar button's styling through `.blockr-navbar-icon-btn` is among the coupling listed in [Client-drawn dock and extensions](Rewrite-1.2).
+The avatar relies on the dock taking no room for a navbar item whose output renders nothing, which is among the coupling listed in [Client-drawn dock and extensions](Rewrite-1.2).
 
 </details>
