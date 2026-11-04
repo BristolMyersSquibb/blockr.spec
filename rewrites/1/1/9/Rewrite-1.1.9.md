@@ -22,7 +22,7 @@ Every request but a `cancel` or a `forget`, which get no reply, has an id the cl
 The client sends nothing but its `hello` until R has answered it, as an MCP client sends no request but pings before the server has answered its `initialize` ([MCP lifecycle](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle)), and R ignores every message that comes before a session's `hello`, and takes a later `hello` as a fresh start of the session, which forgets every block, while the client ignores a reply to a request it is not waiting on, such as one to a `hello` that Shiny replays after a reconnect (notes).
 
 ```ts
-type Kind = "hello" | "open" | "blockr_options" | "evaluate" | "request" | "output" | "cancel" | "forget";
+type Kind = "hello" | "blockr_options" | "evaluate" | "request" | "output" | "cancel" | "forget";
 
 interface Request { id?: string; kind: Kind }                     // id on every kind but cancel and forget
 interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "missing" }
@@ -33,30 +33,23 @@ A reply's status belongs to its request alone: an `error` carries the conditions
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, front-ends among them ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the lock where the app locks the board (below), and the opening board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, in `board`, with its blocks, links and stacks as arrays, each entry with its `id` where it has one, and its own `id` and `name` where it has them, since R mints no ids and the client mints each missing one as it opens the board ([Board objects](Rewrite-1.1.1#ids)), or the saved file given to `serve()`, in `file`, which R passes on as it is, having read nothing of it but the packages it names, with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, front-ends among them, the board classes that loaded packages name front-ends for, each with its package, its front-end and its version, in `board_classes` ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the lock where the app locks the board (below), and the opening board, in `board`, as a JSON board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, with every id, since R draws each id the script left out ([Board objects](Rewrite-1.1.1#ids)), or the one given to `serve()`, which R passes on as it is, having read nothing of it but its format, with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 Both sides use only the capabilities both named, such as `cancel`, `interrupt` and `progress` (below), so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "interrupt", "progress"] }
 { "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "packages": { "blockr.core": "0.2.0" },
-  "block_registry": {}, "startup_modules": [], "modules": {}, "renderers": {}, "lock": null, "board": {} }
+  "block_registry": {}, "startup_modules": [], "modules": {}, "board_classes": {}, "renderers": {}, "lock": null, "board": {} }
 ```
 
-A client that holds a board already, as when the server ended its session while the page lived on (below), keeps it and its undo history, and names in its `hello` the packages that the board names, as its saved file lists them ([Serialization](Rewrite-1.1.4#files)), in `packages`, so that R loads them and registers their block classes before any recipe names them, except on a locked board, which loads nothing the app did not (below).
+A client that holds a board already, as when the server ended its session while the page lived on (below), keeps it and its undo history, since the app's script has loaded the packages its block classes come from, as it did for the session before.
 R sends the opening board all the same, which that client does not open, while a package that R loaded at another version makes core ask for the page to be reloaded ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
 
 ### Opening a board
 
-The client opens every board itself, which needs nothing of R but that the packages the board names are loaded, so that their block classes are registered before any recipe names them, and the block registry's entries for them, by which the client draws their blocks ([Board updates](Rewrite-1.1.2#opening-a-board)).
-So the `store.open()` call sends an `open` that names those packages, as the saved file lists them, as does a startup module that names the board to open in place of the one R sent ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
-R loads those it has installed and not loaded yet, forgets every block (below), and replies as to a `hello`, without the protocol, the capabilities, the lock and the opening board, so with the versions of its packages, the block registry's entries, the front-ends, startup modules, modules and renderers, for every package it has loaded.
-A package it could not load is missing from the versions, and the client drops and names what needs it ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-
-```json
-{ "id": "2", "kind": "open", "packages": ["blockr.core", "blockr.dm"] }
-{ "id": "2", "status": "ok", "packages": { "blockr.core": "0.2.0" }, "block_registry": {}, "startup_modules": [],
-  "modules": {}, "renderers": {} }
-```
+The client opens every board itself, as a JSON board, with what R's reply to `hello` holds: the block registry's entries, by which it draws the blocks, the board classes and the versions of the packages R loaded ([Board updates](Rewrite-1.1.2#opening-a-board)).
+R holds no board, and loads no package for one, since installing and loading the packages whose block classes an app knows is the deployment's job, and the app's script fills the block registry, so that every block class a recipe names is registered before the first `hello`.
+So no message opens a board: `store.open()` sends R nothing for a JSON board's text, nor for the board that a startup module names in place of the one R sent ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), while a block whose class the block registry lacks is dropped and named, and so is each package that the JSON board lists and R did not load ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), and the client has R forget the blocks of the board it replaces (below).
 
 ### Blockr options
 
@@ -183,9 +176,8 @@ The client cancels an evaluation whose revision it has since superseded, and oth
 ### Forgetting blocks
 
 When blocks leave the board, the client sends a `forget` naming them, and R drops their results and every queued request that evaluates or reads one of them, replying `cancelled` to each.
-Opening another board forgets every block, since R opens it afresh, while the block classes that packages and the app script registered stay ([Board updates](Rewrite-1.1.2#opening-a-board), [Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
-The client also sends a `forget` for the blocks of the board it replaces.
-That clears what an evaluation sent between the `open` and the opening may have left in R.
+A board that the client opens in place of another has R forget every block of the one it replaces, through a `forget` for them, while the block classes that packages and the app script registered stay ([Board updates](Rewrite-1.1.2#opening-a-board), [Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
+That clears as well what an evaluation sent since may have left in R.
 
 ```json
 { "kind": "forget", "blocks": ["b", "c"] }
@@ -208,7 +200,6 @@ R sends the lock with its reply to `hello`, as the blocks it leaves open, `{ "op
 
 That stops only a client that plays by the rules, so R holds the lock in what it runs, comparing nothing a client sends.
 When the app starts, it builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the block expression it evaluates, such as `dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again.
-Since it holds the lock by block id, R refuses to lock a board with a block that the script gave no id, which only the client would name.
 A locked block whose opening state cannot run, such as a merge whose `by` is unset, keeps the `invalid()` that building it signalled, and R replies `invalid` with it to every evaluation of the block.
 In a locked session:
 
@@ -216,7 +207,6 @@ In a locked session:
 - It answers a block class's request for a locked block, as its `block` names it, with the block's opening state, whatever `args` holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
 - It takes the board option values from the opening board for every request that carries them, a block class's, an output's or an output class's, whatever the request holds, and the request's own for a board option that the app script set none for, since the lock holds what the app built, while what the R process may read is the deployment's to limit ([Principles](Principles#the-deployment-confines-what-a-board-can-do)).
 - It runs a block class's action only for a block left open.
-- It loads no package that the app did not, refusing every `open` and ignoring the packages that a `hello` names, while a client starting a new session keeps its own board, and with it a reader's choices in the blocks left open.
 - It runs a board option's or an extension's request only where the board option or extension declared that the request may run on a locked board (above).
 
 Anything else is refused with an `error` that names the lock, while outputs are drawn as before, and the requests of their output classes answered, with the opening board option values.
@@ -259,7 +249,7 @@ The dock keeps saving and restoring in locked mode, which restores any board, si
 
 ### Versions
 
-The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format and package versions a saved board records ([Serialization](Rewrite-1.1.4#files)) and a block's revision, which names its result ([Evaluation in the client](Rewrite-1.1.10#revisions)).
+The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format, the versions of shapes and the package versions that a JSON board records ([Serialization](Rewrite-1.1.4#files)) and a block's revision, which names its result ([Evaluation in the client](Rewrite-1.1.10#revisions)).
 Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
 
 ### The Shiny transport
