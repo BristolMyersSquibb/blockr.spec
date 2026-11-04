@@ -1,5 +1,5 @@
 # Principles
-Revised on 2026-11-02.
+Revised on 2026-11-04.
 
 These principles hold for every blockr package, whichever rewrite, spec or issue changes it. A rewrite's root page holds the principles of that rewrite alone and links here for these, as it links the [glossary](Glossary) for its terms.
 
@@ -50,3 +50,9 @@ Today's `board_update` reactive is the coordinator ([R/board-server.R#L1386-L139
 Whatever others refer to has an id that never changes, with a name beside it that a user may edit, so nothing keys on the name. A rename then changes one value, and whatever compares two states of the board can tell a renamed object from a new one.
 
 Blocks have always worked this way, with `block_name()` as an editable label over the block's id, while views did not ([blockr.dock#166](https://github.com/BristolMyersSquibb/blockr.dock/issues/166)). A view's name was its key. So a rename re-keyed the saved layouts, the view state, the registry of live docks and the nav tabs in step, and a reconciler could not tell a rename from a removal and an addition. Names needed rules of uniqueness and charset only because they were keys. Giving views ids took a breaking change to the dock's model and its serialization.
+
+## Opening a board leaves the page as starting it with that board would
+
+Opening a board in place of another leaves every package, core included, as it would be had the page started with that board. Whatever derives from a board lives for one opening: core makes it per opening and drops it when the next board opens, and a package that keeps something of a board does the same. Only what is fixed for the page outlives an opening: the code that is loaded, what loaded packages registered, the blockr options and the lock. State that outlives an opening by accident shows only once a second board opens, as a bug that no test of a single board finds.
+
+Today's restore gets this from a reload: it stages the board and calls `session$reload()`, so that the page starts again with that board ([R/utils-serve.R#L277-L288](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L277-L288)). State in JS opens a board in place ([Front-ends and extension points](Rewrite-1.1.8#what-must-hold)), so it keeps per opening what the reload used to reset. The board options that a UI module requires are an example: core imports the module once per page, so had it added them only as the module first loaded, a board opened later would lack them ([blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468)).
