@@ -29,12 +29,12 @@ A reply's status belongs to its request alone: an `error` carries the conditions
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), where each front-end's module is served ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the lock where the app locks the board (below), and the opening board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, in `board`, with its blocks, links and stacks as arrays, each entry with its `id` where it has one, and its own `id` and `name` where it has them, since R mints no ids and the client mints each missing one as it opens the board ([Board objects](Rewrite-1.1.1#ids)), or the saved file given to `serve()`, in `file`, which R passes on as it is, having read nothing of it but the packages it names, with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)). Both sides use only the capabilities both named, such as `cancel`, `interrupt` and `progress` (below), so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages R has loaded, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, front-ends among them ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), the renderers R picked ([Front-ends and extension points](Rewrite-1.1.8#renderers)), the lock where the app locks the board (below), and the opening board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, in `board`, with its blocks, links and stacks as arrays, each entry with its `id` where it has one, and its own `id` and `name` where it has them, since R mints no ids and the client mints each missing one as it opens the board ([Board objects](Rewrite-1.1.1#ids)), or the saved file given to `serve()`, in `file`, which R passes on as it is, having read nothing of it but the packages it names, with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)). Both sides use only the capabilities both named, such as `cancel`, `interrupt` and `progress` (below), so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
 
 ```json
 { "id": "1", "kind": "hello", "protocol": "1.0", "capabilities": ["cancel", "interrupt", "progress"] }
 { "id": "1", "status": "ok", "protocol": "1.0", "capabilities": ["cancel", "progress"], "packages": { "blockr.core": "0.2.0" },
-  "block_registry": {}, "front_ends": {}, "startup_modules": [], "modules": {}, "renderers": {}, "lock": null, "board": {} }
+  "block_registry": {}, "startup_modules": [], "modules": {}, "renderers": {}, "lock": null, "board": {} }
 ```
 
 A client that holds a board already, as when the server ended its session while the page lived on (below), keeps it and its undo history, and names in its `hello` the packages that the board names, as its saved file lists them ([Serialization](Rewrite-1.1.4#files)), in `packages`, so that R loads them and registers their block classes before any recipe names them, except on a locked board, which loads nothing the app did not (below). R sends the opening board all the same, which that client does not open, while a package that R loaded at another version makes core ask for the page to be reloaded ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
@@ -45,7 +45,7 @@ The client opens every board itself, which needs nothing of R but that the packa
 
 ```json
 { "id": "2", "kind": "open", "packages": ["blockr.core", "blockr.dm"] }
-{ "id": "2", "status": "ok", "packages": { "blockr.core": "0.2.0" }, "block_registry": {}, "front_ends": {}, "startup_modules": [],
+{ "id": "2", "status": "ok", "packages": { "blockr.core": "0.2.0" }, "block_registry": {}, "startup_modules": [],
   "modules": {}, "renderers": {} }
 ```
 
@@ -127,7 +127,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "params": {} }
-{ "id": "21", "status": "ok", "output": { "renderer": "blockr.core-basic_table", "columns": [], "rows": [], "total": 150 } }
+{ "id": "21", "status": "ok", "output": { "renderer": "blockr.core-table_output", "columns": [], "rows": [], "total": 150 } }
 ```
 
 An output is a description in JSON whose `renderer` names the renderer R picked for its output class, which the client mounts to draw it ([Front-ends and extension points](Rewrite-1.1.8#renderers)). Any reply may come with one binary body, such as a plot's PNG beside its output, or a file a request answers with, as a download does, and a request may carry one, as an upload action does, or a chart's bitmap for its download ([UI modules in JS](Rewrite-1.1.7#the-contract)). The reply or request announces it in `body`, with its MIME type and, for a download, a file name, as `"body": { "type": "image/png" }`, and the bytes travel beside it as the Shiny transport carries them (below), so that no message depends on how.
