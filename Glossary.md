@@ -1,7 +1,8 @@
 # Glossary
 Revised on 2026-11-04.
 
-Every page, spec and issue of the rewrites uses these names in these senses only, and a new term is agreed before it appears on a page. The terms outlast the rewrite that brought them in, so they live here rather than on a rewrite's root, and [State in JS](Rewrite-1) brought in these.
+Every page, spec and issue of the rewrites uses these names in these senses only, and a new term is agreed before it appears on a page.
+The terms outlast the rewrite that brought them in, so they live here rather than on a rewrite's root, and [State in JS](Rewrite-1) brought in these.
 
 | Term | Means |
 |---|---|

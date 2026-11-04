@@ -1,11 +1,14 @@
 # UI kit and design system for the client
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.ui: the design system that the dock and the extensions follow, the widgets block packages draw with today, the table preview it adds as a renderer of core's table outputs, and the one copy of React on the page, with the React SDK that block UIs are written with. It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
+This part covers blockr.ui: the design system that the dock and the extensions follow, the widgets block packages draw with today, the table preview it adds as a renderer of core's table outputs, and the one copy of React on the page, with the React SDK that block UIs are written with.
+It builds on [Client-owned board state](Rewrite-1.1), whose module contract every block's UI meets ([UI modules in JS](Rewrite-1.1.7)), and holds the later project of ready-made components for form-like block UIs, which is still to be decided.
 
 ## Problem
 
-Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on `window.Blockr`, where blockr.dplyr's JS names `Blockr.Select` 30 times, blockr.dm's 18 times and blockr.ggplot's 7 times, while under the module contract a block's UI gets what it shares with the page through its host ([UI modules in JS](Rewrite-1.1.7#the-contract)). Its R helpers draw into Shiny UIs, and its table preview implements the Shiny methods of core's `tabular_display()` hook, both of which go, since nothing in R draws UI any more ([Front-ends and extension points](Rewrite-1.1.8#what-goes-from-r)).
+Block UIs reach blockr.ui through page globals and Shiny UI.
+Its widgets sit on `window.Blockr`, where blockr.dplyr's JS names `Blockr.Select` 30 times, blockr.dm's 18 times and blockr.ggplot's 7 times, while under the module contract a block's UI gets what it shares with the page through its host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+Its R helpers draw into Shiny UIs, and its table preview implements the Shiny methods of core's `tabular_display()` hook, both of which go, since nothing in R draws UI any more ([Front-ends and extension points](Rewrite-1.1.8#what-goes-from-r)).
 
 ## What must hold
 
@@ -28,12 +31,14 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 
 - As the UI kit, blockr.ui keeps the design system that the dock and the extensions follow, while core's client builds on Tailwind CSS ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
 - Block UIs are modules written against core's contract ([UI modules in JS](Rewrite-1.1.7)), so blockr.ui's widgets stop being page globals, and whatever else blockr.ui offers block UIs from then on reaches them through the host.
-- The one copy of React on the page ships with blockr.ui, with the React SDK and the build preset that maps `react` to it, so that core ships no React while a block UI written in React still finds it under every front-end, since its package imports blockr.ui. The dock and its extensions use the same copy ([UI modules in JS](Rewrite-1.1.7#react)).
+- The one copy of React on the page ships with blockr.ui, with the React SDK and the build preset that maps `react` to it, so that core ships no React while a block UI written in React still finds it under every front-end, since its package imports blockr.ui.
+  The dock and its extensions use the same copy ([UI modules in JS](Rewrite-1.1.7#react)).
 - Ready-made components for form-like block UIs are a later project of this part, still to be decided, and so are input elements composed in R on top of them ([Input elements for block UIs written in R](Rewrite-1.7.1)).
 
 ## Open questions
 
-- What else blockr.ui offers block UIs in place of its widgets, and when: ready-made components, the input elements of [Input elements for block UIs written in R](Rewrite-1.7.1) on top of them, or nothing until the block packages have ported. It decides whether blockr.dplyr, blockr.dm and blockr.ggplot port their UIs onto blockr.ui's components or write their own.
+- What else blockr.ui offers block UIs in place of its widgets, and when: ready-made components, the input elements of [Input elements for block UIs written in R](Rewrite-1.7.1) on top of them, or nothing until the block packages have ported.
+  It decides whether blockr.dplyr, blockr.dm and blockr.ggplot port their UIs onto blockr.ui's components or write their own.
 - How the client loads the design tokens, now that they no longer arrive as HTML dependencies of Shiny UI, and whether blockr.ui sets Tailwind's theme variables under the dock, so that the UIs of core's built-in blocks and its renderers follow the design system there too ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
 - What becomes of the R helpers, which draw into Shiny UIs today.
 
@@ -50,6 +55,7 @@ Block UIs reach blockr.ui through page globals and Shiny UI. Its widgets sit on 
 
 The rows of Today by file, at `9bd8312`: the design system is `blockr-tokens.css`, `blockr-tokens-dark.css`, `blockr-theme.css` and `blockr-base.css`, with `inst/assets/fonts`, `inst/assets/icons` and `vignettes/articles/design-system.Rmd`; the widgets are `blockr-ui.js`, `blockr-select.js`, `blockr-input.js` and `types.d.ts`, with every other CSS file but `blockr-table-preview.css`; the R helpers are `action-menu.R`, `block-mark.R`, `dropdown.R`, `gear-tray.R` and `shortcut.R`; the table preview is `table-preview.R`, `table-preview-render.R`, `table-preview-engine.R`, `blockr-table-preview.js` and `blockr-table-preview.css`; the dependencies and package files are `theme.R`, `controls.R`, `icons.R`, `blockr.ui-package.R` and `utils-pkg.R`; and the fixes to Shiny are `blockr-shiny.js`, `shiny-has-perf.js` and `shiny-input-batch.js`.
 
-The counts of `Blockr.Select` are its occurrences in each package's `inst/`, at blockr.dplyr `68e1b54`, blockr.dm `8b37981` and blockr.ggplot `289cb60`. The packages that import blockr.ui are blockr.assistant, blockr.cdex, blockr.dag, blockr.dm, blockr.dock, blockr.dplyr, blockr.ggplot, blockr.sandbox and blockr.session.
+The counts of `Blockr.Select` are its occurrences in each package's `inst/`, at blockr.dplyr `68e1b54`, blockr.dm `8b37981` and blockr.ggplot `289cb60`.
+The packages that import blockr.ui are blockr.assistant, blockr.cdex, blockr.dag, blockr.dm, blockr.dock, blockr.dplyr, blockr.ggplot, blockr.sandbox and blockr.session.
 
 </details>
