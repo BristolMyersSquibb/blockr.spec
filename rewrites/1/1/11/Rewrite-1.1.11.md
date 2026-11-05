@@ -73,6 +73,7 @@ The constructor refuses a name in `...` that no loaded package's schema declares
 <details><summary>Notes for implementers</summary>
 
 The page was started from the session of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), which removed `attrs`, core's `visible` and `blockr.core-set_block_attribute`, and left the lock's list of open blocks to this page.
+The other pages still describe attributes, since what takes their place is this page's to settle, so settling it chases their removal through 1.1, 1.1.1, 1.1.2, 1.1.3, 1.1.5, 1.1.7, 1.1.8, 1.1.9, 1.1.10, the Glossary's Block, Attribute, Lock, Extension state and External control, and the pages of [Client-drawn dock and extensions](Rewrite-1.2) that name `visible`.
 R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the properties that its board class adds.
 
 </details>
