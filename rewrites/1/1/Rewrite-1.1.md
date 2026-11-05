@@ -93,6 +93,7 @@ The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8): registering a front-end, what core gives it, starting the page, switching front-ends, core's basic front-end, extensions, renderers and testing
 - [Wire protocol between the client and R](Rewrite-1.1.9): messages, the handshake, opening a board, evaluation, requests, outputs, running one request at a time, cancelling, forgetting, decoding, locked boards and the Shiny transport
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10): revisions, demand, invalidation, statuses and scheduling
+- [Locked boards and the properties of blocks](Rewrite-1.1.11): who holds a lock, which blocks it leaves open, serving a JSON board locked, and the properties that a board class adds to blocks
 
 <details><summary>Notes for implementers</summary>
 

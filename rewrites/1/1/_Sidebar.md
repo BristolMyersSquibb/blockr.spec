@@ -13,5 +13,6 @@
 - [Front-ends and extension points for the client-owned board](Rewrite-1.1.8), settled
 - [Wire protocol between the client and R](Rewrite-1.1.9), settled
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10), settled
+- [Locked boards and the properties of blocks](Rewrite-1.1.11), draft
 
 <!-- dropped: Rewrite-1.1.6 -->
