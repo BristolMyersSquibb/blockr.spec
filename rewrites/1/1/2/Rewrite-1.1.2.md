@@ -161,7 +161,8 @@ A property's schema describes it, in the `description` and `examples` keywords, 
 What a JSON board holds migrates by the version of each shape that it records, never by a package's version ([Serialization](Rewrite-1.1.4#migrations)), so that a class can rename, split and merge the parts of its properties or its state between versions and still read every shape it ever wrote, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it.
 A board class migrates its properties in its definition's `migrate`, given every property beside core's, as the JSON board holds them, and the version of the class that the board records, and returns them in today's shape, changing only its own class's, which only its package enforces.
 A package registers the migration of each of its block classes' states under the class's registry id, from its startup module, since the class's UI module owns the state's shape but loads only once core mounts a block, and no migration runs in R any more.
-Attributes and board option values are not migrated: one that its schema refuses is dropped as the board opens, so that it reads as its initial value or default.
+A board option migrates its value in its definition's `migrate`, given the value and the version of its shape that the JSON board records ([Serialization](Rewrite-1.1.4#board-options)).
+Attributes are not migrated: one that its schema refuses is dropped as the board opens, so that it reads as its initial value.
 
 ```ts
 type Migration = (state: Record<string, Json>, version: number) => Record<string, Json>;   // version: the class's, as the block records it
@@ -170,7 +171,7 @@ store.registerMigration("blockr.dplyr-filter_block", (state, version) =>   // fr
   version < 2 ? { ...state, conditions: [state.condition] } : state);
 ```
 
-When a board opens, the store runs the `migrate` of each class it builds the board as whose version the board records below the one R gives, root first, and the migration of each block's class where the block records a version below its class's, each given what it migrates frozen, and the board opens with what they return, so that what a migration leaves out is gone, as a property that a class renamed is.
+When a board opens, the store runs the `migrate` of each class it builds the board as whose version the board records below the one R gives, root first, the migration of each block's class where the block records a version below its class's, and the `migrate` of each board option whose value the board records at a version below the one R gives, each given what it migrates frozen, and the board opens with what they return, so that what a migration leaves out is gone, as a property that a class renamed is.
 A version above the one R gives refuses the board, since no migration converts back, while a class that the board records no version of keeps what the board holds, since its writer knew no version of it.
 What a board reads where nothing set a value comes from what packages define, a property's `default`, an attribute's `initial` and a board option's `default`, rather than from a migration, which only a JSON board's opening runs.
 Only then does the store drop every property that the class it builds the board as defines neither itself nor through its parents, such as the dock's views on a board opened in a core app, and every attribute and board option value that no package loaded in the app registered, such as those of a package whose startup module failed ([UI modules in JS](Rewrite-1.1.7#startup-modules)), without naming them, so a board saved afterwards is written without them.

@@ -112,7 +112,7 @@ Today's `new_static_block()` holds a data frame in its state and reads it back f
 
 A board option comes onto the board, with the `default` of its definition, when the client first needs a component that requires it, such as a renderer, and the package that ships the board option defines it in the client, its label, category, schema, UI and what a new value does ([Board objects](Rewrite-1.1.1#board-options)).
 A script gives a board option only to set a value other than its default.
-For the board a script builds, R names each board option that the script gives, as `new_board(options = new_n_rows_option(25))` gives `n_rows`, by its id with that value, and no other, since a board option's constructor takes its value alone and computes nothing, while a JSON board holds the values it was saved with.
+For the board a script builds, R names each board option that the script gives, as `new_board(options = new_n_rows_option(25))` gives `n_rows`, by its id with that value and the version of the value's shape ([Serialization](Rewrite-1.1.4#board-options)), and no other, since a board option's constructor takes its value alone and computes nothing, while a JSON board holds the values it was saved with.
 
 ### Blockr options
 
