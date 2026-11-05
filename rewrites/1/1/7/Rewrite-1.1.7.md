@@ -140,7 +140,7 @@ interface Nested {
 }
 ```
 
-An output names in its `renderer` the renderer R picked for its output class, as `{ "renderer": "blockr.core-table_output", ... }` does, and core draws it with that module ([Front-ends and extension points](Rewrite-1.1.8#renderers)), so that an app changes how every table looks, as with a UI kit's renderer, without touching a block class.
+An output carries in its `renderer` the renderer that draws it, with its id and where R serves its module, as `{ "renderer": { "id": "blockr.core-table_output", "module": "blockr.core/js/basic-table.js?v=b7e2a915" }, ... }` does, and core loads that module the first time an output names it and draws the output with it ([Front-ends and extension points](Rewrite-1.1.8#renderers)), so that an app changes how every table looks, as with a UI kit's renderer, without touching a block class.
 Core mounts a renderer once it has an output for it, keeps the last output drawn while the next loads, with `loading()` true, and hands the renderer an output that failed in R through `error()`, keeping it mounted with the output it holds, so that a renderer only ever draws an output it has and can ask again, as one whose parameters asked for a page that no longer exists must.
 Core shows the error in the element itself only where no output came before it.
 It keeps the last output drawn whatever the block's status, which the front-end reads to decide what an output that is not current looks like ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
