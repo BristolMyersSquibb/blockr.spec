@@ -18,7 +18,7 @@ Weeks are ISO weeks.
 | 45 | 2026-11-02 | Implement blockr.core, and add the TypeScript gates to blockr.ci's workflows | [Client-owned board state](Rewrite-1.1) |
 | 46 | 2026-11-09 | Buffer | |
 | 47 | 2026-11-16 | Spec blockr.dock and blockr.ui | [Client-drawn dock and extensions](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
-| 48 | 2026-11-23 | Implement blockr.ui, its React first since the dock is built on it, and blockr.dock | [Client-drawn dock and extensions](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
+| 48 | 2026-11-23 | Implement blockr.ui and blockr.dock | [Client-drawn dock and extensions](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
 | 49 | 2026-11-30 | Buffer | |
 | 50–51 | 2026-12-07 | Spec and implement blockr.assistant | [Assistant as a client extension](Rewrite-1.4) |
 | 52–53 | 2026-12-21 | Holidays | |
@@ -38,7 +38,7 @@ It waits for CRAN as well as for the code: eight of the packages are on CRAN and
 ## Block packages
 
 The block packages port to block classes beside the parts from week 46, once core's block classes, outputs and UI modules are implemented and its guide for porting a block from `new_block()` is written.
-Their UIs follow from week 48, once blockr.ui ships React and its spec has settled what it offers block UIs, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#open-questions)).
+Their UIs follow from week 48, once blockr.ui's spec has settled what it offers block UIs beside core's React SDK, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#open-questions)).
 Each ports after the packages it builds on.
 The first are blockr.dplyr, blockr.io and blockr.ggplot, by week 5, for the fully functional POC, and blockr.dplyr starts in week 46 with its hardest blocks, which test core's block classes before the dock is built on them.
 The rest follow for the CEDX board, which lives in blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot.
