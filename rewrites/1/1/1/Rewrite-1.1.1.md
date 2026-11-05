@@ -181,8 +181,15 @@ For a variadic target, an empty input appends positionally, in link order, as to
 interface Stack {                       // held under its id in board.stacks
   name: string;
   blocks: BlockId[];
+  color?: string;                       // "#66c2a5", the colour front-ends draw the stack in
 }
 ```
+
+A stack may carry a colour, a hex string, which front-ends draw it in, as the dock and the DAG do today.
+A front-end draws a stack without one in a default of its own.
+The colour is core's rather than the dock's, as the dock's card sections became core's attribute `visible` (above).
+So a board opened under any front-end keeps the colours of its stacks, and core's commands set them ([Board updates](Rewrite-1.1.2#commands)).
+Today the dock keeps the colour on a `dock_stack`, which extends core's stack ([blockr.dock R/dock-stack.R#L24-L27](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-stack.R#L24-L27)).
 
 ### Board options
 
@@ -243,8 +250,9 @@ The board's own name, which core's board option `board_name` holds today, become
 
 ### Extending core's objects
 
-A board class adds properties of its own to the board, beside core's, as the dock board adds views, grids and extensions today ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)) and a color to every stack ([R/dock-stack.R#L24-L169](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-stack.R#L24-L169)), since `new_dock_board()` makes each of its stacks a dock stack ([#L171-L192](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-stack.R#L171-L192)).
+A board class adds properties of its own to the board, beside core's, as the dock board adds views, grids and extensions today ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)).
 These become properties of the dock board, held as the dock's design has it ([Client-drawn dock and extensions](Rewrite-1.2)).
+Today the dock also adds a colour to every stack, since `new_dock_board()` makes each of its stacks a dock stack ([R/dock-stack.R#L171-L192](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-stack.R#L171-L192)), and that colour becomes core's ([Stacks](#stacks)).
 Core carries each such property without reading it: it registers nothing inside it, and checks the property's whole value against the schema that the class's definition gives, after every change, while what sits inside, such as how the dock lays out its views or keeps its extensions' state, is the class's own design.
 Core's objects hold only core's properties, apart from a block's attributes, which core carries without reading them (above), and what a package keeps about a link, a stack or a block, such as the DAG's positions, sits in a property of a board class, keyed by the object's id.
 So core's commands and the assistant create blocks, links and stacks without knowing any board class.
