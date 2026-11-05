@@ -67,7 +67,8 @@ The client follows established JS patterns, as the module contract follows anywi
 - The client schedules: it bumps revisions, tracks what is stale and what is demanded, and requests results by the evaluation priority each demand gives and in topological order within one, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Rewrite-1.1.10)).
 - Core keeps no plugin or extension type of its own.
   The dock is a React app on core's JS API, and board extensions are ES modules that register with it, the only way to extend a board besides block classes, with their logic on core's JS API and their UI in the dock's contribution points ([Client-drawn dock and extensions](Rewrite-1.2)).
-- Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from one copy that a package puts on the page, so core ships none ([UI modules in JS](Rewrite-1.1.7)).
+- Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy that core puts on the page ([UI modules in JS](Rewrite-1.1.7)).
+  Core draws its own UIs with that copy too, as the dock does, so that they are written as the UIs of packages are ([UI modules in JS](Rewrite-1.1.7#react)).
   Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
 - The code that a board's script exports is the code that ran, since R builds every block's expression from its block class's `expr`, while exporting it is an extension's, blockr.code's, rather than core's.
