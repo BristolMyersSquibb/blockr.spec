@@ -203,7 +203,7 @@ From then on the board holds the value, which a command changes, a save writes a
 So a board holds no value for a board option that nothing has required since it opened, and nothing yet removes the value of one whose component has gone.
 In R, a board option is its id and the value a script gives it, as `new_n_rows_option(25)` does, and its constructor computes nothing, neither a default from a blockr option, as `new_dark_mode_option(value = blockr_option("dark_mode", NULL))` does today, nor a transform or a check, since its definition in the client holds all of that, and nothing else of a board option crosses the wire.
 A script gives a board option only to set a value other than its default, and nothing in R decides which board options a board has.
-A file keeps each board option's value under its id, and nothing else of it, so a board opened from one keeps the values it was saved with, and the store drops a value no board option claims once the migrations have run ([Serialization](Rewrite-1.1.4#board-options)).
+A JSON board keeps each board option's value under its id, with the version of the value's shape and nothing else of it, so a board opened from one keeps the values it was saved with, migrated by their versions, and the store drops a value no board option claims once the migrations have run ([Serialization](Rewrite-1.1.4#board-options)).
 
 Every board option is an instance of one type, `Option`, rather than a type of its own, which the package that ships it registers in the client from its JS, keyed by the board option's id.
 R gives each board option a class so that methods can dispatch on it, such as the check `validate_board_option.n_rows_option()` ([R/board-option.R#L366-L378](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L366-L378)), and in JS what those methods do is data or a function on the instance, so nothing dispatches on a board option's type:
@@ -217,6 +217,7 @@ type Option = {                         // as the package that ships it register
   default: Json | (() => Promise<Json>);   // what the client gives the board as it adds the board option, or a function that core calls the first time it adds it after a board opens
   ui: OptionModule;                     // its UI module, which gets an `OptionHost`
   onChange?(value: Json, api: CoreApi): void;   // what a new value does on the page, such as switching the theme
+  migrate?(value: Json, version: number): Json;   // converts a value that a JSON board records at an older version of its shape
 };
 ```
 
