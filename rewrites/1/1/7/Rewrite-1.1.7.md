@@ -14,7 +14,7 @@ Core ships no React, and this page covers only what core does so that a package 
 4. One copy each of React, core's runtime and every shared module runs on the page.
 5. Core's runtime and every package's UIs ship inside their R packages, so installing a package pins the client code it runs.
 6. Core ships no React, and a block class whose UI is written in React works under every front-end, core's basic one included.
-7. What a package registers in the client, its board options, its board classes, its attributes and its commands, is registered before the store opens a board, however late R loads the package.
+7. What a package registers in the client, its board options, its board classes, its attributes, the migrations of its block classes' states and its commands, is registered before the store opens a board.
 
 ## Proposal
 
@@ -180,7 +180,7 @@ const stackHost = (core: CoreApi, id: StackId) => ({
 
 ### Startup modules
 
-A package may declare in R one startup module ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#board-options)), defining its board classes, and registering its attributes and its commands ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
+A package may declare in R one startup module ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#board-options)), defining its board classes, and registering its attributes, the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), putting on the page what it shares with other packages' modules, such as React (below) or a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
 The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
 
 ```ts
@@ -190,13 +190,14 @@ export default {
   initialize({ core, signal }: { core: CoreApi; signal: AbortSignal }): void | Promise<string | void> {
     core.options.register(dataDir);                  // a board option it ships, such as blockr.io's data directory
     core.store.register(dockBoard);                  // a board class, with the properties it adds, such as the dock's
+    core.store.registerMigration("blockr.dplyr-filter_block", migrateFilter);   // a block class's migration of its state
     core.commands.register(relayout);                // a command, such as the DAG's relayout
-    // it may also resolve with a saved file's text, which core opens in place of the board R sent
+    // it may also resolve with a JSON board's text, which core opens in place of the board R sent
   }
 };
 ```
 
-R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello` and to every opening of a board, since opening one loads the packages it names ([Board updates](Rewrite-1.1.2#opening-a-board)), and keeps them in the order in which packages declare them, so that each package's comes after those of the packages its NAMESPACE imports, whose `.onLoad()` R runs first.
+R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello`, since R loads no package for a board ([Board updates](Rewrite-1.1.2#opening-a-board)), and keeps them in the order in which packages declare them, so that each package's comes after those of the packages its NAMESPACE imports, whose `.onLoad()` R runs first.
 Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
 It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every board class defined and every attribute and board option registered.
 
@@ -208,7 +209,7 @@ A package relies on the order only for the packages its NAMESPACE imports, which
 Between any other two packages the order is unspecified, and core keeps what they share independent of it:
 
 - A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a key's `expand` runs per delta and a command's `run()` per command.
-  It reads no board there, since none is open at startup, and when an opening brings the package, the board replaces the old one only after `initialize()`.
+  It reads no board there, since none is open at startup.
   What it keeps of a board, it keeps for one opening: it hears each opening through `store.subscribe()` and drops what it kept of the board before, while what it registers holds for every board, as a demand that is a function of the board does ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 - Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
 - A startup module that an opening brings runs once R has replied and before the store migrates or drops anything, since the store awaits what core runs then through the `loaded` it is created with ([Board updates](Rewrite-1.1.2#the-store)), and so just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the commands in its menus, reads them again then.

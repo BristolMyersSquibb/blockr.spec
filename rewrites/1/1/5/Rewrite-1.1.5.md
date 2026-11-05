@@ -73,7 +73,7 @@ A class's fields:
 A class has no say in when its blocks are evaluated: a block that must run with nothing on screen, such as a write block in auto mode, is demanded by its package in the client ([Evaluation in the client](Rewrite-1.1.10#demand)), and a block whose block expression must run only when its UI asks, such as a write block in manual mode, has a `block_eval()` method that runs it only with the parameter the UI's one-time evaluation passes (below).
 
 The function fields name what they read: `expr` the state args, a request the inputs, state args and board options it reads, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below).
-How R evaluates a block and describes a result are generics rather than fields: `block_eval()` dispatches on the block's class, which R gives the recipe's state, building no block, and `block_summary()` on the result's class (below), while a state that an older version of a class saved migrates in JS, through the migration its package registers, since the class's UI owns the state's shape ([Serialization](Rewrite-1.1.4#migrations)).
+How R evaluates a block and describes a result are generics rather than fields: `block_eval()` dispatches on the block's class, which R gives the recipe's state, building no block, and `block_summary()` on the result's class (below), while a state that an older version of a class wrote migrates in JS, through the migration its package registers for the class, by the version of the state's shape that the class gives in `version`, a whole number from 1 that the package raises as it changes the shape, and that a JSON board records with each block, since the class's UI owns the state's shape ([Serialization](Rewrite-1.1.4#migrations)).
 The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `visible`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the class's board options, but for an action's `file` and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
 All but the last read only the class's fields and the formals of its functions, while registration checks that the properties of the schema the class's UI ships are the state args, as it reads the schema (below).
 
@@ -81,10 +81,16 @@ A sketch of `new_block_class()`, in which a field a class leaves out is `NULL`:
 
 ```r
 new_block_class <- function(name, inputs = NULL, expr, ui,
-                            requests = NULL, output = NULL, options = NULL) {
+                            requests = NULL, output = NULL, options = NULL,
+                            version = 1L) {
 
   cls <- list(class = c(name, "block"), inputs = inputs, expr = expr, ui = ui,
-              requests = requests, output = output, options = options)
+              requests = requests, output = output, options = options,
+              version = version)
+
+  stopifnot("the version is a whole number from 1" =
+    is.numeric(version) && length(version) == 1L && !is.na(version) &&
+      version >= 1 && version == trunc(version))
 
   stopifnot("inputs are names, formals or a function of them" =
     is.null(inputs) || is.character(inputs) || is.list(inputs) || is.function(inputs))
@@ -244,7 +250,7 @@ The `register_block()` and `register_blocks()` functions keep their arguments bu
 The `uid` argument sets the name part of the registry id, `{pkg}-{name}`, whose name defaults to the constructor's name without `new_` ([Board objects](Rewrite-1.1.1)).
 A constructor registered by name comes with its package, as every package in the workspace registers its constructors today, while one registered as a function is from outside a package, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
 The block registry keeps one entry per class, and `registry_id_from_block()` finds a block's entry by the class the block refers to.
-Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, its requests and board options, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
+Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests and board options, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
 A class defined outside a package is registered by the script that defines it, and a file holds its blocks by registry id alone ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 The arg specs default to every state arg, since `external_ctrl_vars()` goes, and describe each for models and tools, while its shape is the schema's ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
@@ -264,6 +270,7 @@ interface RegistryEntry {
   inputs: string[];                       // ["data"], ["x", "y"], or ["..."] for a variadic block
   module: string;                         // the URL R serves the class's UI at
   css?: string;                           // the URL of the stylesheet beside it, if it has one
+  version: number;                        // of the shape of the block's state, which a JSON board records with each block
   schema: JsonSchema;                     // of the block's state, as its module ships it
   state: Record<string, Json>;            // what a new block starts with, from expr() called without args
   arguments: Record<string, ArgSpec>;     // the arg specs, which describe each state arg for models and tools
@@ -433,7 +440,7 @@ The client keeps an answer as it keeps the output, unless the class wraps the re
 | none | `interpolate(x, inputs)`, a generic on the class of what `expr` returns, which makes the block expression from it with the upstream ids by input, and whose method a package adds for a class of its own that inherits from `blockr_expr` (above) |
 | `block_eval_trigger()` | gone, since board options never re-evaluate and any component can invalidate a block |
 | `board_options(x)` | the class's `options`, those of the renderers R picked, and for a board those its front-end declares ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)) |
-| `blockr_ser()`, `blockr_deser()` | `blockr_ser()` kept, to write a script's board, and `blockr_deser()` left to the conversion of files from today's stack outside core, while a file of the new stack migrates in JS ([Serialization](Rewrite-1.1.4#migrations)) |
+| `blockr_ser()`, `blockr_deser()` | `blockr_ser()` kept, to write a script's board as a JSON board, and `blockr_deser()` left to the conversion of files from today's stack outside core, while a JSON board migrates in JS ([Serialization](Rewrite-1.1.4#migrations)) |
 | `block_summary(x, data)` | `block_summary(result)`, dispatching on the result's class rather than the block's, which R sends with every evaluation's reply (above) |
 | `block_server()`, `expr_server()`, `expr_ui()` | gone |
 | `block_inputs(x)` | the class's `inputs` |
