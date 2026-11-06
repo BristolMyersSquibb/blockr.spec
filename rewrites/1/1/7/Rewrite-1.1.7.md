@@ -201,7 +201,7 @@ R sends the startup modules of the packages it has loaded with the block registr
 Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
 It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every board class defined and every attribute and board option registered.
 
-Core initializes each package's startup module once per page and skips it when a later reply names the package again.
+Core initializes each package's startup module as each board opens, since opening a board starts core again ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), with a new `CoreApi` and a signal that aborts as the next board opens, and skips it when a later reply of the same opening names the package again.
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy.
 A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, as without the properties of a board class that no loaded package defines ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
 
@@ -210,10 +210,10 @@ Between any other two packages the order is unspecified, and core keeps what the
 
 - A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a key's `expand` runs per delta and a command's `run()` per command.
   It reads no board there, since none is open at startup.
-  What it keeps of a board, it keeps for one opening: it hears each opening through `store.subscribe()` and drops what it kept of the board before, while what it registers holds for every board, as a demand that is a function of the board does ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+  It keeps nothing of a board at module scope, since its module loads once per page while core initializes it again with each board, and keeps what it needs for a board within `initialize()`, which ends with its signal ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 - Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
-- A startup module that an opening brings runs once R has replied and before the store migrates or drops anything, since the store awaits what core runs then through the `loaded` it is created with ([Board updates](Rewrite-1.1.2#the-store)), and so just before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)), so a front-end that lists registrations, such as the commands in its menus, reads them again then.
-  Only a startup module that runs as the page starts may name a board to open, and core ignores a board named by one that an opening brings, since that opening is under way.
+- Every startup module runs once R has replied and before the store migrates or drops anything, since the store awaits what core runs then through the `loaded` it is created with ([Board updates](Rewrite-1.1.2#the-store)), and so before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)) and before the front-end reads what packages registered, such as the commands in its menus.
+  Only a startup module that runs as the page starts may name a board to open, and core ignores a board that one names as a later board opens, since that opening names its own.
 - A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later.
   A stylesheet styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties, and core's through the variables of its Tailwind theme ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
 

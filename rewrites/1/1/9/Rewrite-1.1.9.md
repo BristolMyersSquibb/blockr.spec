@@ -50,7 +50,7 @@ R sends the opening board all the same, which that client does not open, while a
 
 The client opens every board itself, as a JSON board, with what R's reply to `hello` holds: the block registry's entries, by which it draws the blocks, the board classes and the versions of the packages R loaded ([Board updates](Rewrite-1.1.2#opening-a-board)).
 R holds no board, and loads no package for one, since installing and loading the packages whose block classes an app knows is the deployment's job, and the app's script fills the block registry, so that every block class a recipe names is registered before the first `hello`.
-So no message opens a board: `store.open()` sends R nothing for a JSON board's text, nor for the board that a startup module names in place of the one R sent ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), while a block whose class the block registry lacks is dropped and named, and so is each package that the JSON board lists and R did not load ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), and the client has R forget the blocks of the board it replaces (below).
+So no message opens a board: `store.open()` sends R nothing for a JSON board's text, nor for the board that a startup module names in place of the one R sent ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), while a block whose class the block registry lacks is dropped and named, and so is each package that the JSON board lists and R did not load ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), and a board that the client opens in place of another starts the session afresh with a `hello`, as core starts again ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that R drops every result and queued request of the board before (below).
 
 ### Blockr options
 
@@ -188,8 +188,8 @@ The client cancels an evaluation whose revision it has since superseded, and oth
 ### Forgetting blocks
 
 When blocks leave the board, the client sends a `forget` naming them, and R drops their results and every queued request that evaluates or reads one of them, replying `cancelled` to each.
-A board that the client opens in place of another has R forget every block of the one it replaces, through a `forget` for them, while the block classes that packages and the app script registered stay ([Board updates](Rewrite-1.1.2#opening-a-board), [Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
-That clears as well what an evaluation sent since may have left in R.
+A board that the client opens in place of another has R forget every block of the one it replaces through the `hello` with which core starts again, rather than through a `forget`, since R takes a later `hello` as a fresh start of the session (above), while the block classes that packages and the app script registered stay ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board), [Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
+That clears as well what an evaluation sent before it may have left in R, and the bodies that the transport holds for the session (below).
 
 ```json
 { "kind": "forget", "blocks": ["b", "c"] }
@@ -270,6 +270,7 @@ The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.
 R answers with `session$sendCustomMessage("blockr", message)`, which writes to the websocket at once, so that a request running in the session's process can send progress before it ends.
 The transport's observer hands each message to R's queue and returns no promise, so Shiny never holds the session's inputs while a request runs, as it does for an observer that returns one.
 How a body travels is the transport's choice too, which measuring settles when the transport is built (notes).
+A later `hello` drops the bodies that the transport holds for the session too, those that requests posted and those that wait for the client to fetch them, since it starts the session afresh (above).
 Leaving Shiny later replaces this module and nothing else.
 
 The transport calls `session$allowReconnect(TRUE)`, so that a page whose session the server ended while the page lived on, after a network drop longer than the server waits or a server restart, starts a new session and names its board's packages in its `hello` (above).

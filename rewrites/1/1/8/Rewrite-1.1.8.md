@@ -110,13 +110,30 @@ A front-end's package defines its board class, with the properties the class add
 A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except on a locked board, which loads no other board, where core keeps the board R sent and names the package ([Wire protocol](Rewrite-1.1.9#locked-boards)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Should two resolve with a board, core opens the one R sent and names both packages.
 
+### Opening a board
+
+Opening a board starts core again in place, as the page starts (above), with no reload ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+A front-end or an extension opens a board through `store.open()`, as before ([Board updates](Rewrite-1.1.2#opening-a-board)), and core first checks the board as the store on the page would open it, so that a board it refuses leaves the page as it was, with the reason.
+Core then ends everything it runs for the board with one abort: the front-end and what it mounted, every startup module, the store with its undo history, the command registry, the board options, the scheduler with its demands, and what core keeps of outputs and answers.
+A module releases what it holds as its signal aborts, as it does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)), and core drops the rest, so that no part of core has a reset of its own.
+Core then starts as the page does: its `hello` starts R's session afresh, so that R drops every result and request of the board before ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and core initializes the startup modules again, opens the board in a new store and draws it with its front-end (below).
+
+Only what is fixed for the page outlives an opening:
+
+- The code and stylesheets that have loaded, since a module loads once per page.
+- The page's element, and the transport with its session.
+- The protocol's client, so that no id names two requests.
+- The blockr options that core has read, and the lock.
+- The revisions given so far, so that the next scheduler gives a block id a revision above any it had, and a revision never goes back within the page ([Evaluation in the client](Rewrite-1.1.10#revisions)).
+
+What a board takes over from the one it replaces is part of the board that opens, as a board that holds no frontend takes one of the class of the frontend before it, with that class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.
+A new session after the server ended the last opens no board: core keeps the board it holds, and the scheduler has the new session evaluate it again ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+
 ### Switching front-ends
 
-Opening a board switches the page to the front-end of the class the board is built as, with no reload.
-Where that front-end is the page's already, core starts it again all the same, so that nothing it kept of the board before outlives the opening ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-As the store opens a board, core imports the module of the front-end that `frontEnd()` gives for the board's class ([Board updates](Rewrite-1.1.2#the-store)), aborts the signal of the one on the page, which unmounts what it mounted and releases its demands, opens the board in the store, and calls the front-end's `render()`, holding the scheduler until it has returned, as at startup, so that what it first shows is evaluated first.
-Nothing else is lost, since opening a board starts a new undo history and has R forget every block of the board it replaces, whatever draws it ([Board updates](Rewrite-1.1.2#opening-a-board), [Wire protocol](Rewrite-1.1.9#forgetting-blocks)), and a front-end releases what it holds when its signal aborts, as any module does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+Opening a board starts core again, its front-end included, so the page draws the board that opens with that board's front-end, and starts a front-end that is the page's already again all the same, so that nothing it kept of the board before outlives the opening (above).
 So the page draws an opened board as a fresh app serving it would, as today's restore rebuilds the page for the restored board's class (Today) but without the reload: a core board opened in a dock app is drawn by core's basic front-end, a dock board opened in a core app by the dock, and a dock board opened in a dock app by a dock that starts again.
+Where a board's front-end changes while the board stays open, as adding a frontend does in [Plugins](Rewrite-1.1.12#which-plugins-a-board-has), core switches the front-end alone, in place: it aborts the signal of the one on the page, which unmounts what it mounted and releases its demands, as any module does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)), imports the module of the new one and calls its `render()`, holding the scheduler until it has returned, so that what it first shows is evaluated first, while the board, its undo history and the rest of core stay.
 
 ### Core's basic front-end
 

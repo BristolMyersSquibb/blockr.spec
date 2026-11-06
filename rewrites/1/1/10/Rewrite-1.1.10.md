@@ -30,7 +30,7 @@ A block's revision goes up whenever its recipe changes ([Wire protocol](Rewrite-
 It also goes up when something invalidates the block (below).
 A new session invalidates every block, since it holds no results (Scheduling).
 Nothing else changes a revision: not renaming a block, changing its attributes or moving it between stacks, nor changing a property of a board class or a board option, which never reaches `expr` and redraws outputs without evaluating ([Client-owned board state](Rewrite-1.1#proposal)), as a theme switch redraws every plot on screen ([Block classes in R](Rewrite-1.1.5#outputs)).
-Within the page a block id's revision never goes back: the scheduler forgets a block's status when R forgets its result, as when the block leaves the board or another board opens ([Wire protocol](Rewrite-1.1.9#forgetting-blocks)), and a block that comes back, by undo or in the board that opens, takes a revision above any its id had and reads `unevaluated` until its first reply, so that a late reply never passes for a newer revision.
+Within the page a block id's revision never goes back: the scheduler forgets a block's status when R forgets its result, as when the block leaves the board ([Wire protocol](Rewrite-1.1.9#forgetting-blocks)), the scheduler that core starts as another board opens gives revisions above any the page has given ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), and a block that comes back, by undo or in the board that opens, takes a revision above any its id had and reads `unevaluated` until its first reply, so that a late reply never passes for a newer revision.
 A block is stale while its revision is newer than the revision of its latest reply.
 The revision is the scheduler's, apart from the edit id the store keeps for each block, which only the block's own edits change ([Board updates](Rewrite-1.1.2#deltas)).
 
@@ -142,7 +142,7 @@ A block that `serve()` serves alone has no front-end, so core's client, which dr
 Outputs are fetched by whatever draws them, once a block is `ready`, and core keeps drawing a block's last output whatever its status, so that the front-end decides from the status what an output that is not current looks like ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)), while it asks R for no other output of a block that is not `ready`, even when a board option or the output's `info` changes, since R may no longer hold the revision that output was made from.
 
 Core calls four more methods of the scheduler, which front-ends and extensions do not get through `CoreApi`.
-It calls `start()` once the front-end's `render()` has returned, and `hold()` while the page switches front-ends ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
+It calls `start()` once the front-end's `render()` has returned, as the page starts and as each board opens ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), and `hold()` while the page switches front-ends in place ([Front-ends and extension points](Rewrite-1.1.8#switching-front-ends)).
 Both hold evaluations only, so that a startup module that waits on a request before `render()` still gets its answer.
 It calls `session()` after the `hello` of each new session (below).
 Outputs and requests go to R through `request()`, so the scheduler sees everything R has to run, as the idle delay and the 5 s rule need.
