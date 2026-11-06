@@ -113,7 +113,7 @@ Core has five types:
 - The type `plugin` is a plugin's request, which R finds among those that the method of `plugin_requests()` for the plugin class whose id `plugin` names gives ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
 A package may add a type of its own with a method of `request_call()` for its class, whose requests carry the fields that the package gives them, of which R reads only `reads`.
-A request names the block results it reads in `reads`, passes in `args` what its function takes, which for a block class's request is the state args its function names, filled in by the host from the block's state where the module passes none, and the parameters the UI gives it, and carries in `options` the values of the board options its function names, as an output request does, since R holds none ([Block classes in R](Rewrite-1.1.5#requests)).
+A request names the block results it reads in `reads`, passes in `args` what its function takes, which for a block class's request is the state args its function names, filled in by the host from the block's state where the module passes none, and the parameters the UI gives it, and carries in `options` the values of the board options it reads, by id, as an output request does, since R holds none, which for a block class's request are those its `new_block_request()` names ([Block classes in R](Rewrite-1.1.5#requests)).
 An output class's request, or a renderer's, carries the board options and parameters its output was asked with, as the output request did, and R runs it with the result that output was made from.
 
 ```json
@@ -144,8 +144,8 @@ What R runs for the client comes in these flavors, which differ in who defines a
 | Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the opening board option values |
 | Renderer's request | The renderer, as its package declares it | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No | With the opening board option values |
 | Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No | With a locked block's opening state and the opening board option values |
-| Volatile request | A request the class wraps in `volatile()` | The block's UI, through its host | No | No | As a block class's request |
-| Action | A request the class wraps in `action()`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
+| Volatile request | A request that the class makes with `new_block_request(volatile = TRUE)` | The block's UI, through its host | No | No | As a block class's request |
+| Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
 | Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where its package says that it may run there |
 | Plugin's request | The plugin's package, through its method of `plugin_requests()` | The plugin, through `CoreApi` | No | Yes | Only where its package says that it may run there |
 | Request of a type that a package adds | The package, through its method of `request_call()` | The package's code in the client, through `CoreApi` | No | Yes | Only where its package says that it may run there |
