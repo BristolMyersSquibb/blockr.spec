@@ -104,7 +104,7 @@ A plugin class sets any mix of these members, or none of `ui`, `frontend` and `s
 Vite and Rollup take plugins in the same way, as one object whose optional hooks the bundler reads ([Vite](https://vite.dev/guide/api-plugin)), and so does ProseMirror, whose plugin spec holds an optional `state`, `props` and `appendTransaction` ([ProseMirror](https://prosemirror.net/docs/ref/#state.PluginSpec)).
 Every other contract of core's client has this shape too, the module contract that follows anywidget's among them ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
-A package registers the commands, board options and request types of its plugin classes as it registers any others: commands through `core.commands.register()`, board options through `core.options.register()`, and request types in R through methods of `request_call()`, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built them in place of the `register_requests()` of [Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r) ([Wire protocol](Rewrite-1.1.9#requests)).
+A package registers the commands and board options of its plugin classes as it registers any others, through `core.commands.register()` and `core.options.register()`, and gives their requests in R ([A plugin's requests](#a-plugins-requests)).
 A plugin works on the board through `CoreApi` alone, so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, as [Front-ends and extension points](Rewrite-1.1.8#extensions) has it for extensions.
 
 ### Plugin classes
@@ -256,6 +256,42 @@ start: ({ core, signal }) => {                    // blockr.viz's control bridge
 
 A plugin needs no member to stop, since the signal stops it, so core could suspend a plugin one day by aborting its signal and resume it by calling `start` again, with no change to the plugin.
 
+### A plugin's requests
+
+A plugin class that needs R gives its requests through a method of `plugin_requests()` for its class, as blockr.md does to export a document.
+One that lives in the browser alone, such as the DAG's, gives R nothing but its constructor, for app scripts, as a block class's UI lives in the browser and its `expr` in R.
+Core answers a plugin's requests as a type of request of its own, `plugin`, beside the four types that [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built, as it answers a board option's through `board_option_requests()` ([Wire protocol](Rewrite-1.1.9#requests)).
+So a package adds no request type for its plugins, and the dock none for its extensions, which #484 left to it.
+
+Whoever calls `CoreApi.request()` names a plugin of the board by its id, and the message names the plugin's class by the class's id, by which R finds the method.
+R calls the request's function with the args that the client passes, by name, with the request's body in `file` where the function takes it, and with the blocks that the request reads in `reads`, by block id, each a list of the block's `result` and its block expression `expr`.
+Core has those blocks evaluated first, even off screen, as for a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)).
+A plugin's request may write, so the client never keeps its answer, as [Wire protocol](Rewrite-1.1.9#requests) has it for an extension's.
+It may answer with a file, through `new_reply_body()`, and report how far it has come through `report_progress()`.
+On a locked board, R runs it only where the plugin marks it as one that may run there, as `allow_locked` marks an extension's request in [Wire protocol](Rewrite-1.1.9#locked-boards).
+
+The plugin of blockr.md shows both sides.
+Its live document needs no R: its UI renders the markdown in the browser, and mounts the output of each block that `![caption](blockr://a)` embeds with `core.mountOutput()`, as a frontend does on a card.
+Its export is a request, which binds every block's result under the block's id and renders the document in that environment, as today's download hands `filter_md()` every block's result by id ([blockr.md R/md-server.R#L212-L240](https://github.com/BristolMyersSquibb/blockr.md/blob/32e088884d825813fb7ff0afc7d023df9e70a3b6/R/md-server.R#L212-L240)):
+
+```r
+plugin_requests.md_plugin <- function(x, ...) {                        # in blockr.md
+  list(
+    html = function(content, reads) {
+      env <- list2env(lapply(reads, `[[`, "result"), parent = globalenv())   # every block's result under its id
+      src <- tempfile(fileext = ".Rmd")
+      writeLines(content, src)
+      new_reply_body(rmarkdown::render(src, envir = env, quiet = TRUE), "text/html", name = "report.html")
+    }
+  )
+}
+```
+
+```ts
+const file = await core.request("report", "html", { content },        // the board's plugin "report"
+  { reads: Object.keys(core.store.board().blocks), progress: show });   // every block, since a chunk may name any
+```
+
 ### A plugin's state
 
 A plugin's state takes the place of a board class's properties, with the same machinery under the plugin's id ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)):
@@ -314,6 +350,7 @@ interface CoreApi {
     classOf(plugin: PluginId): PluginClass;            // the definition of a running plugin's class
   };
   mountPlugin(el: HTMLElement, plugin: PluginId): () => void;                               // the plugin's UI module, until the cleanup runs
+  request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, in place of an extension's
   notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };
 }
@@ -354,6 +391,15 @@ The `CoreApi` for tests that core ships ([Front-ends and extension points](Rewri
 <details><summary>Notes for implementers</summary>
 
 The board classes to replace on `js-state`, at `3536c4d`: the board class and its registration in `srcts/store/registrations.ts`, the board's `class` in `srcts/types/board.ts`, building a board as a class in `srcts/store/store.ts`, the classes in the reply to `hello` in `srcts/protocol/messages.ts` and `R/loaded-reply.R`, `board_front_end()` and `board_version()` in `R/board-class.R`, the modules of front-ends in `R/pkg-modules.R`, and a board's `class` and `versions` in `R/utils-serdes.R`.
+
+A plugin's request carries the type `plugin` and the id of the plugin's class, beside the fields that every request has ([blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484)):
+
+```json
+{ "id": "40", "kind": "request", "type": "plugin", "plugin": "blockr.md-md_plugin", "name": "html",
+  "args": { "content": "# Report" }, "reads": [ { "block": "a", "revision": 2 } ] }
+```
+
+R reads it into an object of class `plugin_request`, and its method of `request_call()` dispatches `plugin_requests()` on an object of class `c("md_plugin", "plugin")`, which it makes from the class's id, as the method for board options makes one with `new_board_option()`, and binds the args with `request_call_args()`, as that method does, with `reads` and `file` reserved.
 
 Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4) and [Front-ends and extension points](Rewrite-1.1.8), the draft [Locked boards and the properties of blocks](Rewrite-1.1.11), the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins.
 The same change writes "frontend" for "front-end" and "plugin" for "extension" on every page, but in the names of today's code, such as `new_dock_extension()`.
