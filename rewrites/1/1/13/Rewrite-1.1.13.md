@@ -176,8 +176,8 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 ### Locked boards
 
 A locked board keeps the board options that the app set, as it keeps its blocks, links and stacks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
-Core still adds a board option that a component requires and the board lacks, with its default, since the app set no value for it.
-The store lets that delta through, and refuses every other delta that sets or removes a board option's value.
+A board option still comes with the component that requires it, so core adds one that a component requires and the board lacks, with its default, since the app set no value for it ([Which board options a board holds](#which-board-options-a-board-holds)).
+The store tells that delta apart by core's origin and lets it through, and refuses every other delta that sets or removes a board option's value, so that nothing else adds a board option to a locked board or changes one.
 R takes a request's own value for a board option that the app script set none for, so the default that core added reaches R, while R keeps a value that the app set whatever a request carries.
 
 ### Blockr options
@@ -228,5 +228,8 @@ On `js-state`, core adds the board options that a module names in `addOptions()`
 This page has core refuse there a module that leaves one of them out, before it adds the module's board options.
 The reads of blockr options are `createBlockrOptions()` in `srcts/core/blockr-options.ts`, and core's definitions are `nRows()`, `showConditions()`, `darkMode()` and `coreOptions()` in `srcts/options/`.
 In R, `new_block_request()` is in `R/block-request.R` and `output_coercion()` in `R/output-class.R`.
+
+An origin is a string that any caller of `store.apply()` or `commands.run()` may give ([Board updates](Rewrite-1.1.2#the-store)), so code that holds `CoreApi` could give core's own.
+That opens no hole in the lock: the store's refusals keep the user and front-ends from changing what the app fixed, while R holds the lock for what it evaluates, keeping a value that the app set whatever a request carries ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)).
 
 </details>
