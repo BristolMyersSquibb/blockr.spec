@@ -11,9 +11,10 @@ What core gives a frontend, starting the page and renderers stay with [Front-end
 1. Core has two ways to extend a board, block classes and plugins, and no other, so a board has no class of its own.
 2. A plugin works under every frontend: it works on the board through `CoreApi`, keeps its state in the board, and offers its UI as a module that core mounts where the frontend puts it.
 3. The frontend is a plugin, and every frontend places every plugin that has a UI, including one whose class it does not know.
-4. A board names its plugins, and opening a board runs exactly those whose packages the app loads, so the page is what serving that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks.
+4. A board names its plugins, all but the storage plugin (condition 5), and opening a board runs exactly those whose packages the app loads.
+   So the page is what serving that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks.
 5. Where a page saves boards and opens them from is the app's choice, whichever board is open.
-6. A plugin's state belongs to that plugin alone, keyed by its id: it is saved, undone and migrated with the board, and two plugins of one class need not share its shape.
+6. A plugin's state belongs to that plugin alone, keyed by its id: it is saved, undone and migrated with the board, and its shape is the plugin's own, so that the states of two frontends share nothing.
 7. Boards saved by today's blockr.dock open with their views, their layouts and the state of their extensions, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 
 ## Today
@@ -32,9 +33,10 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 |---|---|
 | `preserve_board`, with core's Import and Export | Core's storage plugin, which saves a board as a download and opens an upload ([Storage](#storage)) |
 | `manage_project()` of blockr.session | Its storage plugin ([Session management as a client extension](Rewrite-1.6)) |
-| `generate_code` | The plugin of blockr.code ([Code export as a client extension](Rewrite-1.5)) |
+| `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a client extension](Rewrite-1.5)) |
 | `manage_blocks`, `manage_links`, `manage_stacks`, `edit_block`, `edit_stack`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock and extensions](Rewrite-1.2) put them: core's commands, with the menus, cards, stack editors and notifications of the frontend and the DAG |
-| The dock's extensions: the DAG, blockr.md's document, the assistant, the Edit board extension and blockr.viz's control bridge | A plugin each, whose state is the extension's state |
+| The `ctrl_block` of blockr.ai, `ai_ctrl_block()`, a chat on every block ([blockr.ai R/ai-ctrl-block.R#L51-L56](https://github.com/BristolMyersSquibb/blockr.ai/blob/7441767266cd982858bef0c633bcad5597698a0a/R/ai-ctrl-block.R#L51-L56)) | The assistant, which replaces it ([The dock's contribution points](Rewrite-1.2.4#open-questions)) |
+| The dock's extensions: the DAG, blockr.md's document, the assistant, the Edit board extension, blockr.viz's control bridge, and the outline, slides, report and minidag of blockr.outline | A plugin each, whose state is the extension's state |
 | Board classes, the dock board among them | A frontend each, the dock plugin among them, whose state holds what the class's properties held ([The frontend](#the-frontend)) |
 
 ## Proposal
@@ -45,7 +47,7 @@ In R, a plugin is an S3 object of class `c("{name}_plugin", ..., "plugin")`.
 A package's constructor `new_{name}_plugin()` returns one, made with core's `new_plugin()`.
 Its args are the state it gives the board an app script builds, such as the DAG's `positions`, as a block's args are its state.
 Its id is `{pkg}-{name}_plugin`, as `blockr.dag-dag_plugin`.
-The id joins the class to its package, the one whose namespace holds the class's methods, as a registry id carries its package ([Board objects](Rewrite-1.1.1#registry-ids)).
+The id joins the class to its package, the one its constructor lives in, as a registry id carries its package ([Board objects](Rewrite-1.1.1#registry-ids)).
 The version of its state's shape is what its method of `plugin_version()` returns, 1 where it has none, in place of `board_version()`.
 The board constructor takes the board's plugins in `plugins`, as `new_dock_board(extensions = ...)` takes extensions today:
 
@@ -57,7 +59,8 @@ new_board(
 ```
 
 R writes each plugin into the opening board under its id, with its state and its version ([Serialization](Rewrite-1.1.4#files)).
-In the reply to `hello`, R sends each plugin class that a loaded package defines, with its package, its version and where its modules are served ([Wire protocol](Rewrite-1.1.9#handshake)).
+In the reply to `hello`, R sends the versions that loaded packages give their plugin classes, by plugin id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1, as `option_versions` has it for board options ([Wire protocol](Rewrite-1.1.9#handshake)).
+The client takes a plugin's package from its id, and where its UI module is served from the modules that packages offer each other, so R keeps no list of plugin classes.
 
 In JS, the package's startup module registers the plugin class under its R name, with its parent, its state and its UI module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), where it registered a board class before.
 With illustrative names:
@@ -82,7 +85,7 @@ core.store.register({                              // blockr.dag's, from its sta
 });
 ```
 
-A plugin registers its commands, board options and request types as any package does: commands through `core.commands.register()`, board options through `core.options.register()`, and request types in R through methods of `request_call()` ([Wire protocol](Rewrite-1.1.9#requests)).
+A plugin registers its commands, board options and request types as any package does: commands through `core.commands.register()`, board options through `core.options.register()`, and request types in R through methods of `request_call()`, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built them in place of the `register_requests()` of [Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r) ([Wire protocol](Rewrite-1.1.9#requests)).
 It works on the board through `CoreApi` alone, so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, as [Front-ends and extension points](Rewrite-1.1.8#extensions) has it for extensions.
 
 ### Plugin classes
@@ -163,8 +166,9 @@ The client names the package to install, as it names the package of a block it d
 The plugin's `update` does not run meanwhile, so its state may refer to blocks that the board no longer has, and the plugin drops such entries when it next runs.
 
 Adding a plugin to the open board, or removing one, is an edit through core's commands like any other, so undo takes it back and saving keeps it.
+The commands `blockr.core-add_plugin` and `blockr.core-remove_plugin` do it with a patch at the plugin's own path, as `/plugins/blockr.dag-dag_plugin`, which adds the plugin with the default of its state or removes it with its state.
 So a board saved before an app offered the assistant takes the assistant up with one command.
-Adding a frontend switches the page to it in place.
+Adding a frontend to a board that names one replaces that frontend, in the same step, and switches the page to the new one in place.
 
 ### A plugin's state
 
@@ -176,7 +180,7 @@ A plugin's state takes the place of a board class's properties, with the same ma
 - The plugin's commands change its state, and everything else changes it through them, which is external control ([Board updates](Rewrite-1.1.2#commands)).
 - A JSON board records the version of each plugin's state in `versions`, by plugin id, and the plugin's package in `packages`, and the plugin's `migrate` takes a state of an older version ([Serialization](Rewrite-1.1.4#migrations)).
 
-Each plugin's state has a shape of its own, so the dock's views and the layout of another frontend share nothing, and only the plugin that wrote a state reads it.
+Each plugin's state has a shape of its own, so the dock's views and the layout of another frontend share nothing.
 What a plugin keeps about one of core's objects is an entry in its state keyed by the object's id, as the DAG keeps a block's position, in place of the properties that a board class adds to blocks ([Locked boards and the properties of blocks](Rewrite-1.1.11)).
 
 A board with the dock and the DAG, with illustrative states:
@@ -217,8 +221,13 @@ With illustrative names:
 interface CoreApi {
   // as Front-ends and extension points has it, plus:
   mountPlugin(el: HTMLElement, plugin: PluginId): () => void;                               // the plugin's UI module, until the cleanup runs
-  notify(note: { message: string; severity: "message" | "warning" | "error" }): void;     // which the frontend draws
+  notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };
+}
+
+interface Note {
+  message: string;
+  severity: "message" | "warning" | "error";
 }
 ```
 
@@ -236,6 +245,7 @@ On `js-state`, the board classes of [blockr.core#474](https://github.com/Bristol
 - The conversion outside core ([Serialization](Rewrite-1.1.4#files)) turns a dock board into a board that names the dock plugin, whose state takes the dock board's `views` and `grids`, and one plugin for each extension, whose state takes the extension's, each at version 1.
 - An app script's `new_dock_board()` keeps working, as a board that names the dock plugin and the plugins its `extensions` give, which [Saved boards and app scripts across the switch](Rewrite-1.2.2) settles in detail.
 - An app script that sets storage through `serve(plugins = custom_plugins(manage_project()))` sets it through `serve(storage = ...)`.
+- An app script that sets code export through `serve(plugins = custom_plugins(generate_flat_code()))`, as blockr.code's README does ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)), names blockr.code's plugin on its board instead.
 
 ### Testing
 
