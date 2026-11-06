@@ -1,5 +1,5 @@
 # Plugins for the client-owned board
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what a plugin is in R and in JS, the plugin classes core defines in R, the frontend and storage plugins, which plugins a board has, how a plugin runs, and a plugin's state.
 Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes of [Board objects](Rewrite-1.1.1#the-board) and [Board updates](Rewrite-1.1.2#board-classes-and-attributes).
@@ -151,14 +151,17 @@ A package prefixes the members it adds, as `dockNavbar`, so that two packages ne
 Such a member follows the open board by itself, since the frontend reads it from the plugins that run, so nothing is registered as a plugin starts or dropped as it stops ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 Which places the dock offers is [The dock's contribution points](Rewrite-1.2.4)'s to settle.
 
-A plugin's UI module meets the contract of a frontend's module: it exports the JS API major it was built against and a default whose `render({ el, core, signal })` core calls, here with the element the frontend gave, and which returns the cleanup ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
+A plugin's UI module meets the contract of a frontend's module: it exports the JS API major it was built against and a default whose `render({ el, core, plugin, signal })` core calls, here with the element the frontend gave and the id of the plugin it draws, and which returns the cleanup ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
+So one module draws each plugin of its class, as two documents of blockr.md, each from its own state.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
 Where [Client-drawn dock and extensions](Rewrite-1.2) has extensions render React components inside the dock's own tree, a plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)).
 
 ### The frontend
 
-A frontend is a plugin whose class has `frontend`, of class `frontend_plugin` in R, the module that draws the page, with the contract of the module above, called with the page's element.
-A page has one frontend: the one that the open board holds, or core's basic frontend, which keeps no state, so that no board holds it.
+A frontend is a plugin whose class has `frontend`, the module that draws the page, and whose class in R extends `frontend_plugin`.
+The module meets the contract of a UI module above, and core calls it with the page's element.
+A page has one frontend: the one that the open board holds, or core's basic frontend where it holds none.
+Core's basic frontend keeps no state, so no board holds it.
 A board that holds no frontend takes the one of the board it replaces as it opens, with the default state of its class ([Which plugins a board has](#which-plugins-a-board-has)), so the dock opens a board made under core's basic frontend with its default layout.
 A board holds at most one frontend: the board constructor refuses a second, and the store refuses to open a JSON board that holds two.
 Core starts the page as [Front-ends and extension points](Rewrite-1.1.8#starting-the-page) has it, with the board's frontend in place of its class's front-end:
@@ -187,7 +190,7 @@ interface Storage {
 
 Core's own storage plugin saves a board as a download and opens an upload, as today's `preserve_board` does, and has no `ui`, since the frontend draws the controls.
 It keeps no state, so no board holds it: it saves and opens for every board that holds no storage plugin.
-The storage plugin of blockr.session saves to Connect and opens from it ([Session management as a client extension](Rewrite-1.6)), and shows its board list and versions through a UI module of its own.
+The storage plugin of blockr.session saves to Connect and opens from it ([Session management as a client extension](Rewrite-1.6)).
 
 A board holds its storage plugin as it holds any other, so that a JSON board describes the whole app, its frontend and its storage among its plugins:
 
@@ -208,6 +211,8 @@ With the rule, the board takes session management as it opens, and the page keep
 A board that holds a storage plugin keeps it, whichever storage plugin opened it, since the board describes its app and the page only fills in what the board leaves out.
 So a deployment chooses where its pages save through the board its script builds and the packages it loads.
 
+The interface holds only what every frontend's save and open controls call, and it can grow once a frontend needs more of every storage plugin.
+A storage plugin offers the rest through its own UI, which every frontend places, as session management offers its board list, its versions and its sharing, and its `open()` may show a picker of its own before it resolves.
 A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a client extension](Rewrite-1.6) has it.
 This settles the open question of [Session management as a client extension](Rewrite-1.6#open-questions) on whether storage becomes an interface of core.
 
@@ -230,7 +235,7 @@ Then a board that holds no frontend, or no storage plugin, takes over the one of
 
 - A board made in a core app holds no frontend, and opened in a dock app it takes the dock, which lays it out from its default.
 - A board saved as a download holds no storage plugin, and opened in a Connect app through session management it takes session management ([Storage](#storage)).
-- A board that a startup module names in place of the opening board takes the opening board's, so a record that session management opens from a URL as the page starts takes the frontend and the storage plugin of the board that the app script built.
+- A board that a startup module names in place of the opening board takes over those of the opening board, so a record that session management opens from a URL as the page starts takes the frontend and the storage plugin of the board that the app script built.
 - A dock board opened in an app without blockr.dock loses the dock, which the client names, and takes the frontend of the board it replaces.
 
 Adding a plugin to the open board, or removing one, is an edit through core's commands like any other, so undo takes it back and saving keeps it.
@@ -261,7 +266,7 @@ A plugin needs no member to stop, since the signal stops it, so core could suspe
 A plugin class that needs R gives its requests through a method of `plugin_requests()` for its class, as blockr.md does to export a document.
 One that lives in the browser alone, such as the DAG's, gives R nothing but its constructor, for app scripts, as a block class's UI lives in the browser and its `expr` in R.
 Core answers a plugin's requests as a type of request of its own, `plugin`, beside the four types that [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built, as it answers a board option's through `board_option_requests()` ([Wire protocol](Rewrite-1.1.9#requests)).
-So a package adds no request type for its plugins, and the dock none for its extensions, which #484 left to it.
+So a package adds no request type for its plugins, and the dock none for its extensions, which that pull request left to it.
 
 Whoever calls `CoreApi.request()` names a plugin of the board by its id, and the message names the plugin's class by the class's id, by which R finds the method.
 R calls the request's function with the args that the client passes, by name, with the request's body in `file` where the function takes it, and with the blocks that the request reads in `reads`, by block id, each a list of the block's `result` and its block expression `expr`.
@@ -272,6 +277,7 @@ On a locked board, R runs it only where the plugin marks it as one that may run 
 
 The plugin of blockr.md shows both sides.
 Its live document needs no R: its UI renders the markdown in the browser, and mounts the output of each block that `![caption](blockr://a)` embeds with `core.mountOutput()`, as a frontend does on a card.
+It demands those blocks while it shows them, as a frontend demands the blocks it shows ([Evaluation in the client](Rewrite-1.1.10#demand)).
 Its export is a request, which binds every block's result under the block's id and renders the document in that environment, as today's download hands `filter_md()` every block's result by id ([blockr.md R/md-server.R#L212-L240](https://github.com/BristolMyersSquibb/blockr.md/blob/32e088884d825813fb7ff0afc7d023df9e70a3b6/R/md-server.R#L212-L240)):
 
 ```r
@@ -385,8 +391,7 @@ The `CoreApi` for tests that core ships ([Front-ends and extension points](Rewri
 
 ## Open questions
 
-- What a storage plugin's interface holds beyond saving and opening, such as listing boards, which session management needs ([Session management as a client extension](Rewrite-1.6)).
-  It blocks rebuilding session management.
+None.
 
 <details><summary>Notes for implementers</summary>
 
@@ -401,7 +406,7 @@ A plugin's request carries the type `plugin` and the id of the plugin's class, b
 
 R reads it into an object of class `plugin_request`, and its method of `request_call()` dispatches `plugin_requests()` on an object of class `c("md_plugin", "plugin")`, which it makes from the class's id, as the method for board options makes one with `new_board_option()`, and binds the args with `request_call_args()`, as that method does, with `reads` and `file` reserved.
 
-Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4) and [Front-ends and extension points](Rewrite-1.1.8), the draft [Locked boards and the properties of blocks](Rewrite-1.1.11), the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins.
+Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4), [UI modules in JS](Rewrite-1.1.7), [Front-ends and extension points](Rewrite-1.1.8) and [Wire protocol](Rewrite-1.1.9), the draft [Locked boards and the properties of blocks](Rewrite-1.1.11), the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins.
 The same change writes "frontend" for "front-end" and "plugin" for "extension" on every page, but in the names of today's code, such as `new_dock_extension()`.
 The issues that restate what changes are [blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434), [blockr.core#436](https://github.com/BristolMyersSquibb/blockr.core/issues/436), [blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440), [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441), [blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442), [blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443), [blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445) and [blockr.core#487](https://github.com/BristolMyersSquibb/blockr.core/issues/487), and [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8), which recasts the code export as a dock extension.
 
