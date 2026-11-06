@@ -55,6 +55,7 @@ interface Store {
   apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
   open(given: string | HelloReply): Promise<Dropped[]>;      // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry, then replaces the board
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
+  save(): string;                                            // the text of jsonBoard(), as a file holds it, which open() opens (Serialization)
 
   undo(origin?: Origin): void;                               // takes that origin's last step back, as a new edit (below)
   redo(origin?: Origin): void;
