@@ -271,9 +271,9 @@ So a package adds no request type for its plugins, and the dock none for its ext
 Whoever calls `CoreApi.request()` names a plugin of the board by its id, and the message names the plugin's class by the class's id, by which R finds the method.
 R calls the request's function with the args that the client passes, by name, with the request's body in `file` where the function takes it, and with the blocks that the request reads in `reads`, by block id, each a list of the block's `result` and its block expression `expr`.
 Core has those blocks evaluated first, even off screen, as for a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)).
-A plugin's request may write, so the client never keeps its answer, as [Wire protocol](Rewrite-1.1.9#requests) has it for an extension's.
+A plugin's request may write, so the client never keeps its answer ([Wire protocol](Rewrite-1.1.9#requests)).
 It may answer with a file, through `new_reply_body()`, and report how far it has come through `report_progress()`.
-On a locked board, R runs it only where the plugin marks it as one that may run there, as `allow_locked` marks an extension's request in [Wire protocol](Rewrite-1.1.9#locked-boards).
+On a locked board, R runs it only where its package says that it may run there ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 The plugin of blockr.md shows both sides.
 Its live document needs no R: its UI renders the markdown in the browser, and mounts the output of each block that `![caption](blockr://a)` embeds with `core.mountOutput()`, as a frontend does on a card.

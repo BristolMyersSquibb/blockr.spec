@@ -93,7 +93,7 @@ It reads the block's status as front-ends do ([Evaluation in the client](Rewrite
 The shape is close to blockr.dplyr's [`Blockr.registerBlock()`](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/inst/js/blockr-core.js#L57) today, whose block classes implement `setState(state)` and call back on submit.
 
 The context holds only what the client knows already, and anything that needs the data comes through the block class's requests.
-The host sends a request once core has had the inputs it reads evaluated, even where nothing demands them, as core does for an extension's request, so that it reads them at revisions that may be newer than those the context named when the module asked ([Evaluation in the client](Rewrite-1.1.10#demand)).
+The host sends a request once core has had the inputs it reads evaluated, even where nothing demands them, as core does for a plugin's request, so that it reads them at revisions that may be newer than those the context named when the module asked ([Evaluation in the client](Rewrite-1.1.10#demand)).
 It sends the request through the scheduler's `request()`.
 Where R replies `missing`, the host has the inputs evaluated again and asks again at their current revisions.
 With them go the state args its function names, from `args` or else from the block's state, the parameters `args` gives, such as the column whose values a dropdown lists, and the values of the board options its function names ([Block classes in R](Rewrite-1.1.5#requests), [Wire protocol](Rewrite-1.1.9#requests)).
