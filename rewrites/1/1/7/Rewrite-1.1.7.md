@@ -37,7 +37,8 @@ export default {
 
 Core refuses a module whose major does not match its own.
 Beside `render()`, the default may hold `options`, the ids of the board options the module requires, which core adds to the board before it calls `render()` ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
-A module that fails to load, declares another major or throws in `render()` leaves an error in its element that names the module and its package, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on.
+Those include every board option that a request of the module's class reads, as the block registry entry names them, and core refuses a module that leaves one out, naming the board option and the request.
+A module that fails to load, declares another major, leaves out such a board option or throws in `render()` leaves an error in its element that names the module and its package, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on.
 A custom element meets the contract through `render()`, which puts one in `el` and hands it the host, so the contract has no second form for it, since that would tie the contract to the page's element registry, where a name is defined once and never removed.
 The host is everything the module may use:
 
@@ -58,7 +59,7 @@ interface BlockContext {
   name: string;                                      // "Head"
   status: BlockStatus;                               // its status, revision, conditions and summary, as the scheduler has them
   inputs: { input: string; revision: number }[];     // its linked inputs, in the order of its class's inputs, whose revisions say when the data changed
-  options: Record<OptionId, Json>;                   // the values of the board options its module and its class's requests name
+  options: Record<OptionId, Json>;                   // the values of the board options its module names
 }
 
 interface HostRequestOpts extends Omit<RequestOpts, "reads"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds

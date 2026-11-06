@@ -9,7 +9,7 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 ## What must hold
 
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it.
-2. Each component that reads a board option's value names the board option in its own definition: a board class, a renderer, a block class's UI module or one of the block class's requests.
+2. Each component that reads a board option's value names the board option in its own definition: a board class, a renderer, or a block class in its UI module, which also names every board option that the class's requests read.
    The board holds a value for the board option before that component first reads it, on a locked board too.
 3. A board holds a value only for a board option that something on the page has required since the board opened, or that a script, a file or a command has set.
 4. A change to a board option's value evaluates no block, since no board option reaches `expr`.
@@ -44,7 +44,7 @@ So a board's JSON describes the board in full, and holds nothing of the deployme
 | Held by | The board, under the board option's id | Nobody: R reads it where its code needs it, and the client keeps what it asked R for until the page closes |
 | Saved | With the board, and undone with it for now (Open questions) | Never |
 | Defined | Once, in the client, by the package that ships it | Nowhere: the code that reads it names it and gives a fallback |
-| Read by | Only a component that names it, a board class, a renderer, a block class's UI module or request, and the board option's own UI | Any code, through `blockr_option()` in R and `CoreApi.blockrOption()` in the client |
+| Read by | Only a component that names it, as a block class does in its UI module, and the board option's own UI | Any code, through `blockr_option()` in R and `CoreApi.blockrOption()` in the client |
 
 ### Defining a board option
 
@@ -104,7 +104,13 @@ Each component names the board options it requires in its own definition:
 
 - A board class, in the `options` of its definition ([Board objects](Rewrite-1.1.1#the-board)).
 - A renderer, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
-- A block class, in the `options` of its UI module and in its requests, which name in R the board options they read ([Board option values in R](#board-option-values-in-r)), while its block registry entry carries those names to the client.
+- A block class, in the `options` of its UI module, those that its requests read included.
+
+The UI module is the one place where a block class names its board options.
+A request's `options` in R says only which of them the request reads, so that R binds them to its function's arguments and the client sends their values with it ([Board option values in R](#board-option-values-in-r)).
+The block registry entry carries each request's board options to the client by id.
+Core refuses a module whose `options` leaves out a board option that a request of its class names, as it refuses one that declares another major of its JS API ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+It shows the error in the block's element, naming the module, the request and the board option, so that the gap shows on the first mount rather than as a request that reaches R without the value.
 
 Core adds each board option that a component requires and the board lacks, with its definition's `default`:
 
@@ -145,7 +151,7 @@ The `new_board()` function holds no board options unless a script gives some, as
 
 R code reads a board option's value only where it names the board option:
 
-- A block class's request names the board options it reads through `new_block_request(fun, options = )`.
+- A block class's request names which of the class's board options it reads through `new_block_request(fun, options = )`, each one that the class's UI module names ([Which board options a board holds](#which-board-options-a-board-holds)).
   Given one constructor, its function takes that board option's value in its argument `options`.
   Given a list of constructors named by arguments, its function takes each value in the argument of that name.
   No argument is matched to a board option by its name, and a value comes whole, whatever its shape ([Block classes in R](Rewrite-1.1.5#requests)).
@@ -160,7 +166,7 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 
 ### Reading a board option in the client
 
-- A block class's UI module gets, in its context, the values of its class's board options, both those its module names and those its requests name, so that it shows what depends on them, as blockr.io's path field shows the data directory as its prefix ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+- A block class's UI module gets, in its context, the values of the board options it names, so that it shows what depends on them, as blockr.io's path field shows the data directory as its prefix ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 - A renderer gets, through its output host's `options()`, the values of the board options its module names, as the output it holds was asked with.
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, or else the board option's default, which core resolves before it calls the module's `render()`, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
   A front-end mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic front-end does in its toolbar and the dock in its options sidebar ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
@@ -218,8 +224,8 @@ The blockr option `renderers` also replaces a board option's UI (above), which c
 
 The departures that this page takes in come from the bodies of [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451) (requests name their board options through `new_block_request()`), [blockr.core#460](https://github.com/BristolMyersSquibb/blockr.core/pull/460) (a board option's R object holds its id and value, with a table of today's functions and what replaced each), [blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468) (a module names its board options in `options`), [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) (board classes require board options), [blockr.core#480](https://github.com/BristolMyersSquibb/blockr.core/pull/480) (core's definitions and the output host's `options()`) and [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) (the renderer in the registry entry, the caller of `onChange` and the reads of blockr options).
 
-On `js-state`, core adds a module's board options in `addOptions()` in `srcts/mount/block.ts`, and the block host gives the module the values of those its module names alone.
-This page has core add the board options that the class's requests name as well, from the `requests` of the registry entry, and give the module the values of both.
+On `js-state`, core adds the board options that a module names in `addOptions()` in `srcts/mount/block.ts`, as this page has it, but does not check them against those that the `requests` of the class's registry entry name.
+This page has core refuse there a module that leaves one of them out, before it adds the module's board options.
 The reads of blockr options are `createBlockrOptions()` in `srcts/core/blockr-options.ts`, and core's definitions are `nRows()`, `showConditions()`, `darkMode()` and `coreOptions()` in `srcts/options/`.
 In R, `new_block_request()` is in `R/block-request.R` and `output_coercion()` in `R/output-class.R`.
 
