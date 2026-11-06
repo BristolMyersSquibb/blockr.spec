@@ -11,12 +11,12 @@ What core gives a frontend, starting the page and renderers stay with [Front-end
 1. Core has two ways to extend a board, block classes and plugins, and no other, so a board has no class of its own.
 2. A plugin works under every frontend: it works on the board through `CoreApi`, keeps its state in the board, and offers its UI as a module that core mounts where the frontend puts it.
 3. The frontend is a plugin, and every frontend places every plugin that has a UI, including one from a package it does not know.
-4. A board holds its plugins, all but the storage plugin (condition 5), and opening a board runs exactly those whose packages the app loads.
-   So the page is what serving that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks.
-5. Where a page saves boards and opens them from is the app's choice, whichever board is open.
+4. A board holds all its plugins, its frontend and its storage plugin among them, and opening a board runs exactly those whose packages the app loads.
+   So the page is what serving that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks, and a JSON board describes the whole app.
+5. A board saves back to where it was opened from, so opening a board through one storage plugin never switches the page to another.
 6. A plugin's state belongs to that plugin alone, keyed by its id: it is saved, undone and migrated with the board, and its shape is its class's own, so that the states of two frontends share nothing.
 7. Boards saved by today's blockr.dock open with their views, their layouts and the state of their extensions, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
-8. A board holds as many plugins of one class as it needs, such as two documents of blockr.md, but at most one frontend.
+8. A board holds as many plugins of one class as it needs, such as two documents of blockr.md, but at most one frontend and one storage plugin.
 
 ## Today
 
@@ -111,11 +111,11 @@ A plugin works on the board through `CoreApi` alone, so the DAG adds a link by r
 In R, core defines two plugin classes beside `plugin`, `frontend_plugin` and `storage_plugin`, since every page relies on what each does (below).
 A package's class extends one of them or `plugin` itself, as blockr.session's is `c("session_plugin", "storage_plugin", "plugin")`.
 R dispatches on these classes for a plugin's version and its requests.
-The board constructor refuses a second frontend by them, and `serve()` refuses a `storage` that is no storage plugin.
+The board constructor refuses a second frontend or a second storage plugin by them.
 
 In JS, no plugin class extends another, and nothing walks a chain of classes.
 A plugin whose class has `frontend` is a frontend, and one whose class has `storage` is a storage plugin.
-So the dock has its save and open controls call the page's storage plugin, whichever package that plugin comes from.
+So the dock has its save and open controls call the storage plugin of the open board, whichever package that plugin comes from.
 
 A frontend places every plugin whose class has a `ui`, once for each plugin, so that two documents of blockr.md get a panel each.
 It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a drawer in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
@@ -183,23 +183,37 @@ interface Storage {
 ```
 
 Core's own storage plugin saves a board as a download and opens an upload, as today's `preserve_board` does, and has no `ui`, since the frontend draws the controls.
+It saves and opens wherever the open board holds no storage plugin, or holds one whose package the app does not load.
 The storage plugin of blockr.session saves to Connect and opens from it ([Session management as a client extension](Rewrite-1.6)), and shows its board list and versions through a UI module of its own.
 
-The app sets its storage plugin, not the board, since where a page saves boards belongs to the deployment rather than to a board:
+A board holds its storage plugin as it holds any other, so that a JSON board describes the whole app, its frontend and its storage among its plugins:
 
 ```r
-serve(board, storage = new_session_plugin())
+new_board(blocks = blks, plugins = list(new_dock_plugin(), new_session_plugin()))
 ```
 
-A board holds no storage plugin, so opening a board never changes where the page saves.
-Were storage among the plugins that a board holds, this would go wrong:
+A board holds at most one storage plugin: the board constructor refuses a second, and the store refuses to open a JSON board that holds two.
+A board that the storage plugin of the open board opens holds that storage plugin from then on, in place of the one it held, so that a board saves back to where it was opened from.
+Without that rule, this would go wrong:
 
-1. A user saves a board as a download, in an app without Connect.
-2. The user uploads it into a Connect app, through session management.
-3. The board holds no session management, so session management stops, in the middle of its own upload.
+1. A user saves a board as a download, in an app without Connect, where core's storage plugin saves it.
+2. The user opens the file in a Connect app, through session management.
+3. Opening a board runs exactly the plugins that it holds, and the file holds no session management, so the page switches to core's storage plugin, and session management stops.
+4. The user's next save downloads a file instead of saving to Connect.
+
+With the rule, the board holds session management once it opens, and the page keeps saving to Connect.
+The store applies the rule as it opens the text that `open()` returned, which a frontend's open control hands it with the id of the storage plugin that returned it:
+
+```ts
+const text = await storage.open();                              // a frontend's open control
+if (text) await core.store.open(text, { storage: "session" });  // the board opens holding the open board's storage plugin, session
+```
+
+A board from Connect that core's storage plugin opens from a file holds core's from then on, in the same way.
+A board that a startup module names in place of the opening board takes the opening board's storage plugin, so a record that session management opens from a URL as the page starts saves back to Connect too ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
+So a deployment still chooses where its pages save: through the board its script builds, the boards its storage plugin opens and the packages it loads.
 
 A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a client extension](Rewrite-1.6) has it.
-The page's storage plugin runs under the id `storage`, beside the plugins of the board, so that a frontend mounts its UI as it mounts any other plugin's, and no plugin of a board may take that id.
 This settles the open question of [Session management as a client extension](Rewrite-1.6#open-questions) on whether storage becomes an interface of core.
 
 ### Which plugins a board has
@@ -208,12 +222,11 @@ A board holds its plugins in `plugins`, a property of core's board, each under i
 A plugin's id is its name in the list that the board constructor takes, as a block's id is its name among the blocks.
 Where the list gives no name, the id is the class's name without `_plugin`, as `dag`, as today's dock names an extension after its class.
 So two plugins of one class need names of their own, as two extensions of one class do today.
-A board holds as many plugins of a class as it needs, as two documents of blockr.md, but at most one frontend ([The frontend](#the-frontend)) and no storage plugin ([Storage](#storage)).
+A board holds as many plugins of a class as it needs, as two documents of blockr.md, but at most one frontend ([The frontend](#the-frontend)) and one storage plugin ([Storage](#storage)).
 
 Opening a board runs exactly the plugins that it holds and whose packages the app loads, its frontend among them, and stops every plugin that only the board before it held.
 So the page is what serving that board in a fresh app would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 The plugins of the board that an app script builds are no different: opening another board stops those that it does not hold.
-Storage is the one exception, which the app sets for the page ([Storage](#storage)).
 
 A plugin whose package the app does not load stays in the board with its state unchanged, so that it runs again in an app that loads the package.
 The client names the package to install, as it names the package of a block it drops ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
@@ -279,7 +292,7 @@ interface CoreApi {
   // as Front-ends and extension points has it, plus:
   plugins: {
     register(def: PluginClass): () => void;            // a plugin class, from its package's startup module
-    running(): Record<PluginId, Plugin>;               // the open board's plugins whose classes are registered, and the page's storage plugin under "storage"
+    running(): Record<PluginId, Plugin>;               // the open board's plugins whose classes are registered
     classOf(plugin: PluginId): PluginClass;            // the definition of a running plugin's class
   };
   mountPlugin(el: HTMLElement, plugin: PluginId): () => void;                               // the plugin's UI module, until the cleanup runs
@@ -298,6 +311,7 @@ interface Note {
 - Board classes: the board class that `core.store.register()` takes today, a board's `class` and its `versions` by class, the R generics `board_front_end()` and `board_version()`, and the rule that the client builds a board as the first class in its `class` that a loaded package defines ([Board objects](Rewrite-1.1.1#the-board)).
 - The dock board as a class, `dock_board`, with its `extensions`, whose entries become plugins of their own.
 - Core's nine plugin classes and `known_plugins()`, of which only storage keeps a class in core.
+- The `plugins` argument of `serve()`, with `custom_plugins()` and `blockr_app_plugins()`, since a board holds all its plugins.
 - Registering a front-end through its board class ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), which the frontend plugin replaces, while what core gives a frontend, starting the page, switching frontends, core's basic frontend and renderers stay on that page.
 
 On `js-state`, the board classes of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) become plugin state: the patches, the schema checks, `update` and `migrate` keep their code, with each state under its plugin's id and each definition under its plugin class's id, rather than under a board class.
@@ -307,7 +321,7 @@ On `js-state`, the board classes of [blockr.core#474](https://github.com/Bristol
 - The conversion outside core ([Serialization](Rewrite-1.1.4#files)) turns a dock board into a board that holds the dock plugin, whose state takes the dock board's `views` and `grids`, and one plugin for each extension, under the key the board gave the extension and with the extension's name, whose state takes the extension's, each class at version 1.
   So a board with two documents of blockr.md keeps both.
 - An app script's `new_dock_board()` keeps working, as a board that holds the dock plugin and the plugins its `extensions` give, which [Saved boards and app scripts across the switch](Rewrite-1.2.2) settles in detail.
-- An app script that sets storage through `serve(plugins = custom_plugins(manage_project()))` sets it through `serve(storage = ...)`.
+- An app script that sets storage through `serve(plugins = custom_plugins(manage_project()))` puts blockr.session's storage plugin on its board instead.
 - An app script that sets code export through `serve(plugins = custom_plugins(generate_flat_code()))`, as blockr.code's README does ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)), puts blockr.code's plugin on its board instead.
 
 ### Testing
@@ -318,8 +332,6 @@ The `CoreApi` for tests that core ships ([Front-ends and extension points](Rewri
 
 - What a storage plugin's interface holds beyond saving and opening, such as listing boards, which session management needs ([Session management as a client extension](Rewrite-1.6)).
   It blocks rebuilding session management.
-- Whether the assistant, which needs the deployment's credentials, is set by the app as storage is, rather than named by the board.
-  It blocks [Assistant as a client extension](Rewrite-1.4).
 
 <details><summary>Notes for implementers</summary>
 
