@@ -93,9 +93,9 @@ Giving views ids took a breaking change to the dock's model and its serializatio
 
 Opening a board in place of another leaves every package, core included, as it would be had the page started with that board.
 Whatever derives from a board lives for one opening: core makes it per opening and drops it when the next board opens, and a package that keeps something of a board does the same.
-Only what is fixed for the page outlives an opening: the code that is loaded, what loaded packages registered, the blockr options and the lock.
+Only what is fixed for the page outlives an opening: the code that is loaded, what the packages that the app names offer, the blockr options and the lock.
 State that outlives an opening by accident shows only once a second board opens, as a bug that no test of a single board finds.
 
 Today's restore gets this from a reload: it stages the board and calls `session$reload()`, so that the page starts again with that board ([R/utils-serve.R#L277-L288](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L277-L288)).
-State in JS opens a board in place ([Front-ends and extension points](Rewrite-1.1.8#what-must-hold)), so it keeps per opening what the reload used to reset.
+State in JS starts core again in place instead, with no reload ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that core makes everything it keeps of a board per opening, and only what the page keeps across openings needs care.
 The board options that a UI module requires are an example: core imports the module once per page, so had it added them only as the module first loaded, a board opened later would lack them ([blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468)).
