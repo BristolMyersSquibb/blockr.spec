@@ -3,7 +3,7 @@ Status: settled on 2026-10-27. Design for [Client-owned board state](Rewrite-1.1
 
 The first of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)).
 It covers the objects the client holds for a board, its blocks, links, stacks and board options, how the board names its class and a block its class by registry id, and the properties that a board class adds beside core's.
-It shapes the store, the TypeScript object in core's JS API that holds the board and through which every change to it passes (sketched in [Board updates](Rewrite-1.1.2), [blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), defining block classes ([blockr.core#421](https://github.com/BristolMyersSquibb/blockr.core/issues/421)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), the board's name and id ([blockr.core#427](https://github.com/BristolMyersSquibb/blockr.core/issues/427)), writing a board's JSON in R by schema ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), saving a JSON board in the client ([blockr.core#436](https://github.com/BristolMyersSquibb/blockr.core/issues/436)), board classes and their properties ([blockr.core#465](https://github.com/BristolMyersSquibb/blockr.core/issues/465)) and core's board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It shapes the store, the TypeScript object in core's JS API that holds the board and through which every change to it passes (sketched in [Board updates](Rewrite-1.1.2), [blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), defining block classes ([blockr.core#421](https://github.com/BristolMyersSquibb/blockr.core/issues/421)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), the board's name and id ([blockr.core#427](https://github.com/BristolMyersSquibb/blockr.core/issues/427)), writing a board's JSON in R by schema ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), saving a JSON board in the client ([blockr.core#436](https://github.com/BristolMyersSquibb/blockr.core/issues/436)), board classes and their properties ([blockr.core#465](https://github.com/BristolMyersSquibb/blockr.core/issues/465)), core's board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)) and a stack's colour ([blockr.core#487](https://github.com/BristolMyersSquibb/blockr.core/issues/487)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How the board changes, through deltas, commands and undo, is the [board updates proposal](Rewrite-1.1.2), and the exact JSON format with its migrations is the [serialization proposal](Rewrite-1.1.4).
 
 ## What must hold
@@ -181,15 +181,21 @@ For a variadic target, an empty input appends positionally, in link order, as to
 interface Stack {                       // held under its id in board.stacks
   name: string;
   blocks: BlockId[];
-  color?: string;                       // "#66c2a5", the colour front-ends draw the stack in
+  color: string | null;                 // "#66c2a5", the colour front-ends draw the stack in, or null for none
 }
 ```
 
-A stack may carry a colour, a hex string, which front-ends draw it in, as the dock and the DAG do today.
-A front-end draws a stack without one in a default of its own.
+A stack may carry a colour, which front-ends draw it in, as the dock and the DAG do today.
+The colour is a hex colour of six digits, such as `#66c2a5`.
+That is the one form that `<input type="color">` takes, so a front-end hands a stack's colour to a colour input as it is.
+A stack without a colour holds `null`, and a front-end draws it in a default of its own.
+So every stack holds `color`, as every link holds `input`.
+A command clears a colour by setting it to `null`, and undo does the same for a colour that its step set on a stack that had none.
+A stack's change in a delta sets properties and removes none, so a stack that could lack `color` would leave undo no way to take a colour away ([Board updates](Rewrite-1.1.2#deltas)).
 The colour is core's rather than the dock's, as the dock's card sections became core's attribute `visible` (above).
 So a board opened under any front-end keeps the colours of its stacks, and core's commands set them ([Board updates](Rewrite-1.1.2#commands)).
 Today the dock keeps the colour on a `dock_stack`, which extends core's stack ([blockr.dock R/dock-stack.R#L24-L27](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-stack.R#L24-L27)).
+It takes three digits too, as `#fc8`, which it expands to six before it fills a colour input ([R/utils-misc.R#L72-L85](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-misc.R#L72-L85)).
 
 ### Board options
 
@@ -296,6 +302,7 @@ The store refuses to open a board with an id made of digits alone, with an error
 The store checks after every delta that ids are unique and well formed, that a link's endpoints exist, its target declares its input, a fixed input takes at most one link and no links form a cycle, as `validate_links()` and the board's checks do today ([R/links-class.R#L308-L368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L308-L368), [R/board-class.R#L64-L122](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-class.R#L64-L122)), that a stack names existing blocks and a block sits in at most one stack, and that every value a delta sets for a board option fits that board option's schema.
 It also checks that a block's class is in the block registry, since opening a board drops a block whose class it lacks, so that no delta makes a board that no opening would, and that a block, link or stack that a delta adds or changes has core's fields and nothing else, since deltas come from plain JS and from the assistant's tools too.
 These two look only at what a delta changed: on a board of 1,000 blocks they take 0.4 µs of an `apply()` that takes 3.8 ms, most of it in the checks of the whole board.
+With the fields of a stack that a delta adds or changes, the store checks that its colour is `null` or a hex colour of six digits ([Stacks](#stacks)).
 
 ### Objects that cannot be rebuilt
 
