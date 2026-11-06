@@ -87,7 +87,7 @@ It carries no code, since exporting a block's code is blockr.code's, through a r
 ```
 
 A reply keeps the first few conditions of each severity and counts the rest in `omitted`, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)).
-The phase names what raised a condition: the class's `expr`, which builds the expression, its `inputs`, whose body checks the data, `block_eval()`, which runs the block expression, or `block_summary()`, which describes the result, and in the reply to an output request or a request, `output` or `request`, for the coercion or the request's function.
+The phase names what raised a condition: the class's `expr`, which builds the expression, its `inputs`, whose body checks the data, `block_eval()`, which runs the block expression, or `result_summary()`, which describes the result, and in the reply to an output request or a request, `output` or `request`, for the coercion or the request's function.
 The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
 A request on a revision that is still computing waits for it.
 
