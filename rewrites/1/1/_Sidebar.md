@@ -14,5 +14,6 @@
 - [Wire protocol between the client and R](Rewrite-1.1.9), settled
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10), settled
 - [Locked boards and the properties of blocks](Rewrite-1.1.11), draft
+- [Plugins for the client-owned board](Rewrite-1.1.12), draft
 
 <!-- dropped: Rewrite-1.1.6 -->

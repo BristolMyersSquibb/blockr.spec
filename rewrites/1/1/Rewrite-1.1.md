@@ -94,6 +94,7 @@ The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503
 - [Wire protocol between the client and R](Rewrite-1.1.9): messages, the handshake, opening a board, evaluation, requests, outputs, running one request at a time, cancelling, forgetting, decoding, locked boards and the Shiny transport
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10): revisions, demand, invalidation, statuses and scheduling
 - [Locked boards and the properties of blocks](Rewrite-1.1.11): who holds a lock, which blocks it leaves open, serving a JSON board locked, and the properties that a board class adds to blocks
+- [Plugins for the client-owned board](Rewrite-1.1.12): what a plugin is in R and in JS, plugin classes, the frontend and storage plugins, which plugins a board has, and a plugin's state, in place of board classes and the dock's extensions
 
 <details><summary>Notes for implementers</summary>
 
