@@ -105,7 +105,7 @@ Besides core's objects, a board holds the properties that its board class adds (
 An attribute is a value that is not state, kept on every block, such as core's `visible`, which says which sections of a block's card show.
 
 A package defines each board class it ships from its startup module, under the class's R name.
-The definition names the class's parent and the board options it requires ([Board objects](Rewrite-1.1.1#board-options)), gives the properties it adds, each with a schema and a default, one function that keeps those properties consistent with the rest of the board, and one that migrates them (below), while what sits inside a property is the class's own design.
+The definition names the class's parent and the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), gives the properties it adds, each with a schema and a default, one function that keeps those properties consistent with the rest of the board, and one that migrates them (below), while what sits inside a property is the class's own design.
 Its package, its front-end and its version come from R, where the package names them through its methods of `board_front_end()` and `board_version()`, and R sends them with the reply to `hello` ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
 Registering a class checks that it names a registered parent, as every class but core's `board` does, that it adds no property named as one of core's, such as `blocks`, nor one that a parent adds, and that each property's default fits its schema, while the store refuses to open a board whose `class` is no array of class names.
 The store registers nothing inside a property: it checks a property's whole value against its schema after every change, keeps what a change replaced for undo, and saves the property with the board.
@@ -251,7 +251,7 @@ A file of today's stack is converted to a JSON board outside core first ([Serial
 
 A board opens as it is, whatever class the store builds it as, and core draws it with the front-end of that class, as a fresh app serving the board would ([Front-ends and extension points](Rewrite-1.1.8#switching-front-ends)), where a restore today is a `session$reload()` that builds the page for the restored board's class ([Client-owned board state](Rewrite-1.1)).
 Nothing converts the board, so its board option values stay, while the store drops the properties of a class whose package is not installed ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-The properties of the board's class that it lacks take their defaults, and so do the board options its classes require, as far as the board lacks them ([Board objects](Rewrite-1.1.1#board-options)), where a board option that no loaded package defines, or a default that fails or does not fit its schema, refuses the board ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
+The properties of the board's class that it lacks take their defaults, and so do the board options its classes require, as far as the board lacks them ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), where a board option that no loaded package defines, or a default that fails or does not fit its schema, refuses the board ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 
 ### Undo
 

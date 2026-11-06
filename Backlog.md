@@ -29,6 +29,6 @@ Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/
 What it would remove: the block classes that an app does not offer but gets because their package loaded, and the registration code in every block package's `.onLoad()`.
 
 What it would cost: registration in R by class from a board's registry ids ([Block classes in R](Rewrite-1.1.5#registration)), an `open` that names a board's registry ids beside its packages ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and the same move for what else a package declares as it loads, its front-ends, startup module and renderers, which a board needs whole whatever block classes it uses ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)).
-The board options of a class registered while the app runs need nothing more, since a board option takes its default where the board holds no value.
+The board options of a class registered while the app runs need nothing more, since core adds a component's board options as it first needs the component ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 
 What would settle it: whether apps want to offer only some of a package's block classes, or to let a user load block packages while the app runs.

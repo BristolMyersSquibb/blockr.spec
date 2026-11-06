@@ -65,7 +65,7 @@ A class's fields:
   Every class names one, since the schema of its state comes with it, and a module may draw nothing, as core's static block's does, whose expression a script sets.
   The `requests` field takes a named list of requests for whatever the UI asks of R, such as the head block's `n_max`, each a function or an object that `new_block_request()` makes, whose arguments name the inputs and state args it reads and any parameters the UI passes, while `new_block_request()` names the board options it reads (below).
 - The `output` field names the coercion the class's results are shown through, such as `as_table_output`, which makes an output of its class from a result (below).
-  A class has no field for the board options it reads, since its requests are the only code of it that reads them, and each request names its own through `new_block_request()`, as blockr.io's read block names `data_dir`, the directory it lists files from, while the package that ships a board option defines it in the client, its default included ([Board objects](Rewrite-1.1.1), [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
+  A class has no field for the board options it reads, since its requests are the only code of it that reads them, and each request names its own through `new_block_request()`, as blockr.io's read block names `data_dir`, the directory it lists files from, while the package that ships a board option defines it in the client, its default included ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option), [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 - The `dat_valid`, `allow_empty_state`, `external_ctrl`, `expr_type` and `block_metadata` fields go.
   The checks of the data are the body of a function given as `inputs` (above), and they read the data inputs only.
   A state arg a block needs has no default, any other state that cannot run yet is for a class's `expr` to say (below), and a block waits for its inputs (above), so the glue block, which today renders its text with nothing linked, waits for a link.
@@ -219,7 +219,7 @@ A body that can do without an unset arg tests it with `missing()`, as a merge by
 ### Requests
 
 A request is a function, or an object that `new_block_request()` makes around one, which the UI calls through its host for whatever it needs from R, such as the head block's `n_max`, the maximum of its numeric input, which never enters the block's state ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-R binds each of its arguments by name: an input to the result of the upstream block at the revision the request reads ([UI modules in JS](Rewrite-1.1.7#the-contract)), a variadic block's `...` to its inputs in link order, named by their links' inputs, a state arg to the value the request carries, which the host fills in from the block's state where the UI passes none ([Wire protocol](Rewrite-1.1.9)), leaving an unset one missing, the argument that takes a board option's value to that value, as blockr.io's read block lists the files under its `data_dir`, and any other argument to a parameter the UI passes, which must have a default, so that `new_block_class()` still catches a misspelled state arg written without one, as a state arg in a request needs none.
+R binds each of its arguments by name: an input to the result of the upstream block at the revision the request reads ([UI modules in JS](Rewrite-1.1.7#the-contract)), a variadic block's `...` to its inputs in link order, named by their links' inputs, a state arg to the value the request carries, which the host fills in from the block's state where the UI passes none ([Wire protocol](Rewrite-1.1.9)), leaving an unset one missing, the argument that takes a board option's value to that value, as blockr.io's read block lists the files under its `data_dir` ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)), and any other argument to a parameter the UI passes, which must have a default, so that `new_block_class()` still catches a misspelled state arg written without one, as a state arg in a request needs none.
 A request reads board options only where `new_block_request()` names them, by their constructors: given one, its function takes the board option's value in its argument `options`, and given a named list of them, each value in the argument of that name, whole, whatever its shape, while an argument whose board option the client sends no value for is left missing ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 No argument is matched to a board option by its name.
 A request's parameter holds only what the UI is showing, such as the column whose values a dropdown lists or the text typed into its search, never what the block computes.
@@ -261,7 +261,7 @@ The app names the packages it offers in `serve()`'s `packages`, with core always
 So the block registry, and everything else that the reply to `hello` holds, stays what the app named for the life of the process, whatever a block's code loads ([Wire protocol](Rewrite-1.1.9#handshake)).
 A package that the app names and that is not installed, or that exports no such object, stops the app as it starts, naming the package.
 Two steps stay open for later.
-A blockr option may narrow what the app offers, such as one that names a YAML file listing packages and, for each, the block classes to offer, all of them where it lists none ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
+A blockr option may narrow what the app offers, such as one that names a YAML file listing packages and, for each, the block classes to offer, all of them where it lists none ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
 Once block packages export the object, `packages = NULL` may become the default, offering every installed package that exports one.
 
 An entry of the object holds what `register_block()` takes but `classes` ([R/block-registry.R#L80](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L80)), as the roclet writes it from the `@block` tags: the constructor, as today, from which R reads its block class, which gives the class vector (notes).
@@ -269,7 +269,7 @@ The `register_block()` and `register_blocks()` functions stay for the block clas
 The `uid` argument sets the name part of the registry id, `{pkg}-{name}`, whose name defaults to the constructor's name without `new_` ([Board objects](Rewrite-1.1.1)).
 A constructor registered by name comes with its package, as every package in the workspace registers its constructors today, while one registered as a function is from outside a package, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
 The block registry keeps one entry per class, and `registry_id_from_block()` finds a block's entry by the class the block refers to.
-Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests and board options, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
+Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests with the board options each names, the renderer of its outputs, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
 A class defined outside a package is registered by the script that defines it, and a file holds its blocks by registry id alone ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 The arg specs default to every state arg, since `external_ctrl_vars()` goes, and describe each for models and tools, while its shape is the schema's ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
@@ -300,6 +300,7 @@ interface RegistryEntry {
     volatile?: true;                      // never kept
     action?: true;                        // acts rather than reads
   }>;
+  renderer?: { id: string; module: string; css?: string };   // the renderer of its outputs, where an output class gives the coercion it names
 }
 ```
 
@@ -414,7 +415,8 @@ interface PlotOutput extends BlockOutput {
 ```
 
 What draws an output is a renderer, a module for an output class.
-Each output class has a renderer, which the package that defines the class gives through its method of `output_renderer()`, and an app replaces it only by naming another renderer, which any package may offer, in a blockr option that the method reads, so that loading a package that offers one changes nothing.
+Each output class has a renderer, which the package that defines the class gives through its method of `output_renderer()`, and its coercion, which it gives through its method of `output_coercion()`, so that R names the renderer of a block class's outputs in the class's registry entry before it makes an output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
+An app replaces the renderer only by naming another renderer, which any package may offer, in a blockr option that the method reads, so that loading a package that offers one changes nothing.
 S3 dispatch gives each output the renderer of the most specific class in its class vector that has a method, and R sends the renderer in the output, with where it serves the renderer's module ([Front-ends and extension points](Rewrite-1.1.8#renderers)).
 The client mounts the renderer an output carries, so neither class vectors nor dispatch reach it, as [State in JS](Rewrite-1#principles) keeps them in R.
 An output class is the contract of the package that defines it, and only that package adds fields to it, in a later version whose new fields older renderers skip, as both sides of the protocol ignore fields they do not know ([Wire protocol](Rewrite-1.1.9#versions)).
@@ -423,7 +425,7 @@ A lazy table with nothing more to show is a table output, which R pages in the d
 So a block class never names what draws its output, and an app that names blockr.ui's table preview has it take the place of core's plain table for every block whose output is a table output.
 
 An output's parameters are what its renderer keeps and the coercion reads, such as the page a table shows and its sort, which the renderer changes through its host, asking R for the output again, so a table output holds the page its parameters ask for, sorted as they say, with `n_rows` rows to a page unless they give a page size.
-A board option the coercion reads, such as `n_rows`, is part of the class's contract, so every renderer of the class requires it, which the renderer's module names ([Board objects](Rewrite-1.1.1#board-options)).
+A board option the coercion reads, such as `n_rows`, is part of the class's contract, so every renderer of the class requires it, which the renderer's module names ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 A renderer draws an output nested in its own through its host, with the renderer R puts in the nested output.
 An output that is composite rather than an extension of another nests the outputs it holds: the output blockr.dm draws today through `block_ui()` and `block_output()` methods ([R/dm-block.R#L504-L627](https://github.com/BristolMyersSquibb/blockr.dm/blob/8b37981838cfac63a5d40e270a19857e5ef9ea90/R/dm-block.R#L504-L627)) becomes, with illustrative names, an output class of its own, whose coercion makes a dm's output and nests the selected table's, and whose renderer draws the diagram and has the table drawn by the app's renderer for table outputs:
 
