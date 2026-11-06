@@ -113,7 +113,7 @@ Core has five types:
 - The type `option` is a board option's request, which R finds among those that the method of `board_option_requests()` for the class of the board option that `option` names, `{id}_option`, gives ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)).
 - The type `plugin` is a plugin's request, which R finds among those that the method of `plugin_requests()` for the plugin class whose id `plugin` names gives ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
-A package may add a type of its own with a method of `request_call()` for its class, whose requests carry the fields that the package gives them, of which R reads only `reads`.
+A package adds no type of its own, since a plugin's request covers what the dock's extensions would have added one for, and R replies `error` to a type that is not core's ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 A request names the block results it reads in `reads`, passes in `args` what its function takes, which for a block class's request is the state args its function names, filled in by the host from the block's state where the module passes none, and the parameters the UI gives it, and carries in `options` the values of the board options it reads, by id, as an output request does, since R holds none, which for a block class's request are those its `new_block_request()` names ([Block classes in R](Rewrite-1.1.5#requests)).
 An output class's request, or a renderer's, carries the board options and parameters its output was asked with, as the output request did, and R runs it with the result that output was made from.
 
@@ -149,10 +149,9 @@ What R runs for the client comes in these flavors, which differ in who defines a
 | Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
 | Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where its package says that it may run there |
 | Plugin's request | The plugin's package, through its method of `plugin_requests()` | The plugin, through `CoreApi` | No | Yes | Only where its package says that it may run there |
-| Request of a type that a package adds | The package, through its method of `request_call()` | The package's code in the client, through `CoreApi` | No | Yes | Only where its package says that it may run there |
 
-The package of a board option or a plugin, or of a type that it adds, says for each of its requests whether it may run on a locked board, so that each is decided on its own: one only reads, as the code export's does, while another may evaluate what the client sends, as an assistant's trial of proposed args would.
-R calls a plugin's request with its `args` by name and, in `reads`, the results it reads, by block id, each with the block expression R built for it, and a request that reads blocks, a block class's, a plugin's or one of a type that a package adds, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)).
+The package of a board option or a plugin says for each of its requests whether it may run on a locked board, so that each is decided on its own: one only reads, as the code export's does, while another may evaluate what the client sends, as an assistant's trial of proposed args would.
+R calls a plugin's request with its `args` by name and, in `reads`, the results it reads, by block id, each with the block expression R built for it, and a request that reads blocks, a block class's or a plugin's, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)).
 No request times out, since no reply is lost on a live connection and giving up on a request frees nothing in R, which runs it when its turn comes: a block class's request is bounded by its author ([Client-owned board state](Rewrite-1.1#proposal)), and any request may send progress, as blockr.md's export to PowerPoint would, which shows that a long one is still running.
 
 ### Outputs
@@ -220,7 +219,7 @@ In a locked session:
 - It answers a block class's request for a locked block, as its `block` names it, with the block's opening state, whatever `args` holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
 - It takes the board option values from the opening board for every request that carries them, a block class's, an output's or an output class's, whatever the request holds, and the request's own for a board option that the app script set none for, since the lock holds what the app built, while what the R process may read is the deployment's to limit ([Principles](Principles#the-deployment-confines-what-a-board-can-do)).
 - It runs a block class's action only for a block left open.
-- It runs a board option's or a plugin's request, or one of a type that a package adds, only where its package says that the request may run on a locked board (above).
+- It runs a board option's or a plugin's request only where its package says that the request may run on a locked board (above).
 
 Anything else is refused with an `error` that names the lock, while outputs are drawn as before, and the requests of their output classes answered, with the opening board option values.
 A locked board thus runs only its opening board's blocks, every locked one with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks.
