@@ -11,7 +11,7 @@ What core gives a frontend, starting the page and renderers stay with [Front-end
 1. Core has two ways to extend a board, block classes and plugins, and no other, so a board has no class of its own.
 2. A plugin works under every frontend: it works on the board through `CoreApi`, keeps its state in the board, and offers its UI as a module that core mounts where the frontend puts it.
 3. The frontend is a plugin, and every frontend places every plugin that has a UI, including one from a package it does not know.
-4. A board holds all its plugins, its frontend and its storage plugin among them, and opening a board runs exactly those whose packages the app loads and drops the others, naming what to install, as it drops a block ([Board objects](Rewrite-1.1.1#what-must-hold)).
+4. A board holds all its plugins, its frontend and its storage plugin among them, and opening a board runs exactly those whose packages the app names and drops the others, naming what to install, as it drops a block ([Board objects](Rewrite-1.1.1#what-must-hold)).
    So the page is what serving that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks, and a JSON board describes the whole app.
 5. A board that holds no frontend, or no storage plugin, takes those of the board it replaces, so opening it never switches what draws the page or where the page saves.
 6. A plugin's state belongs to that plugin alone, keyed by its id: it is saved, undone and migrated with the board, and its shape is its class's own, so that the states of two frontends share nothing.
@@ -65,7 +65,7 @@ new_board(
 ```
 
 R writes each plugin into the opening board under its id, with its class's id, its name and its state, and records each class's version ([Serialization](Rewrite-1.1.4#files)).
-In the reply to `hello`, R sends the versions that loaded packages give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1, as `option_versions` has it for board options ([Wire protocol](Rewrite-1.1.9#handshake)).
+In the reply to `hello`, R sends the versions that the packages the app names give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1, as `option_versions` has it for board options ([Wire protocol](Rewrite-1.1.9#handshake)).
 The client takes a plugin's package from its class's id, and where its UI module is served from the modules that packages offer each other, so R keeps no list of plugin classes.
 
 In JS, the package's startup module registers each of its plugin classes once, under the class's id, where it registered a board class before ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
@@ -166,7 +166,7 @@ A board that holds no frontend takes the one of the board it replaces as it open
 A board holds at most one frontend: the board constructor refuses a second, and the store refuses to open a JSON board that holds two.
 Core starts the page as [Front-ends and extension points](Rewrite-1.1.8#starting-the-page) has it, with the board's frontend in place of its class's front-end:
 
-1. Core initializes the startup module of every package that R loaded.
+1. Core initializes the startup module of every package that the app names.
 2. Core opens the board, or the one a startup module names in its place.
 3. Core imports the module of the board's frontend and calls its `render()`.
 4. The scheduler sends nothing to R until `render()` has returned, so what the frontend first shows is evaluated first.
@@ -224,11 +224,11 @@ Where the list gives no name, the id is the class's name without `_plugin`, as `
 So two plugins of one class need names of their own, as two extensions of one class do today.
 A board holds as many plugins of a class as it needs, as two documents of blockr.md, but at most one frontend ([The frontend](#the-frontend)) and one storage plugin ([Storage](#storage)).
 
-Opening a board runs exactly the plugins that it holds and whose packages the app loads, its frontend among them, and stops every plugin that only the board before it held.
+Opening a board runs exactly the plugins that it holds and whose packages the app names, its frontend among them, and stops every plugin of the board before it, since core starts again as a board opens ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that a plugin that both boards hold starts again too.
 So the page is what serving that board in a fresh app would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 The plugins of the board that an app script builds are no different: opening another board stops those that it does not hold.
 
-Opening a board drops every plugin whose class no loaded package registers, as it drops a block whose class the block registry lacks, and names it with the package to install, which its class's id gives ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
+Opening a board drops every plugin whose class none of the packages that the app names registers, as it drops a block whose class the block registry lacks, and names it with the package to install, which its class's id gives ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 So no plugin runs on a board that changed while its package was away, and a board saved afterwards is written without it, as condition 4 of [Board objects](Rewrite-1.1.1#what-must-hold) has it for blocks.
 
 Then a board that holds no frontend, or no storage plugin, takes over the one of the board it replaces: a plugin of the same class, under the same id and name, with its class's default state, so that the page keeps drawing and saving as it did:
