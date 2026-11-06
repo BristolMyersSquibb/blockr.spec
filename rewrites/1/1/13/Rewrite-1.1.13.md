@@ -1,5 +1,5 @@
 # Board options and blockr options
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the two kinds of option, board options and blockr options, what sets them apart, and how each reaches the code that reads it, in the client and in R.
 It takes over what [Board objects](Rewrite-1.1.1#board-options) and [Defining a board in R](Rewrite-1.1.3#blockr-options) said about them, and shapes `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic front-end ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)) and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
@@ -9,10 +9,10 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 ## What must hold
 
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it.
-2. Each component that reads a board option's value names the board option in its own definition: a board class, a renderer, or a block class in its UI module, which also names every board option that the class's requests read.
+2. Each component that reads a board option's value names the board option in its own definition: a board class, a renderer, a board option's UI, or a block class in its UI module, which also names every board option that the class's requests read.
    The board holds a value for the board option before that component first reads it, on a locked board too.
 3. A board holds a value only for a board option that something on the page has required since the board opened, or that a script, a file or a command has set.
-4. A change to a board option's value evaluates no block, since no board option reaches `expr`.
+4. A change to a board option's value evaluates no block, since no board option reaches `expr`, and neither undo nor redo changes a board option's value.
 5. A blockr option is fixed when the app starts or is deployed, by an R option or an environment variable, and neither a board nor a file holds one.
 6. Client code reads a blockr option only by asking R for it by name, and nothing declares a blockr option in R.
 7. A board option takes a blockr option's value only as its default, which its definition in the client reads, so that R computes no default.
@@ -42,7 +42,7 @@ So a board's JSON describes the board in full, and holds nothing of the deployme
 | Set by | The user through its UI, the assistant or an extension through a command, a script through its constructor, or a file | The app through an R option `blockr.<name>`, or a deployment through an environment variable `BLOCKR_<NAME>` |
 | Changes | Whenever a command sets it | Never while the app runs |
 | Held by | The board, under the board option's id | Nobody: R reads it where its code needs it, and the client keeps what it asked R for until the page closes |
-| Saved | With the board, and undone with it for now (Open questions) | Never |
+| Saved | With the board, and never undone | Never |
 | Defined | Once, in the client, by the package that ships it | Nowhere: the code that reads it names it and gives a fallback |
 | Read by | Only a component that names it, as a block class does in its UI module, and the board option's own UI | Any code, through `blockr_option()` in R and `CoreApi.blockrOption()` in the client |
 
@@ -104,6 +104,7 @@ Each component names the board options it requires in its own definition:
 
 - A board class, in the `options` of its definition ([Board objects](Rewrite-1.1.1#the-board)).
 - A renderer, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
+- A board option's UI, in the `options` of its module, as a renderer does, for the board options it reads besides its own.
 - A block class, in the `options` of its UI module, those that its requests read included.
 
 The UI module is the one place where a block class names its board options.
@@ -117,15 +118,18 @@ Core adds each board option that a component requires and the board lacks, with 
 1. A board class's, as the store opens the board.
 2. A block class's, before core first calls its module's `render()` after the board opens.
 3. A renderer's, before core first asks R for an output that the renderer draws, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
+4. Those of a board option's UI, before core first calls its module's `render()`.
 
 So a board opened later gets them as a page that starts with that board would ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-Core adds a value through its command `blockr.core-set_option`, under core's own origin, so that the user's undo never takes it back ([Board updates](Rewrite-1.1.2#undo)).
+Core adds a value through its command `blockr.core-set_option`, under core's own origin, by which a locked board tells it apart ([Locked boards](#locked-boards)).
 A board option that a board class requires but no loaded package defines refuses the board, naming the board option and the class, before any default runs, and so does a required default that fails or does not fit its schema ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-For a renderer or a block class, core reports such a board option, naming it and what requires it, and mounts the module without it.
+For a renderer, a board option's UI or a block class, core reports such a board option, naming it and what requires it, and mounts the module without it.
 
 From then on the board holds the value: a command changes it, a save writes it, and opening the saved board restores it ([Serialization](Rewrite-1.1.4#board-options)).
 So a board holds no value for a board option that nothing has required since it opened, and nothing yet removes the value of one whose component has gone.
 A script gives a board option only to set a value other than its default, and nothing in R decides which board options a board has.
+
+Undo never takes a value back, nor does redo set it again, since a board option never changes what the board computes, and most say only how it shows: a step's inverse holds no board option values, and a step that sets only those is no undo step ([Board updates](Rewrite-1.1.2#undo)).
 
 ### The renderer before the first output
 
@@ -215,10 +219,7 @@ The blockr option `renderers` also replaces a board option's UI (above), which c
 
 ## Open questions
 
-- Whether a board option's value belongs in undo ([blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503#discussioncomment-19358997)).
-  Core's board options say how the board shows rather than what it computes, so undoing back past a switch to dark mode switches the theme back too.
-  It blocks nothing built so far: the store undoes a value that a user's step set, as it undoes any change, and leaving values out would change only what the store keeps the inverse of.
-  A decision settles it, since no measurement bears on it.
+None.
 
 <details><summary>Notes for implementers</summary>
 
@@ -228,6 +229,7 @@ On `js-state`, core adds the board options that a module names in `addOptions()`
 This page has core refuse there a module that leaves one of them out, before it adds the module's board options.
 The reads of blockr options are `createBlockrOptions()` in `srcts/core/blockr-options.ts`, and core's definitions are `nRows()`, `showConditions()`, `darkMode()` and `coreOptions()` in `srcts/options/`.
 In R, `new_block_request()` is in `R/block-request.R` and `output_coercion()` in `R/output-class.R`.
+On `js-state`, `commit()` in `srcts/store/commit.ts` keeps a step's board option values in its inverse, which this page leaves out, as settled on [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503#discussioncomment-19358997).
 
 An origin is a string that any caller of `store.apply()` or `commands.run()` may give ([Board updates](Rewrite-1.1.2#the-store)), so code that holds `CoreApi` could give core's own.
 That opens no hole in the lock: the store's refusals keep the user and front-ends from changing what the app fixed, while R holds the lock for what it evaluates, keeping a value that the app set whatever a request carries ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)).
