@@ -31,19 +31,17 @@ Insertions and removals reach the page through R, and the dock's removal current
 ### Registering a front-end
 
 A front-end is the UI module of a board class, the module that draws the boards that the client builds as that class, as a block class has a UI module.
-A package offers it in R as it offers any module to others, under a name when it loads, so that R serves it and its id is `{pkg}-{name}`, as a registry id is ([UI modules in JS](Rewrite-1.1.7#packaging)), and a package can ship several.
+A package offers it in R as it offers any module to others, under a name in the object it exports (below), so that R serves it and its id is `{pkg}-{name}`, as a registry id is ([UI modules in JS](Rewrite-1.1.7#packaging)), and a package can ship several.
 The board class names the front-end that draws its boards in R, through its method of the generic `board_front_end()`, which returns the module's id whatever the board holds, and the version of the properties it adds through its method of `board_version()`, 1 where it has none ([Serialization](Rewrite-1.1.4#migrations)):
 
 ```r
-register_module("dock", js_module("dock.js"))                    # in .onLoad()
-
 board_front_end.dock_board <- function(x, ...) "blockr.dock-dock"   # exported as S3 methods
 board_version.dock_board <- function(x, ...) 2L                     # where its properties changed shape once
 ```
 
 The dock is then `blockr.dock-dock`, which blockr.dock's method for `dock_board` names, and core's basic front-end is `blockr.core-basic`, which core's method for `board` names.
 The namespace that holds a class's method is the one of the package that defines the class, so R learns a class's package from its method, which a class name does not give, as the JSON board that R writes records it ([Serialization](Rewrite-1.1.4#files)), with no registry of board classes of its own, since S3 registers the methods.
-R sends each board class that a loaded package names a front-end for, with its package, its front-end and its version, in the reply to `hello`, calling each method on an empty board of its class, while the class's definition in JS gives its parent, the board options it requires ([Board objects](Rewrite-1.1.1#board-options)), its properties and its functions ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
+R sends each board class that a package the app names gives a front-end for, with its package, its front-end and its version, in the reply to `hello`, calling each method on an empty board of its class, while the class's definition in JS gives its parent, the board options it requires ([Board objects](Rewrite-1.1.1#board-options)), its properties and its functions ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
 A board names no front-end: the client builds the board as the first class in its `class` that a loaded package defines, and the front-end that R names for that class, or for its nearest parent that R names one for, draws it, which the store's `frontEnd()` gives ([Board objects](Rewrite-1.1.1#the-board)).
 So a board of a class extending `dock_board` that no package defines is drawn by the dock, as is one of a class that a package defines in JS alone, with no method in R, which comes from no package, and every board by core's basic front-end at least, as S3 dispatch gives a board in R its parent's front-end.
 R picks no board's front-end, whether an app script built the board or the client opens it from a file, but names each class's.
@@ -103,7 +101,7 @@ It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locke
 
 ### Starting the page
 
-Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package R has loaded, one at a time, then opens the board R sent, or the one a startup module names in its place (below), then imports the module of the front-end that R names for the class the board is built as, since a module's imports run as it loads and may need what a startup module puts on the page, such as a library on another package's global ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered.
+Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package that the app names, one at a time, then opens the board R sent, or the one a startup module names in its place (below), then imports the module of the front-end that R names for the class the board is built as, since a module's imports run as it loads and may need what a startup module puts on the page, such as a library on another package's global ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered.
 The scheduler sends nothing to R until `render()` has returned, or resolved where it is async, so a front-end demands what it first shows within `render()`, from the board, rather than from an effect that runs once it has drawn, as a React app's would, and those blocks are evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 A front-end's package defines its board class, with the properties the class adds, and registers its commands, from its startup module, and subscribes to the store there too, so that it sees the first board open, with what R dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the front-end's module only draws.
 
@@ -190,14 +188,11 @@ A renderer's module names the board options it requires, as core's table rendere
 
 ### What a package declares in R
 
-Besides its block classes, which `register_block()` registers ([Block classes in R](Rewrite-1.1.5#registration)), a package declares in R, from its `.onLoad()`, the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is.
+Besides its block classes, a package declares in R the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is: its startup module and the modules it offers others in the object it exports, which lists its block classes too and which R reads for each package that the app names, so that loading a package registers nothing ([Block classes in R](Rewrite-1.1.5#registration)), and the rest through S3 methods.
 With illustrative names:
 
 ```r
-register_startup_module(js_module("startup.js"))                  # a package's one startup module
-register_module("filter", js_module("filter.js"))                 # in blockr.dplyr, a module it offers others, blockr.dplyr-filter
-register_module("dock", js_module("dock.js"))                     # in blockr.dock, its front-end, blockr.dock-dock,
-board_front_end.dock_board <- function(x, ...) "blockr.dock-dock"  # which its board class names, as an exported S3 method
+board_front_end.dock_board <- function(x, ...) "blockr.dock-dock"  # in blockr.dock, the front-end its board class names, as an exported S3 method
 output_schema.chart_output <- function(x, ...) read_json_schema("chart-output.schema.json")   # in blockr.viz, S3 methods for
 output_renderer.chart_output <- function(x, ...) {                                             # its schema, its renderer
   chosen_renderer("chart_output", new_renderer("chart_output", js_module("chart.js")))

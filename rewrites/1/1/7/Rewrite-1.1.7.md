@@ -197,7 +197,7 @@ export default {
 };
 ```
 
-R sends the startup modules of the packages it has loaded with the block registry's entries, in its reply to `hello`, since R loads no package for a board ([Board updates](Rewrite-1.1.2#opening-a-board)), and keeps them in the order in which packages declare them, so that each package's comes after those of the packages its NAMESPACE imports, whose `.onLoad()` R runs first.
+R sends the startup modules of the packages that the app names with the block registry's entries, in its reply to `hello` ([Block classes in R](Rewrite-1.1.5#registration)), and keeps them in the order of the packages' dependencies, which their DESCRIPTION files give, so that each package's comes after those of the packages it imports, and in the order the app names them otherwise.
 Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
 It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every board class defined and every attribute and board option registered.
 
@@ -205,7 +205,7 @@ Core initializes each package's startup module as each board opens, since openin
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy.
 A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, as without the properties of a board class that no loaded package defines ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
 
-A package relies on the order only for the packages its NAMESPACE imports, which is what a module needs as it loads, such as a library on another package's global, since R loads a package that a DESCRIPTION alone names only once something asks for it.
+A package relies on the order only for the packages it imports, which is what a module needs as it loads, such as a library on another package's global.
 Between any other two packages the order is unspecified, and core keeps what they share independent of it:
 
 - A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a key's `expand` runs per delta and a command's `run()` per command.
@@ -261,7 +261,7 @@ None.
 An element that has left the page measures 0 by 0, as dockview warns of a hidden panel under its default renderer ([rendering.mdx#L18-L21](https://github.com/mathuo/dockview/blob/27a42c314a06ebc37f288d6d181d01b6cb84cd7a/packages/docs/docs/core/panels/rendering.mdx#L18-L21)), so `mountOutput()` asks R for no output while its element measures nothing, and asks again once it measures a size.
 
 Only running the startup modules and their `initialize()` follows the order, so core can fetch every one at once, such as with `<link rel="modulepreload">`.
-R keeps them in the order in which packages declare them from their `.onLoad()`, which R runs for the packages a namespace imports before the namespace's own, so that no DESCRIPTION needs reading.
+R orders them by the dependencies that the installed DESCRIPTION files of the packages the app names give, which it reads without loading a package, and by the order the app names them where those leave two packages unordered.
 
 R serves the module of a class defined outside a package at a URL of its own, read from the path the script gave, as it serves a package's modules, so that the client imports every module alike, and a page whose content security policy forbids `blob:` scripts loads it too.
 

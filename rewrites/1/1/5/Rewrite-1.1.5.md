@@ -255,7 +255,17 @@ No package in the workspace overrides another's block methods today, and the two
 
 ### Registration
 
-The `register_block()` and `register_blocks()` functions keep their arguments but `classes` ([R/block-registry.R#L80](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L80)), and so does the roclet that writes `inst/registry/blocks.yml` from `@block` tags: they take the constructor, as today, and read its block class from it, which gives the class vector (notes).
+Which block classes an app offers is the app's choice, never a board's, and loading a package registers nothing.
+A block package exports one object that lists what it offers core: the registry metadata of each of its block classes, which the roclet writes from the `@block` tags in place of `inst/registry/blocks.yml`, and the modules and the startup module the package declares ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)).
+The app names the packages it offers in `serve()`'s `packages`, with core always among them ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)), and R reads the object of each as the app starts and fills the block registry from it.
+So the block registry, and everything else that the reply to `hello` holds, stays what the app named for the life of the process, whatever a block's code loads ([Wire protocol](Rewrite-1.1.9#handshake)).
+A package that the app names and that is not installed, or that exports no such object, stops the app as it starts, naming the package.
+Two steps stay open for later.
+A blockr option may narrow what the app offers, such as one that names a YAML file listing packages and, for each, the block classes to offer, all of them where it lists none ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
+Once block packages export the object, `packages = NULL` may become the default, offering every installed package that exports one.
+
+An entry of the object holds what `register_block()` takes but `classes` ([R/block-registry.R#L80](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L80)), as the roclet writes it from the `@block` tags: the constructor, as today, from which R reads its block class, which gives the class vector (notes).
+The `register_block()` and `register_blocks()` functions stay for the block classes that an app script defines, which the script registers before `serve()` starts the app, and refuse once it has started.
 The `uid` argument sets the name part of the registry id, `{pkg}-{name}`, whose name defaults to the constructor's name without `new_` ([Board objects](Rewrite-1.1.1)).
 A constructor registered by name comes with its package, as every package in the workspace registers its constructors today, while one registered as a function is from outside a package, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
 The block registry keeps one entry per class, and `registry_id_from_block()` finds a block's entry by the class the block refers to.
