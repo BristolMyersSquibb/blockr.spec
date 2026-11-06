@@ -5,6 +5,7 @@ The first of the API proposals for the client-owned board ([Client-owned board s
 It covers the objects the client holds for a board, its blocks, links, stacks and board options, how the board names its class and a block its class by registry id, and the properties that a board class adds beside core's.
 It shapes the store, the TypeScript object in core's JS API that holds the board and through which every change to it passes (sketched in [Board updates](Rewrite-1.1.2), [blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), defining block classes ([blockr.core#421](https://github.com/BristolMyersSquibb/blockr.core/issues/421)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), the board's name and id ([blockr.core#427](https://github.com/BristolMyersSquibb/blockr.core/issues/427)), writing a board's JSON in R by schema ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), saving a JSON board in the client ([blockr.core#436](https://github.com/BristolMyersSquibb/blockr.core/issues/436)), board classes and their properties ([blockr.core#465](https://github.com/BristolMyersSquibb/blockr.core/issues/465)), core's board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)) and a stack's colour ([blockr.core#487](https://github.com/BristolMyersSquibb/blockr.core/issues/487)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How the board changes, through deltas, commands and undo, is the [board updates proposal](Rewrite-1.1.2), and the exact JSON format with its migrations is the [serialization proposal](Rewrite-1.1.4).
+What a board option is, and the blockr options beside board options, are [Board options and blockr options](Rewrite-1.1.13)'s.
 
 ## What must hold
 
@@ -31,8 +32,8 @@ The board holds only what changes while the app runs, with the ids and registry 
 | Command registry | The client | The page | The edits that menus, shortcuts, extensions and the assistant run ([Board updates](Rewrite-1.1.2)) |
 | Scheduler | The client | The page | Revisions, statuses, conditions and demand, computed from the board and R's replies ([Evaluation in the client](Rewrite-1.1.10)) |
 | Block registry entries | The client | The page | Each block class by registry id, with its UI, inputs and arg specs and the schema of its state that its UI ships, which R sends with the versions of its packages when the client connects, for neither side to edit ([Block classes in R](Rewrite-1.1.5#registration)) |
-| Board options | The client | The page | Each board option's definition, an `Option`, which the package that ships the board option registers from its JS, for neither side to edit, while the board holds its value ([Board options](#board-options)) |
-| Blockr options | The client | The page | The values of the blockr options that core, front-ends and extensions read, each asked of R the first time client code reads it and kept for the page, since a blockr option is fixed for the app, for neither side to edit, while the board holds none of them ([Defining a board in R](Rewrite-1.1.3#blockr-options)) |
+| Board options | The client | The page | Each board option's definition, an `Option`, which the package that ships the board option registers from its JS, for neither side to edit, while the board holds its value ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) |
+| Blockr options | The client | The page | The values of the blockr options that core, front-ends and extensions read, each asked of R the first time client code reads it and kept for the page, since a blockr option is fixed for the app, for neither side to edit, while the board holds none of them ([Board options and blockr options](Rewrite-1.1.13#blockr-options)) |
 | Board classes | The client | The page | Each board class's definition, under its R class name: its parent class, the board options it requires and the properties it adds, which the package that ships the class defines in JS, with its package, its front-end and its version, which R sends from the class's methods, for neither side to edit, while the board holds the properties' values ([The board](#the-board)) |
 | Front-end and extensions | The client | The page | Draw the board and work on it through the store, commands, demand and requests, keeping their data in the properties of the board's class ([Front-ends and extension points](Rewrite-1.1.8)) |
 | Block registry | R | The process | Each registered block class, a value holding its UI, inputs, `expr`, requests and output, with its constructor and metadata ([Block classes in R](Rewrite-1.1.5)) |
@@ -79,7 +80,7 @@ When the client opens a JSON board, it finds each block's class among the block 
 
 A board's `class` is the class vector of the R board it comes from, most specific class first, as `["dock_board", "board"]`, which R writes for the board an app script builds, and which the client keeps as it got it and saves back unchanged.
 A package defines each board class it ships in JS, under its R class name.
-The definition names the class's parent and the board options it requires ([Board options](#board-options)), and gives the properties it adds beside core's, each with a schema and a default ([Extending core's objects](#extending-cores-objects)), so that the definition and R's class meet at the name.
+The definition names the class's parent and the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), and gives the properties it adds beside core's, each with a schema and a default ([Extending core's objects](#extending-cores-objects)), so that the definition and R's class meet at the name.
 In R, the package names the class's front-end through its method of `board_front_end()`, and the version of its properties through its method of `board_version()`, and the namespace that holds the methods names the class's package, which a class name does not give ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
 Core's method for `board` names core's basic front-end, `blockr.core-basic`, and blockr.dock's for `dock_board` the dock, `blockr.dock-dock`.
 Opening a board, the client builds the first class in the list that a loaded package defines.
@@ -199,61 +200,8 @@ It takes three digits too, as `#fc8`, which it expands to six before it fills a 
 
 ### Board options
 
-The board holds each board option's value under its id, which says which board option it is, such as `n_rows`.
-The value is the board option's state, which a command sets ([Board updates](Rewrite-1.1.2)).
-The rest of a board option is defined once, in the client, by the package that ships it: its label, its category, the schema of its value, its UI, and what a new value does on the page, such as switching the theme for `dark_mode`, which the board option's `server` does in R today ([R/board-option.R#L572-L582](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L572-L582)) and which R could not describe to the client.
-A board option comes onto the board through the components that require it.
-A component defined in JS, a board class, a renderer or a block class's UI module, names the board options it requires in its JS definition, as core's table renderer names `n_rows`.
-The client adds a component's board options when it first needs the component, each with the `default` of its definition where the board lacks it: a board class's as the board opens, and a renderer's or a UI module's the first time core mounts the module after the board opens, as when it first draws a table, so that a board opened later gets them as a page that starts with it would ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-From then on the board holds the value, which a command changes, a save writes and an opening restores.
-So a board holds no value for a board option that nothing has required since it opened, and nothing yet removes the value of one whose component has gone.
-In R, a board option is its id and the value a script gives it, as `new_n_rows_option(25)` does, and its constructor computes nothing, neither a default from a blockr option, as `new_dark_mode_option(value = blockr_option("dark_mode", NULL))` does today, nor a transform or a check, since its definition in the client holds all of that, and nothing else of a board option crosses the wire.
-A script gives a board option only to set a value other than its default, and nothing in R decides which board options a board has.
-A JSON board keeps each board option's value under its id, with the version of the value's shape and nothing else of it, so a board opened from one keeps the values it was saved with, migrated by their versions, and the store drops a value no board option claims once the migrations have run ([Serialization](Rewrite-1.1.4#board-options)).
-
-Every board option is an instance of one type, `Option`, rather than a type of its own, which the package that ships it registers in the client from its JS, keyed by the board option's id.
-R gives each board option a class so that methods can dispatch on it, such as the check `validate_board_option.n_rows_option()` ([R/board-option.R#L366-L378](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L366-L378)), and in JS what those methods do is data or a function on the instance, so nothing dispatches on a board option's type:
-
-```ts
-type Option = {                         // as the package that ships it registers it in the client
-  id: OptionId;                         // "n_rows", stable, the key of the board option's value in the board
-  label: string;                        // "Preview rows", what the user sees
-  category: string;                     // "Table options"
-  schema: JsonSchema;                   // which values it accepts, such as { enum: ["light", "dark"] }, with a description for a model
-  default: Json | (() => Promise<Json>);   // what the client gives the board as it adds the board option, or a function that core calls the first time it adds it after a board opens
-  ui: OptionModule;                     // its UI module, which gets an `OptionHost`
-  onChange?(value: Json, api: CoreApi): void;   // what a new value does on the page, such as switching the theme
-  migrate?(value: Json, version: number): Json;   // converts a value that a JSON board records at an older version of its shape
-};
-```
-
-The `n_rows` board option, for example, is the instance this constructor makes, which blockr.core's JS registers, taking its default from a blockr option as `new_n_rows_option(value = blockr_option("n_rows", 50L))` does in R today, and the board holds only its value:
-
-```ts
-const nRows = (core: CoreApi): Option => ({
-  id: "n_rows",
-  label: "Preview rows",
-  category: "Table options",
-  schema: {
-    type: "integer",
-    minimum: 0,                         // a count, as is_count() checks today
-    description: "How many rows of a table a block's output shows",
-  },
-  default: () => core.blockrOption("n_rows", 50),   // the blockr option n_rows where it is set, else 50
-  ui: nRowsInput,                       // the module blockr.core ships for it
-});
-
-// and in the board, once a component that requires it has come onto the page: options: { n_rows: 50 }
-```
-
-The id says which board option it is and never changes, while the label is only what the user sees.
-Ids are unique: R collects one board option per id, keeping the first, as `combine_board_options()` does today ([R/board-options.R#L435-L442](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-options.R#L435-L442)), and the client holds one definition per id.
-The schema says which values a board option takes, with a description for the assistant's model, as the schema of a property that a board class adds does ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), and the store checks every value a delta sets against it (below), while R writes a value a script gives by the copy of the schema that the board option's package ships beside its startup module ([UI modules in JS](Rewrite-1.1.7#packaging)).
-The board option's UI module gets an `OptionHost` with its value ([UI modules in JS](Rewrite-1.1.7)).
-A definition's `default` is a value, or a function that core calls the first time it adds the board option after a board opens, and whose result it keeps until the next board opens, so that a definition takes its default from a blockr option through `CoreApi.blockrOption()` only once a component requires the board option ([Defining a board in R](Rewrite-1.1.3#blockr-options)), and nothing is read for a board option that nothing requires.
-
-The user does not rename a board option, so its label, which its definition sets, takes the place of a name.
-The board's own name, which core's board option `board_name` holds today, becomes the board's `name`.
+The board holds each board option's value under its id, such as `n_rows`, which a command sets ([Board updates](Rewrite-1.1.2)), and nothing else of the board option.
+What a board option is, which board options a board holds and how code reads their values are [Board options and blockr options](Rewrite-1.1.13)'s.
 
 ### Extending core's objects
 

@@ -46,7 +46,7 @@ Translate rather than transliterate.
 The client follows established JS patterns, as the module contract follows anywidget's, and R's idioms stay in R, unless a page gives a strong reason to carry one over, as the last item below does:
 
 - S3 classes stay in R and in the files R reads.
-  Where R dispatches on a class, the client looks the object up by id, as it looks up block classes in the block registry and commands in the command registry, and what the methods did becomes data on one type, so a board option is an instance of one `Option` type rather than a type of its own ([Board objects](Rewrite-1.1.1#board-options)).
+  Where R dispatches on a class, the client looks the object up by id, as it looks up block classes in the block registry and commands in the command registry, and what the methods did becomes data on one type, so a board option is an instance of one `Option` type rather than a type of its own ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 - Names follow each language, snake_case in R and camelCase in TypeScript, while the JSON between them keeps the snake_case it has today.
 - Core's type-stable helpers, such as `chr_ply()` and `lst_xtr()`, are not ported, since the type checker and the standard library do their work.
 - R's lack of scalars stays in R, which converts at the boundary, so the client sees plain JSON values.

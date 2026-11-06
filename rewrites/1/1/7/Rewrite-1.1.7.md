@@ -36,7 +36,9 @@ export default {
 ```
 
 Core refuses a module whose major does not match its own.
-A module that fails to load, declares another major or throws in `render()` leaves an error in its element that names the module and its package, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on.
+Beside `render()`, the default may hold `options`, the ids of the board options the module requires, which core adds to the board before it calls `render()` ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+Those include every board option that a request of the module's class reads, as the block registry entry names them, and core refuses a module that leaves one out, naming the board option and the request.
+A module that fails to load, declares another major, leaves out such a board option or throws in `render()` leaves an error in its element that names the module and its package, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on.
 A custom element meets the contract through `render()`, which puts one in `el` and hands it the host, so the contract has no second form for it, since that would tie the contract to the page's element registry, where a name is defined once and never removed.
 The host is everything the module may use:
 
@@ -57,7 +59,7 @@ interface BlockContext {
   name: string;                                      // "Head"
   status: BlockStatus;                               // its status, revision, conditions and summary, as the scheduler has them
   inputs: { input: string; revision: number }[];     // its linked inputs, in the order of its class's inputs, whose revisions say when the data changed
-  options: Record<OptionId, Json>;                   // the values of the board options its class names
+  options: Record<OptionId, Json>;                   // the values of the board options its module names
 }
 
 interface HostRequestOpts extends Omit<RequestOpts, "reads"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds
@@ -114,7 +116,7 @@ A board option's UI, or the renderer that replaces it, gets an `OptionHost`, whi
 ```ts
 interface OptionHost<V extends Json = Json> {
   readonly option: OptionId;
-  value(): V;                                        // the board option's value in the board, or else its default, announced through "value" once resolved
+  value(): V;                                        // the board option's value in the board, or else its default, which core resolves before render()
   on(event: "value", fn: () => void): () => void;
   submit(value: V): Promise<void>;                   // runs core's command that sets a board option
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
@@ -125,6 +127,7 @@ interface OutputHost {
   output(): Json;                                    // the output it holds, which its block class's coercion made from the block's result
   body(): Blob | null;                               // the binary body it came with, if any, such as a plot's PNG
   params(): Json;                                    // the parameters the output it holds was made with, such as a table's page and sort
+  options(): Record<OptionId, Json>;                 // the values of the board options its module names, which the output it holds was asked with
   loading(): boolean;                                // whether core is asking R for a newer output
   error(): Condition | null;                         // why the latest ask failed, while output() keeps what it held
   on(event: "output", fn: () => void): () => void;
@@ -180,7 +183,7 @@ const stackHost = (core: CoreApi, id: StackId) => ({
 
 ### Startup modules
 
-A package may declare in R one startup module ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board objects](Rewrite-1.1.1#board-options)), defining its board classes, and registering its attributes, the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), putting on the page what it shares with other packages' modules, such as a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
+A package may declare in R one startup module ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)), defining its board classes, and registering its attributes, the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), putting on the page what it shares with other packages' modules, such as a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)).
 The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
 
 ```ts
@@ -246,7 +249,7 @@ A block class defined outside a package names a plain JS module by its path, whi
 What a module ships beside it sits in its folder under its name, so that `head-block.js` has its stylesheet in `head-block.css` and its JSON Schema in `head-block.schema.json`, which R serves or reads with it, and R names every module to the client with the URL of its stylesheet where it has one.
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)).
 R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads.
-A package ships the JSON Schemas of the properties its board classes add and of the board options that it registers beside the startup module that defines and registers them, in the same way, each property's by its class and name and each board option's by its id, by which R writes their values ([Board updates](Rewrite-1.1.2#board-classes-and-attributes), [Board objects](Rewrite-1.1.1#board-options)).
+A package ships the JSON Schemas of the properties its board classes add and of the board options that it registers beside the startup module that defines and registers them, in the same way, each property's by its class and name and each board option's by its id, by which R writes their values ([Board updates](Rewrite-1.1.2#board-classes-and-attributes), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 
 ### Testing
 
