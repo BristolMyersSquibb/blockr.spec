@@ -124,7 +124,7 @@ Only what is fixed for the page outlives an opening:
 - The blockr options that core has read, and the lock.
 - The revisions given so far, so that the next scheduler gives a block id a revision above any it had, and a revision never goes back within the page ([Evaluation in the client](Rewrite-1.1.10#revisions)).
 
-What a board takes over from the one it replaces is part of the board that opens, as a board that holds no frontend takes one of the class of the frontend before it, with that class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.
+What a board takes over is part of the board that opens, and comes from the app's opening board, which R's reply to every `hello` holds, never from the board it replaces, as a board that holds no frontend takes one of the class of the opening board's frontend, with that class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.
 A new session after the server ended the last opens no board: core keeps the board it holds, and the scheduler has the new session evaluate it again ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
 ### Switching front-ends
