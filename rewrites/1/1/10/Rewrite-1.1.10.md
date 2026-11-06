@@ -157,7 +157,7 @@ What is demanded, and what a one-time evaluation still waits for, evaluates agai
 The scheduler sends again every request of a block class or an output class still unanswered ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 Where such a request names an old revision, R replies `missing`, and the request goes back to the code that sent it.
 That code asks again at the new revisions.
-A one-time evaluation with parameters, an action, and a board option's or an extension's request still unanswered reject instead, since they may have run and may write.
+A one-time evaluation with parameters, an action, and a board option's or a plugin's request still unanswered reject instead, since they may have run and may write.
 
 There is no early cutoff: a recomputed R result is a new object, so an identity check would not fire, and hashing results costs time in proportion to their size.
 Cutoff can come later, opt-in per block class.

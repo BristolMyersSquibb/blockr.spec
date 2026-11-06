@@ -1,8 +1,8 @@
 # Locked boards and the properties of blocks
 Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): who holds a board's lock, which blocks it leaves open, and the properties of a block besides its state, core's and those that a board class adds.
-It shapes the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)) and the properties that board classes add to blocks, which no issue asks for yet.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): who holds a board's lock, which blocks it leaves open, and the properties of a block besides its state, which are core's, while what a plugin keeps about a block lives in the plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+It shapes the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)) and core's properties of a block, such as `locked`.
 The lock's part of the protocol, its place in the reply to `hello` and what R refuses, is [Wire protocol](Rewrite-1.1.9#locked-boards)'s, and the rest of what a block is, [Board objects](Rewrite-1.1.1#blocks)'.
 Block attributes, which said which of a block's sections show and which blocks a lock left open, are gone ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503#discussioncomment-19354484)), and this page settles what takes their place.
 
@@ -13,8 +13,8 @@ These conditions are proposed and not yet agreed (Open questions, below).
 1. On a locked board that R built or read itself, R evaluates only the opening board's blocks, with their opening links, and every locked block with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks, and it does so for a JSON board that `serve()` is given as for a script's board.
 2. An app may lock a board that the client opened, or let a locked board open others, and such a lock is kept by the client alone: the store refuses what it fixes and a front-end draws no control for it, while R evaluates what it is sent.
 3. Whether a lock leaves a block open is a property of that block, which a script or a JSON board sets, and never what a front-end shows.
-4. A board class adds properties to blocks without a change to core, as it adds properties to the board, such as the dock's record of which sections of a card show, and core carries them without reading them: it checks each against its schema, saves and undoes it, and drops it where no loaded class adds it.
-5. A script sets every property of a block in the block's constructor, and a misspelled state arg still fails there.
+4. What a plugin keeps about a block, such as the dock's record of which sections of a card show, lives in the plugin's state, keyed by the block's id, so core needs nothing new for it: the store checks it against the plugin class's schema, saves and undoes it, and drops it with the plugin.
+5. A block constructor takes the block's state args and core's properties alone, so a misspelled state arg still fails there, and a script sets what a plugin keeps about a block in the plugin's constructor.
 6. R writes every property of a block by a schema, so a value of length one that its schema has as an array stays an array.
 
 ## Today
@@ -48,25 +48,23 @@ So `locked` set to `TRUE` alone locks every block, as today.
 Where R holds the lock on a JSON board that `serve()` was given, R reads the board's blocks, links and their `locked` to hold it, where it passes any other JSON board on unread.
 Migrations run in the client ([Serialization](Rewrite-1.1.4#migrations)), so R refuses to lock a JSON board that records a version of a shape other than today's, and the deployer opens and saves the board once with today's packages.
 
-### Properties that a board class adds to blocks
+### What a plugin keeps about a block
 
-A board class's definition gives the properties that it adds to every block, as it gives those that it adds to the board, each with a schema and a default ([Board objects](Rewrite-1.1.1#extending-cores-objects)), such as the dock's `visible`, the sections of a card that show.
-The store checks each against its schema after every change, a JSON board saves it, undo takes it back, and opening a board drops it where the class that the board is built as does not add it, while changing it bumps no revision, since it is not the block's state.
-A block carries them wherever it goes, so a copied block keeps them, and the class's commands change them.
+What a plugin keeps about a block lives in the plugin's state, keyed by the block's id, as the DAG keeps a block's position, so core adds nothing to blocks for it ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+The dock keeps in its state which sections of each card show, as `visible: { a: ["outputs"] }`.
+The store checks that state against the plugin class's schema after every change, a JSON board saves it, undo takes it back, and the plugin's `update` drops a removed block's entry in the same step, while changing it bumps no revision, since it is not the block's state.
+A block that a command copies gets what each plugin's `update` gives a new block, or what the command adds itself, as the DAG's paste adds the pasted blocks' positions in the same delta ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
 
 ### Block properties in R
 
-A block constructor takes `block_name` and `locked` besides its state args, and in `...` the properties that board classes add to blocks, as `new_head_block(n = 10L, locked = FALSE, visible = "outputs")`.
-The JSON Schema of a JSON board knows only core's properties, so the package that adds a property gives its shape in the schema beside its startup module, laid out like the board under `blocks`, which R applies to the whole board as it applies every such schema, and which the package's build writes from its board class's definition, so that the shape has one source.
-The constructor refuses a name in `...` that no loaded package's schema declares as a property of blocks, so that a misspelled state arg still fails, and a name that is both a state arg and such a property, naming both.
+A block constructor takes `block_name` and `locked` besides its state args, and nothing else, as `new_head_block(n = 10L, locked = FALSE)`, so a misspelled state arg still fails there.
+What a plugin keeps about a block, a script gives the plugin's constructor, keyed by the block's id, as `new_dock_plugin(visible = list(a = "outputs"))`, and R writes it by the schema of the plugin class's state, which the plugin's package ships beside its startup module ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
 ## Open questions
 
 - Whether conditions 1 to 6 are the right ones, which every section of the proposal is argued against, and which the user settles.
 - Whether one blockr option for opening other boards decides who holds the lock, and what the option is called, which shapes [blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434) and the dock's lock.
 - Whether `locked` is true by default and locks nothing on a board that is not locked, which shapes the JSON board and every block constructor.
-- Whether a block carries the properties that a board class adds, or the class keeps them in a property of the board keyed by block id, as the DAG keeps its positions, which needs nothing new in core.
-- Whether block constructors take those properties in `...`, with the check above, or whether the package that adds them offers a function of its own that sets them on an R block, which keeps constructors as they are.
 - Whether R refuses to lock a JSON board at another version than today's, or locks only the blocks whose versions match.
 - What the page is called, once the rest is settled.
 
@@ -74,6 +72,6 @@ The constructor refuses a name in `...` that no loaded package's schema declares
 
 The page was started from the session of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), which removed `attrs`, core's `visible` and `blockr.core-set_block_attribute`, and left the lock's list of open blocks to this page.
 The other pages still describe attributes, since what takes their place is this page's to settle, so settling it chases their removal through 1.1, 1.1.1, 1.1.2, 1.1.3, 1.1.5, 1.1.7, 1.1.8, 1.1.9, 1.1.10, the Glossary's Block, Attribute, Lock, Extension state and External control, and the pages of [Client-drawn dock and extensions](Rewrite-1.2) that name `visible`.
-R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the properties that its board class adds.
+R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the state of its plugin classes.
 
 </details>

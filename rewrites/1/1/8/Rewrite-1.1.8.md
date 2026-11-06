@@ -73,7 +73,7 @@ interface CoreApi {
   options: Options;                // register() and the board options packages define, by id
   lock: Lock | null;               // the blocks a locked board leaves open, { open: ["f"] }, from the reply to hello
   outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for extensions to act on
-  request<T = Json>(extension: string, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // an extension's request, by the extension's id
+  request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by the plugin's id, as Plugins has it
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   blockrOption<T extends Json>(name: string, fallback: T): Promise<T>;   // a blockr option, asked of R once per page, or fallback where R has none
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
@@ -99,7 +99,7 @@ A front-end shows a block's UI and its output as core's attribute `visible` says
 The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same revision, board options, `info` and parameters ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R names in it (below), and redraws it when the block's revision, a board option, the `info` or the output's parameters change, while the block is `ready` ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 A front-end draws a block's status, conditions and summary from `scheduler.status()`, and decides from the status what an output that is not current looks like, leaving it as it is, greying it out or hiding it, since core keeps drawing a block's last output whatever the block's status ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 It demands the blocks it shows, above the default evaluation priority ([Evaluation in the client](Rewrite-1.1.10#demand)), and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
-It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and its extensions reach R through `request()`, each through requests of its own, as code export and session management do ([Wire protocol](Rewrite-1.1.9#requests)).
+It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and plugins reach R through `request()`, each through requests of its own, as code export and session management do ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
 ### Starting the page
 
@@ -131,7 +131,7 @@ Their stylesheets keep Tailwind's utilities under core's prefix and leave out it
 
 ### Extensions
 
-An extension is registered with the front-end it extends by its package's startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), under an id, `{pkg}-{name}`, by which its package registers its requests in R (below) and `request()` names them ([Wire protocol](Rewrite-1.1.9#requests)), while how an extension registers with the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s, since only the dock takes extensions.
+An extension is registered with the front-end it extends by its package's startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), under an id, `{pkg}-{name}`, while its requests are those of a plugin, which `request()` names ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and how an extension registers with the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s, since only the dock takes extensions.
 It works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback.
 What it contributes to the screen goes through the front-end's contribution points, which for the dock are [Client-drawn dock and extensions](Rewrite-1.2)'s.
 Its state lives in a property of the board class whose front-end it extends, as a dock board holds it in its `extensions` by the extension's id, and other extensions and the assistant change it through the commands the extension registers ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
@@ -188,15 +188,19 @@ output_renderer.chart_output <- function(x, ...) {                              
 output_requests.chart_output <- function(x, ...) {                                             # and a download
   list(download = function(result, options, params, format, file) chart_pptx(result, file))
 }
-register_requests(list(list_dir = function(path = "") list_dir(path)), option = "data_dir")   # in blockr.io, for its data directory
-register_requests(list(script = function(reads) export_code(reads)),
-                  extension = "code", allow_locked = "script")    # in blockr.code, for blockr.code-code
+board_option_requests.data_dir_option <- function(x, ...) {       # in blockr.io, for its data directory
+  list(list_dir = function(path = "") list_dir(path))
+}
+plugin_requests.code_plugin <- function(x, ...) {                 # in blockr.code, for its plugin class blockr.code-code_plugin
+  list(script = function(reads) export_code(reads))
+}
 ```
 
 A package has at most one startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and a module it offers others, a front-end among them, is reached by its id through `host.module()` and `CoreApi.module()`.
 A board class's front-end and version are S3 methods, of `board_front_end()` and `board_version()`, rather than declarations, so that R learns the class's package from the namespace that holds them (above).
 An output class gives, through S3 methods rather than declarations, the JSON Schema of its outputs, by which R writes them, its renderer, `blockr.viz-chart_output` here, and its requests, which R runs with the result the output was made from, so that S3 dispatch gives a subclass what its class gives ([Block classes in R](Rewrite-1.1.5#outputs)).
-A board option's requests are registered under its id and an extension's under the extension's name, which with its package's gives the id that `request()` names, each with `allow_locked` naming those that may run on a locked board ([Wire protocol](Rewrite-1.1.9#locked-boards)): R calls a board option's request with its args by name, and an extension's with its args by name and, in `reads`, the blocks it reads by id, each a list of its `result` and the block expression `expr` R built for it.
+A board option's requests come from its package's method of `board_option_requests()` for the board option's class, `{id}_option`, and a plugin's from its package's method of `plugin_requests()` for the plugin's class, which R finds by the type of each request, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built requests ([Wire protocol](Rewrite-1.1.9#requests)).
+R calls a board option's request with its args by name, and a plugin's with its args by name and, in `reads`, the blocks it reads by id, each a list of its `result` and the block expression `expr` R built for it, while the package says which of its requests may run on a locked board ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 A package declares none of the blockr options its client reads, which the client asks R for by name ([Defining a board in R](Rewrite-1.1.3#blockr-options)).
 A module's stylesheet and JSON Schema need no declaration, since they sit beside it ([UI modules in JS](Rewrite-1.1.7#packaging)).
 

@@ -77,7 +77,7 @@ A one-time evaluation's parameters, such as the write block's `save`, travel in 
               "inputs": [ { "input": "x", "block": "a", "revision": 2 }, { "input": "y", "block": "b", "revision": 3 } ] } }
 ```
 
-R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and an extension's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
+R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and a plugin's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
 It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a client extension](Rewrite-1.5)).
 
 ```json
@@ -97,29 +97,39 @@ That code asks again once the blocks are evaluated at their current revisions.
 A request that reads a `failed`, `invalid` or `waiting` block is never sent ([Evaluation in the client](Rewrite-1.1.10#demand)).
 A new session holds no results, so after its `hello` the client gives every block a new revision.
 Every block then reads `stale` until the new session has evaluated it ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
-It answers none of the requests the session before it held either, so the client sends again every output and every request of a block class or an output class still waiting for its reply, and rejects an evaluation with parameters, an action, and a board option's or an extension's request still waiting, which may have run and may write ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+It answers none of the requests the session before it held either, so the client sends again every output and every request of a block class or an output class still waiting for its reply, and rejects an evaluation with parameters, an action, and a board option's or a plugin's request still waiting, which may have run and may write ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
 ### Requests
 
-A request asks R for an answer its caller needs, rather than for a block's result, by running a function that an object registers in R.
-Every request belongs to one, as a block's belong to its class, and R resolves it by the object's id: a block class's request by registry id, with `block` naming the block that asks, which R reads only on a locked board (below), a board option's by the board option's id, under which its package registers it in R, an output class's by the output it belongs to, which `output` names by its block and revision, among the requests that the method of `output_requests()` for its class vector gives ([Block classes in R](Rewrite-1.1.5#outputs)), a renderer's by the renderer's id, which `renderer` names beside the output whose result it reads, among the requests of the renderer that draws that output alone, which has to be the one named ([Front-ends and extension points](Rewrite-1.1.8#renderers)), and an extension's by the extension's id, `{pkg}-{name}`, under which its package registers it in R ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)), while how an extension registers with the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s.
-A request names the block results it reads in `reads`, passes in `args` what its function takes, which for a block class's request is the state args its function names, filled in by the host from the block's state where the module passes none, and the parameters the UI gives it, and carries in `options` the values of the board options its function names, as an output request does, since R holds none ([Block classes in R](Rewrite-1.1.5#requests)).
+A request asks R for an answer its caller needs, rather than for a block's result, by running a function that an object gives in R.
+Every request belongs to one, as a block's belong to its class, and names in `type` which kind of object that is, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built it.
+R reads a request into an object of class `{type}_request` and answers it through the generic `request_call()`, whose method for that class finds the function that answers the request and binds its args.
+Core has five types:
+
+- The type `block_class` is a block class's request, which R finds by registry id, with `block` naming the block that asks, which R reads only on a locked board (below).
+- The type `output_class` is an output class's request, which R finds by the output it belongs to, which `output` names by its block and revision, among the requests that the method of `output_requests()` for its class vector gives ([Block classes in R](Rewrite-1.1.5#outputs)).
+- The type `renderer` is a renderer's own request, which R finds by the renderer's id, which `renderer` names beside the output whose result it reads, among the requests of the renderer that draws that output alone, which has to be the one named ([Front-ends and extension points](Rewrite-1.1.8#renderers)).
+- The type `option` is a board option's request, which R finds among those that the method of `board_option_requests()` for the class of the board option that `option` names, `{id}_option`, gives ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)).
+- The type `plugin` is a plugin's request, which R finds among those that the method of `plugin_requests()` for the plugin class whose id `plugin` names gives ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
+
+A package may add a type of its own with a method of `request_call()` for its class, whose requests carry the fields that the package gives them, of which R reads only `reads`.
+A request names the block results it reads in `reads`, passes in `args` what its function takes, which for a block class's request is the state args its function names, filled in by the host from the block's state where the module passes none, and the parameters the UI gives it, and carries in `options` the values of the board options it reads, by id, as an output request does, since R holds none, which for a block class's request are those its `new_block_request()` names ([Block classes in R](Rewrite-1.1.5#requests)).
 An output class's request, or a renderer's, carries the board options and parameters its output was asked with, as the output request did, and R runs it with the result that output was made from.
 
 ```json
-{ "id": "18", "kind": "request", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "args": {},
+{ "id": "18", "kind": "request", "type": "block_class", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "args": {},
   "reads": [ { "input": "data", "block": "a", "revision": 2 } ] }
 { "id": "18", "status": "ok", "value": [150] }
 
-{ "id": "19", "kind": "request", "option": "data_dir", "name": "list_dir", "args": { "path": "~" } }
-{ "id": "20", "kind": "request", "extension": "blockr.code-code", "name": "script", "args": {},
+{ "id": "19", "kind": "request", "type": "option", "option": "data_dir", "name": "list_dir", "args": { "path": "~" } }
+{ "id": "20", "kind": "request", "type": "plugin", "plugin": "blockr.code-code_plugin", "name": "script", "args": {},
   "reads": [ { "block": "a", "revision": 2 }, { "block": "b", "revision": 3 } ] }
 
-{ "id": "22", "kind": "request", "output": { "block": "c", "revision": 7 }, "name": "download", "args": { "format": "pptx" },
+{ "id": "22", "kind": "request", "type": "output_class", "output": { "block": "c", "revision": 7 }, "name": "download", "args": { "format": "pptx" },
   "options": {}, "params": {}, "body": { "type": "image/png" } }
 { "id": "22", "status": "ok", "body": { "type": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "name": "chart.pptx" } }
 
-{ "id": "35", "kind": "request", "output": { "block": "a", "revision": 3 }, "renderer": "blockr.ui-table_preview", "name": "labels",
+{ "id": "35", "kind": "request", "type": "renderer", "output": { "block": "a", "revision": 3 }, "renderer": "blockr.ui-table_preview", "name": "labels",
   "args": {}, "options": { "n_rows": 50 }, "params": {} }
 { "id": "35", "status": "ok", "value": { "USUBJID": ["Unique Subject Identifier"], "AGE": ["Age"] } }
 ```
@@ -131,16 +141,17 @@ What R runs for the client comes in these flavors, which differ in who defines a
 | Evaluation | The block's class, through its `expr` and `block_eval()` ([Block classes in R](Rewrite-1.1.5#evaluation)) | The scheduler, for demand and one-time evaluations ([Evaluation in the client](Rewrite-1.1.10#demand)) | Its reply sets the block's status, and R keeps the result | No | From the block expression R built at startup, for a locked block |
 | Evaluation with parameters | A `block_eval()` method of the block's class, such as the write block's | A one-time evaluation with parameters, such as a save button's | No, it runs once per call | Yes | With its parameters only for a block left open |
 | Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, board options, `info` and parameters | No | With the opening board option values |
-| Output class's request | The output class, as the package that defines it registers it | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the opening board option values |
+| Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the opening board option values |
 | Renderer's request | The renderer, as its package declares it | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No | With the opening board option values |
 | Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No | With a locked block's opening state and the opening board option values |
-| Volatile request | A request the class wraps in `volatile()` | The block's UI, through its host | No | No | As a block class's request |
-| Action | A request the class wraps in `action()`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
-| Board option's request | The board option, as the package that ships it registers it | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where the board option declares that it may run there |
-| Extension's request | The extension, as its package registers it | The extension, through `CoreApi` | No | Yes | Only where the extension declares that it may run there |
+| Volatile request | A request that the class makes with `new_block_request(volatile = TRUE)` | The block's UI, through its host | No | No | As a block class's request |
+| Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
+| Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where its package says that it may run there |
+| Plugin's request | The plugin's package, through its method of `plugin_requests()` | The plugin, through `CoreApi` | No | Yes | Only where its package says that it may run there |
+| Request of a type that a package adds | The package, through its method of `request_call()` | The package's code in the client, through `CoreApi` | No | Yes | Only where its package says that it may run there |
 
-A board option or an extension declares for each of its requests, as its package registers it in R, whether it may run on a locked board, through `allow_locked`, so that each is decided on its own: one only reads, as the code export's does, while another may evaluate what the client sends, as an assistant's trial of proposed args would.
-R calls an extension's request with its `args` and the results it reads, each with the block expression R built for it, and a request that reads blocks, a block class's or an extension's, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)).
+The package of a board option or a plugin, or of a type that it adds, says for each of its requests whether it may run on a locked board, so that each is decided on its own: one only reads, as the code export's does, while another may evaluate what the client sends, as an assistant's trial of proposed args would.
+R calls a plugin's request with its `args` by name and, in `reads`, the results it reads, by block id, each with the block expression R built for it, and a request that reads blocks, a block class's, a plugin's or one of a type that a package adds, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)).
 No request times out, since no reply is lost on a live connection and giving up on a request frees nothing in R, which runs it when its turn comes: a block class's request is bounded by its author ([Client-owned board state](Rewrite-1.1#proposal)), and any request may send progress, as blockr.md's export to PowerPoint would, which shows that a long one is still running.
 
 ### Outputs
@@ -208,7 +219,7 @@ In a locked session:
 - It answers a block class's request for a locked block, as its `block` names it, with the block's opening state, whatever `args` holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
 - It takes the board option values from the opening board for every request that carries them, a block class's, an output's or an output class's, whatever the request holds, and the request's own for a board option that the app script set none for, since the lock holds what the app built, while what the R process may read is the deployment's to limit ([Principles](Principles#the-deployment-confines-what-a-board-can-do)).
 - It runs a block class's action only for a block left open.
-- It runs a board option's or an extension's request only where the board option or extension declared that the request may run on a locked board (above).
+- It runs a board option's or a plugin's request, or one of a type that a package adds, only where its package says that the request may run on a locked board (above).
 
 Anything else is refused with an `error` that names the lock, while outputs are drawn as before, and the requests of their output classes answered, with the opening board option values.
 A locked board thus runs only its opening board's blocks, every locked one with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks.
