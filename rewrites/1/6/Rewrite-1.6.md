@@ -26,7 +26,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - The rack layer becomes a TypeScript interface in the extension, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser.
   The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the extension load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Front-ends and extension points](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the extension load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
 - The extension provides the dock's storage service, in place of the default download and upload.
 
 ## Open questions
@@ -34,7 +34,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - Whether the tier on the app's own Connect key survives: that key works for every visitor and cannot go to the browser, so its calls would stay in R.
 - Whether drafts go to the backend, recoverable from any device as today, or to the browser's own storage.
 - Whether where boards are saved to and opened from becomes an interface of core, which the save and open controls of every front-end call, with download and upload as core's default and session management's storage in its place, rather than the dock's storage service.
-  Session management replaces core's `preserve_board()` plugin today, and core keeps no plugin type of its own ([Client-owned board state](Rewrite-1.1)), while its controls are no panel, so it may fit core's surface better than the dock's, and it would then need no dock, and core's basic front-end would open and save through it too ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
+  Session management replaces core's `preserve_board()` plugin today, and core keeps no plugin type of its own ([Client-owned board state](Rewrite-1.1)), while its controls are no panel, so it may fit core's surface better than the dock's, and it would then need no dock, and core's basic front-end would open and save through it too ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
   It blocks rebuilding session management, and settles where its controls and its storage service live.
 
 ## Work

@@ -97,5 +97,5 @@ Only what is fixed for the page outlives an opening: the code that is loaded, wh
 State that outlives an opening by accident shows only once a second board opens, as a bug that no test of a single board finds.
 
 Today's restore gets this from a reload: it stages the board and calls `session$reload()`, so that the page starts again with that board ([R/utils-serve.R#L277-L288](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L277-L288)).
-State in JS starts core again in place instead, with no reload ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that core makes everything it keeps of a board per opening, and only what the page keeps across openings needs care.
+State in JS starts core again in place instead, with no reload ([Drawing the board](Rewrite-1.1.8#opening-a-board)), so that core makes everything it keeps of a board per opening, and only what the page keeps across openings needs care.
 The board options that a UI module requires are an example: core imports the module once per page, so had it added them only as the module first loaded, a board opened later would lack them ([blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468)).

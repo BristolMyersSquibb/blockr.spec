@@ -8,7 +8,7 @@ It builds on [Client-owned board state](Rewrite-1.1), whose module contract ever
 
 Block UIs reach blockr.ui through page globals and Shiny UI.
 Its widgets sit on `window.Blockr`, where blockr.dplyr's JS names `Blockr.Select` 30 times, blockr.dm's 18 times and blockr.ggplot's 7 times, while under the module contract a block's UI gets what it shares with the page through its host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-Its R helpers draw into Shiny UIs, and its table preview implements the Shiny methods of core's `tabular_display()` hook, both of which go, since nothing in R draws UI any more ([Front-ends and extension points](Rewrite-1.1.8#what-goes-from-r)).
+Its R helpers draw into Shiny UIs, and its table preview implements the Shiny methods of core's `tabular_display()` hook, both of which go, since nothing in R draws UI any more ([Drawing the board](Rewrite-1.1.8#what-goes-from-r)).
 
 ## What must hold
 
@@ -23,13 +23,13 @@ Its R helpers draw into Shiny UIs, and its table preview implements the Shiny me
 | Design tokens, the theme and base CSS, fonts, icons and the design system article | 1,223 of CSS, 10 fonts, 19 icons | Carried over, as the design system the dock and the extensions follow |
 | Widgets on `window.Blockr`, such as `Blockr.Select`, `Blockr.textCommit` and `Blockr.gearTray`, with their types and CSS | 3,628 of JS, 2,194 of CSS | Open (below), since they reach block UIs as page globals |
 | R helpers that draw them into Shiny UIs: the gear tray, action menu, dropdown, shortcut hints and block marks | 646 of R | Open (below), since nothing in R draws UI |
-| The table preview, a display for core's `tabular_display()` hook, with its render engine | 916 of R, 94 of JS, 322 of CSS | Carried over as a renderer of the output class `table_output`, which takes the place of core's plain table where an app names it in the blockr option `renderers` ([Front-ends and extension points](Rewrite-1.1.8#renderers)) |
+| The table preview, a display for core's `tabular_display()` hook, with its render engine | 916 of R, 94 of JS, 322 of CSS | Carried over as a renderer of the output class `table_output`, which takes the place of core's plain table where an app names it in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)) |
 | Asset dependencies and the package's own files | 423 of R | Replaced by however the client loads blockr.ui's assets (below) |
 | Fixes to Shiny's behaviour: the recalculating fade, empty input batches, and the gear tray's input binding | 285 of JS | Dropped, unless the Shiny transport needs one, since no Shiny input or output draws the board |
 
 ## Proposal
 
-- As the UI kit, blockr.ui keeps the design system that the dock and the extensions follow, while core's client builds on Tailwind CSS ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
+- As the UI kit, blockr.ui keeps the design system that the dock and the extensions follow, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 - Block UIs are modules written against core's contract ([UI modules in JS](Rewrite-1.1.7)), so blockr.ui's widgets stop being page globals, and whatever else blockr.ui offers block UIs from then on reaches them through the host.
 - Like the dock and its extensions, blockr.ui draws with the one copy of React that core ships, with core's React SDK and its build preset, and ships no React of its own ([UI modules in JS](Rewrite-1.1.7#react)).
 - Ready-made components for form-like block UIs are a later project of this part, still to be decided, and so are input elements composed in R on top of them ([Input elements for block UIs written in R](Rewrite-1.7.1)).
@@ -38,7 +38,7 @@ Its R helpers draw into Shiny UIs, and its table preview implements the Shiny me
 
 - What else blockr.ui offers block UIs in place of its widgets, beside the inputs of core's React SDK, and when: ready-made components, the input elements of [Input elements for block UIs written in R](Rewrite-1.7.1) on top of them, or nothing until the block packages have ported.
   It decides whether blockr.dplyr, blockr.dm and blockr.ggplot port their UIs onto blockr.ui's components or write their own.
-- How the client loads the design tokens, now that they no longer arrive as HTML dependencies of Shiny UI, and whether blockr.ui sets Tailwind's theme variables under the dock, so that the UIs of core's built-in blocks and its renderers follow the design system there too ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
+- How the client loads the design tokens, now that they no longer arrive as HTML dependencies of Shiny UI, and whether blockr.ui sets Tailwind's theme variables under the dock, so that the UIs of core's built-in blocks and its renderers follow the design system there too ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 - What becomes of the R helpers, which draw into Shiny UIs today.
 
 ## Work

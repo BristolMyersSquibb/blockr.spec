@@ -1,66 +1,36 @@
-# Front-ends and extension points for the client-owned board
-Status: settled on 2026-10-30. Design for [Client-owned board state](Rewrite-1.1).
+# Drawing the board: `CoreApi`, the page, core's basic frontend and renderers
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): core's basic front-end, how a front-end such as blockr.dock replaces it, and what front-ends and their extensions hook into.
-It builds on the [board objects proposal](Rewrite-1.1.1) and on the [board updates](Rewrite-1.1.2), evaluation ([Evaluation in the client](Rewrite-1.1.10)) and UI modules ([UI modules in JS](Rewrite-1.1.7)) proposals, and shapes removing the generics that draw UI from R ([blockr.core#418](https://github.com/BristolMyersSquibb/blockr.core/issues/418)), the toolchain of core's client ([blockr.core#419](https://github.com/BristolMyersSquibb/blockr.core/issues/419)), front-end registration with what else a package declares in R ([blockr.core#424](https://github.com/BristolMyersSquibb/blockr.core/issues/424)), board classes and their front-ends ([blockr.core#465](https://github.com/BristolMyersSquibb/blockr.core/issues/465)), renderers ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425)), the requests of the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)), the UIs of core's built-in blocks ([blockr.core#438](https://github.com/BristolMyersSquibb/blockr.core/issues/438)), core's renderers and board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic front-end ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), what core exports for end-to-end tests ([blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)) and filling the block registry from the packages that the app names ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
-The dock's contribution points, such as its panels, navbar items and sidebar sections, are [Client-drawn dock and extensions](Rewrite-1.2)'s.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what core gives every plugin through `CoreApi`, how the page starts, opens a board and switches its frontend, core's basic frontend, and renderers.
+It builds on the [board objects proposal](Rewrite-1.1.1) and on the [board updates](Rewrite-1.1.2), evaluation ([Evaluation in the client](Rewrite-1.1.10)), UI modules ([UI modules in JS](Rewrite-1.1.7)) and plugins ([Plugins](Rewrite-1.1.12)) proposals, and shapes removing the generics that draw UI from R ([blockr.core#418](https://github.com/BristolMyersSquibb/blockr.core/issues/418)), the toolchain of core's client ([blockr.core#419](https://github.com/BristolMyersSquibb/blockr.core/issues/419)), what a package declares in R ([blockr.core#424](https://github.com/BristolMyersSquibb/blockr.core/issues/424)), renderers ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425)), the requests of the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)), the UIs of core's built-in blocks ([blockr.core#438](https://github.com/BristolMyersSquibb/blockr.core/issues/438)), core's renderers and board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), what core exports for end-to-end tests ([blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)) and filling the block registry from the packages that the app names ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+What a plugin is, the frontend and the storage plugin among them, and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, and the dock's contribution points, such as its panels, navbar items and sidebar sections, are [Client-drawn dock and extensions](Rewrite-1.2)'s.
 
 ## What must hold
 
-1. Core ships a basic front-end that draws any board, so a board serves without blockr.dock, and a front-end replaces it entirely, so that none of it runs underneath another, as core's stack generics run underneath the dock today.
-2. A front-end draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block class works in every front-end.
-3. A front-end and its extensions work on the board only through core's JS API: the store, commands, demand, statuses and requests.
+1. Core ships a basic frontend that draws any board, so a board serves without blockr.dock, and a frontend replaces it entirely, so that none of it runs underneath another, as core's stack generics run underneath the dock today.
+2. A frontend draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block class works in every frontend.
+3. A frontend and every other plugin work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
 5. Any package can supply a renderer for an output class or a board option.
    An app replaces an output class's default renderer, or a board option's UI, with such a renderer through a blockr option, with no change to a block class.
 6. A startup module can open another board in place of the opening board before anything is drawn or evaluated, as `rack_loader()` resolves the board a URL names before today's page is drawn.
-7. Opening a board leaves the page as serving that board in a fresh app would, its front-end included, as a restore does today, but with no reload ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+7. Opening a board leaves the page as opening that board in a fresh app would, its frontend and its other plugins included, as a restore does today, but with no reload ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 
 ## Today
 
-Core's front-end is `board_ui.board()`: a toolbar of its plugins with a popover of board options, a bslib accordion of stacks and a bslib card per block, whose header and footer the `edit_block` plugin draws ([R/board-ui.R#L40-L140](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-ui.R#L40-L140)).
+Core's frontend is `board_ui.board()`: a toolbar of its plugins with a popover of board options, a bslib accordion of stacks and a bslib card per block, whose header and footer the `edit_block` plugin draws ([R/board-ui.R#L40-L140](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-ui.R#L40-L140)).
 It computes a block's status without drawing it, and shows conditions as notifications ([R/plugin-notification.R#L76-L140](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plugin-notification.R#L76-L140)).
 It parks the blocks of collapsed stacks through `gate_stacks()`, the default `callbacks` of `board_server()`, so a stacked board is lazy under it ([R/board-server.R#L143-L158](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L143-L158)).
-A front-end replaces it by implementing generics that dispatch on the board, `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()` and more, and by passing `callbacks` of its own: blockr.dock implements those four and `blockr_app_ui()` and `blockr_app_server()`, through which it passes its callbacks ([blockr.dock R/utils-serve.R#L64-L86](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serve.R#L64-L86)), but none of the stack generics, which still fire underneath it ([R/stack-ui.R#L37-L255](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/stack-ui.R#L37-L255)).
+A frontend replaces it by implementing generics that dispatch on the board, `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()` and more, and by passing `callbacks` of its own: blockr.dock implements those four and `blockr_app_ui()` and `blockr_app_server()`, through which it passes its callbacks ([blockr.dock R/utils-serve.R#L64-L86](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serve.R#L64-L86)), but none of the stack generics, which still fire underneath it ([R/stack-ui.R#L37-L255](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/stack-ui.R#L37-L255)).
 The board's class also picks the page: `serve()` builds it with `blockr_app_ui()` for the board its loader returns at each request, and a restore stages the restored board and reloads the page, so a core board restored in a dock app brings core's UI along ([R/utils-serve.R#L227-L288](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L227-L288)).
-Extensions hook in through `new_dock_extension()` and `extension_block_callback()`, which the DAG uses to draw status badges ([R/ext-class.R#L52](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/ext-class.R#L52), [blockr.dag R/ext.R#L521-L583](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L521-L583)).
+The dock's extensions hook in through `new_dock_extension()` and `extension_block_callback()`, which the DAG uses to draw status badges ([R/ext-class.R#L52](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/ext-class.R#L52), [blockr.dag R/ext.R#L521-L583](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L521-L583)).
 Insertions and removals reach the page through R, and the dock's removal currently misses: the selector it passes to `removeUI()` is built from the board's id instead of the block's and lacks the `#`, so it matches no element, as [blockr.dock#527](https://github.com/BristolMyersSquibb/blockr.dock/issues/527) reports ([R/block-ui.R#L104](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/block-ui.R#L104)).
 
 ## Proposal
 
-### Registering a front-end
+### What core gives plugins
 
-A front-end is the UI module of a board class, the module that draws the boards that the client builds as that class, as a block class has a UI module.
-A package offers it in R as it offers any module to others, under a name in the object it exports (below), so that R serves it and its id is `{pkg}-{name}`, as a registry id is ([UI modules in JS](Rewrite-1.1.7#packaging)), and a package can ship several.
-The board class names the front-end that draws its boards in R, through its method of the generic `board_front_end()`, which returns the module's id whatever the board holds, and the version of the properties it adds through its method of `board_version()`, 1 where it has none ([Serialization](Rewrite-1.1.4#migrations)):
-
-```r
-board_front_end.dock_board <- function(x, ...) "blockr.dock-dock"   # exported as S3 methods
-board_version.dock_board <- function(x, ...) 2L                     # where its properties changed shape once
-```
-
-The dock is then `blockr.dock-dock`, which blockr.dock's method for `dock_board` names, and core's basic front-end is `blockr.core-basic`, which core's method for `board` names.
-The namespace that holds a class's method is the one of the package that defines the class, so R learns a class's package from its method, which a class name does not give, as the JSON board that R writes records it ([Serialization](Rewrite-1.1.4#files)), with no registry of board classes of its own, since S3 registers the methods.
-R sends each board class that a package the app names gives a front-end for, with its package, its front-end and its version, in the reply to `hello`, calling each method on an empty board of its class, while the class's definition in JS gives its parent, the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), its properties and its functions ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
-A board names no front-end: the client builds the board as the first class in its `class` that a loaded package defines, and the front-end that R names for that class, or for its nearest parent that R names one for, draws it, which the store's `frontEnd()` gives ([Board objects](Rewrite-1.1.1#the-board)).
-So a board of a class extending `dock_board` that no package defines is drawn by the dock, as is one of a class that a package defines in JS alone, with no method in R, which comes from no package, and every board by core's basic front-end at least, as S3 dispatch gives a board in R its parent's front-end.
-R picks no board's front-end, whether an app script built the board or the client opens it from a file, but names each class's.
-
-R tells the client where each front-end is served, by its id, among the modules that packages offer ([UI modules in JS](Rewrite-1.1.7#packaging)), and every board is drawn by the front-end that R names for the class it is built as: core imports the module of the first board's front-end once every startup module has initialized, and switches the page in place to the front-end of a board opened later (below).
-Where a board lacks a property of its class, the property takes its default ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), and the store drops the properties of a class that no loaded package defines ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-Nothing in R converts a board, and R never needs a board's constructor to open one, nor builds a board to learn about a front-end.
-
-The module meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls, so it never names its own id.
-
-```ts
-export const api = 1;                                // the JS API major it was built against
-
-export default {
-  render({ el, core, signal }: { el: HTMLElement; core: CoreApi; signal: AbortSignal }): () => void { /* draw the board, return the cleanup */ }
-};
-```
-
-### What core gives a front-end
+Core gives one `CoreApi` to the module of every plugin, a frontend's among them, as it calls the module's `render()`, to every plugin class's `start`, and to every startup module's `initialize()`, and a plugin works on the board through it alone ([Plugins](Rewrite-1.1.12#running-a-plugin), [UI modules in JS](Rewrite-1.1.7#startup-modules)):
 
 ```ts
 interface CoreApi {
@@ -69,14 +39,23 @@ interface CoreApi {
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() and subscribe() alone, from Evaluation in the client
   blockRegistry: BlockRegistry;    // the block registry's entries by registry id, for pickers
   options: Options;                // register() and the board options packages define, by id
+  plugins: {                       // from Plugins
+    register(def: PluginClass): () => void;    // a plugin class, from its package's startup module
+    running(): Record<PluginId, Plugin>;       // the open board's plugins whose classes are registered
+    classOf(plugin: PluginId): PluginClass;    // the definition of a running plugin's class
+    storage(): Storage;                        // the open board's storage plugin's, or core's own where it holds none
+  };
   lock: Lock | null;               // the blocks a locked board leaves open, { open: ["f"] }, from the reply to hello
-  outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for extensions to act on
+  outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for plugins to act on
+  notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
+  focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
   request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by the plugin's id, as Plugins has it
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   blockrOption<T extends Json>(name: string, fallback: T): Promise<T>;   // a blockr option, asked of R once per page, or fallback where R has none
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by the renderer R names in it
   mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's UI, or the renderer the app names for it
+  mountPlugin(el: HTMLElement, plugin: PluginId): () => void; // a plugin's UI module, where a frontend places the plugin
 }
 
 interface RequestOpts {
@@ -88,22 +67,31 @@ interface RequestOpts {
 interface OutputEvents {
   subscribe(fn: (event: { block: BlockId; name: string; payload: Json }) => void): () => void;   // each event a renderer emits ([UI modules in JS](Rewrite-1.1.7#the-contract))
 }
+
+interface Note {
+  message: string;
+  severity: "message" | "warning" | "error";
+}
 ```
 
-A front-end decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's.
-A front-end may mount a block's UI or output in several places at once, such as two panels of one view, and mount it again as its panels move or reopen, since everything a mount draws from is core's and none of it is lost when a mount ends ([UI modules in JS](Rewrite-1.1.7#the-contract)), rather than moving one element around, as the dock parks each card in its offcanvas today and carries it into a panel and back ([blockr.dock R/block-ui.R#L188-L295](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/block-ui.R#L188-L295)).
+A frontend decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's.
+A frontend may mount a block's UI or output in several places at once, such as two panels of one view, and mount it again as its panels move or reopen, since everything a mount draws from is core's and none of it is lost when a mount ends ([UI modules in JS](Rewrite-1.1.7#the-contract)), rather than moving one element around, as the dock parks each card in its offcanvas today and carries it into a panel and back ([blockr.dock R/block-ui.R#L188-L295](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/block-ui.R#L188-L295)).
 Two mounts of one output share its parameters, which core keeps per block, so both show the same page and sort.
-A front-end shows a block's UI and its output as core's attribute `visible` says, which its toggles set where the board is not locked, since a locked board leaves open only the blocks whose inputs show ([Board objects](Rewrite-1.1.1#blocks), [Wire protocol](Rewrite-1.1.9#locked-boards)).
+A frontend shows a block's UI and its output as core's attribute `visible` says, which its toggles set where the board is not locked, since a locked board leaves open only the blocks whose inputs show ([Board objects](Rewrite-1.1.1#blocks), [Wire protocol](Rewrite-1.1.9#locked-boards)).
 The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same revision, board options, `info` and parameters ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R names in it (below), and redraws it when the block's revision, a board option, the `info` or the output's parameters change, while the block is `ready` ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
-A front-end draws a block's status, conditions and summary from `scheduler.status()`, and decides from the status what an output that is not current looks like, leaving it as it is, greying it out or hiding it, since core keeps drawing a block's last output whatever the block's status ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+A frontend draws a block's status, conditions and summary from `scheduler.status()`, and decides from the status what an output that is not current looks like, leaving it as it is, greying it out or hiding it, since core keeps drawing a block's last output whatever the block's status ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 It demands the blocks it shows, above the default evaluation priority ([Evaluation in the client](Rewrite-1.1.10#demand)), and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
 It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and plugins reach R through `request()`, each through requests of its own, as code export and session management do ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
+A frontend places each plugin whose class has a `ui` as it places a block: it gives `mountPlugin()` an element of its choosing, and core mounts the plugin's module there ([Plugins](Rewrite-1.1.12#plugin-classes)).
+Through `plugins` it reads which plugins run and what their classes give, and reaches the open board's storage, while plugins reach it through `notifications` and `focus` ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
+
 ### Starting the page
 
-Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package that the app names, one at a time, then opens the board R sent, or the one a startup module names in its place (below), then imports the module of the front-end that R names for the class the board is built as, since a module's imports run as it loads and may need what a startup module puts on the page, such as a library on another package's global ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and only then starts the scheduler and calls the front-end's `render()`, so nothing is evaluated or drawn before every package has registered.
-The scheduler sends nothing to R until `render()` has returned, or resolved where it is async, so a front-end demands what it first shows within `render()`, from the board, rather than from an effect that runs once it has drawn, as a React app's would, and those blocks are evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
-A front-end's package defines its board class, with the properties the class adds, and registers its commands, from its startup module, and subscribes to the store there too, so that it sees the first board open, with what R dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the front-end's module only draws.
+Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package that the app names, one at a time, then opens the board R sent, or the one a startup module names in its place (below), which takes over what it lacks of the plugins of the board R sent ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), then imports the module of the board's frontend, or of core's basic frontend where the board holds none, since a module's imports run as it loads and may need what a startup module puts on the page, such as a library on another package's global ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and only then starts the scheduler and calls the frontend's `render()`, so nothing is evaluated or drawn before every package has registered.
+The scheduler sends nothing to R until `render()` has returned, or resolved where it is async, so a frontend demands what it first shows within `render()`, from the board, rather than from an effect that runs once it has drawn, as a React app's would, and those blocks are evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+Core then calls `start` for each plugin of the board whose class has one, so that what the frontend first shows comes before what the plugins ask for as they start ([Plugins](Rewrite-1.1.12#running-a-plugin)).
+A frontend's package registers its plugin class and its commands from its startup module ([Plugins](Rewrite-1.1.12#a-plugin)), and subscribes to the store there too, so that it sees the board open, with what R dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the frontend's module only draws.
 
 A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except on a locked board, which loads no other board, where core keeps the board R sent and names the package ([Wire protocol](Rewrite-1.1.9#locked-boards)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Should two resolve with a board, core opens the one R sent and names both packages.
@@ -111,10 +99,10 @@ Should two resolve with a board, core opens the one R sent and names both packag
 ### Opening a board
 
 Opening a board starts core again in place, as the page starts (above), with no reload ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-A front-end or an extension opens a board through `store.open()`, as before ([Board updates](Rewrite-1.1.2#opening-a-board)), and core first checks the board as the store on the page would open it, so that a board it refuses leaves the page as it was, with the reason.
-Core then ends everything it runs for the board with one abort: the front-end and what it mounted, every startup module, the store with its undo history, the command registry, the board options, the scheduler with its demands, and what core keeps of outputs and answers.
+A plugin, a frontend among them, opens a board through `store.open()` ([Board updates](Rewrite-1.1.2#opening-a-board)), and core first checks the board as the store on the page would open it, so that a board it refuses leaves the page as it was, with the reason.
+Core then ends everything it runs for the board with one abort: the frontend and what it mounted, every plugin that runs, every startup module, the store with its undo history, the command registry and the plugin classes, the board options, the scheduler with its demands, which block has focus, and what core keeps of outputs and answers.
 A module releases what it holds as its signal aborts, as it does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)), and core drops the rest, so that no part of core has a reset of its own.
-Core then starts as the page does: its `hello` starts R's session afresh, so that R drops every result and request of the board before ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and core initializes the startup modules again, opens the board in a new store and draws it with its front-end (below).
+Core then starts as the page does: its `hello` starts R's session afresh, so that R drops every result and request of the board before ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and core initializes the startup modules again, opens the board in a new store, draws it with its frontend (below) and starts its plugins.
 
 Only what is fixed for the page outlives an opening:
 
@@ -124,34 +112,27 @@ Only what is fixed for the page outlives an opening:
 - The blockr options that core has read, and the lock.
 - The revisions given so far, so that the next scheduler gives a block id a revision above any it had, and a revision never goes back within the page ([Evaluation in the client](Rewrite-1.1.10#revisions)).
 
-What a board takes over is part of the board that opens, and comes from the app's opening board, which R's reply to every `hello` holds, never from the board it replaces, as a board that holds no frontend takes one of the class of the opening board's frontend, with that class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.
+What a board takes over is part of the board that opens, and comes from the app's opening board, which R's reply to every `hello` holds, never from the board it replaces, as a board takes over each plugin of the opening board whose class it holds no plugin of, with its class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.
 A new session after the server ended the last opens no board: core keeps the board it holds, and the scheduler has the new session evaluate it again ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
-### Switching front-ends
+### Switching frontends
 
-Opening a board starts core again, its front-end included, so the page draws the board that opens with that board's front-end, and starts a front-end that is the page's already again all the same, so that nothing it kept of the board before outlives the opening (above).
-So the page draws an opened board as a fresh app serving it would, as today's restore rebuilds the page for the restored board's class (Today) but without the reload: a core board opened in a dock app is drawn by core's basic front-end, a dock board opened in a core app by the dock, and a dock board opened in a dock app by a dock that starts again.
-Where a board's front-end changes while the board stays open, as adding a frontend does in [Plugins](Rewrite-1.1.12#which-plugins-a-board-has), core switches the front-end alone, in place: it aborts the signal of the one on the page, which unmounts what it mounted and releases its demands, as any module does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)), imports the module of the new one and calls its `render()`, holding the scheduler until it has returned, so that what it first shows is evaluated first, while the board, its undo history and the rest of core stay.
+Opening a board starts core again, its frontend included, so the page draws the board that opens with that board's frontend, and starts a frontend that is the page's already again all the same, so that nothing it kept of the board before outlives the opening (above).
+So the page draws an opened board as a fresh app opening it would, as today's restore rebuilds the page for the restored board (Today) but without the reload: a board that holds the dock is drawn by the dock in any app that names blockr.dock, by a dock that starts again where the page shows the dock already, and a board that holds no frontend by the frontend of the app's opening board, or by core's basic frontend where that board holds none either ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+So a board made in a core app opens in a dock app with the dock's default layout, where today's restore brings core's UI along.
+Where a board's frontend changes while the board stays open, as adding or removing a frontend does ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), core switches the frontend alone, in place: it aborts the signal of the one on the page, which unmounts what it mounted, the UIs of plugins among them, and releases its demands, as any module does when core unmounts it ([UI modules in JS](Rewrite-1.1.7#the-contract)), imports the module of the new one and calls its `render()`, holding the scheduler until it has returned, so that what it first shows is evaluated first, while the board, its undo history, the other plugins and the rest of core stay.
 
-### Core's basic front-end
+### Core's basic frontend
 
-Core's own front-end does what today's does wherever core's commands and store do the work, so that it only draws: a toolbar for adding a block from the block registry's entries, editing links and stacks, setting the board options that the board holds and renaming the board, and downloading the board as a file and opening one, as today's `preserve_board` plugin does, since the client writes a saved board and opening one is `store.open()` ([Serialization](Rewrite-1.1.4#files)); stacks as groups; and a card per block with its name, a menu to rename or remove it or add a block before or after it, its UI, its output and its summary, as today's has, and its status and conditions, which today's computes but does not draw on the card, showing the severities that core's `show_conditions` board option names, with the output greyed out while the block is not `ready`, where today's clears it ([R/block-server.R#L63-L66](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L63-L66)).
-It also binds undo and redo to their shortcuts, the one thing today's lacks, since the store keeps the steps and a front-end binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), and it tells the user what R dropped when a board opened and which edit the store refused ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-Code export stays blockr.code's, to which [Client-drawn dock and extensions](Rewrite-1.2) gives today's `generate_code` plugin, and the basic front-end takes no extensions, since contribution points of its own would be a second extension API beside the dock's.
+Core's own frontend does what today's does wherever core's commands and store do the work, so that it only draws: a toolbar for adding a block from the block registry's entries, editing links and stacks, setting the board options that the board holds, renaming the board, saving it and opening another, and opening the UI of each plugin that has one in a drawer, where it mounts the plugin's module ([Plugins](Rewrite-1.1.12#plugin-classes)); stacks as groups; and a card per block with its name, a menu to rename or remove it or add a block before or after it, its UI, its output and its summary, as today's has, and its status and conditions, which today's computes but does not draw on the card, showing the severities that core's `show_conditions` board option names, with the output greyed out while the block is not `ready`, where today's clears it ([R/block-server.R#L63-L66](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L63-L66)).
+Its save and open controls call the `storage` that `core.plugins.storage()` gives, handing `save()` the JSON board that the store writes and opening what `open()` gives through `store.open()`, so that where the board holds no storage plugin they save a download and open an upload, as today's `preserve_board` plugin does ([Plugins](Rewrite-1.1.12#storage), [Serialization](Rewrite-1.1.4#files)).
+It also binds undo and redo to their shortcuts, which today's lacks, since the store keeps the steps and a frontend binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), gives a block focus as the user moves into its card, and tells the user what R dropped when a board opened, which edit the store refused and what plugins notify ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt), [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
+Code export is blockr.code's plugin, which the basic frontend places in a drawer as it places any other ([Code export as a client extension](Rewrite-1.5)), and the basic frontend reads no member of a plugin class beyond core's, so that a plugin needs only its `ui` to show under it ([Plugins](Rewrite-1.1.12#plugin-classes)).
 
-It shows every block, so it demands every block, and a board served without the dock evaluates every block ([Evaluation in the client](Rewrite-1.1.10#demand)), where today's parks the blocks of collapsed stacks.
-It is written in React, as TSX, as core's built-in block UIs and renderers are, on the one copy of React that core ships, and it mounts a block's UI as any front-end does, whatever the module is written in ([UI modules in JS](Rewrite-1.1.7#react)).
-It builds on Tailwind CSS rather than on blockr.ui's design system, which the dock follows, since blockr.ui builds on blockr.core ([State in JS](Rewrite-1#what-must-hold)), and so do the UIs of core's built-in blocks and its renderers, which show under every front-end.
-Their stylesheets keep Tailwind's utilities under core's prefix and leave out its reset of the whole page, so that nothing core loads styles another package's elements, the dock's included once the page has switched to it ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and they take their colours, fonts and radii from the variables in which Tailwind CSS 4 keeps its theme, which a front-end or a UI kit may set to restyle them, as blockr.ui may under the dock ([UI kit and design system for the client](Rewrite-1.7)).
-
-### Extensions
-
-An extension is registered with the front-end it extends by its package's startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), under an id, `{pkg}-{name}`, while its requests are those of a plugin, which `request()` names ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and how an extension registers with the dock is [Client-drawn dock and extensions](Rewrite-1.2)'s, since only the dock takes extensions.
-It works on the board through the same `CoreApi`, so the DAG adds a link by running a command and draws its status badges from `scheduler.status()`, with no per-block callback.
-What it contributes to the screen goes through the front-end's contribution points, which for the dock are [Client-drawn dock and extensions](Rewrite-1.2)'s.
-Its state lives in a property of the board class whose front-end it extends, as a dock board holds it in its `extensions` by the extension's id, and other extensions and the assistant change it through the commands the extension registers ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
-How the dock lets an extension keep its state consistent with the rest of the board, as the DAG drops a removed block's position, is the dock's to offer ([Client-drawn dock and extensions](Rewrite-1.2)).
-A file holds that state within the board and the version of the extension's package in its `packages`, while R reads the state a file from today's stack keeps next to the extension's constructor into the same place ([Serialization](Rewrite-1.1.4#files)).
+It shows every block, so it demands every block, and a board that it draws evaluates every block ([Evaluation in the client](Rewrite-1.1.10#demand)), where today's parks the blocks of collapsed stacks.
+It is written in React, as TSX, as core's built-in block UIs and renderers are, on the one copy of React that core ships, and it mounts a block's UI and a plugin's as any frontend does, whatever the module is written in ([UI modules in JS](Rewrite-1.1.7#react)).
+It builds on Tailwind CSS rather than on blockr.ui's design system, which the dock follows, since blockr.ui builds on blockr.core ([State in JS](Rewrite-1#what-must-hold)), and so do the UIs of core's built-in blocks and its renderers, which show under every frontend.
+Their stylesheets keep Tailwind's utilities under core's prefix and leave out its reset of the whole page, so that nothing core loads styles another package's elements, the dock's included once the page has switched to it ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and they take their colours, fonts and radii from the variables in which Tailwind CSS 4 keeps its theme, which a frontend or a UI kit may set to restyle them, as blockr.ui may under the dock ([UI kit and design system for the client](Rewrite-1.7)).
 
 ### Renderers
 
@@ -193,7 +174,7 @@ Besides its block classes, a package declares in R the rest of its client that R
 With illustrative names:
 
 ```r
-board_front_end.dock_board <- function(x, ...) "blockr.dock-dock"  # in blockr.dock, the front-end its board class names, as an exported S3 method
+plugin_version.dock_plugin <- function(x, ...) 2L                 # in blockr.dock, where its plugin's state changed shape once, as an exported S3 method
 output_schema.chart_output <- function(x, ...) read_json_schema("chart-output.schema.json")   # in blockr.viz, S3 methods for
 output_renderer.chart_output <- function(x, ...) {                                             # its schema, its renderer
   chosen_renderer("chart_output", new_renderer("chart_output", js_module("chart.js")))
@@ -209,8 +190,8 @@ plugin_requests.code_plugin <- function(x, ...) {                 # in blockr.co
 }
 ```
 
-A package has at most one startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and a module it offers others, a front-end among them, is reached by its id through `host.module()` and `CoreApi.module()`.
-A board class's front-end and version are S3 methods, of `board_front_end()` and `board_version()`, rather than declarations, so that R learns the class's package from the namespace that holds them (above).
+A package has at most one startup module ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and a module it offers others, the `ui` or the `frontend` of a plugin class among them, is reached by its id through `host.module()` and `CoreApi.module()`.
+A plugin class gives the version of its state through its method of `plugin_version()` ([Plugins](Rewrite-1.1.12#a-plugin)).
 An output class gives, through S3 methods rather than declarations, the JSON Schema of its outputs, by which R writes them, its renderer, `blockr.viz-chart_output` here, and its requests, which R runs with the result the output was made from, so that S3 dispatch gives a subclass what its class gives ([Block classes in R](Rewrite-1.1.5#outputs)).
 A board option's requests come from its package's method of `board_option_requests()` for the board option's class, `{id}_option`, and a plugin's from its package's method of `plugin_requests()` for the plugin's class, which R finds by the type of each request, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built requests ([Wire protocol](Rewrite-1.1.9#requests)).
 R calls a board option's request with its args by name, and a plugin's with its args by name and, in `reads`, the blocks it reads by id, each a list of its `result` and the block expression `expr` R built for it, while the package says which of its requests may run on a locked board ([Wire protocol](Rewrite-1.1.9#locked-boards)).
@@ -219,12 +200,12 @@ A module's stylesheet and JSON Schema need no declaration, since they sit beside
 
 ### What goes from R
 
-The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and so do the `callbacks` through which a front-end hooks into `board_server()`, which goes with the board server ([Client-owned board state](Rewrite-1.1#today)).
-A front-end's R side shrinks to declaring its front-ends with their modules, its board classes' methods of `board_front_end()` and `board_version()`, its startup module, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_board()` and `new_dock_stack()`, whose components R writes as the dock board's properties ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
+The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and so do the `callbacks` through which a frontend hooks into `board_server()`, which goes with the board server ([Client-owned board state](Rewrite-1.1#today)).
+A frontend's R side shrinks to the modules it offers, its startup module, its plugin class's methods of `plugin_version()` and `plugin_requests()`, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_plugin()` and its `new_dock_board()`, which keeps working as a board that holds the dock plugin ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### Testing
 
-Core ships, beside the stubs of its hosts ([UI modules in JS](Rewrite-1.1.7#testing)), a `CoreApi` for tests whose store, commands and scheduler are core's own and whose replies from R come from fixtures, those the wire protocol's tests round-trip ([Wire protocol](Rewrite-1.1.9)), so that a front-end, an extension or a startup module runs in a test runner on a board, needing neither R nor a browser.
+Core ships, beside the stubs of its hosts ([UI modules in JS](Rewrite-1.1.7#testing)), a `CoreApi` for tests whose store, commands and scheduler are core's own and whose replies from R come from fixtures, those the wire protocol's tests round-trip ([Wire protocol](Rewrite-1.1.9)), so that a plugin, a frontend among them, or a startup module runs in a test runner on a board, needing neither R nor a browser, with the plugin classes that the test registers ([Plugins](Rewrite-1.1.12#testing)).
 
 End-to-end tests run an app with R and a browser, through shinytest2 to start with, and core exports what they check.
 R exports each block's latest result through `exportTestValues()`, as `blockr_test_exports()` does today ([R/utils-serve.R#L310-L331](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L310-L331)), which Shiny does only in the test mode shinytest2 starts an app in, and the client exposes the board and each block's status, read only, for `AppDriver$get_js()` to read, since they now live in the client.

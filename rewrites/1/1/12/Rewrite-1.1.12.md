@@ -3,8 +3,8 @@ Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what a plugin is in R and in JS, the plugin classes core defines in R, the frontend and storage plugins, which plugins a board has, how a plugin runs, and a plugin's state.
 Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes of [Board objects](Rewrite-1.1.1#the-board) and [Board updates](Rewrite-1.1.2#board-classes-and-attributes).
-It changes what [Front-ends and extension points](Rewrite-1.1.8) says about registering a frontend and about extensions, and what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and shapes core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)) and serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), while no issue asks for plugins yet.
-What core gives a frontend, starting the page and renderers stay with [Front-ends and extension points](Rewrite-1.1.8), and what the dock plugin keeps in its state and where it places other plugins stay with [Client-drawn dock and extensions](Rewrite-1.2).
+It changes what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and core's basic frontend as [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built it, and shapes serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), while no issue asks for plugins yet.
+What core gives plugins through `CoreApi`, starting the page, opening a board, switching frontends, core's basic frontend and renderers are [Drawing the board](Rewrite-1.1.8)'s, and what the dock plugin keeps in its state and where it places other plugins stay with [Client-drawn dock and extensions](Rewrite-1.2).
 
 ## What must hold
 
@@ -109,7 +109,7 @@ Every other contract of core's client has this shape too, the module contract th
 
 A package registers the commands and board options of its plugin classes as it registers any others, through `core.commands.register()` and `core.options.register()`, and gives their requests in R ([A plugin's requests](#a-plugins-requests)).
 A plugin class names the board options it requires in `options`, and core adds each one that the board lacks, with its default, before it starts the plugin or mounts its UI ([Which board options a board holds](Rewrite-1.1.13#which-board-options-a-board-holds)).
-A plugin works on the board through `CoreApi` alone, so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, as [Front-ends and extension points](Rewrite-1.1.8#extensions) has it for extensions.
+A plugin works on the board through `CoreApi` alone ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, with no per-block callback.
 
 A plugin class comes from a package, since a startup module registers it and only a package declares one ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
 So an app script defines no plugin class, unlike a block class, which a script may define outside a package ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)), and `new_plugin()` raises an error where the constructor that calls it lives outside a package.
@@ -129,7 +129,7 @@ A plugin whose class has `frontend` is a frontend, and one whose class has `stor
 So the dock has its save and open controls call the storage plugin of the open board, whichever package that plugin comes from.
 
 A frontend places every plugin whose class has a `ui`, once for each plugin, so that two documents of blockr.md get a panel each.
-It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a drawer in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
+It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a drawer in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 So every plugin with a UI works under every frontend.
 A frontend may know a plugin class by its id too, as the dock might know `blockr.dag-dag_plugin` to give the DAG a place of its own, but it needs nothing beyond core's members to place a plugin.
 A plugin without a UI module, such as blockr.viz's control bridge, runs from its class's `start` alone, with no place on the screen ([Running a plugin](#running-a-plugin)).
@@ -161,7 +161,17 @@ A package prefixes the members it adds, as `dockNavbar`, so that two packages ne
 Such a member follows the open board by itself, since the frontend reads it from the plugins that run, so nothing is registered as a plugin starts or dropped as it stops ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 Which places the dock offers is [The dock's contribution points](Rewrite-1.2.4)'s to settle.
 
-A plugin's UI module meets the contract of a frontend's module: it exports the JS API major it was built against and a default whose `render({ el, core, plugin, signal })` core calls, here with the element the frontend gave and the id of the plugin it draws, and which returns the cleanup ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
+A plugin's module, the `ui` or the `frontend` of its class, meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls with an element, the id of the plugin it draws and a signal, and which returns the cleanup, so it never names its own id.
+Core calls a plugin's `ui` with the element that the frontend gave `mountPlugin()`, and a frontend's module with the page's element ([The frontend](#the-frontend)):
+
+```ts
+export const api = 1;                                // the JS API major it was built against
+
+export default {
+  render({ el, core, plugin, signal }: { el: HTMLElement; core: CoreApi; plugin: PluginId; signal: AbortSignal }): () => void { /* draw the plugin, return the cleanup */ }
+};
+```
+
 So one module draws each plugin of its class, as two documents of blockr.md, each from its own state.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
 Where [Client-drawn dock and extensions](Rewrite-1.2) has extensions render React components inside the dock's own tree, a plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)).
@@ -175,15 +185,8 @@ No board holds core's basic frontend: it draws every board that holds no fronten
 A board that holds no frontend takes the one that the app's opening board holds as it opens, with the default state of its class, and is drawn by core's basic frontend where the opening board holds none ([Which plugins a board has](#which-plugins-a-board-has)).
 So a dock app opens a board made in a core app with the dock's default layout.
 A board holds at most one frontend: the board constructor refuses a second, and the store refuses to open a JSON board that holds two.
-Core starts the page as [Front-ends and extension points](Rewrite-1.1.8#starting-the-page) has it, with the board's frontend in place of its class's front-end:
-
-1. Core initializes the startup module of every package that the app names.
-2. Core opens the board, or the one a startup module names in its place.
-3. Core imports the module of the board's frontend and calls its `render()`.
-4. The scheduler sends nothing to R until `render()` has returned, so what the frontend first shows is evaluated first.
-5. Core calls `start` for each plugin of the board whose class has one ([Running a plugin](#running-a-plugin)).
-
-Opening a board that holds another frontend than the page's switches the page in place, as [Front-ends and extension points](Rewrite-1.1.8#switching-front-ends) has it.
+Core starts the page with the board's frontend, and starts the board's plugins once the frontend has drawn, as [Drawing the board](Rewrite-1.1.8#starting-the-page) has it.
+Opening a board that holds another frontend than the page's switches the page in place, as [Drawing the board](Rewrite-1.1.8#switching-frontends) has it.
 A frontend's state holds what it keeps of the board, as the dock's views, their layouts and which view is active, which were the dock board's properties ([The dock board: views and layouts](Rewrite-1.2.1)).
 A board that holds the dock, opened in an app that does not name blockr.dock, opens without the dock, whose package the client names, and takes the frontend of the app's opening board ([Which plugins a board has](#which-plugins-a-board-has)).
 
@@ -237,7 +240,7 @@ Where the list gives no name, the id is the class's name without `_plugin`, as `
 So two plugins of one class need names of their own, as two extensions of one class do today.
 A board holds as many plugins of a class as it needs, as two documents of blockr.md, but at most one frontend ([The frontend](#the-frontend)) and one storage plugin ([Storage](#storage)).
 
-Opening a board runs the plugins that it holds and whose packages the app names, its frontend among them, and those that it takes over from the app's opening board (below), and stops every plugin of the board before it, since core starts again as a board opens ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that a plugin that both boards hold starts again too.
+Opening a board runs the plugins that it holds and whose packages the app names, its frontend among them, and those that it takes over from the app's opening board (below), and stops every plugin of the board before it, since core starts again as a board opens ([Drawing the board](Rewrite-1.1.8#opening-a-board)), so that a plugin that both boards hold starts again too.
 So the page is what opening that board in a fresh app would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 The plugins of the board that an app script builds are the app's: opening another board stops them with the rest, and the board that opens takes over what it lacks of them (below).
 
@@ -273,7 +276,7 @@ On a locked board the store refuses adding and removing a plugin, since a locked
 Besides the store, which calls a plugin class's `migrate` as a board opens and its `update` with every change, core runs a plugin's code in two places: a frontend mounts its class's `ui` where it places the plugin, and core calls its class's `start`.
 Core calls `start` for each plugin of the board once the board has opened and the frontend's `render()` has returned, so that what the frontend first shows is evaluated first.
 It calls `start` too for a plugin that a change adds while the board is open, as `blockr.core-add_plugin`, a removal that takes another plugin over, or an undo does, once the change applies.
-As the next board opens, or a change removes the plugin, core aborts the plugin's signal and runs the cleanup that `start` returned, as it does for a frontend's `render()` ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
+As the next board opens, or a change removes the plugin, core aborts the plugin's signal and runs the cleanup that `start` returned, as it does for a module's `render()` ([Plugin classes](#plugin-classes)).
 Every opening starts the plugins again, so nothing a plugin kept of one board outlives it.
 Code that runs with no UI, or longer than a UI stays mounted, runs from `start`, as blockr.viz's control bridge hears what renderers emit and sets block state, and as the assistant's turn goes on once its panel closes:
 
@@ -384,32 +387,11 @@ A board with the dock, the DAG and two documents of blockr.md, with illustrative
 
 Part of what [The dock's services](Rewrite-1.2.6) gives the dock's extensions, every frontend gives every plugin through `CoreApi`, so a plugin that uses it works under any frontend:
 
-- Notifications, which the frontend draws, as it draws what the store refused and what R dropped when a board opened ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
+- Notifications, which the frontend draws, as it draws what the store refused and what R dropped when a board opened ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 - Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a client extension](Rewrite-1.4)).
   Core holds it for the page, outside the board, since only one person's screen needs it ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
 
-With illustrative names:
-
-```ts
-interface CoreApi {
-  // as Front-ends and extension points has it, plus:
-  plugins: {
-    register(def: PluginClass): () => void;            // a plugin class, from its package's startup module
-    running(): Record<PluginId, Plugin>;               // the open board's plugins whose classes are registered
-    classOf(plugin: PluginId): PluginClass;            // the definition of a running plugin's class
-    storage(): Storage;                                // the open board's storage plugin's, or core's own where it holds none
-  };
-  mountPlugin(el: HTMLElement, plugin: PluginId): () => void;                               // the plugin's UI module, until the cleanup runs
-  request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, in place of an extension's
-  notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
-  focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };
-}
-
-interface Note {
-  message: string;
-  severity: "message" | "warning" | "error";
-}
-```
+They are the `notifications` and `focus` of `CoreApi`, which [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) gives in full, with the members that the sections above give plugins, `plugins`, `mountPlugin()` and `request()`.
 
 ### What goes
 
@@ -418,7 +400,7 @@ interface Note {
 - The dock board as a class, `dock_board`, with its `extensions`, whose entries become plugins of their own.
 - Core's nine plugin classes and `known_plugins()`, of which only storage keeps a class in core.
 - The `plugins` argument of `serve()`, with `custom_plugins()` and `blockr_app_plugins()`, since a board holds all its plugins, and every board that an app opens takes over what it lacks of the plugins of the app's opening board ([Which plugins a board has](#which-plugins-a-board-has)).
-- Registering a front-end through its board class ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)), which the frontend plugin replaces, while what core gives a frontend, starting the page, switching frontends, core's basic frontend and renderers stay on that page.
+- Registering a front-end through its board class, which the frontend plugin replaces ([The frontend](#the-frontend)).
 
 On `js-state`, the board classes of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) become plugin state: the patches, the schema checks, `update` and `migrate` keep their code, with each state under its plugin's id and each definition under its plugin class's id, rather than under a board class.
 
@@ -434,7 +416,7 @@ On `js-state`, the board classes of [blockr.core#474](https://github.com/Bristol
 
 ### Testing
 
-The `CoreApi` for tests that core ships ([Front-ends and extension points](Rewrite-1.1.8#testing)) runs a plugin on a board in a test runner, its `update` and `migrate` included, so testing a plugin, a frontend among them, needs neither R nor a browser.
+The `CoreApi` for tests that core ships ([Drawing the board](Rewrite-1.1.8#testing)) runs a plugin on a board in a test runner, its `update` and `migrate` included, so testing a plugin, a frontend among them, needs neither R nor a browser.
 A test registers the plugin classes it runs through `core.plugins.register()`, as a startup module does, so a class that only a test needs, such as one that drives the dock's panels, needs no package.
 
 ## Open questions
@@ -459,9 +441,9 @@ Both go, since no package adds a type ([A plugin's requests](#a-plugins-requests
 
 Where a board that takes over a plugin of the opening board already holds another plugin under that plugin's id, the store gives the plugin it takes over an id that the client mints ([Board objects](Rewrite-1.1.1#ids)).
 
-Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4), [UI modules in JS](Rewrite-1.1.7), [Front-ends and extension points](Rewrite-1.1.8) and [Wire protocol](Rewrite-1.1.9), [Locked boards and the properties of blocks](Rewrite-1.1.11) in review, the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins.
+Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4), [UI modules in JS](Rewrite-1.1.7) and [Wire protocol](Rewrite-1.1.9), [Locked boards and the properties of blocks](Rewrite-1.1.11) in review, the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins, while [Drawing the board](Rewrite-1.1.8), in review, follows it already.
 The same change writes "frontend" for "front-end" and "plugin" for "extension" on every page, but in the names of today's code, such as `new_dock_extension()`.
-The open issues that restate what changes are [blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434), [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441), [blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442), [blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443) and [blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445), and [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8), which recasts the code export as a dock extension.
+The open issues that restate what changes are [blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434), [blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442), [blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443) and [blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445), and [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8), which recasts the code export as a dock extension.
 The same change adds the Work items for plugins to the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503).
 
 A plugin class's state has two defaults: its constructor's in R, which an app script's plugins take, and `state.default` in JS, which `blockr.core-add_plugin` gives and a board takes as it takes a plugin over, so its package keeps the two alike.

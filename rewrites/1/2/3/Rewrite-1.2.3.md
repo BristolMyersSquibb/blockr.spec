@@ -3,7 +3,7 @@ Status: draft. Design for [Client-drawn dock and extensions](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock and extensions](Rewrite-1.2)): how an extension registers with the dock from its package's startup module, and which extensions a board has.
 It covers the state an extension keeps in the dock board's `extensions`, with the commands that change it, the hook that keeps it consistent with the board and the way it migrates, the board options and requests an extension brings, the API majors it declares, and how it is tested.
-It builds on [Front-ends and extension points](Rewrite-1.1.8#extensions) and [Board updates](Rewrite-1.1.2#board-classes-and-attributes).
+It builds on [Plugins](Rewrite-1.1.12#a-plugin) and [Board updates](Rewrite-1.1.2#board-classes-and-attributes).
 Where an extension draws is [The dock's contribution points](Rewrite-1.2.4)'s and [The dock's navbar](Rewrite-1.2.5)'s, and what the dock offers it besides is [The dock's services](Rewrite-1.2.6)'s.
 
 ## What must hold

@@ -38,7 +38,7 @@ Only the DAG has shortcuts ([blockr.dag R/g6r.R#L1025-L1046](https://github.com/
 ### The store
 
 The store is the TypeScript object in core's JS API that holds a board and through which every change to it passes.
-There is one per board, which core creates when it opens the page's board and hands to front-ends, extensions and block modules through `CoreApi` ([Front-ends and extension points](Rewrite-1.1.8)) and the module host ([UI modules in JS](Rewrite-1.1.7)), rather than a global, so that tests, and a page that shows two boards one day, can create more than one.
+There is one per board, which core creates when it opens the page's board and hands to front-ends, extensions and block modules through `CoreApi` ([Drawing the board](Rewrite-1.1.8)) and the module host ([UI modules in JS](Rewrite-1.1.7)), rather than a global, so that tests, and a page that shows two boards one day, can create more than one.
 The command registry is an object of its own (below).
 
 ```ts
@@ -72,9 +72,9 @@ interface Store {
 
 Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, what is registered, and the edit id of each block and of each property that a board class adds: the number of the step that last changed it, from one count of the steps, the opening of a board, an undo and a redo included, so that no number names two versions of one object.
 It holds no board until it opens one and refuses every delta until then, so that nothing builds on a board that no opening made.
-Core creates a store for each board it opens, with `createStore({ loaded })`, and the store sends R nothing, since it opens its board with what the reply to `hello` holds, while a board that another replaces goes with its store, as core starts again ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)).
+Core creates a store for each board it opens, with `createStore({ loaded })`, and the store sends R nothing, since it opens its board with what the reply to `hello` holds, while a board that another replaces goes with its store, as core starts again ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 The `loaded(reply, classes)` callback is what the store awaits before it opens its board, given the reply to `hello` and the board's `class`: core initializes there the startup modules, which define their board classes, and imports the front-end that `frontEnd(classes)` gives.
-The store then builds the board as the class that `boardClass(classes)` gives, by the rule that `frontEnd()` follows too, so that core's choice of a front-end and the store's build cannot differ ([Switching front-ends](Rewrite-1.1.8#switching-front-ends)).
+The store then builds the board as the class that `boardClass(classes)` gives, by the rule that `frontEnd()` follows too, so that core's choice of a front-end and the store's build cannot differ ([Switching frontends](Rewrite-1.1.8#switching-frontends)).
 On a locked board it refuses every `store.open()` of a file's text and every delta the lock does not leave open, such as one that adds a block or changes a locked block's state, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
@@ -106,7 +106,7 @@ An attribute is a value that is not state, kept on every block, such as core's `
 
 A package defines each board class it ships from its startup module, under the class's R name.
 The definition names the class's parent and the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), gives the properties it adds, each with a schema and a default, one function that keeps those properties consistent with the rest of the board, and one that migrates them (below), while what sits inside a property is the class's own design.
-Its package, its front-end and its version come from R, where the package names them through its methods of `board_front_end()` and `board_version()`, and R sends them with the reply to `hello` ([Front-ends and extension points](Rewrite-1.1.8#registering-a-front-end)).
+Its package, its front-end and its version come from R, where the package names them through its methods of `board_front_end()` and `board_version()`, and R sends them with the reply to `hello` ([Plugins](Rewrite-1.1.12#a-plugin)).
 Registering a class checks that it names a registered parent, as every class but core's `board` does, that it adds no property named as one of core's, such as `blocks`, nor one that a parent adds, and that each property's default fits its schema, while the store refuses to open a board whose `class` is no array of class names.
 The store registers nothing inside a property: it checks a property's whole value against its schema after every change, keeps what a change replaced for undo, and saves the property with the board.
 An attribute is registered under a name, `visible` for core's, which a block's `mod` sets, and registering a name that another package registered fails.
@@ -238,7 +238,7 @@ await store.open(hello);   // the opening board in R's reply to hello
 ```
 
 Opening a board replaces the board rather than changing it, so it is no delta.
-A store opens one board, which core has it open as core starts, and a later `store.open()` starts core again with the board given, in a new store ([Front-ends and extension points](Rewrite-1.1.8#opening-a-board)), so that the undo history and everything else of the board before goes with the store that held it.
+A store opens one board, which core has it open as core starts, and a later `store.open()` starts core again with the board given, in a new store ([Drawing the board](Rewrite-1.1.8#opening-a-board)), so that the undo history and everything else of the board before goes with the store that held it.
 The store tells its followers of the board it opens without a delta, through `store.subscribe()`, so a session package saving drafts, which subscribes as its startup module initializes, sees each board open.
 A board may come from another app or from older versions of its classes ([Board objects](Rewrite-1.1.1)), and the store opens it itself, as a JSON board, as it opens the board R sends at startup ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), needing nothing of R but what the reply to `hello` holds: the block registry's entries, the board classes and the versions of the packages that the app names ([Wire protocol](Rewrite-1.1.9#opening-a-board)).
 The `store.open()` call parses a JSON board's text and opens it with what the last reply to `hello` held, sending R nothing.
@@ -249,7 +249,7 @@ It awaits what core runs before it opens a board (above), builds the board as th
 A block whose class the block registry lacks is dropped as a delta removes it, through core's expansion and the board class's `update`, so that what the class keeps about it goes with its links and its places in stacks.
 A file of today's stack is converted to a JSON board outside core first ([Serialization](Rewrite-1.1.4#files)).
 
-A board opens as it is, whatever class the store builds it as, and core draws it with the front-end of that class, as a fresh app serving the board would ([Front-ends and extension points](Rewrite-1.1.8#switching-front-ends)), where a restore today is a `session$reload()` that builds the page for the restored board's class ([Client-owned board state](Rewrite-1.1)).
+A board opens as it is, whatever class the store builds it as, and core draws it with the front-end of that class, as a fresh app serving the board would ([Drawing the board](Rewrite-1.1.8#switching-frontends)), where a restore today is a `session$reload()` that builds the page for the restored board's class ([Client-owned board state](Rewrite-1.1)).
 Nothing converts the board, so its board option values stay, while the store drops the properties of a class whose package is not installed ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 The properties of the board's class that it lacks take their defaults, and so do the board options its classes require, as far as the board lacks them ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), where a board option that no loaded package defines, or a default that fails or does not fit its schema, refuses the board ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 
