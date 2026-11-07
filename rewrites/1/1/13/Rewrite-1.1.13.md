@@ -9,7 +9,7 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 ## What must hold
 
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it.
-2. Each component that reads a board option's value names the board option in its own definition: a board class, a renderer, a board option's UI, or a block class in its UI module, which also names every board option that the class's requests read.
+2. Each component that reads a board option's value names the board option in its own definition: a board class, a plugin class, a renderer, a board option's UI, or a block class in its UI module, which also names every board option that the class's requests read.
    The board holds a value for the board option before that component first reads it, on a locked board too.
 3. A board holds a value only for a board option that something on the page has required since the board opened, or that a script, a file or a command has set.
 4. A change to a board option's value evaluates no block, since no board option reaches `expr`, and neither undo nor redo changes a board option's value.
@@ -103,6 +103,7 @@ A board option comes onto a board through the components that require it.
 Each component names the board options it requires in its own definition:
 
 - A board class, in the `options` of its definition ([Board objects](Rewrite-1.1.1#the-board)).
+- A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)).
 - A renderer, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
 - A board option's UI, in the `options` of its module, as a renderer does, for the board options it reads besides its own.
 - A block class, in the `options` of its UI module, those that its requests read included.
@@ -116,14 +117,15 @@ It shows the error in the block's element, naming the module, the request and th
 Core adds each board option that a component requires and the board lacks, with its definition's `default`:
 
 1. A board class's, as the store opens the board.
-2. A block class's, before core first calls its module's `render()` after the board opens.
-3. A renderer's, before core first asks R for an output that the renderer draws, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
-4. Those of a board option's UI, before core first calls its module's `render()`.
+2. A plugin class's, as a board opens with one of its plugins and as a change adds one, before core calls the plugin's `start` or mounts its UI module ([Running a plugin](Rewrite-1.1.12#running-a-plugin)).
+3. A block class's, before core first calls its module's `render()` after the board opens.
+4. A renderer's, before core first asks R for an output that the renderer draws, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
+5. Those of a board option's UI, before core first calls its module's `render()`.
 
 So a board opened later gets them as a page that starts with that board would ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 Core adds a value through its command `blockr.core-set_option`, under core's own origin, by which a locked board tells it apart ([Locked boards](#locked-boards)).
 A board option that a board class requires but no loaded package defines refuses the board, naming the board option and the class, before any default runs, and so does a required default that fails or does not fit its schema ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-For a renderer, a board option's UI or a block class, core reports such a board option, naming it and what requires it, and mounts the module without it.
+For a plugin class, a renderer, a board option's UI or a block class, core reports such a board option, naming it and what requires it, and runs the plugin or mounts the module without it.
 
 From then on the board holds the value: a command changes it, a save writes it, and opening the saved board restores it ([Serialization](Rewrite-1.1.4#board-options)).
 So a board holds no value for a board option that nothing has required since it opened, and nothing yet removes the value of one whose component has gone.
@@ -175,7 +177,7 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, or else the board option's default, which core resolves before it calls the module's `render()`, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
   A front-end mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic front-end does in its toolbar and the dock in its options sidebar ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
   An app replaces it with a renderer that it names in the blockr option `renderers` ([Front-ends and extension points](Rewrite-1.1.8#renderers)).
-- Other client code reads the values in `store.board().options` and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
+- A plugin, like any other client code, reads the values in `store.board().options` and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
 ### Locked boards
 
