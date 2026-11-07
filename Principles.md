@@ -15,7 +15,7 @@ Core's table output is an example ([blockr.core#422](https://github.com/BristolM
 It holds the names and classes of a table's columns, one page of its rows and its total row count, which may be unknown.
 A cell that is not a single value shows its summary, so that the table stays flat, and every other value goes to the JSON writer as it is.
 Core shows no column labels, no groups and no row names.
-A renderer that shows them asks R for them through requests of its own ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425#issuecomment-6579784904)), and a deployment picks that renderer for table outputs.
+A renderer that shows them asks R for them through requests of its own ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425#issuecomment-6579784904)), and an app picks that renderer for table outputs.
 A package whose results need another kind of table output adds a method of `as_table_output()` for their class.
 
 ## A board runs arbitrary R code, and the deployment sandboxes the R process

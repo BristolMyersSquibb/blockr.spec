@@ -251,7 +251,7 @@ A file of today's stack is converted to a JSON board outside core first ([Serial
 
 A board opens as it is, whatever class the store builds it as, and core draws it with the front-end of that class, as a fresh app serving the board would ([Drawing the board](Rewrite-1.1.8#switching-frontends)), where a restore today is a `session$reload()` that builds the page for the restored board's class ([Client-owned board state](Rewrite-1.1)).
 Nothing converts the board, so its board option values stay, while the store drops the properties of a class whose package is not installed ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-The properties of the board's class that it lacks take their defaults, and so do the board options its classes require, as far as the board lacks them ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), where a board option that no loaded package defines, or a default that fails or does not fit its schema, refuses the board ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
+The properties of the board's class that it lacks take their defaults, and core then adds the board options that its classes require and it lacks, each with its default, through `blockr.core-set_option` ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), where a board option that no loaded package defines, or a default that fails or does not fit its schema, refuses the board ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 
 ### Undo
 

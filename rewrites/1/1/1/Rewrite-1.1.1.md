@@ -11,7 +11,7 @@ What a board option is, and the blockr options beside board options, are [Board 
 
 1. A board built in R by `new_board()` and the block, link, stack and board option constructors maps to the client's board and back without losing any of its state, and so does the JSON `blockr_ser()` writes today.
    An app can start from a JSON board in place of a constructor call, as `serve()` takes a file's path today.
-2. The board is plain data, so it serializes as is, and every change to it can be written as a delta and undone.
+2. The board is plain data, so it serializes as is, and every change to it can be written as a delta and undone, but for a board option's value, which undo leaves alone ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 3. A board names its class, as blockr.dock makes boards of a class of its own today, and a board class keeps what it adds in properties of its own, beside core's, which core carries without reading them.
 4. A board saved with a package that is not installed opens without the objects that need it, and the user learns which ones were dropped.
 5. The board names its blocks' classes by registry id only, and its own class by its R class vector alone, while no other object in it, nor in the file it is saved to, carries an R class, names a constructor or holds a block class's source ([Serialization](Rewrite-1.1.4)).
@@ -37,7 +37,7 @@ The board holds only what changes while the app runs, with the ids and registry 
 | Board classes | The client | The page | Each board class's definition, under its R class name: its parent class, the board options it requires and the properties it adds, which the package that ships the class defines in JS, with its package, its front-end and its version, which R sends from the class's methods, for neither side to edit, while the board holds the properties' values ([The board](#the-board)) |
 | Front-end and extensions | The client | The page | Draw the board and work on it through the store, commands, demand and requests, keeping their data in the properties of the board's class ([Drawing the board](Rewrite-1.1.8)) |
 | Block registry | R | The process | Each registered block class, a value holding its UI, inputs, `expr`, requests and output, with its constructor and metadata ([Block classes in R](Rewrite-1.1.5)) |
-| R board | R | While R converts it | Built by an app script's constructor calls, whose board options R collects and whose block classes it registers, then converted to the client's board and dropped, so it never exists beside the client's board |
+| R board | R | While R converts it | Built by an app script's constructor calls, whose block classes R registers, then converted to the client's board and dropped, so it never exists beside the client's board |
 | Results | R | Until the client forgets the block | For each block R has evaluated, the revision, value, block expression and registry id of its latest evaluation, with the previous value kept while the next computes. They hold no state, which each evaluation brings, so they cannot fall out of step with the board ([Block classes in R](Rewrite-1.1.5#evaluation)) |
 | JSON board | A file, or the reply to `hello` | As long as the file, and the process for the opening board | The board with every id, the versions of the shapes it holds and the versions of the packages its content comes from, which the client saves and R writes for the opening board ([Serialization](Rewrite-1.1.4#files)) |
 
@@ -45,9 +45,9 @@ The board holds only what changes while the app runs, with the ids and registry 
 
 R holds no copy of the board, so nothing in R has to follow it: an R object either exists only while a board is defined or opened or holds no state, and R reads the current state from the request that needs it.
 
-- An R board, with its blocks, links, stacks and board options, exists only while R converts it to the client's board: the one an app script builds with constructors, whose board options R collects and whose block classes it registers.
+- An R board, with its blocks, links, stacks and board options, exists only while R converts it to the client's board: the one an app script builds with constructors, whose block classes R registers.
   R hands it to the client as its board and drops it, while a JSON board it neither builds nor opens, since the client opens every board ([Board updates](Rewrite-1.1.2#opening-a-board)).
-  Its S3 classes do their work there, in the constructors and in collecting board options, and only the board's class vector reaches the client, in the board's `class`, while the board names block classes by registry id (below).
+  Its S3 classes do their work there, in the constructors, and only the board's class vector reaches the client, in the board's `class`, while the board names block classes by registry id (below).
 - A block class is a value, defined once with `new_block_class()` and held by the block registry: its UI, inputs, requests and output, and its `expr`, which checks a state and returns what the block expression is made from, while `block_eval()` runs that expression ([Block classes in R](Rewrite-1.1.5)).
   Nothing about a class is copied into a block.
 - A block, as its constructor returns it, holds its state and name and refers to its class.
@@ -55,7 +55,7 @@ R holds no copy of the board, so nothing in R has to follow it: an R object eith
 - Results are an environment keyed by block id, holding for each block R has evaluated the revision, value, block expression and registry id of its latest evaluation, with the previous value kept while the next computes.
   They hold no state: an evaluation brings the recipe's state, from which the class's `expr` builds the block expression that `block_eval()` runs, and the coercion its class names makes an output from a result ([Wire protocol](Rewrite-1.1.9#outputs)).
   R drops a block's results when the client says the block is gone ([Wire protocol](Rewrite-1.1.9)).
-- A request carries the current state it needs: an evaluation its recipe ([Wire protocol](Rewrite-1.1.9)), a block class's request the state args its function names, and an output request, or a request of its output class, the values of the board options.
+- A request carries the current state it needs: an evaluation its recipe ([Wire protocol](Rewrite-1.1.9)), a block class's request the state args its function names and the values of the board options that it names, and an output request, or a request of its output class, the values of the board options that the renderer names ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)).
 
 ### The board
 
