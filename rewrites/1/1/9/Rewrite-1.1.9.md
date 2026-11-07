@@ -141,10 +141,10 @@ What R runs for the client comes in these flavors, which differ in who defines a
 |---|---|---|---|---|---|
 | Evaluation | The block's class, through its `expr` and `block_eval()` ([Block classes in R](Rewrite-1.1.5#evaluation)) | The scheduler, for demand and one-time evaluations ([Evaluation in the client](Rewrite-1.1.10#demand)) | Its reply sets the block's status, and R keeps the result | No | From the block expression R built at startup, for a locked block |
 | Evaluation with parameters | A `block_eval()` method of the block's class, such as the write block's | A one-time evaluation with parameters, such as a save button's | No, it runs once per call | Yes | With its parameters only for a block left open |
-| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, board options, `info` and parameters | No | With the opening board option values |
-| Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the opening board option values |
-| Renderer's request | The renderer, as its package declares it | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No | With the opening board option values |
-| Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No | With a locked block's opening state and the opening board option values |
+| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, board options, `info` and parameters | No | With the board option values that the app set, else the request's own |
+| Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the board option values that the app set, else the request's own |
+| Renderer's request | The renderer, as its package declares it | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No | With the board option values that the app set, else the request's own |
+| Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No | With a locked block's opening state, and the board option values that the app set, else the request's own |
 | Volatile request | A request that the class makes with `new_block_request(volatile = TRUE)` | The block's UI, through its host | No | No | As a block class's request |
 | Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
 | Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where its package says that it may run there |
@@ -156,7 +156,7 @@ No request times out, since no reply is lost on a live connection and giving up 
 
 ### Outputs
 
-An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, or, in a block's first output request where its registry entry names no renderer, of every board option that the board holds ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)), what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
@@ -165,7 +165,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "status": "ok", "output": { "renderer": "blockr.core-table_output", "columns": [], "rows": [], "total": 150 } }
 ```
 
-An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
+An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it, unless it loaded it already as the renderer that the block registry entry names, and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
 Any reply may come with one binary body, such as a plot's PNG beside its output, or a file a request answers with, as a download does, and a request may carry one, as an upload action does, or a chart's bitmap for its download ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 The reply or request announces it in `body`, with its MIME type and, for a download, a file name, as `"body": { "type": "image/png" }`, and the bytes travel beside it as the Shiny transport carries them (below), so that no message depends on how.
 
@@ -217,11 +217,11 @@ In a locked session:
 
 - It evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the revisions of the inputs, which say only which of its own results to bind, and the state and parameters of a block left open, so that a locked write block in manual mode, whose save button no front-end shows, never writes.
 - It answers a block class's request for a locked block, as its `block` names it, with the block's opening state, whatever `args` holds, binding the inputs as it built them at startup, and takes only the parameters from the request.
-- It takes the board option values from the opening board for every request that carries them, a block class's, an output's or an output class's, whatever the request holds, and the request's own for a board option that the app script set none for, since the lock holds what the app built, while what the R process may read is the deployment's to limit ([Principles](Principles#the-deployment-confines-what-a-board-can-do)).
+- It takes the board option values from the opening board for every request that carries them, a block class's, an output's, an output class's or a renderer's, whatever the request holds, and the request's own for a board option that the app script set none for, since the lock holds what the app built, while what the R process may read is the deployment's to limit ([Principles](Principles#a-board-runs-arbitrary-r-code-and-the-deployment-sandboxes-the-r-process)).
 - It runs a block class's action only for a block left open.
 - It runs a board option's or a plugin's request only where its package says that the request may run on a locked board (above).
 
-Anything else is refused with an `error` that names the lock, while outputs are drawn as before, and the requests of their output classes answered, with the opening board option values.
+Anything else is refused with an `error` that names the lock, while outputs are drawn as before, and the requests of their output classes answered, with the board option values that the app set, else the request's own.
 A locked board thus runs only its opening board's blocks, every locked one with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks.
 With illustrative names:
 

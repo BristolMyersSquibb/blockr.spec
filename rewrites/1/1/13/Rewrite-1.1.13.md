@@ -183,8 +183,9 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 
 A locked board keeps the board options that the app set, as it keeps its blocks, links and stacks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 A board option still comes with the component that requires it, so core adds one that a component requires and the board lacks, with its default, since the app set no value for it ([Which board options a board holds](#which-board-options-a-board-holds)).
-The store tells that delta apart by core's origin and lets it through, and refuses every other delta that sets or removes a board option's value, so that nothing else adds a board option to a locked board or changes one.
-R takes a request's own value for a board option that the app script set none for, so the default that core added reaches R, while R keeps a value that the app set whatever a request carries.
+The store lets through a delta under core's origin that adds a value the board lacks, and refuses every other delta that sets or removes a board option's value, so that nothing else adds a board option to a locked board or changes one.
+While the blockr option `lock_load` is on, R holds the lock: it takes a request's own value for a board option that the app script set none for, so the default that core added reaches R, while it keeps a value that the app set whatever a request carries.
+Set false, the client alone keeps the lock, and R takes the values that a request carries ([Locked boards](Rewrite-1.1.11#who-holds-a-lock)).
 
 ### Blockr options
 
@@ -234,6 +235,7 @@ In R, `new_block_request()` is in `R/block-request.R` and `output_coercion()` in
 On `js-state`, `commit()` in `srcts/store/commit.ts` keeps a step's board option values in its inverse, which this page leaves out, as settled on [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503#discussioncomment-19358997).
 
 An origin is a string that any caller of `store.apply()` or `commands.run()` may give ([Board updates](Rewrite-1.1.2#the-store)), so code that holds `CoreApi` could give core's own.
-That opens no hole in the lock: the store's refusals keep the user and front-ends from changing what the app fixed, while R holds the lock for what it evaluates, keeping a value that the app set whatever a request carries ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)).
+That opens no hole in a lock that R holds: the store's refusals keep the user and front-ends from changing what the app fixed, while R holds the lock for what it evaluates, keeping a value that the app set whatever a request carries ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)).
+Where `lock_load` is false, the client alone keeps the lock, and the store's refusals are all that hold it, so a delta under core's origin still changes no value that the app set ([Locked boards](Rewrite-1.1.11#who-holds-a-lock)).
 
 </details>

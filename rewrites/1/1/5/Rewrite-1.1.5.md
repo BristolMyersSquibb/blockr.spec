@@ -12,7 +12,7 @@ A block class's UI, a module that meets the contract, is the UI modules proposal
 3. The generics packages implement today keep working wherever they still have a job.
 4. Nothing about a class is copied into its blocks, and nothing builds a block to learn about its class.
 5. A package plugs into another package's class only through a hook that class offers, or by building a class of its own from that class's fields.
-6. A front-end or any other package can replace how core draws an output class, such as table outputs, without changing a block class.
+6. An app can replace how core draws an output class, such as table outputs, with a renderer that any package offers, without changing a block class.
 
 ## Today
 
@@ -250,7 +250,7 @@ Blocks group in other ways too, each with a home of its own rather than a place 
 
 A class's fields belong to its package, so another package cannot change a class in place, as an S3 method registered for the block's class can today.
 Instead, an output class's coercion is a hook where other packages are meant to plug in: `as_table_output()` dispatches on the result's class, so a package that knows another class of table, such as dbplyr's lazy tables, which it pages in the database, registers a method that returns a table output, which every renderer of table outputs then draws.
-How an output looks is no hook of a block class at all, since any package can replace the renderer of an output class (below).
+How an output looks is no hook of a block class at all, since an app can replace the renderer of an output class with one that any package offers (below).
 Otherwise, a package builds a class of its own from the other package's class's fields, `new_block_class("my_head", inputs = head_block$inputs, expr = head_block$expr, ui = head_block$ui, output = as_text_output)`, and calls the other class's field where it extends one.
 No package in the workspace overrides another's block methods today, and the two registrations across packages, blockr.sandbox's methods for blockr.ai's `data_schema()` and `data_effect()` and for blockr.assistant's `describe_result()`, dispatch on result classes and work as before ([blockr.sandbox R/composer.R#L1401-L1418](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/afa235e346145e61af6dd01151b5b14f0ef12549/R/composer.R#L1401-L1418), [R/describe-composed.R#L178-L186](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/afa235e346145e61af6dd01151b5b14f0ef12549/R/describe-composed.R#L178-L186)).
 
@@ -383,7 +383,7 @@ For a head block's result, the first seven rows of `iris`, with `n_rows` at 3 an
 {"renderer":{"id":"blockr.core-table_output","module":"blockr.core/js/basic-table.js?v=b7e2a915"},"columns":[{"name":"Sepal.Length","class":"numeric"},{"name":"Sepal.Width","class":"numeric"},{"name":"Petal.Length","class":"numeric"},{"name":"Petal.Width","class":"numeric"},{"name":"Species","class":"factor"}],"rows":[[4.6,3.1,1.5,0.2,"setosa"],[5,3.6,1.4,0.2,"setosa"],[5.4,3.9,1.7,0.4,"setosa"]],"total":7}
 ```
 
-The contract is what a renderer of the class is written against: a JSON Schema of the class's outputs, by which R writes each output, as it writes a block's state by its class's schema ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), with the TypeScript type that goes with it, as a module ships its state's schema beside its type ([UI modules in JS](Rewrite-1.1.7#packaging)); a type of the parameters its coercion reads; a type of the events its renderers emit, if they emit any, such as a chart's selection, which an extension may hear ([UI modules in JS](Rewrite-1.1.7#the-contract)); the types of the args and answers of its requests, if it has any (below); and fixtures of sample outputs, which R's constructor writes and every renderer of the class is tested on.
+The contract is what a renderer of the class is written against: a JSON Schema of the class's outputs, by which R writes each output, as it writes a block's state by its class's schema ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), with the TypeScript type that goes with it, as a module ships its state's schema beside its type ([UI modules in JS](Rewrite-1.1.7#packaging)); a type of the parameters its coercion reads, and the board options it reads (below); a type of the events its renderers emit, if they emit any, such as a chart's selection, which an extension may hear ([UI modules in JS](Rewrite-1.1.7#the-contract)); the types of the args and answers of its requests, if it has any (below); and fixtures of sample outputs, which R's constructor writes and every renderer of the class is tested on.
 So a data frame becomes rows wherever the schema wants arrays of arrays, and a length-one vector stays an array wherever the schema wants one.
 The defining package ships them beside its renderer, as core ships the types modules are written against ([UI modules in JS](Rewrite-1.1.7#packaging)), and a subclass's types extend its class's, as its class vector does.
 Core's contracts for its three output classes:
@@ -448,13 +448,14 @@ as_dm_output.dm <- function(result, options, info, params) {
 dm_block <- new_block_class("dm_block", expr = dm_expr, ui = js_module("dm-block.js"), output = as_dm_output)   # inputs and requests left out
 
 output_schema.dm_output <- function(x, ...) read_json_schema("dm-output.schema.json")   # S3 methods, for the schema of its outputs
+output_coercion.dm_output <- function(x, ...) as_dm_output                             # its coercion, by which R finds the renderer for dm_block
 output_renderer.dm_output <- function(x, ...) {                                        # and its renderer, blockr.dm-dm_output
   chosen_renderer("dm_output", new_renderer("dm_output", js_module("dm-output.js")))
 }
 ```
 
 An output class may have requests, for what its renderers offer beyond the output, such as a download of what they show, as blockr.viz's tables offer the frame on screen as xlsx, HTML and pptx today ([R/table-download.R#L3-L11](https://github.com/BristolMyersSquibb/blockr.viz/blob/332ce573ffafa86f5a41dc400b0f85e6800128f7/R/table-download.R#L3-L11)).
-The package that defines the class gives them in R through its method of `output_requests()`, beside its methods for the class's JSON Schema and renderer ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), and a renderer of the class calls them through its output host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+The package that defines the class gives them in R through its method of `output_requests()`, beside its methods for the class's JSON Schema, coercion and renderer ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), and a renderer of the class calls them through its output host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 R runs one as it runs the coercion, with the block's result at the revision of the output the renderer holds and the board option values and parameters that output was asked with, which the request carries, and with the args the renderer passes and, in the argument `file`, a file it sends, such as the bitmap of a chart the browser drew, and the request answers as a block class's does, a download with a reply body.
 A subclass's method returns its own requests before those that `NextMethod()` returns for its class, so that a subclass has its class's requests and may replace them, while a subclass without a method has its class's alone.
 A renderer may bring requests of its own too, for what it alone offers, such as the labels of a table's columns, which its package gives it as it makes it ([Drawing the board](Rewrite-1.1.8#renderers)).
@@ -473,7 +474,7 @@ The client keeps an answer as it keeps the output, unless the class wraps the re
 | `block_eval(x, expr, env, ...)` | kept, dispatching on the block's class, with core's method only evaluating the block expression, and a class whose expression draws a base plot capturing it with `capture_plot()` in a method of its own (above) |
 | none | `interpolate(x, inputs)`, a generic on the class of what `expr` returns, which makes the block expression from it with the upstream ids by input, and whose method a package adds for a class of its own that inherits from `blockr_expr` (above) |
 | `block_eval_trigger()` | gone, since board options never re-evaluate and any component can invalidate a block |
-| `board_options(x)` | the board options that the class's UI module names, those its requests read among them, those of the renderers that draw its outputs, and for a board those its front-end declares ([Plugins](Rewrite-1.1.12#a-plugin)) |
+| `board_options(x)` | the board options that the class's UI module names, those its requests read among them, those of the renderers that draw its outputs, and for a board those that its board class and its plugins' classes name ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)) |
 | `blockr_ser()`, `blockr_deser()` | `blockr_ser()` kept, to write a script's board as a JSON board, and `blockr_deser()` left to the conversion of files from today's stack outside core, while a JSON board migrates in JS ([Serialization](Rewrite-1.1.4#migrations)) |
 | `block_summary(x, data)` | `result_summary(result)`, dispatching on the result's class rather than the block's, which R sends with every evaluation's reply (above) |
 | `block_server()`, `expr_server()`, `expr_ui()` | gone |
