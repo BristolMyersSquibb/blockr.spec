@@ -22,7 +22,7 @@ The dock, which draws the board from R with DOM operations, shows the same split
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen, except what an app has R evaluate in the background while it has nothing else to run ([Evaluation in the client](Rewrite-1.1.10#demand)).
 4. Boards written by today's `blockr_ser()` open, with the dock's views and layouts and the DAG's positions, for block classes that have been ported ([Serialization](Rewrite-1.1.4)).
 5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
-6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the extensions follow it, while core's client builds on Tailwind CSS ([Front-ends and extension points](Rewrite-1.1.8#cores-basic-front-end)).
+6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the extensions follow it, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 
 ## Principles
 

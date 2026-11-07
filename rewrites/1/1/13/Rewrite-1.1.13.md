@@ -137,7 +137,7 @@ Undo never takes a value back, nor does redo set it again, since a board option 
 
 R makes an output only with the board options its coercion reads.
 The coercion `as_table_output()`, for one, pages a data frame by `n_rows`, and has no fallback of its own.
-The client, though, learns the renderer that requires them from the output itself ([Front-ends and extension points](Rewrite-1.1.8#renderers)).
+The client, though, learns the renderer that requires them from the output itself ([Drawing the board](Rewrite-1.1.8#renderers)).
 Without more, a fresh board's first table could never draw: R needs `n_rows` to make the output, and core adds `n_rows` only once an output has named its renderer.
 R therefore also names the renderer of a block class's outputs in the class's registry entry ([Block classes in R](Rewrite-1.1.5#registration)):
 
@@ -167,7 +167,7 @@ R code reads a board option's value only where it names the board option:
 Registration calls each constructor that a request names once, to read the board option's id for the registry entry, and drops the object.
 The client sends a block class's request the values of the board options that the request names, and an output request those that the renderer names, each as the board holds it, by id.
 It keeps the answer or the output by those values, so that a change to any other board option leaves it alone ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-A board option's own requests, which its package registers in R under the board option's id, get only the args that its UI passes, as blockr.io's data directory board option has R list a directory that its UI names ([Front-ends and extension points](Rewrite-1.1.8#what-a-package-declares-in-r)).
+A board option's own requests, which its package registers in R under the board option's id, get only the args that its UI passes, as blockr.io's data directory board option has R list a directory that its UI names ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
 No board option reaches `expr` or `block_eval()`, so a change to one evaluates no block, and one that shapes outputs redraws them without evaluating ([Client-owned board state](Rewrite-1.1#proposal)).
 
 ### Reading a board option in the client
@@ -175,8 +175,8 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 - A block class's UI module gets, in its context, the values of the board options it names, so that it shows what depends on them, as blockr.io's path field shows the data directory as its prefix ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 - A renderer gets, through its output host's `options()`, the values of the board options its module names, as the output it holds was asked with.
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, or else the board option's default, which core resolves before it calls the module's `render()`, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-  A front-end mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic front-end does in its toolbar and the dock in its options sidebar ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)).
-  An app replaces it with a renderer that it names in the blockr option `renderers` ([Front-ends and extension points](Rewrite-1.1.8#renderers)).
+  A front-end mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic front-end does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+  An app replaces it with a renderer that it names in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)).
 - A plugin, like any other client code, reads the values in `store.board().options` and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
 ### Locked boards
@@ -191,7 +191,7 @@ R takes a request's own value for a board option that the app script set none fo
 An app fixes its blockr options when it starts or is deployed, as today, and the mechanism carries over: `blockr_option()` reads each one from an R option or an environment variable.
 The blockr options follow the code that reads them, since each part keeps, drops or adds blockr options as it translates its code rather than copying it ([State in JS](Rewrite-1#principles)).
 R reads the blockr options that its own code needs where it needs them, as today.
-The client can read neither an R option nor an environment variable of the server, so client code asks R for a blockr option by name, through `CoreApi.blockrOption(name, fallback)`, which passes the values in rather than having code read a global ([Front-ends and extension points](Rewrite-1.1.8#what-core-gives-a-front-end)):
+The client can read neither an R option nor an environment variable of the server, so client code asks R for a blockr option by name, through `CoreApi.blockrOption(name, fallback)`, which passes the values in rather than having code read a global ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)):
 
 1. Core asks R the first time code reads a blockr option, with a `blockr_options` request, and the names that code reads within one task go in one request ([Wire protocol](Rewrite-1.1.9#blockr-options)).
 2. R replies with the value of each blockr option it has a value for, as `blockr_option()` reads it.
