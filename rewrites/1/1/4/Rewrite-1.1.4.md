@@ -25,7 +25,7 @@ A one-block stack therefore comes out as `"blocks": "a"` in one file and `"block
 ### Files
 
 A JSON board is the one format of a board outside the store: the board as the client holds it ([Board objects](Rewrite-1.1.1#the-board)), under `board`, with two things beside it that opening it needs: `format`, the version of the format, which today's files lack, so that a file still to convert is told apart; and `packages`, the version of every package that the board's block classes and board classes come from, which names what to install, since the client names each package that a JSON board lists and R did not load ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
-Inside the board, each block records the version of its class's state in `version`, and the board, in `versions`, the version of the properties that each of its classes adds, by class, which migrations key on (below).
+Inside the board, each block records the version of its class's state in `version`, the board in `versions` the version of the properties that each of its classes adds, by class, and each board option the version of its value's shape beside the value, which migrations key on (below).
 A block of a class defined outside a package is there by its registry id alone, as any other, and nothing of its class is ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 It names no constructor, and no R class but the board's own class vector in `class`, which the client keeps as R wrote it: when the client opens the file, it finds each block's class among the block registry's entries by registry id, and builds the board as the first class in its `class` that a loaded package defines ([Board objects](Rewrite-1.1.1#the-board)).
 The client saves a board as one, from its board and from the versions of packages and of classes that R sends with the block registry.
@@ -50,7 +50,7 @@ A board with two blocks, one of them of a class defined outside a package, a lin
     },
     "links": { "ab": { "from": "a", "to": "b", "input": "data" } },
     "stacks": {},
-    "options": { "n_rows": 50 }
+    "options": { "n_rows": { "value": 50, "version": 1 } }
   }
 }
 ```
@@ -103,7 +103,7 @@ A file from today's stack migrates once, as its conversion outside core reads it
 ### Board options
 
 A JSON board holds each board option's value under its id with the version of the value's shape, as `"n_rows": { "value": 50, "version": 1 }`, and nothing else of it, while the board holds the value alone.
-It holds every value that the board held, whether a command set it or a component added it with its default, so a board opened from one gets back the values it was saved with, whatever its page then shows ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+It holds every value that the board held, whether a script, a file or a command set it or core added it with its default for a component that requires it, so a board opened from one gets back the values it was saved with, whatever its page then shows ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 The package that defines a board option gives the version in R, through its method of `board_option_version()` for the board option's class, which is its id followed by `_option`, as `board_option_version.n_rows_option()`, and a board option without one is at version 1, so that R writes the values of the opening board at the versions the client saves, while R sends the versions in its reply to `hello`, in `option_versions` ([Wire protocol](Rewrite-1.1.9#handshake)).
 The store migrates a value that the board records at a version below the one R gives in the board option's `migrate` (above), refuses one above, and drops a value that no board option claims or that its schema refuses once migrated, as it drops a property that the class the board is built as does not define, without naming it, while a board option that a board class requires but no loaded package defines refuses the board, naming it and the class ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 The conversion of a file from today's stack drops a board option's category and label, since its definition supplies them.

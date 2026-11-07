@@ -156,7 +156,7 @@ No request times out, since no reply is lost on a live connection and giving up 
 
 ### Outputs
 
-An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, or, in a block's first output request where its registry entry names no renderer, of every board option that the board holds ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)), what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
@@ -165,7 +165,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "status": "ok", "output": { "renderer": "blockr.core-table_output", "columns": [], "rows": [], "total": 150 } }
 ```
 
-An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
+An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it, unless it loaded it already as the renderer that the block registry entry names, and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
 Any reply may come with one binary body, such as a plot's PNG beside its output, or a file a request answers with, as a download does, and a request may carry one, as an upload action does, or a chart's bitmap for its download ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 The reply or request announces it in `body`, with its MIME type and, for a download, a file name, as `"body": { "type": "image/png" }`, and the bytes travel beside it as the Shiny transport carries them (below), so that no message depends on how.
 

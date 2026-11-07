@@ -4,11 +4,12 @@ Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7)
 A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block class could compose its UI from in R, without writing TSX, which blockr.ui would build on core's module contract ([UI modules in JS](Rewrite-1.1.7)) once it ships ready-made components.
 Core ships none of it, and it shapes no issue yet.
 How a block class names its UI and its requests is the block classes proposal ([Block classes in R](Rewrite-1.1.5)).
+A board option's UI is the UI module in the board option's definition in the client ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 
 ## What must hold
 
 1. A block class whose UI is a form of common inputs is written in R alone, as most block UIs are today.
-2. Every element is bound to one state arg, or to a board option's value, and an attribute that depends on the data is an R function whose arguments name what it reads.
+2. Every element is bound to one state arg, and an attribute that depends on the data is an R function whose arguments name what it reads.
 3. The first set covers what core's built-in blocks and the block packages draw today.
 4. R holds no reactive graph, since the client tracks what each attribute reads.
 
@@ -62,14 +63,6 @@ Each function is a request of its block class, registered under the element's id
 The client asks R for it again when the revision of an input it names or the value of a state arg it names changes, caches the answers by those values, and tracks what each function reads with a JS signals library, so R just runs the function.
 An attribute that depends only on state, such as whether to show a field, goes through the same mechanism.
 A block class whose input and state arg share a name is rejected when `new_block_class()` defines it, since a function's argument would not say which it means ([Block classes in R](Rewrite-1.1.5)).
-
-### Board options
-
-A board option's UI could be composed from the same elements, bound to the board option's value instead of a state arg, as for `n_rows`:
-
-```r
-new_board_option("n_rows", 50L, ui = numeric_input("n_rows", "Preview rows", min = 1L))
-```
 
 ### Inside modules
 
