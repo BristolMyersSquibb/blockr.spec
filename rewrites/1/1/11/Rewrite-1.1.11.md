@@ -10,8 +10,8 @@ Block attributes, which said which of a block's sections show and which blocks a
 
 1. Where the load lock and the board lock are both on, R evaluates only the opening board's blocks, with their opening links, and every locked block with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks, for a JSON board that `serve()` is given as for a script's board.
 2. An app sets each lock on its own: the load lock fixes the app to its opening board, the board lock fixes what every board the app shows holds but its blocks' state, its board options and its plugins' state, and a block's lock fixes the block's state where the board lock is on.
-3. Without the load lock, the board lock and the block locks hold for a client that plays by the rules: the store refuses what they fix, a front-end draws no control for it, and R refuses an evaluation that rebinds a block's data inputs or changes a locked block's state, while a client that opens a board it changed loosens them.
-4. Whether the board lock leaves a block open is a property of that block, which a script or a JSON board sets, and never what a front-end shows, and a block for which neither sets it follows the board lock, so that the board lock locks every block of a board that today's packages saved, as the dock does today.
+3. Without the load lock, the board lock and the block locks hold for a client that plays by the rules: the store refuses what they fix, a frontend draws no control for it, and R refuses an evaluation that rebinds a block's data inputs or changes a locked block's state, while a client that opens a board it changed loosens them.
+4. Whether the board lock leaves a block open is a property of that block, which a script or a JSON board sets, and never what a frontend shows, and a block for which neither sets it follows the board lock, so that the board lock locks every block of a board that today's packages saved, as the dock does today.
 5. The board lock leaves board options open, such as dark mode, since no board option reaches what R evaluates.
 6. The board lock keeps the plugins a board holds, its frontend and storage plugin among them, which go on running but change nothing that a lock fixes, while what a plugin keeps in its state is the plugin's own to lock.
 7. What a plugin keeps about a block, such as the dock's record of which sections of a card show, lives in the plugin's state, keyed by the block's id, so core needs nothing new for it: the store checks it against the plugin class's schema, saves and undoes it, and drops it with the plugin.
@@ -19,7 +19,7 @@ Block attributes, which said which of a block's sections show and which blocks a
 
 ## Today
 
-An app locks a board through the blockr option `locked` ([R/board-lock.R#L39-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-lock.R#L39-L47)), and a locked core board drops every update that changes the board, while a block's own inputs stay editable unless a front-end reports them hidden ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)).
+An app locks a board through the blockr option `locked` ([R/board-lock.R#L39-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-lock.R#L39-L47)), and a locked core board drops every update that changes the board, while a block's own inputs stay editable unless a frontend reports them hidden ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386)).
 The dock freezes every block on a locked board, from what the client reports its cards show ([blockr.dock R/board-server.R#L386-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L386-L433)), and restores any board in locked mode, since "locking is about preventing layout / structural mutations, not blocking a wholesale state import/export" ([blockr.dock#125](https://github.com/BristolMyersSquibb/blockr.dock/pull/125)).
 A deployment that only hides the authoring controls uses a separate option of the dock's, which refuses nothing ([blockr.dock#475](https://github.com/BristolMyersSquibb/blockr.dock/issues/475)).
 The dock writes which sections of a card show into the block's payload as it saves ([blockr.dock R/utils-serdes.R#L12-L33](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L12-L33)), and `new_block()` passes its `...` on to the block as R attributes ([R/block-class.R#L180-L184](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-class.R#L180-L184)).
@@ -29,7 +29,7 @@ So a script can set a block's sections in its constructor, as `new_head_block(vi
 
 ### Three locks
 
-An app sets three locks, each on its own, while a front-end or a plugin may lock more of what it alone keeps, as the dock locks the arrangement of its panels ([Client-drawn dock and extensions](Rewrite-1.2)).
+An app sets three locks, each on its own, while a frontend or a plugin may lock more of what it alone keeps, as the dock locks the arrangement of its panels ([Client-drawn dock and extensions](Rewrite-1.2)).
 The load lock fixes the app to its opening board, the board lock fixes what the board holds, its blocks and links above all, and a block's lock fixes the block's state.
 They meet in two places: a block's lock takes effect only under the board lock, and R can guarantee the board lock and the block locks only where the load lock is on too ([What R refuses](#what-r-refuses)).
 A locked board is one under the board lock, whatever the load lock says.
@@ -37,7 +37,7 @@ A locked board is one under the board lock, whatever the load lock says.
 ### The load lock
 
 The blockr option `lock_load`, which an app sets as `blockr.lock_load` and a deployment as `BLOCKR_LOCK_LOAD`, fixes the app to its opening board, the one that the app script built or that `serve()` was given, and is off unless one of them sets it.
-While it is on, the store refuses every `store.open()` of a board's text, so that no board that the storage plugin's `open()` returns replaces the opening board ([Plugins](Rewrite-1.1.12#storage)), a front-end draws no control for opening one, and core keeps the board R sent where a startup module names another, naming the package ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+While it is on, the store refuses every `store.open()` of a board's text, so that no board that the storage plugin's `open()` returns replaces the opening board ([Plugins](Rewrite-1.1.12#storage)), a frontend draws no control for opening one, and core keeps the board R sent where a startup module names another, naming the package ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 It fixes nothing of the opening board itself, so an app with the load lock alone shows one board that a user may still edit, while an app that shows a fixed setup to anyone on the internet sets the board lock too.
 
 ### The board lock
@@ -45,17 +45,17 @@ It fixes nothing of the opening board itself, so an app with the load lock alone
 The blockr option `locked`, which an app sets as `blockr.locked` and a deployment as `BLOCKR_LOCKED`, as today, locks whichever board the app shows, and is off unless one of them sets it.
 While it is on, the store refuses every change but three: one to the state of a block that the board lock leaves open ([Block locks](#block-locks)), one to a board option's value ([Board options on a locked board](#board-options-on-a-locked-board)), and one inside a plugin's state ([Plugins on a locked board](#plugins-on-a-locked-board)).
 So it fixes the board's DAG, its blocks and links, and with it the board's name, every block's name and `locked`, the stacks, and which plugins the board holds, with their classes and names.
-A front-end draws no control for what it fixes, and nor does a plugin.
+A frontend draws no control for what it fixes, and nor does a plugin.
 Without the load lock, a reader may open other boards, each locked, but change the setup of none, as today's dock restores any board in locked mode ([blockr.dock#125](https://github.com/BristolMyersSquibb/blockr.dock/pull/125)), while a deployment that only hides the authoring controls keeps the dock's option for that, which refuses nothing ([blockr.dock#475](https://github.com/BristolMyersSquibb/blockr.dock/issues/475)).
 
 ### Block locks
 
 Every block holds `locked`, a property of core's beside `name`: `TRUE` locks the block, `FALSE` leaves it open, and `NA`, which a JSON board holds as `null`, follows the board lock.
-Core fixes a block's state only where both the board lock and the block's lock are on, which under the board lock is every block whose `locked` is `TRUE` or `NA`, and the store says which blocks it fixes, so that no front-end reads `null` as open.
+Core fixes a block's state only where both the board lock and the block's lock are on, which under the board lock is every block whose `locked` is `TRUE` or `NA`, and the store says which blocks it fixes, so that no frontend reads `null` as open.
 A block's `locked` is `NA` unless a script or a command sets it, and a board that today's packages saved opens with `NA` in every block, so that the board lock locks every block of such a board, as the dock does today.
 Under the board lock, a locked block keeps its opening state, and the store refuses every change to it.
 So an author leaves a block open to readers by setting its `locked` to `FALSE` in an app without the board lock, saves the board and serves it with the board lock on.
-Without the board lock, core fixes no block, and what a block whose `locked` is `TRUE` does there is the front-end's to decide, such as drawing its inputs read-only until the author unlocks it.
+Without the board lock, core fixes no block, and what a block whose `locked` is `TRUE` does there is the frontend's to decide, such as drawing its inputs read-only until the author unlocks it.
 
 ### Board options on a locked board
 
@@ -71,7 +71,7 @@ A board option's own request runs under the board lock only where its package sa
 A board holds its plugins in `plugins`, a property of core's board ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so the board lock fixes which plugins it holds, as it fixes its blocks.
 While the board lock is on, the store refuses every patch but those inside a plugin's state, such as `/plugins/dag/state/positions/a`, so that no command adds, removes or renames a plugin, and no frontend replaces the one the board holds.
 A plugin goes on running under the board lock, but only reads the board: the store refuses every change that a lock fixes, whichever plugin's command makes it, so that neither the DAG nor the assistant adds a block, links one or changes a locked block's state.
-A plugin reads the board and its results as on any board, and draws no control for what a lock fixes, as a front-end draws none, by the locks that core's API holds ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+A plugin reads the board and its results as on any board, and draws no control for what a lock fixes, as a frontend draws none, by the locks that core's API holds ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 What sits inside a plugin's state stays the plugin's own to lock, as [Wire protocol](Rewrite-1.1.9#locked-boards) has it, so the store applies a patch inside a plugin's state under the board lock, and the plugin's commands refuse what the plugin locks.
 A locked dock, for example, still lets a reader switch views, though the active view is part of the dock's state, while it offers no view to add, rename or remove, as today ([blockr.dock R/dock-view.R#L32-L35](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L32-L35), [Client-drawn dock and extensions](Rewrite-1.2)).
 R reads no plugin's state, so a plugin's own lock is the client's alone, and R runs a plugin's request under the board lock only where the plugin's package says that it may, as a package would for a request that only reads, such as the assistant's answer to a question about the board, and not for one that evaluates what the client sends, such as the assistant's trial of proposed args ([Plugins](Rewrite-1.1.12#a-plugins-requests), [Wire protocol](Rewrite-1.1.9#requests)).
@@ -105,7 +105,7 @@ R sends the locks with its reply to `hello`, as `{ "board": true, "load": true }
 What a plugin keeps about a block lives in the plugin's state, keyed by the block's id, as the DAG keeps a block's position, so core adds nothing to blocks for it ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 The dock keeps in its state which sections of each card show, as `visible: { a: ["outputs"] }`.
 The store checks that state against the plugin class's schema after every change, a JSON board saves it, undo takes it back, and the plugin's `update` drops a removed block's entry in the same step, while changing it bumps no revision, since it is not the block's state.
-A block that a command copies gets what each plugin's `update` gives a new block, or what the command adds itself, as the DAG's paste adds the pasted blocks' positions in the same delta ([Board updates](Rewrite-1.1.2#board-classes)).
+A block that a command copies gets what each plugin's `update` gives a new block, or what the command adds itself, as the DAG's paste adds the pasted blocks' positions in the same delta ([Board updates](Rewrite-1.1.2#plugins)).
 
 ### Block properties in R
 

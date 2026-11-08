@@ -2,7 +2,7 @@
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the two kinds of option, board options and blockr options, what sets them apart, and how each reaches the code that reads it, in the client and in R.
-It takes over what [Board objects](Rewrite-1.1.1#board-options) and [Defining a board in R](Rewrite-1.1.3#blockr-options) said about them, and shapes `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic front-end ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)) and leaving board option values out of undo and redo ([blockr.core#503](https://github.com/BristolMyersSquibb/blockr.core/issues/503)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It takes over what [Board objects](Rewrite-1.1.1#board-options) and [Defining a board in R](Rewrite-1.1.3#blockr-options) said about them, and shapes `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)) and leaving board option values out of undo and redo ([blockr.core#503](https://github.com/BristolMyersSquibb/blockr.core/issues/503)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How a delta sets a board option's value is [Board updates](Rewrite-1.1.2#deltas)'s, how a JSON board records the value is [Serialization](Rewrite-1.1.4#board-options)'s, the hosts through which a module reads it are [UI modules in JS](Rewrite-1.1.7#the-contract)'s, and the `blockr_options` message is [Wire protocol](Rewrite-1.1.9#blockr-options)'s.
 Each blockr option belongs to the page of the code that reads it, as the three that the scheduler reads belong to [Evaluation in the client](Rewrite-1.1.10#scheduling).
 
@@ -39,7 +39,7 @@ So a board's JSON describes the board in full, and holds nothing of the deployme
 | | Board option | Blockr option |
 |---|---|---|
 | Example | `n_rows`, the number of rows on a page of a table output | `gate_visibility`, which has core demand every block when it is `FALSE` |
-| Set by | The user through its UI, the assistant or an extension through a command, a script through its constructor, or a file | The app through an R option `blockr.<name>`, or a deployment through an environment variable `BLOCKR_<NAME>` |
+| Set by | The user through its UI, the assistant or another plugin through a command, a script through its constructor, or a file | The app through an R option `blockr.<name>`, or a deployment through an environment variable `BLOCKR_<NAME>` |
 | Changes | Whenever a command sets it | Never while the app runs |
 | Held by | The board, under the board option's id | Nobody: R reads it where its code needs it, and the client keeps what it asked R for until the page closes |
 | Saved | With the board, and never undone | Never |
@@ -173,7 +173,7 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 - A block class's UI module gets, in its context, the values of the board options it names, so that it shows what depends on them, as blockr.io's path field shows the data directory as its prefix ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 - A renderer gets, through its output host's `options()`, the values of the board options its module names, as the output it holds was asked with.
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, or else the board option's default, which core resolves before it calls the module's `render()`, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-  A front-end mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic front-end does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+  A frontend mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic frontend does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
   An app replaces it with a renderer that it names in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)).
 - A plugin, like any other client code, reads the values in `store.board().options` and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
@@ -204,7 +204,7 @@ A blockr option whose value R cannot write as JSON, such as `renderers`, which h
 A constructor argument that configures rather than holds state is lost to the JSON, which keeps what the board holds and nothing else.
 Such an argument becomes a blockr option where it is a value, and it moves to the code that calls it where it is a function.
 The assistant's system prompt is a function of this kind: `new_assistant_extension()` takes it as `system_prompt` ([vignettes/intro.Rmd#L124-L153](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/vignettes/intro.Rmd#L124-L153)), and a board restored from a file loses it already ([R/ext-server.R#L1229-L1231](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-server.R#L1229-L1231)).
-It is R code only because ellmer runs the agent loop in R, and it becomes JS logic of the assistant extension once that loop runs in the browser ([Assistant as a client extension](Rewrite-1.4)).
+It is R code only because ellmer runs the agent loop in R, and it becomes JS logic of the assistant's plugin once that loop runs in the browser ([Assistant as a client extension](Rewrite-1.4)).
 
 ### Where the two meet
 

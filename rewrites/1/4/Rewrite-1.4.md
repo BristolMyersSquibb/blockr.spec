@@ -19,7 +19,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), the
 
 ## Proposal
 
-- The agent loop runs in the browser, where the board it edits is, with the commands that core and the extensions register, and requests to R, as its tools, so that it changes what an extension adds, such as blockr.md's document or the DAG's layout, through the extension's commands, as it changes core's objects through core's ([Board updates](Rewrite-1.1.2#board-classes)).
+- The agent loop runs in the browser, where the board it edits is, with the commands that core and the extensions register, and requests to R, as its tools, so that it changes what an extension adds, such as blockr.md's document or the DAG's layout, through the extension's commands, as it changes core's objects through core's ([Board updates](Rewrite-1.1.2#plugins)).
   It reaches the board only through core's JS API, never the DOM, so that it could run in Node on the server the [Roadmap](Roadmap#a-server-of-our-own) considers.
 - Two libraries run such a loop in a browser, and a spike chooses between them (Work): the AI SDK, `ai` with a provider package such as `@ai-sdk/anthropic`, and pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai`, while a provider's own SDK would leave the loop to us.
   The spike builds the edit tool, one request to R and compaction on each, and keeps the library that does the following with less code of our own, the smaller bundle breaking a tie: it meets What must hold 1 to 4, streams a turn and stops it when the user does, takes the JSON Schemas that core and the extensions register as tool schemas unchanged, goes on with a thread once its board is saved and opened again, and runs under Vitest on happy-dom with the model faked.
