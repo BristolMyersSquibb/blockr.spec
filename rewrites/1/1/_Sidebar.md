@@ -15,6 +15,6 @@
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10), settled
 - [Locked boards and the properties of blocks](Rewrite-1.1.11), settled
 - [Plugins for the client-owned board](Rewrite-1.1.12), settled
-- [Board options and blockr options](Rewrite-1.1.13), review
+- [Board options and blockr options](Rewrite-1.1.13), settled
 
 <!-- dropped: Rewrite-1.1.6 -->
