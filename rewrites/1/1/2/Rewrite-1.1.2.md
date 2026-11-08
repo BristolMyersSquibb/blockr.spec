@@ -2,7 +2,7 @@
 Status: settled on 2026-10-28. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the state of its plugins alike.
-It builds on the [board objects proposal](Rewrite-1.1.1) and shapes the store ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), locking a board ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)) and starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It builds on the [board objects proposal](Rewrite-1.1.1) and shapes the store ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), locking a board ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)) and keeping an `update`'s append to an array that the delta appends to as well ([blockr.core#513](https://github.com/BristolMyersSquibb/blockr.core/issues/513)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), how a plugin's state is written to a file is the [serialization proposal](Rewrite-1.1.4), and what a plugin is and which plugins a board holds are [Plugins](Rewrite-1.1.12)'s.
 
 ## What must hold
@@ -66,6 +66,10 @@ interface Store {
   canRedo(origin?: Origin): boolean;
 
   registerMigration(registryId: RegistryId, fn: Migration): () => void;   // a block class's one migration of its state (below)
+  readonly options: Options;                                 // the board options that packages register (Board options and blockr options)
+  blockRegistry(): BlockRegistry;                            // the block registry's entries of the reply to hello that it opened its board with
+  packages(): Record<string, string>;                        // the versions of the packages in that reply, which jsonBoard() records
+  editId(of: { block: BlockId } | { plugin: PluginId }): number | undefined;   // the edit id of a block or a plugin, which the command registry fills into the deltas of a command (below)
 }
 ```
 
