@@ -1,8 +1,8 @@
 # Plugins for the client-owned board
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-11-08. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what a plugin is in R and in JS, the plugin classes core defines in R, the frontend and storage plugins, which plugins a board has, how a plugin runs, and a plugin's state.
-Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes of [Board objects](Rewrite-1.1.1#the-board) and [Board updates](Rewrite-1.1.2#board-classes).
+Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes that [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) built on `js-state`.
 It changes what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and core's basic frontend as [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built it, and shapes serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), while no issue asks for plugins yet.
 What core gives plugins through `CoreApi`, starting the page, opening a board, switching frontends, core's basic frontend and renderers are [Drawing the board](Rewrite-1.1.8)'s, and what the dock plugin keeps in its state and where it places other plugins stay with [Client-drawn dock and extensions](Rewrite-1.2).
 
@@ -29,7 +29,7 @@ Three mechanisms extend a board, two on main and one on `js-state`:
   So an app swaps blockr.session's storage in for core's with `serve(plugins = custom_plugins(manage_project()))` ([README.Rmd#L38-L47](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/README.Rmd#L38-L47)).
 - **The dock's extensions** are Shiny module pairs that `new_dock_extension()` makes, which `new_dock_board(extensions = ...)` puts on the board.
   The board sets them: saving writes each with its constructor, the constructor's package and its state, and restoring calls each constructor that the file names, loading its package where it is installed ([blockr.dock R/utils-serdes.R#L78-L185](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-serdes.R#L78-L185), [R/utils-serdes.R#L518-L539](https://github.com/BristolMyersSquibb/blockr.core/blob/460afef170ed67ec926a75ed66021bc98ce61647/R/utils-serdes.R#L518-L539)).
-- **Board classes**, on `js-state`, are defined in JS with the properties they add, each with a schema and a default, and with an `update` and a `migrate` for them, while R names each class's front-end and version through `board_front_end()` and `board_version()` ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), [srcts/store/registrations.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/3536c4dad52b09bb6f9adb220d4981b1350276b9/srcts/store/registrations.ts)).
+- **Board classes**, on `js-state`, are defined in JS with the properties they add, each with a schema and a default, and with an `update` and a `migrate` for them, while R names each class's frontend and version through `board_front_end()` and `board_version()` ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), [srcts/store/registrations.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/3536c4dad52b09bb6f9adb220d4981b1350276b9/srcts/store/registrations.ts)).
   The dock board adds its views and layouts as properties, and keeps the state of its extensions in its `extensions`.
 
 | Today | Where it goes |
@@ -328,7 +328,7 @@ const file = await core.request("report", "html", { content },        // the boa
 
 ### A plugin's state
 
-A plugin's state takes the place of a board class's properties, with the same machinery under the plugin's id ([Board updates](Rewrite-1.1.2#board-classes)):
+A plugin's state takes the place of a board class's properties, and the store keeps it as [Board updates](Rewrite-1.1.2#plugins) has it:
 
 - A change inside it is a patch at a path under the plugin's state, as `/plugins/dag/state/positions/a`.
 - The store keeps an edit id for each plugin, as it kept one for each property, which a patch to the plugin names, so that the store refuses the patch where another edit to the plugin came first ([Board updates](Rewrite-1.1.2#deltas)).
@@ -395,12 +395,12 @@ They are the `notifications` and `focus` of `CoreApi`, which [Drawing the board]
 
 ### What goes
 
-- Board classes: the board class that `core.store.register()` takes today, a board's `class`, the board classes in its `versions`, which holds plugin classes instead, the R generics `board_front_end()` and `board_version()`, and the rule that the client builds a board as the first class in its `class` that a loaded package defines ([Board objects](Rewrite-1.1.1#the-board)).
+- Board classes: the board class that `core.store.register()` takes today, a board's `class`, the board classes in its `versions`, which holds plugin classes instead, the R generics `board_front_end()` and `board_version()`, and the rule that the client builds a board as the first class in its `class` that a loaded package defines ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474)).
 - The `class` argument of `new_board()`, and the components that its `...` adds beside core's, which `plugins` replaces, so that every R board is of class `board`.
 - The dock board as a class, `dock_board`, with its `extensions`, whose entries become plugins of their own.
 - Core's nine plugin classes and `known_plugins()`, of which only storage keeps a class in core.
 - The `plugins` argument of `serve()`, with `custom_plugins()` and `blockr_app_plugins()`, since a board holds all its plugins, and every board that an app opens takes over what it lacks of the plugins of the app's opening board ([Which plugins a board has](#which-plugins-a-board-has)).
-- Registering a front-end through its board class, which the frontend plugin replaces ([The frontend](#the-frontend)).
+- Registering a frontend through its board class, which the frontend plugin replaces ([The frontend](#the-frontend)).
 
 On `js-state`, the board classes of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) become plugin state: the patches, the schema checks, `update` and `migrate` keep their code, with each state under its plugin's id and each definition under its plugin class's id, rather than under a board class.
 
@@ -425,7 +425,7 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The board classes to replace on `js-state`, at `d363b48`: the board class and its registration in `srcts/store/registrations.ts`, the board's `class` in `srcts/types/board.ts`, building a board as a class in `srcts/store/store.ts`, the classes in the reply to `hello` in `srcts/protocol/messages.ts` and `R/loaded-reply.R`, `board_front_end()` and `board_version()` in `R/board-class.R`, the modules of front-ends in `R/pkg-modules.R`, a board's `class` and `versions` in `R/utils-serdes.R`, and the front-end of the class that a board is built as, which `srcts/core/start.ts` imports as the board opens and `srcts/core/frontends.ts` draws ([blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494)).
+The board classes to replace on `js-state`, at `d363b48`: the board class and its registration in `srcts/store/registrations.ts`, the board's `class` in `srcts/types/board.ts`, building a board as a class in `srcts/store/store.ts`, the classes in the reply to `hello` in `srcts/protocol/messages.ts` and `R/loaded-reply.R`, `board_front_end()` and `board_version()` in `R/board-class.R`, the modules of frontends in `R/pkg-modules.R`, a board's `class` and `versions` in `R/utils-serdes.R`, and the frontend of the class that a board is built as, which `srcts/core/start.ts` imports as the board opens and `srcts/core/frontends.ts` draws ([blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494)).
 
 A plugin's request carries the type `plugin` and the id of the plugin's class, beside the fields that every request has ([blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484)):
 
@@ -441,10 +441,7 @@ Both go, since no package adds a type ([A plugin's requests](#a-plugins-requests
 
 Where a board that takes over a plugin of the opening board already holds another plugin under that plugin's id, the store gives the plugin it takes over an id that the client mints ([Board objects](Rewrite-1.1.1#ids)).
 
-Once this page settles, the change reaches the root page, which says that core keeps no plugin or extension type of its own, [Client-owned board state](Rewrite-1.1), the settled [Board objects](Rewrite-1.1.1), [Board updates](Rewrite-1.1.2), [Defining a board in R](Rewrite-1.1.3), [Serialization](Rewrite-1.1.4), [UI modules in JS](Rewrite-1.1.7) and [Wire protocol](Rewrite-1.1.9), [Locked boards and the properties of blocks](Rewrite-1.1.11) in review, the [Glossary](Glossary), and Rewrite 1.2 to 1.6, whose extensions become plugins, while [Drawing the board](Rewrite-1.1.8), in review, follows it already.
-The same change writes "frontend" for "front-end" and "plugin" for "extension" on every page, but in the names of today's code, such as `new_dock_extension()`.
-The open issues that restate what changes are [blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434), [blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442), [blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443) and [blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445), and [blockr.code#8](https://github.com/BristolMyersSquibb/blockr.code/issues/8), which recasts the code export as a dock extension.
-The same change adds the Work items for plugins to the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503).
+Rewrite 1.2 to 1.8, drafts written before this page, still have the dock's extensions where this page has plugins, and "front-end" where it has "frontend", and follow it as each is revised.
 
 A plugin class's state has two defaults: its constructor's in R, which an app script's plugins take, and `state.default` in JS, which `blockr.core-add_plugin` gives and a board takes as it takes a plugin over, so its package keeps the two alike.
 

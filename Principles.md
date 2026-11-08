@@ -71,11 +71,11 @@ Core grew deferred and prioritized construction ([blockr.core#243](https://githu
 
 ## Every edit goes through one central coordinator, in one shared shape, whoever makes it
 
-The user, the assistant and every extension change the board the same way, and a package that needs a new kind of edit adds it to the coordinator rather than building a path around it.
+The user and every plugin, the assistant among them, change the board the same way, and a package that needs a new kind of edit adds it to the coordinator rather than building a path around it.
 So every edit is checked the same way, and whatever follows the board, such as undo, saving or a session's drafts, sees every edit.
 
 Today's `board_update` reactive is the coordinator ([R/board-server.R#L1386-L1395](https://github.com/BristolMyersSquibb/blockr.core/blob/14e4a2a109c5ecbf9040c89b66c2f1e714756fda/R/board-server.R#L1386-L1395)).
-Every state change flows through it as `add`, `mod` and `rm`, core validates and augments each payload before applying it, and a board class adds slots of its own, as the dock adds `extensions`.
+Every state change flows through it as `add`, `mod` and `rm`, core validates and augments each payload before applying it, and the dock's board adds slots of its own by S3 method, `views` and `extensions`.
 State in JS keeps that shape for every delta, whoever makes it ([Board updates](Rewrite-1.1.2)).
 
 ## An object is known by an id that never changes, and its name is only a label

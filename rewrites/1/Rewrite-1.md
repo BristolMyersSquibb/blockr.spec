@@ -2,7 +2,7 @@
 Status: review.
 
 State in JS moves board state from R to the browser: the client becomes the only writer of the board, and R evaluates what it is sent.
-Core is rewritten around a client-side store, the dock is drawn in the browser, the extensions are rebuilt on the dock's client API, and the block packages are ported to block classes.
+Core is rewritten around a client-side store, the dock is drawn in the browser, the dock's extensions are rebuilt as plugins on core's JS API, and the block packages are ported to block classes.
 
 ## Problem
 
@@ -22,7 +22,7 @@ The dock, which draws the board from R with DOM operations, shows the same split
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen, except what an app has R evaluate in the background while it has nothing else to run ([Evaluation in the client](Rewrite-1.1.10#demand)).
 4. Boards written by today's `blockr_ser()` open, with the dock's views and layouts and the DAG's positions, for block classes that have been ported ([Serialization](Rewrite-1.1.4)).
 5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
-6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the extensions follow it, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the other plugins follow it, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 
 ## Principles
 
@@ -30,7 +30,7 @@ This is the second rewrite of blockr, and it must not undo what the first one fi
 
 Keep what has served us well:
 
-- Two extension points, as blockr.dock's extensions have shown: a block, for logic that belongs to one block, and a board extension, for whatever shows or changes the board as a whole, such as the DAG, tools for bulk changes, AI that works on the whole board, and reports like blockr.md's.
+- Two ways to extend a board, as blockr.dock's extensions have shown: a block, for logic that belongs to one block, and a plugin, for whatever shows or changes the board as a whole, such as the DAG, tools for bulk changes, AI that works on the whole board, and reports like blockr.md's.
 - Well-defined APIs.
   Keeping blockr in separate packages forced us to think through what each one offers the others.
 - A package plugs into another only through a hook the other offers, as `tabular_display()` is today, never by patching what it owns, in JS as in R.
@@ -38,7 +38,7 @@ Keep what has served us well:
 - Gates that let nothing through: no lints, no failing tests and a clean check, in TypeScript as in R.
 
 Improve what has not, which the Problem above sets out: state kept in two places, UI logic in R's reactive graph with the workarounds its cost needs, and a dock drawn from R.
-The same goes for having two ways to extend a board, core's plugins beside the dock's extensions.
+The same goes for the two mechanisms that extend the board as a whole today, core's plugins and the dock's extensions, which give way to one, the plugins of [Plugins](Rewrite-1.1.12).
 
 Keep edge cases out of core ([Principles](Principles#core-gives-a-basic-implementation-and-ways-to-extend-it)).
 
@@ -60,23 +60,23 @@ The client follows established JS patterns, as the module contract follows anywi
 - Each piece of state has one writer.
   The board is plain data held by a TypeScript store in core's JS API, and what R holds is either computed from the board at one moment, as a result is, or handed over once, as the opening board is, so nothing has to be kept in step with it.
   The table in [Board objects](Rewrite-1.1.1#what-lives-where) gives each object, where it lives and for how long.
-- Every edit, by the user, the assistant or an extension, is a versioned delta through one command registry in core, and the same deltas give undo ([Client-owned board state](Rewrite-1.1), [Board updates](Rewrite-1.1.2)).
+- Every edit, by the user or a plugin, the assistant among them, is a versioned delta through one command registry in core, and the same deltas give undo ([Client-owned board state](Rewrite-1.1), [Board updates](Rewrite-1.1.2)).
 - Whatever does not need R moves to the browser.
   R is an evaluator, one process per session.
   A request carries the recipe, and a result is named by block id and revision, never by process, so a client that starts a new session with its board loses only recomputation, and putting several sessions on one process, or one session on several, stays a server-side change.
 - The client schedules: it bumps revisions, tracks what is stale and what is demanded, and requests results by the evaluation priority each demand gives and in topological order within one, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Rewrite-1.1.10)).
-- Core keeps no plugin or extension type of its own.
-  The dock is a React app on core's JS API, and board extensions are ES modules that register with it, the only way to extend a board besides block classes, with their logic on core's JS API and their UI in the dock's contribution points ([Client-drawn dock and extensions](Rewrite-1.2)).
+- Plugins are the only way to extend a board besides block classes, and core defines them: a plugin keeps its state in the board, works on it through core's JS API, and offers its UI as an ES module that core mounts where the frontend places it, so that it works under every frontend ([Plugins](Rewrite-1.1.12)).
+  The frontend is a plugin too: the dock is a React app on core's JS API, which places the other plugins in its contribution points, while core's basic frontend draws a board that holds no frontend ([Client-drawn dock and extensions](Rewrite-1.2)).
 - Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy that core puts on the page ([UI modules in JS](Rewrite-1.1.7)).
   Core draws its own UIs with that copy too, as the dock does, so that they are written as the UIs of packages are ([UI modules in JS](Rewrite-1.1.7#react)).
   Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
-- The code that a board's script exports is the code that ran, since R builds every block's expression from its block class's `expr`, while exporting it is an extension's, blockr.code's, rather than core's.
+- The code that a board's script exports is the code that ran, since R builds every block's expression from its block class's `expr`, while exporting it is a plugin's, blockr.code's, rather than core's.
   A board can run any R code, since a block may parse a string into code, so a client can read whatever the R process can, its environment variables and R options included ([Client-owned board state](Rewrite-1.1#proposal)), and limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
 - Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process.
   One small module, the Shiny transport, carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Rewrite-1.1)).
 - The assistant is a collaborator, editing the board beside the user, which is why collaboration shapes the design now: a delta names its origin, so the user and the assistant each undo their own steps ([Board updates](Rewrite-1.1.2)).
-  Collaboration between people is not built, but stays open on the same terms, with the dock board's properties holding what opening, saving and restoring a board need, and a later relay free to keep each person's switching between views on their own screen ([Client-drawn dock and extensions](Rewrite-1.2)).
+  Collaboration between people is not built, but stays open on the same terms, with the dock plugin's state holding what opening, saving and restoring a board need, and a later relay free to keep each person's switching between views on their own screen ([Client-drawn dock and extensions](Rewrite-1.2)).
   Early cutoff is not built either and can come later, opt-in per block class.
 
 ## Migration

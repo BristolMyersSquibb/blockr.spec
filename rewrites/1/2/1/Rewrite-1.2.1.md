@@ -3,7 +3,7 @@ Status: draft. Design for [Client-drawn dock and extensions](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock and extensions](Rewrite-1.2)): the properties that the dock board adds beside core's, which are its views and each view's grid.
 It covers the commands that change them, the `update` that keeps them consistent with the board, the R functions that write them for an app script, and how the client turns a grid into dockview's layout and back.
-It builds on the board classes of [Board updates](Rewrite-1.1.2#board-classes).
+It builds on the board classes of [Board updates](Rewrite-1.1.2#plugins).
 How boards saved today open is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s, and the state that extensions keep in the dock board's `extensions` is [Registering extensions with the dock](Rewrite-1.2.3)'s.
 
 ## What must hold

@@ -34,7 +34,7 @@ Core gives one `CoreApi` to the module of every plugin, a frontend's among them,
 
 ```ts
 interface CoreApi {
-  store: Store;                    // board(), subscribe(), apply(), open(), register(), from Board updates
+  store: Store;                    // board(), subscribe(), apply(), open(), from Board updates
   commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() and subscribe() alone, from Evaluation in the client
   blockRegistry: BlockRegistry;    // the block registry's entries by registry id, for pickers
