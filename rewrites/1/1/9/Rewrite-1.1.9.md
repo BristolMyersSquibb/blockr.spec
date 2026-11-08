@@ -19,7 +19,7 @@ How R evaluates a block with its class and describes its output is [Block classe
 
 A message is an array of requests from the client, or of replies and progress notes from R, so several travel together.
 Every request but a `cancel` or a `forget`, which get no reply, has an id the client chooses, and its reply echoes it, so replies may arrive in any order.
-The client sends nothing but its `hello` until R has answered it, as an MCP client sends no request but pings before the server has answered its `initialize` ([MCP lifecycle](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle)), and R ignores every message that comes before a session's `hello`, and takes a later `hello` as a fresh start of the session, which forgets every block, while the client ignores a reply to a request it is not waiting on, such as one to a `hello` that Shiny replays after a reconnect (notes).
+The client sends nothing but its `hello` until R has answered it, as an MCP client sends no request but pings before the server has answered its `initialize` ([MCP lifecycle](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle)), and R ignores every message that comes before a session's `hello`, and takes a later `hello` as a fresh start of the session, which forgets every block, while the client ignores a reply to a request it is not waiting on, and R never sees a `hello` that Shiny replays after a reconnect (notes).
 
 ```ts
 type Kind = "hello" | "blockr_options" | "evaluate" | "request" | "output" | "cancel" | "forget";
@@ -33,7 +33,7 @@ A reply's status belongs to its request alone: an `error` carries the conditions
 
 ### Handshake
 
-A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries, each with the renderer of its class's outputs where R knows it ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages that the app names, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, those of plugin classes among them, the versions that those packages give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1 ([Plugins](Rewrite-1.1.12#a-plugin)), the versions that those packages give board options, in `option_versions`, where a board option that it lacks is at version 1 ([Serialization](Rewrite-1.1.4#board-options)), the renderers that the app names for board options, since the renderer of an output comes in the output and in its block class's entry ([Drawing the board](Rewrite-1.1.8#renderers)), the locks that the app sets (below), and the opening board, in `board`, as a JSON board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, with every id, since R draws each id the script left out ([Board objects](Rewrite-1.1.1#ids)), or the one given to `serve()`, which R passes on as it is, having read nothing of it but its format, with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
+A connection starts with a `hello`, after MCP's `initialize`: the client names the protocol version and capabilities it speaks, and R answers with its own and with everything the client needs before it draws a board: the versions of R's packages, the block registry's entries, each with the renderer of its class's outputs where R knows it ([Block classes in R](Rewrite-1.1.5#registration)), the startup modules of the packages that the app names, in the order of their R dependencies ([UI modules in JS](Rewrite-1.1.7#startup-modules)), the modules packages offer each other, those of plugin classes among them, the versions that those packages give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1 ([Plugins](Rewrite-1.1.12#a-plugin)), the versions that those packages give board options, in `option_versions`, where a board option that it lacks is at version 1 ([Serialization](Rewrite-1.1.4#board-options)), the renderers that the app names for board options, since the renderer of an output comes in the output and in its block class's entry ([Drawing the board](Rewrite-1.1.8#renderers)), the locks that the app sets (below), and the opening board, in `board`, as a JSON board ([Defining a board in R](Rewrite-1.1.3#the-opening-board)): the one the app script built, with every id, since R draws each id the script left out ([Board objects](Rewrite-1.1.1#ids)), or the one given to `serve()`, which R passes on as it is, having read nothing of it but its format unless both locks are on ([Serving a JSON board locked](Rewrite-1.1.11#serving-a-json-board-locked)), with, for a block that `serve()` serves alone, the inputs R binds itself to the data it was given, in `bound`, which the client counts as linked and names in a request by the input alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 R takes all of it from the packages that the app names, as the app starts, so that every reply to `hello` of the process holds the same, whatever a block's code loads ([Block classes in R](Rewrite-1.1.5#registration)).
 Both sides use only the capabilities both named, such as `cancel`, `interrupt` and `progress` (below), so a capability can arrive without a major version, and on a major mismatch the client stops and says what to do, such as reload the page.
 
@@ -56,8 +56,8 @@ So no message opens a board: `store.open()` sends R nothing for a JSON board's t
 ### Blockr options
 
 The client reads a blockr option by asking R for it, since it can read neither an R option nor an environment variable of the server ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
-A `blockr_options` request names them in `names`, and R replies with the value of each it has one for, as `blockr_option()` reads it, in `values`, by name, leaving out the others, for which the client takes the default its code gives.
-A value set through an environment variable arrives as a string, which the client converts to its default's type, and R writes `Inf` as `null`, since JSON has no infinite numbers, which the client reads as `Infinity` where its default is a number.
+A `blockr_options` request names them in `names`, and R replies with the value of each it has one for, as `blockr_option()` reads it, in `values`, by name, leaving out the others, for which the client takes the fallback its code gives.
+A value set through an environment variable arrives as a string, which the client converts to its fallback's type, and R writes `Inf` as `null`, since JSON has no infinite numbers, which the client reads as `Infinity` where its fallback is a number.
 The client asks for a blockr option once per page, the first time its code reads it, and keeps the value, since a blockr option is fixed for the app, while core asks for those its scheduler reads as soon as R has answered its `hello` ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 R answers for any blockr option, since a client can read whatever the R process can ([State in JS](Rewrite-1#proposal)).
 
@@ -89,7 +89,7 @@ It carries no code, since exporting a block's code is blockr.code's, through a r
 
 A reply keeps the first few conditions of each severity and counts the rest in `omitted`, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)).
 The phase names what raised a condition: the class's `expr`, which builds the expression, its `inputs`, whose body checks the data, `block_eval()`, which runs the block expression, or `result_summary()`, which describes the result, and in the reply to an output request or a request, `output` or `request`, for the coercion or the request's function.
-The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
+The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `blockr_invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
 A request on a revision that is still computing waits for it.
 
 R replies `missing` to any request that names a block's revision it does not hold, such as a result it has forgotten or replaced, naming the blocks and revisions it lacks in `missing`, as `[ { "block": "b", "revision": 4 } ]`.
@@ -98,7 +98,7 @@ That code asks again once the blocks are evaluated at their current revisions.
 A request that reads a `failed`, `invalid` or `waiting` block is never sent ([Evaluation in the client](Rewrite-1.1.10#demand)).
 A new session holds no results, so after its `hello` the client gives every block a new revision.
 Every block then reads `stale` until the new session has evaluated it ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
-It answers none of the requests the session before it held either, so the client sends again every output and every request of a block class or an output class still waiting for its reply, and rejects an evaluation with parameters, an action, and a board option's or a plugin's request still waiting, which may have run and may write ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
+It answers none of the requests the session before it held either, so the client sends again every output and every request of a block class, an output class or a renderer still waiting for its reply, and rejects an evaluation with parameters, an action, and a board option's or a plugin's request still waiting, which may have run and may write ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 
 ### Requests
 
@@ -107,7 +107,7 @@ Every request belongs to one, as a block's belong to its class, and names in `ty
 R reads a request into an object of class `{type}_request` and answers it through the generic `request_call()`, whose method for that class finds the function that answers the request and binds its args.
 Core has five types:
 
-- The type `block_class` is a block class's request, which R finds by registry id, with `block` naming the block that asks and `locked` the block's `locked`, which R reads only on a locked board (below).
+- The type `block_class` is a block class's request, which R finds by registry id, with `block` naming the block that asks.
 - The type `output_class` is an output class's request, which R finds by the output it belongs to, which `output` names by its block and revision, among the requests that the method of `output_requests()` for its class vector gives ([Block classes in R](Rewrite-1.1.5#outputs)).
 - The type `renderer` is a renderer's own request, which R finds by the renderer's id, which `renderer` names beside the output whose result it reads, among the requests of the renderer that draws that output alone, which has to be the one named ([Drawing the board](Rewrite-1.1.8#renderers)).
 - The type `option` is a board option's request, which R finds among those that the method of `board_option_requests()` for the class of the board option that `option` names, `{id}_option`, gives ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
@@ -118,7 +118,7 @@ A request names the block results it reads in `reads`, passes in `args` what its
 An output class's request, or a renderer's, carries the board options and parameters its output was asked with, as the output request did, and R runs it with the result that output was made from.
 
 ```json
-{ "id": "18", "kind": "request", "type": "block_class", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "locked": null, "args": {},
+{ "id": "18", "kind": "request", "type": "block_class", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "args": {},
   "reads": [ { "input": "data", "block": "a", "revision": 2 } ] }
 { "id": "18", "status": "ok", "value": [150] }
 
@@ -135,22 +135,22 @@ An output class's request, or a renderer's, carries the board options and parame
 { "id": "35", "status": "ok", "value": { "USUBJID": ["Unique Subject Identifier"], "AGE": ["Age"] } }
 ```
 
-What R runs for the client comes in these flavors, which differ in who defines and calls them, whether the client keeps what they answer, whether they may write, and what a locked board allows (below):
+What R runs for the client comes in these flavors, which differ in who defines and calls them, whether the client keeps what they answer, and whether they may write:
 
-| Flavor | Defined by | Called by | Kept by the client | May write | On a locked board |
-|---|---|---|---|---|---|
-| Evaluation | The block's class, through its `expr` and `block_eval()` ([Block classes in R](Rewrite-1.1.5#evaluation)) | The scheduler, for demand and one-time evaluations ([Evaluation in the client](Rewrite-1.1.10#demand)) | Its reply sets the block's status, and R keeps the result | No | Held to the block's data inputs, and a locked block to its state |
-| Evaluation with parameters | A `block_eval()` method of the block's class, such as the write block's | A one-time evaluation with parameters, such as a save button's | No, it runs once per call | Yes | With its parameters only for a block left open |
-| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, board options, `info` and parameters | No | With the request's board option values |
-| Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No | With the request's board option values |
-| Renderer's request | The renderer, as its package declares it | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No | With the request's board option values |
-| Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No | With a locked block's opening state and board option values where the load lock is on too |
-| Volatile request | A request that the class makes with `new_block_request(volatile = TRUE)` | The block's UI, through its host | No | No | As a block class's request |
-| Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes | Only for a block left open |
-| Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes | Only where its package says that it may run there |
-| Plugin's request | The plugin's package, through its method of `plugin_requests()` | The plugin, through `CoreApi` | No | Yes | Only where its package says that it may run there |
+| Flavor | Defined by | Called by | Kept by the client | May write |
+|---|---|---|---|---|
+| Evaluation | The block's class, through its `expr` and `block_eval()` ([Block classes in R](Rewrite-1.1.5#evaluation)) | The scheduler, for demand and one-time evaluations ([Evaluation in the client](Rewrite-1.1.10#demand)) | Its reply sets the block's status, and R keeps the result | No |
+| Evaluation with parameters | A `block_eval()` method of the block's class, such as the write block's | A one-time evaluation with parameters, such as a save button's | No, it runs once per call | Yes |
+| Output | The coercion of the output class that the block's class names | Core, for whatever draws the output ([UI modules in JS](Rewrite-1.1.7#the-contract)) | The last output, by revision, board options, `info` and parameters | No |
+| Output class's request | The output class, through the method of `output_requests()` that the package that defines it gives | A renderer of the class, through its output host | Its answer, by block, revision, name, args, board options and parameters, unless the class wraps it in `volatile()` | No |
+| Renderer's request | The renderer, as its package gives it to `new_renderer()` | That renderer, through its output host | Its answer, as for an output class's request, and by the renderer | No |
+| Block class's request | The class's `requests` | The block's UI, through its host | Its answer, by registry id, name, args, board options and the revisions read | No |
+| Volatile request | A request that the class makes with `new_block_request(volatile = TRUE)` | The block's UI, through its host | No | No |
+| Action | A request that the class makes with `new_block_request(action = TRUE)`, such as an upload | The block's UI, through its host | No, it runs once per call | Yes |
+| Board option's request | The package that ships the board option, through its method of `board_option_requests()` | The board option's UI or renderer, through its `OptionHost` | No | Yes |
+| Plugin's request | The plugin's package, through its method of `plugin_requests()` | The plugin, through `CoreApi` | No | Yes |
 
-The package of a board option or a plugin says for each of its requests whether it may run on a locked board, so that each is decided on its own: one only reads, as the code export's does, while another may evaluate what the client sends, as an assistant's trial of proposed args would.
+On a locked board, R holds an evaluation, with parameters or without, to the block's data inputs and a locked block to its state, and draws every output and runs every request as on any board ([What R refuses](Rewrite-1.1.11#what-r-refuses)).
 R calls a plugin's request with its `args` by name and, in `reads`, the results it reads, by block id, each with the block expression R built for it, and a request that reads blocks, a block class's or a plugin's, has them evaluated first, even off screen, as a one-time evaluation does ([Evaluation in the client](Rewrite-1.1.10#demand)).
 No request times out, since no reply is lost on a live connection and giving up on a request frees nothing in R, which runs it when its turn comes: a block class's request is bounded by its author ([Client-owned board state](Rewrite-1.1#proposal)), and any request may send progress, as blockr.md's export to PowerPoint would, which shows that a long one is still running.
 
@@ -162,7 +162,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "params": {} }
-{ "id": "21", "status": "ok", "output": { "renderer": "blockr.core-table_output", "columns": [], "rows": [], "total": 150 } }
+{ "id": "21", "status": "ok", "output": { "renderer": { "id": "blockr.core-table_output", "module": "blockr.core/js/basic-table.js?v=b7e2a915" }, "columns": [], "rows": [], "total": 150 } }
 ```
 
 An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it, unless it loaded it already as the renderer that the block registry entry names, and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
@@ -203,31 +203,14 @@ R decodes with yyjsonr, as [Serialization](Rewrite-1.1.4#state-values-between-th
 
 ### Locked boards
 
-An app sets two locks when it starts, each on its own, through blockr options that stay as the app set them: the load lock, `lock_load`, which an app sets as `blockr.lock_load` and a deployment as `BLOCKR_LOCK_LOAD`, fixes the app to its opening board, and the board lock, `locked`, which an app sets as `blockr.locked` and a deployment as `BLOCKR_LOCKED`, as today, fixes what a board holds but its blocks' state, its board options and its plugins' state ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
-Each block's `locked` says whether the board lock fixes the block's state, and `null`, which a block holds unless a script or a command sets it, follows the board lock, so that the board lock locks every block of a board that today's packages saved ([Block locks](Rewrite-1.1.11#block-locks)).
-What a plugin keeps in its state is the plugin's own to lock, as the dock locks the arrangement of its panels today, which never reaches R ([Plugins on a locked board](Rewrite-1.1.11#plugins-on-a-locked-board)).
-R sends the locks with its reply to `hello`, as `{ "board": true, "load": true }`, with `false` for a lock that the app does not set, and the client keeps to them: its store refuses what they fix, while it opens the opening board in the reply to `hello` ([Board updates](Rewrite-1.1.2#the-store)), a frontend draws no control for what they fix, and whether a locked board offers saving is the frontend's and session management's to decide, while the app offers no restoring under the load lock, since it loads no other board then ([Session management as a client extension](Rewrite-1.6)).
+The locks, and what R refuses for them, are [Locked boards and the properties of blocks](Rewrite-1.1.11)'s: the load lock, the blockr option `lock_load`, the board lock, the blockr option `locked`, and each block's `locked` ([Three locks](Rewrite-1.1.11#three-locks)).
+Two properties of the messages carry them:
 
-That stops only a client that plays by the rules, so R refuses what it can tell breaks the board lock or a block's lock, while the load lock is the client's to keep, since no message opens a board (above).
-Under the board lock, R refuses an evaluation that binds a block's data inputs to other blocks or gives a locked block another state, runs an action, or an evaluation with parameters, only for a block left open, and runs a board option's or a plugin's request only where its package says that the request may run on a locked board (above).
-What R holds a block to depends on the load lock, since R can hold a block to a board only where it has that board itself and no other board replaces it ([What R refuses](Rewrite-1.1.11#what-r-refuses)).
+- The reply to `hello` holds the locks in `lock`, as `{ "board": true, "load": true }`, with `false` for a lock that the app does not set ([The locks in the reply to `hello`](Rewrite-1.1.11#the-locks-in-the-reply-to-hello)).
+- An evaluation carries the block's `locked`, which R reads only on a locked board ([Block locks](Rewrite-1.1.11#block-locks)).
 
-Where the load lock is on too, R holds every block to the opening board, so that nothing a client sends can loosen the locks.
-When the app starts, it builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the block expression it evaluates, such as `dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again.
-Where `serve()` was given a JSON board, R reads that board's blocks, links, their `locked` and its board option values to build them ([Serving a JSON board locked](Rewrite-1.1.11#serving-a-json-board-locked)).
-A locked block whose opening state cannot run, such as a merge whose `by` is unset, keeps the `invalid()` that building it signalled, and R replies `invalid` with it to every evaluation of the block.
-In a session with both locks:
-
-- It evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup, reading from the request only the block's id, refusing one the opening board lacks, the revisions of the inputs, which say only which of its own results to bind, and the state and parameters of a block left open, so that a locked write block in manual mode, whose save button no frontend shows, never writes.
-- It answers a block class's request for a locked block, as its `block` names it, with the block's opening state and the opening board option values, whatever `args` and `options` hold, binding the inputs as it built them at startup, and takes only the parameters from the request, since a board option may say what such a request reads, as `data_dir` names the directory that blockr.io's read block lists files from.
-
-Without the load lock, R cannot tell which board the client shows, since the board is the client's, so it holds a block to what the client sent before.
-An evaluation and an action carry the block's `locked` (above), which R reads as the store does, and once R has evaluated a block since the board opened, which starts the session afresh (above), it holds the block to the data inputs of that evaluation and, where the block is locked, to its state.
-That holds against a defect, such as a store that applies a change it should refuse, but not against a client that sends another `locked`, adds a block or opens a board it changed, so the board lock and the block locks are a guarantee only with the load lock.
-
-R takes the board option values that a request carries, but for a locked block's request where both locks are on (above), since no board option reaches a block expression ([Board options on a locked board](Rewrite-1.1.11#board-options-on-a-locked-board)), while what the R process may read is the deployment's to limit ([Principles](Principles#a-board-runs-arbitrary-r-code-and-the-deployment-sandboxes-the-r-process)).
-What R refuses, it refuses with an `error` that names the lock, while it draws outputs as before and answers the requests of their output classes and renderers.
-Where both locks are on, a locked board thus runs only its opening board's blocks, every locked one with its opening state, whatever a client sends, as condition 2 of [Client-owned board state](Rewrite-1.1#what-must-hold) asks.
+R refuses only what it can tell breaks the board lock or a block's lock, with an `error` that names the lock ([What R refuses](Rewrite-1.1.11#what-r-refuses)).
+Where both locks are on, R holds every block to the opening board, from what it builds once as the app starts.
 With illustrative names:
 
 ```r
@@ -241,13 +224,13 @@ lock_board <- function(board, open = character()) {        # once, when the app 
     cls    <- block_registry[[blk$registry_id]]
     inputs <- upstream_ids(board$links, id)                  # input -> upstream id, list(data = "a")
     list(cls = cls, inputs = inputs,
-         expression = if (!id %in% open)                     # or the invalid() that building it signals
-           tryCatch(build_block_expression(cls, blk$state, inputs), invalid = identity))
+         expression = if (!id %in% open)                     # or the blockr_invalid() that building it signals
+           tryCatch(build_block_expression(cls, blk$state, inputs), blockr_invalid = identity))
   })
 }
 
 block_expression_for <- function(req, lock = NULL) {         # for every evaluation
-  if (is.null(lock)) {                                       # without both locks: the request's recipe, held as above
+  if (is.null(lock)) {                                       # without both locks: the request's recipe
     rec <- req$recipe
     return(build_block_expression(block_registry[[rec$registry_id]], rec$state, input_ids(rec$inputs)))
   }
@@ -257,30 +240,23 @@ block_expression_for <- function(req, lock = NULL) {         # for every evaluat
 }
 ```
 
-A block left open may parse what a reader types into code, as most of blockr.dplyr's builders do, and then runs whatever a reader types.
-A lock is no sandbox, and core decides nothing about what is safe to run: the deployment sandboxes the R process, for a locked board as for any other ([Principles](Principles#a-board-runs-arbitrary-r-code-and-the-deployment-sandboxes-the-r-process)).
-
-The board lock leaves whole blocks open rather than single args, which a later version can add, since only what a block's `locked` holds would change.
-Today a locked core board drops every update that changes the board, while a block's own inputs stay editable unless a frontend reports them hidden through core's `frozen` channel ([R/board-server.R#L377-L386](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L377-L386), [R/block-server.R#L143-L153](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L143-L153)), and the dock freezes every block on a locked board, and on any board a block whose card hides its inputs, from what the client reports its cards show ([blockr.dock R/board-server.R#L386-L433](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/board-server.R#L386-L433)).
-The dock keeps saving and restoring in locked mode, which restores any board, since "locking is about preventing layout / structural mutations, not blocking a wholesale state import/export" ([blockr.dock#125](https://github.com/BristolMyersSquibb/blockr.dock/pull/125)), where under the load lock the app loads none.
-
 ### Versions
 
 The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format, the versions of shapes and the package versions that a JSON board records ([Serialization](Rewrite-1.1.4#files)) and a block's revision, which names its result ([Evaluation in the client](Rewrite-1.1.10#revisions)).
-Its major changes only for what an existing peer would misread, and both sides ignore fields they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
+Its major changes only for what an existing peer would misread, and both sides ignore properties they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
 
 ### The Shiny transport
 
 The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.stringify(message), { priority: "event" })`, for R to decode as [Serialization](Rewrite-1.1.4) has it, since Shiny's own decoding leaves every array a list and flattens a message that is itself an array.
 R answers with `session$sendCustomMessage("blockr", message)`, which writes to the websocket at once, so that a request running in the session's process can send progress before it ends.
 The transport's observer hands each message to R's queue and returns no promise, so Shiny never holds the session's inputs while a request runs, as it does for an observer that returns one.
-How a body travels is the transport's choice too, which measuring settles when the transport is built (notes).
+How a body travels is the transport's choice too, which [blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455) settled by measuring (notes).
 A later `hello` drops the bodies that the transport holds for the session too, those that requests posted and those that wait for the client to fetch them, since it starts the session afresh (above).
 Leaving Shiny later replaces this module and nothing else.
 
-The transport calls `session$allowReconnect(TRUE)`, so that a page whose session the server ended while the page lived on, after a network drop longer than the server waits or a server restart, starts a new session and names its board's packages in its `hello` (above).
+The transport calls `session$allowReconnect(TRUE)`, so that a page whose session the server ended while the page lived on, after a network drop longer than the server waits or a server restart, starts a new session with a `hello`, and keeps its board (above).
 An R process that exits ends the page instead: Shiny Server's proxy closes the page's connection with a code that forbids a new session, and its client covers the page until the user reloads it, so the board then survives as session management last saved it ([Session management as a client extension](Rewrite-1.6)).
-Keeping a page alive through a crash, by hiding that cover or starting a new session when the user asks, goes against what the proxy signals and is left for later, which the protocol allows already, since a `hello` may name the packages of a board the client holds.
+Keeping a page alive through a crash, by hiding that cover or starting a new session when the user asks, goes against what the proxy signals and is left for later, which the protocol allows already, since a client that holds a board keeps it through a new session's `hello`.
 
 ## Open questions
 
@@ -298,7 +274,7 @@ With 33 messages queued during a request, Shiny handled all of them before the n
 A request that called `session$sendCustomMessage()` reached the client every 0.5 s while it ran.
 In a mirai daemon with dispatcher, `stop_mirai()` interrupted a running task within 15 ms, and the daemon took the next task at once, its state intact.
 
-A request's function reports progress through core, which sends it as progress notes, rather than through Shiny's `withProgress()`, whose messages Shiny's own client draws as a notification.
+A request's function reports progress through core, with `report_progress(value, message)`, which sends it as progress notes, rather than through Shiny's `withProgress()`, whose messages Shiny's own client draws as a notification.
 The export of blockr.md reports none today: it runs pandoc in a `downloadHandler()` ([R/md-server.R#L212-L270](https://github.com/BristolMyersSquibb/blockr.md/blob/32e088884d825813fb7ff0afc7d023df9e70a3b6/R/md-server.R#L212-L270)).
 R's `setTimeLimit()` stopped an R loop at 1.01 s but let `Sys.sleep(3)` run its full 3 s, which is one reason no request times out.
 
@@ -312,11 +288,12 @@ A worker per session is a second R process, 137 MB resident with blockr.core loa
 Shiny Server and Connect wrap Shiny's websocket in shiny-server-client, which lets Shiny start a new session only when the server closes the connection with a 47xx code ([lib/main.js#L133-L153](https://github.com/rstudio/shiny-server-client/blob/92cbc96583f958f4e379120323fb3a48c2e61fd5/lib/main.js#L133-L153)), as Shiny Server does for a session it no longer knows after a network drop and for its own restart.
 For an R process that exits, it closes the connection with `APP_EXIT`, 4503, which its table of codes describes as "Process exit with error (don't automatically restart)" ([lib/proxy/sockjs.js#L191-L235](https://github.com/rstudio/shiny-server/blob/4445750261a0d3ce4f303a14934d132be805f450/lib/proxy/sockjs.js#L191-L235), [lib/proxy/errorcode.js#L32-L55](https://github.com/rstudio/shiny-server/blob/4445750261a0d3ce4f303a14934d132be805f450/lib/proxy/errorcode.js#L32-L55)), and the wrapper covers the page with an overlay that takes every click, where Shiny's own lets clicks through.
 Connect's proxy is closed source, and Shiny documents a new session after a reconnect for Connect 1.5.10 or later ([Reconnecting to Shiny apps](https://shiny.posit.co/r/articles/improve/reconnecting)), while locally only `session$allowReconnect("force")` reconnects.
-When it reconnects, shiny.js 1.14.0 sends the new session the last value of every input, the transport's last message among them, and then the messages queued while the page was offline, all of which R ignores until the session's `hello`, unless the last was a `hello` itself, which R answers as any `hello` and the client ignores, before the client's own `hello` starts the session afresh.
+When it reconnects, shiny.js 1.14.0 sends the new session the last value of every input, the transport's last message among them, and then the messages queued while the page was offline, all of which R ignores until the session's `hello`, the replayed last message included, since the transport ignores the value that an input starts a session with ([blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455)), before the client's own `hello` starts the session afresh.
 
-How a body travels is settled by measuring while the transport is built.
-From R it can go as a binary frame from `session$sendBinaryMessage()`, which shiny.js 1.14.0 hands to the custom message handler for its type as an `ArrayBuffer`, as base64 in the JSON, a third larger, or from a session-scoped URL that `session$registerDataObj()` serves, which the browser fetches itself, so that a download streams to disk and no large body holds up the messages behind it on the websocket ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
-A file reaches R through the URL that Shiny's `uploadInit` gives, as `fileInput()` sends one, which refuses a file over `shiny.maxRequestSize`, 5 MB by default, or posted to a `registerDataObj()` URL, whose filter Shiny calls whatever the request's method.
+How a body travels was settled by measuring as the transport was built ([blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455)).
+A body from R of up to the blockr option `max_message_body` bytes, by default 1 MiB, or 4 MiB in binary frames, goes in its reply's message, as base64 in the JSON, a third larger, and a larger one from a session-scoped URL that `session$registerDataObj()` serves, which the browser fetches itself, so that a download streams to disk and no large body holds up the messages behind it on the websocket ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
+A body goes in a binary frame from `session$sendBinaryMessage()` only where the blockr option `message_body_encoding` is `"binary"`, which is off by default, since Shiny Server's proxy writes each message of R's into the page's channel as text.
+A body from the client is posted to another such URL, which R gives the client in the message that starts each session, `{ "body_url": ..., "max_request_size": ... }`, so that the deployment's `shiny.maxRequestSize` still limits it, while the client never goes through Shiny's `uploadInit`, which was never faster.
 Core's output classes carry one page of rows as JSON, so core needs no Arrow writer, and an output class that needs one brings its own.
 
 </details>
