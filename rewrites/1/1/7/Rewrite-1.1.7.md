@@ -14,7 +14,7 @@ Core ships the one copy of React that block UIs use, with the React SDK, while r
 4. One copy each of React, core's runtime and every shared module runs on the page.
 5. Core's runtime and every package's UIs ship inside their R packages, so installing a package pins the client code it runs.
 6. Core ships the one copy of React, so that a block class whose UI is written in React works under every front-end, core's basic one included, whichever other packages are loaded.
-7. What a package registers in the client, its board options, its board classes, its attributes, the migrations of its block classes' states and its commands, is registered before the store opens a board.
+7. What a package registers in the client, its board options, its board classes, the migrations of its block classes' states and its commands, is registered before the store opens a board.
 
 ## Proposal
 
@@ -90,7 +90,7 @@ An input that changes with every keystroke or pointer move submits once the user
 The store commits a submit at once, and the host announces it as it does any other change, before the user's next keystroke, so the echo of a module's own edit comes before anything the user types next rather than late from R, which is why today's blocks skip it with a flag ([R/read.R#L372-L392](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/read.R#L372-L392)).
 A module updates its inputs in place, leaving the one the user is editing, since building them again would take its focus and caret, and builds each submit from `host.state()` when it submits, so that an edit made in the meantime, such as a condition the assistant added to a filter, is kept.
 A submit builds on the current state, as every command does, so of two edits to one arg the later wins ([Board updates](Rewrite-1.1.2#deltas)).
-On a locked board a front-end mounts the UI only of a block the lock leaves open, since it shows a block's UI as core's attribute `visible` says and the lock leaves open the blocks whose inputs show, so a module needs no flag for the lock ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), [Wire protocol](Rewrite-1.1.9#locked-boards)).
+On a locked board a front-end mounts the UI only of a block that the board lock leaves open, as `store.locked()` says, since it draws no control for what a lock fixes, so a module needs no flag for the lock ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), [Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
 It reads the block's status as front-ends do ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 The shape is close to blockr.dplyr's [`Blockr.registerBlock()`](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/inst/js/blockr-core.js#L57) today, whose block classes implement `setState(state)` and call back on submit.
 
@@ -107,7 +107,7 @@ A download is a request whose answer is a file, which resolves with a `File` car
 Core keeps the answers for one opening of the board, shared by every block of the class, by registry id, name, args, the board option values sent and the revisions read: it merges a request with an identical one in flight and drops an answer once the revisions it read are superseded.
 Core keeps no superseded answer, since no host method hands one out, and a module keeps the last answer it got on screen while it asks again.
 An answer is a snapshot that never goes stale for its key, so nothing refetches it, while the answer of a request its class marks volatile, such as a directory listing, is never kept, and core needs no query library such as TanStack Query, which refetches data that changes behind the client's back.
-A request that its class makes with `new_block_request(action = TRUE)` acts rather than reads: R runs it once per call and it may write, so core never keeps or merges its answer, and on a locked board R runs it only for a block the lock leaves open ([Block classes in R](Rewrite-1.1.5#requests), [Wire protocol](Rewrite-1.1.9#locked-boards)).
+A request that its class makes with `new_block_request(action = TRUE)` acts rather than reads: R runs it once per call and it may write, so core never keeps or merges its answer, and on a locked board R runs it only for a block that the board lock leaves open ([Block classes in R](Rewrite-1.1.5#requests), [Wire protocol](Rewrite-1.1.9#locked-boards)).
 A write block's manual save is its button's one-time evaluation with a parameter, `evaluate({ save: true })`: the write block's `block_eval()` method runs the block expression, which holds the write, only in auto mode or with `save`, and signals `invalid()` otherwise, so that no later upstream change rewrites the file, as today's write block writes only per click ([R/write.R#L266-L307](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/write.R#L266-L307)), while an exported script, which runs the block expression, writes it ([Block classes in R](Rewrite-1.1.5#evaluation)).
 An upload is an action that receives the file the user picked, keeps it where its package decides and returns the path that the module submits into the block's state, as blockr.io's read block keeps uploads under `blockr_option("upload_path")` today ([R/read.R#L332-L371](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/read.R#L332-L371)).
 
@@ -169,7 +169,7 @@ Core keeps an answer as it keeps the output, unless the class marks the request 
 
 Only what core mounts inside a front-end's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer.
 A front-end, which draws the whole board, its stacks and links included, gets `CoreApi`, as a startup module does, so core makes no host for a stack or for the board.
-A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a property of its board class, keyed by stack id ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), as in this host for a note on each stack:
+A front-end that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in a property of its board class, keyed by stack id ([Board updates](Rewrite-1.1.2#board-classes)), as in this host for a note on each stack:
 
 ```ts
 // in the front-end's package, whose board class adds the property stack_notes
@@ -183,7 +183,7 @@ const stackHost = (core: CoreApi, id: StackId) => ({
 
 ### Startup modules
 
-A package may declare in R one startup module ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)), defining its board classes, and registering its attributes, the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), putting on the page what it shares with other packages' modules, such as a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+A package may declare in R one startup module ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)), defining its board classes, and registering the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#board-classes)), putting on the page what it shares with other packages' modules, such as a UI kit's stylesheet, and naming a board to open in place of the one R sent, such as the board a URL names for session management ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls a front-end's `render()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)):
 
 ```ts
@@ -202,11 +202,11 @@ export default {
 
 R sends the startup modules of the packages that the app names with the block registry's entries, in its reply to `hello` ([Block classes in R](Rewrite-1.1.5#registration)), and keeps them in the order of the packages' dependencies, which their DESCRIPTION files give, so that each package's comes after those of the packages it imports, and in the order the app names them otherwise.
 Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
-It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every board class defined and every attribute and board option registered.
+It does so before the front-end mounts and before the store opens the board R sent, so that the store finds every board class defined and every board option registered.
 
 Core initializes each package's startup module as each board opens, since opening a board starts core again ([Drawing the board](Rewrite-1.1.8#opening-a-board)), with a new `CoreApi` and a signal that aborts as the next board opens, and skips it when a later reply of the same opening names the package again.
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy.
-A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, as without the properties of a board class that no loaded package defines ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
+A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, as without the properties of a board class that no loaded package defines ([Board updates](Rewrite-1.1.2#board-classes)).
 
 A package relies on the order only for the packages it imports, which is what a module needs as it loads, such as a library on another package's global.
 Between any other two packages the order is unspecified, and core keeps what they share independent of it:
@@ -214,7 +214,7 @@ Between any other two packages the order is unspecified, and core keeps what the
 - A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a key's `expand` runs per delta and a command's `run()` per command.
   It reads no board there, since none is open at startup.
   It keeps nothing of a board at module scope, since its module loads once per page while core initializes it again with each board, and keeps what it needs for a board within `initialize()`, which ends with its signal ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both, as a taken attribute name does ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
+- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 - Every startup module runs once R has replied and before the store migrates or drops anything, since the store awaits what core runs then through the `loaded` it is created with ([Board updates](Rewrite-1.1.2#the-store)), and so before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)) and before the front-end reads what packages registered, such as the commands in its menus.
   Only a startup module that runs as the page starts may name a board to open, and core ignores a board that one names as a later board opens, since that opening names its own.
 - A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later.
@@ -249,7 +249,7 @@ A block class defined outside a package names a plain JS module by its path, whi
 What a module ships beside it sits in its folder under its name, so that `head-block.js` has its stylesheet in `head-block.css` and its JSON Schema in `head-block.schema.json`, which R serves or reads with it, and R names every module to the client with the URL of its stylesheet where it has one.
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)).
 R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads.
-A package ships the JSON Schemas of the properties its board classes add and of the board options that it registers beside the startup module that defines and registers them, in the same way, each property's by its class and name and each board option's by its id, by which R writes their values ([Board updates](Rewrite-1.1.2#board-classes-and-attributes), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+A package ships the JSON Schemas of the properties its board classes add and of the board options that it registers beside the startup module that defines and registers them, in the same way, each property's by its class and name and each board option's by its id, by which R writes their values ([Board updates](Rewrite-1.1.2#board-classes), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 
 ### Testing
 

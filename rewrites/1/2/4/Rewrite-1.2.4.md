@@ -18,5 +18,5 @@ Not drafted yet.
 
 - Panel kinds: one per board, like the assistant's, or one per block, and whether commands can open panels.
 - Whether the dock's block card takes contributions from extensions, a section in its body and actions in its header, each a component the dock renders per block with the block's id, to keep what today's `edit_block` callbacks and `ctrl` section let a package add to every block.
-  Core needs nothing new for it: the component works through `CoreApi`, a plugin's request reads the block's result in R ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and whether a section shows can be an attribute the dock defines, which core carries without reading ([Board objects](Rewrite-1.1.1#blocks)).
+  Core needs nothing new for it: the component works through `CoreApi`, a plugin's request reads the block's result in R ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and whether a section shows can live in the dock board's `visible`, by block id, which core carries without reading ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)).
   It blocks nothing yet, since the assistant replaces the per-block chat that blockr.ai puts in the `ctrl` section today, and a package that needs such UI would settle it.

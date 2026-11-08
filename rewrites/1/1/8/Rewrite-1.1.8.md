@@ -45,7 +45,7 @@ interface CoreApi {
     classOf(plugin: PluginId): PluginClass;    // the definition of a running plugin's class
     storage(): Storage;                        // the open board's storage plugin's, or core's own where it holds none
   };
-  lock: Lock | null;               // the blocks a locked board leaves open, { open: ["f"] }, from the reply to hello
+  lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello
   outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for plugins to act on
   notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
@@ -77,11 +77,11 @@ interface Note {
 A frontend decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's.
 A frontend may mount a block's UI or output in several places at once, such as two panels of one view, and mount it again as its panels move or reopen, since everything a mount draws from is core's and none of it is lost when a mount ends ([UI modules in JS](Rewrite-1.1.7#the-contract)), rather than moving one element around, as the dock parks each card in its offcanvas today and carries it into a panel and back ([blockr.dock R/block-ui.R#L188-L295](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/block-ui.R#L188-L295)).
 Two mounts of one output share its parameters, which core keeps per block, so both show the same page and sort.
-A frontend shows a block's UI and its output as core's attribute `visible` says, which its toggles set where the board is not locked, since a locked board leaves open only the blocks whose inputs show ([Board objects](Rewrite-1.1.1#blocks), [Wire protocol](Rewrite-1.1.9#locked-boards)).
+Which of a block's sections a frontend shows is its own to keep in its state, as the dock keeps which sections of each card show ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)), while on a locked board it mounts the UI only of a block that the board lock leaves open, as `store.locked()` says ([Board updates](Rewrite-1.1.2#the-store)).
 The `mountOutput()` call measures its element for the output's `info`, asks R for the output unless core kept one asked with the same revision, board options, `info` and parameters ([UI modules in JS](Rewrite-1.1.7#the-contract)), draws it with the renderer R names in it (below), and redraws it when the block's revision, a board option, the `info` or the output's parameters change, while the block is `ready` ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 A frontend draws a block's status, conditions and summary from `scheduler.status()`, and decides from the status what an output that is not current looks like, leaving it as it is, greying it out or hiding it, since core keeps drawing a block's last output whatever the block's status ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 It demands the blocks it shows, above the default evaluation priority ([Evaluation in the client](Rewrite-1.1.10#demand)), and follows the board through `store.subscribe()`, so a removed block's card goes away because the board changed, not because R said so.
-It draws no control for what the lock fixes ([Wire protocol](Rewrite-1.1.9#locked-boards)), and plugins reach R through `request()`, each through requests of its own, as code export and session management do ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
+It draws no control for what a lock fixes, as `lock` and `store.locked()` say ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)), and plugins reach R through `request()`, each through requests of its own, as code export and session management do ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
 A frontend places each plugin whose class has a `ui` as it places a block: it gives `mountPlugin()` an element of its choosing, and core mounts the plugin's module there ([Plugins](Rewrite-1.1.12#plugin-classes)).
 Through `plugins` it reads which plugins run and what their classes give, and reaches the open board's storage, while plugins reach it through `notifications` and `focus` ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
@@ -93,7 +93,7 @@ The scheduler sends nothing to R until `render()` has returned, or resolved wher
 Core then calls `start` for each plugin of the board whose class has one, so that what the frontend first shows comes before what the plugins ask for as they start ([Plugins](Rewrite-1.1.12#running-a-plugin)).
 A frontend's package registers its plugin class and its commands from its startup module ([Plugins](Rewrite-1.1.12#a-plugin)), and subscribes to the store there too, so that it sees the board open, with what R dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the frontend's module only draws.
 
-A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except on a locked board, which loads no other board, where core keeps the board R sent and names the package ([Wire protocol](Rewrite-1.1.9#locked-boards)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
+A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except under the load lock, which fixes the app to its opening board, where core keeps the board R sent and names the package ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-load-lock)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Should two resolve with a board, core opens the one R sent and names both packages.
 
 ### Opening a board
@@ -109,7 +109,7 @@ Only what is fixed for the page outlives an opening:
 - The code and stylesheets that have loaded, since a module loads once per page.
 - The page's element, and the transport with its session.
 - The protocol's client, so that no id names two requests.
-- The blockr options that core has read, and the lock.
+- The blockr options that core has read, and the load lock and the board lock.
 - The revisions given so far, so that the next scheduler gives a block id a revision above any it had, and a revision never goes back within the page ([Evaluation in the client](Rewrite-1.1.10#revisions)).
 
 What a board takes over is part of the board that opens, and comes from the app's opening board, which R's reply to every `hello` holds, never from the board it replaces, as a board takes over each plugin of the opening board whose class it holds no plugin of, with its class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so nothing outlives an opening that way either.

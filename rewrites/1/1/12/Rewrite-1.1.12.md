@@ -2,7 +2,7 @@
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what a plugin is in R and in JS, the plugin classes core defines in R, the frontend and storage plugins, which plugins a board has, how a plugin runs, and a plugin's state.
-Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes of [Board objects](Rewrite-1.1.1#the-board) and [Board updates](Rewrite-1.1.2#board-classes-and-attributes).
+Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes of [Board objects](Rewrite-1.1.1#the-board) and [Board updates](Rewrite-1.1.2#board-classes).
 It changes what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and core's basic frontend as [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built it, and shapes serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), while no issue asks for plugins yet.
 What core gives plugins through `CoreApi`, starting the page, opening a board, switching frontends, core's basic frontend and renderers are [Drawing the board](Rewrite-1.1.8)'s, and what the dock plugin keeps in its state and where it places other plugins stay with [Client-drawn dock and extensions](Rewrite-1.2).
 
@@ -269,7 +269,7 @@ Adding a storage plugin to a board that holds one replaces it in the same way.
 Removing a plugin leaves the board as opening it would: where the board then lacks a plugin that it takes over from the app's opening board, it takes that plugin over in the same step, and where it then holds no frontend or no storage plugin and the opening board holds none either, core's own takes its place.
 So removing the DAG resets it to its class's default state where the opening board holds the DAG, removing the dock from a board in a dock app lays the board out from the dock's default, and removing the frontend where the opening board holds none switches the page to core's basic frontend.
 An app that leaves a plugin to its users keeps it off its opening board, and a board keeps the plugin once a user adds it.
-On a locked board the store refuses adding and removing a plugin, since a locked board keeps everything core keeps in it, while each plugin locks what it alone governs in its state, as the dock does the arrangement of its panels ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+On a locked board the store refuses adding, removing and renaming a plugin, since the board lock fixes which plugins a board holds, as it fixes its blocks, while each plugin locks what it alone governs in its state, as the dock does the arrangement of its panels ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 
 ### Running a plugin
 
@@ -328,7 +328,7 @@ const file = await core.request("report", "html", { content },        // the boa
 
 ### A plugin's state
 
-A plugin's state takes the place of a board class's properties, with the same machinery under the plugin's id ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)):
+A plugin's state takes the place of a board class's properties, with the same machinery under the plugin's id ([Board updates](Rewrite-1.1.2#board-classes)):
 
 - A change inside it is a patch at a path under the plugin's state, as `/plugins/dag/state/positions/a`.
 - The store keeps an edit id for each plugin, as it kept one for each property, which a patch to the plugin names, so that the store refuses the patch where another edit to the plugin came first ([Board updates](Rewrite-1.1.2#deltas)).
@@ -355,7 +355,7 @@ A plugin's module, its `ui` or its `frontend`, follows the plugin's state throug
 So what others may change, such as which view the dock shows, lives in the plugin's state rather than in its module alone, while what only one person's screen needs, such as which block has focus, core holds for the page ([What a frontend offers other plugins](#what-a-frontend-offers-other-plugins)).
 
 Each plugin class gives the state of its plugins a shape of its own, so the dock's views and the layout of another frontend share nothing.
-What a plugin keeps about one of core's objects is an entry in its state keyed by the object's id, as the DAG keeps a block's position, in place of the properties that a board class adds to blocks ([Locked boards and the properties of blocks](Rewrite-1.1.11)).
+What a plugin keeps about one of core's objects is an entry in its state keyed by the object's id, as the DAG keeps a block's position, so that core adds nothing to blocks for it ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)).
 
 A board with the dock, the DAG and two documents of blockr.md, with illustrative states:
 
