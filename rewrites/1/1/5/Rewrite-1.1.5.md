@@ -45,9 +45,9 @@ head_block <- new_block_class(
 new_head_block <- block_constructor(head_block)
 ```
 
-The constructor has the formals of `expr`, a `block_name` and a `visible`, so an app script calls `new_head_block(n = 10L)` as today, and the checks in `expr`, such as `match.arg()`, run when it does: it calls `expr` with its args and takes the block's state from the frame `expr` ran in, as the checks left it, `list(n = 10L, direction = "head")` (notes).
-It returns a block that holds its state, its name, which defaults to one from its class's, `"Head"` for `head_block`, as `default_block_name()` gives it today, and core's attribute `visible`, which says which of the block's sections show ([Board objects](Rewrite-1.1.1#blocks)), and refers to its class, which every head block shares and none copies.
-It takes no `...`, so a misspelled state arg fails as an unused argument, `new_head_block(m = 10L)` with `unused argument (m = 10)`, rather than becoming an attribute, and another package's attributes are set in the client only.
+The constructor has the formals of `expr`, a `block_name` and a `locked`, so an app script calls `new_head_block(n = 10L)` as today, and the checks in `expr`, such as `match.arg()`, run when it does: it calls `expr` with its args and takes the block's state from the frame `expr` ran in, as the checks left it, `list(n = 10L, direction = "head")` (notes).
+It returns a block that holds its state, its name, which defaults to one from its class's, `"Head"` for `head_block`, as `default_block_name()` gives it today, and its `locked`, `NA` unless the script gives it, which says whether the board lock fixes the block's state ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)), and refers to its class, which every head block shares and none copies.
+It takes no `...`, so a misspelled state arg fails as an unused argument, `new_head_block(m = 10L)` with `unused argument (m = 10)`, rather than becoming an R attribute of the block, as through `new_block()`'s `...` today, while a script gives what another package keeps about a block to that package's constructor ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-properties-in-r)).
 The name keeps today's argument, `block_name`, since `attr()` matches the names of R attributes partially: on a block, a list of its state, that has no R attribute `name`, `attr(blk, "name")` returns the block's `names`, as it did when `new_block()` took a `name`.
 A package exports both: the class, from whose fields another class can be built, and the constructor, which app scripts call.
 
@@ -75,7 +75,7 @@ A class has no say in when its blocks are evaluated: a block that must run with 
 
 The function fields name what they read: `expr` the state args, a request the inputs and state args it reads, beside the board options its `new_block_request()` names, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below).
 How R evaluates a block and describes a result are generics rather than fields: `block_eval()` dispatches on the block's class, which R gives the recipe's state, building no block, and `result_summary()` on the result's class (below), while a state that an older version of a class wrote migrates in JS, through the migration its package registers for the class, by the version of the state's shape that the class gives in `version`, a whole number from 1 that the package raises as it changes the shape, and that a JSON board records with each block, since the class's UI owns the state's shape ([Serialization](Rewrite-1.1.4#migrations)).
-The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `visible`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the board options that its `new_block_request()` names, but for an action's `file` and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
+The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `locked`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the board options that its `new_block_request()` names, but for an action's `file` and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
 All but the last read only the class's fields and the formals of its functions, while registration checks that the properties of the schema the class's UI ships are the state args, as it reads the schema (below).
 
 A sketch of `new_block_class()`, in which a field a class leaves out is `NULL`:
@@ -99,7 +99,7 @@ new_block_class <- function(name, inputs = NULL, expr, ui,
   state_args <- names(formals(expr))
   stopifnot(
     "no input has a default" = !any(nzchar(vapply(input_formals, deparse1, ""))),
-    "no state arg is ..., block_name or visible" = !any(c("...", "block_name", "visible") %in% state_args),
+    "no state arg is ..., block_name or locked" = !any(c("...", "block_name", "locked") %in% state_args),
     "no input shares a state arg's name" = !any(input_args %in% state_args)
   )
   for (r in cls$requests) {
@@ -153,13 +153,13 @@ block_constructor <- function(cls) {
     unset <- vapply(state_args, function(arg) eval(call("missing", as.name(arg)), frame), NA)
     structure(
       mget(state_args[has_default | !unset], frame),  # the state, as the checks left it
-      block_name = env$block_name %||% default_block_name(cls$class), visible = env$visible,
+      block_name = env$block_name %||% default_block_name(cls$class), locked = env$locked,
       block_class = cls, class = cls$class
     )
   }
 
   ctor <- function() build(environment())
-  formals(ctor) <- c(args, alist(block_name = NULL, visible = NULL))
+  formals(ctor) <- c(args, alist(block_name = NULL, locked = NA))
   ctor
 }
 
@@ -237,7 +237,7 @@ requests = list(
 R writes a request's answer, which no schema describes, with every vector as an array, a length-one vector included, so that a module reads a single value as `answer[0]`, while a request that answers with a file, such as a download, returns a reply body, `new_reply_body("report.pptx", type, name = "report.pptx")`, which R sends as its reply's binary body.
 Core keeps each answer by registry id, name, state args, the values of the board options it reads, parameters and the revisions of the inputs read, as a snapshot of them, so that reopening a column's dropdown is answered without asking R, and data that changes behind an input, such as a database's, is read again once something invalidates the block that reads it ([Evaluation in the client](Rewrite-1.1.10#invalidation)).
 A request that `new_block_request(volatile = TRUE)` makes is never kept and goes to R every time, which suits a cheap lookup outside the board, such as a directory listing, and nothing expensive.
-A request that `new_block_request(action = TRUE)` makes acts rather than reads, such as an upload, which receives the file the user picked in its argument `file`, a list of the path of the temporary file R wrote the bytes to and the file's name, MIME type and size, as Shiny's `fileInput()` gives them today, keeps the file where its package decides and returns its path for the block's state: R runs it once per call and it may write, core never keeps or merges its answer, and on a locked board R runs it only for a block the lock leaves open ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+A request that `new_block_request(action = TRUE)` makes acts rather than reads, such as an upload, which receives the file the user picked in its argument `file`, a list of the path of the temporary file R wrote the bytes to and the file's name, MIME type and size, as Shiny's `fileInput()` gives them today, keeps the file where its package decides and returns its path for the block's state: R runs it once per call and it may write, core never keeps or merges its answer, and on a locked board R runs it only for a block that the board lock leaves open ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Core's classes and hooks
 

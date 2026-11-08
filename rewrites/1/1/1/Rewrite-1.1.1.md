@@ -110,7 +110,7 @@ type Block = {                          // held under its id in board.blocks
   registry_id: RegistryId;              // "blockr.core-head_block"
   state: Record<string, Json>;          // { n: 10, direction: "head" }
   name: string;                         // "Head", today's block_name
-  attrs: Record<string, Json>;          // { visible: ["outputs"] }, its attributes, values that are not its state (below)
+  locked: boolean | null;               // whether the board lock fixes its state, null following the board lock (below)
 };
 ```
 
@@ -122,8 +122,9 @@ Its registry id says which package its class comes from, since an id splits at i
 A block whose class the block registry lacks when the client opens a JSON board is dropped and named (below).
 A JSON board holds each block with `version`, the version of its class's state, by which its class's migration converts a state of an older shape ([Serialization](Rewrite-1.1.4#migrations)).
 
-A block's state is its constructor's args and nothing else, so calling its class's constructor with the state, its name and its `visible` rebuilds it, but for the attributes other packages keep on it in the client.
-An attribute is a value kept on every block that is not its state, core's own `visible` among them, which says which of a block's sections show, its inputs and its output, and which a locked board reads ([Wire protocol](Rewrite-1.1.9#locked-boards)), as the dock's card sections today travel as a `visible` field in the block's payload ([blockr.dock R/utils-serdes.R#L12-L33](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L12-L33)): whoever defines it registers it with the store, with a schema and an initial value ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), a block constructor takes core's `visible` as an argument of its own, while an attribute that another package defines is set in the client, by a command, and core carries it without reading it, so that a block copied or removed takes its attributes along.
+A block's state is its constructor's args and nothing else, so calling its class's constructor with the state, its name and its `locked` rebuilds it.
+Its `locked` says whether the board lock fixes its state: `true` locks it, `false` leaves it open, and `null`, which a block holds unless a script or a command sets it, follows the board lock ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
+What another package keeps about a block, such as which of the dock's card sections show, which travel today as a `visible` field in the block's payload ([blockr.dock R/utils-serdes.R#L12-L33](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L12-L33)), sits outside the block, keyed by its id ([Extending core's objects](#extending-cores-objects)).
 The name is a property of its own, since every block has one and the client titles cards and panels with it.
 
 A block's state is part of the board and its status is not, because the board holds what someone wrote, while the scheduler holds what is computed from it, beside the board and keyed by block id ([Evaluation in the client](Rewrite-1.1.10)).
@@ -193,7 +194,7 @@ A stack without a colour holds `null`, and a front-end draws it in a default of 
 So every stack holds `color`, as every link holds `input`.
 A command clears a colour by setting it to `null`, and undo does the same for a colour that its step set on a stack that had none.
 A stack's change in a delta sets properties and removes none, so a stack that could lack `color` would leave undo no way to take a colour away ([Board updates](Rewrite-1.1.2#deltas)).
-The colour is core's rather than the dock's, as the dock's card sections became core's attribute `visible` (above).
+The colour is core's rather than the dock's.
 So a board opened under any front-end keeps the colours of its stacks, and core's commands set them ([Board updates](Rewrite-1.1.2#commands)).
 Today the dock keeps the colour on a `dock_stack`, which extends core's stack ([blockr.dock R/dock-stack.R#L24-L27](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-stack.R#L24-L27)).
 It takes three digits too, as `#fc8`, which it expands to six before it fills a colour input ([R/utils-misc.R#L72-L85](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-misc.R#L72-L85)).
@@ -209,9 +210,9 @@ A board class adds properties of its own to the board, beside core's, as the doc
 These become properties of the dock board, held as the dock's design has it ([Client-drawn dock and extensions](Rewrite-1.2)).
 Today the dock also adds a colour to every stack, since `new_dock_board()` makes each of its stacks a dock stack ([R/dock-stack.R#L171-L192](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-stack.R#L171-L192)), and that colour becomes core's ([Stacks](#stacks)).
 Core carries each such property without reading it: it registers nothing inside it, and checks the property's whole value against the schema that the class's definition gives, after every change, while what sits inside, such as how the dock lays out its views or keeps its extensions' state, is the class's own design.
-Core's objects hold only core's properties, apart from a block's attributes, which core carries without reading them (above), and what a package keeps about a link, a stack or a block, such as the DAG's positions, sits in a property of a board class, keyed by the object's id.
+Core's objects hold only core's properties, and what a package keeps about a link, a stack or a block, such as the DAG's positions or which of the dock's card sections show, sits in a property of a board class, keyed by the object's id.
 So core's commands and the assistant create blocks, links and stacks without knowing any board class.
-A change inside a property travels as a patch at a nested path, which the store applies without knowing the property's structure, and the package that defines the class registers the commands that change it ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
+A change inside a property travels as a patch at a nested path, which the store applies without knowing the property's structure, and the package that defines the class registers the commands that change it ([Board updates](Rewrite-1.1.2#board-classes)).
 Whatever reads only core's properties, such as core's basic front-end, works on a board of any class.
 Core publishes TypeScript types for its own objects, and a JSON Schema of a JSON board generated from them, by which R writes a board ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and a board class types its properties by extending core's `Board` interface, as the dock would type its board, with illustrative names:
 
@@ -254,10 +255,10 @@ With the fields of a stack that a delta adds or changes, the store checks that i
 
 ### Objects that cannot be rebuilt
 
-When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, and, once the migrations have run, every property that the class it builds the board as does not define, and the attributes and board option values that no package loaded in the app registered, as those of a package that is missing ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)).
+When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, and, once the migrations have run, every property that the class it builds the board as does not define, and the board option values that no package loaded in the app registered, as those of a package that is missing ([Board updates](Rewrite-1.1.2#board-classes)).
 A board whose first class no loaded package defines, as when blockr.dock is missing, is built as the next class in its `class` that one does, as a dock board is built as a core board, so that only what the missing package's class adds goes, such as the dock's views.
 Its `class` keeps every class, so that the board is built as a dock board again where blockr.dock is installed, with the defaults of the dock's properties.
-The client names each block it drops with the package to install, which the block's registry id gives, and each package that the JSON board lists and the app does not offer, with the version it records, since a class's name gives no package while the JSON board's packages do, so the user learns what to install, while it drops properties, attributes and board option values without naming them, which is the business of whoever keeps them, and a board saved afterwards is written without any of them.
+The client names each block it drops with the package to install, which the block's registry id gives, and each package that the JSON board lists and the app does not offer, with the version it records, since a class's name gives no package while the JSON board's packages do, so the user learns what to install, while it drops properties and board option values without naming them, which is the business of whoever keeps them, and a board saved afterwards is written without any of them.
 A board whose class requires a board option that no loaded package defines does not open, with an error naming the board option and the class, before any default runs, since what the class requires it for would fail later, where the cause is harder to see, and neither does a board where a required board option's default fails or does not fit its schema.
 Today `blockr_deser()` drops blocks only with `deser_on_error = "drop"`, pruning their links and stacks, and logs them without telling the user ([R/utils-serdes.R#L379-L391](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L379-L391), [#L433-L457](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L433-L457)), and a board whose class's package is missing does not open at all, since reading its constructor fails ([#L518-L538](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L518-L538)).
 

@@ -13,7 +13,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 1. The DAG draws the board's blocks, links and stacks in the browser, without g6R, and follows every delta.
 2. Its gestures, such as drawing a link, moving a block into a stack or removing one, run core's commands, so undo and save cover them.
-3. Positions and layout settings are the DAG's extension state, which a dock board keeps in its `extensions` ([Board updates](Rewrite-1.1.2#board-classes-and-attributes)), and boards saved today open with theirs.
+3. Positions and layout settings are the DAG's extension state, which a dock board keeps in its `extensions` ([Board updates](Rewrite-1.1.2#board-classes)), and boards saved today open with theirs.
 4. What blockr.dag offers today carries over: zoom and pan, dragging blocks, click and brush selection, drawing a link by dragging, highlighting on hover, the context menu, the toolbar, tooltips, and stacks that collapse and expand.
 
 ## Proposal

@@ -50,6 +50,7 @@ type Change =
 
 interface Store {
   board(): Board;                                            // the current board, whose changes subscribe() announces
+  locked(block: BlockId): boolean;                           // whether a lock fixes the block's state: the board lock is on and its locked is not false (below)
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
   apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
@@ -62,8 +63,8 @@ interface Store {
   canUndo(origin?: Origin): boolean;
   canRedo(origin?: Origin): boolean;
 
-  register(def: BoardClass | Attribute): () => void;        // adds a board class, with the properties it adds, or a block attribute (below)
-  registered(): (BoardClass | Attribute)[];                  // what is registered, with its schemas
+  register(def: BoardClass): () => void;                     // adds a board class, with the properties it adds (below)
+  registered(): BoardClass[];                                // what is registered, with its schemas
   boardClass(classes: string[]): BoardClass;                 // the class that a board of this class vector is built as (below)
   frontEnd(classes: string[]): string;                       // the front-end that draws a board of this class vector (below)
   registerMigration(registryId: RegistryId, fn: Migration): () => void;   // a block class's one migration of its state (below)
@@ -75,13 +76,14 @@ It holds no board until it opens one and refuses every delta until then, so that
 Core creates a store for each board it opens, with `createStore({ loaded })`, and the store sends R nothing, since it opens its board with what the reply to `hello` holds, while a board that another replaces goes with its store, as core starts again ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 The `loaded(reply, classes)` callback is what the store awaits before it opens its board, given the reply to `hello` and the board's `class`: core initializes there the startup modules, which define their board classes, and imports the front-end that `frontEnd(classes)` gives.
 The store then builds the board as the class that `boardClass(classes)` gives, by the rule that `frontEnd()` follows too, so that core's choice of a front-end and the store's build cannot differ ([Switching frontends](Rewrite-1.1.8#switching-frontends)).
-On a locked board it refuses every `store.open()` of a file's text and every delta the lock does not leave open, such as one that adds a block or changes a locked block's state, which R backs by evaluating only the opening board's blocks ([Wire protocol](Rewrite-1.1.9#locked-boards)).
+Under the load lock it refuses every `store.open()` of a file's text, and under the board lock every delta but one that changes the state of a block that the board lock leaves open, a board option's value or a property that the board's class adds, which its package locks itself ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)), and `locked()` says which blocks it fixes, since a block whose `locked` is `null` follows the board lock.
+So it refuses a delta that adds a block or changes a locked block's state, which R backs by refusing an evaluation that rebinds a block's data inputs or gives a locked block another state ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 
 ### Deltas
 
 ```ts
 interface Delta {
-  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit?: number; state?: Partial<State>; unset?: string[]; name?: string; attrs?: Values }>; rm?: BlockId[] };
+  blocks?:   { add?: Record<BlockId, Block>; mod?: Record<BlockId, { edit?: number; state?: Partial<State>; unset?: string[]; name?: string; locked?: boolean | null }>; rm?: BlockId[] };
   links?:    { add?: Record<LinkId, Link>; mod?: Record<LinkId, Partial<Link>>; rm?: LinkId[]; before?: Record<LinkId, LinkId> };
   stacks?:   { add?: Record<StackId, Stack>; mod?: Record<StackId, Partial<Stack>>; rm?: StackId[] };
   options?:  Values<OptionId>;                // board option values to set and to remove
@@ -95,21 +97,19 @@ interface Values<K extends string = string> {  // values by name to set, and nam
 }
 ```
 
-The shape is today's payload, with four differences: a block's `mod` takes any of its state args and attributes, since every block can be controlled from outside, and removes the state args its `unset` names, since an arg without a default starts unset ([Block classes in R](Rewrite-1.1.5#the-block-class)) and a `null` would reach `expr` as `NULL`; it names the block's edit id it was built on, which a command leaves out and the command registry fills in from the board `run()` read, and which only the block's own edits change, so that a delta built on an older board is refused rather than applied over a newer edit, as a patch names the edit id of the property it changes; a link's `mod` changes the link in place and keeps its id; and board options, the board's name and the properties that its class adds are part of it, so nothing bypasses it.
+The shape is today's payload, with four differences: a block's `mod` takes any of its state args, since every block can be controlled from outside, and its `locked` ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)), and removes the state args its `unset` names, since an arg without a default starts unset ([Block classes in R](Rewrite-1.1.5#the-block-class)) and a `null` would reach `expr` as `NULL`; it names the block's edit id it was built on, which a command leaves out and the command registry fills in from the board `run()` read, and which only the block's own edits change, so that a delta built on an older board is refused rather than applied over a newer edit, as a patch names the edit id of the property it changes; a link's `mod` changes the link in place and keeps its id; and board options, the board's name and the properties that its class adds are part of it, so nothing bypasses it.
 A link's placement among a variadic target's inputs is given by `before`, as today.
-Board option values and attributes are set and removed as a collection entry's fields are, by `set` and `unset`, so that a delta removes a value in a way that survives JSON, as a delta has to where it travels between peers or through the assistant's plans, and undo removes an attribute that its step set where there was none.
+Board option values are set and removed as a collection entry's fields are, by `set` and `unset`, so that a delta removes a value in a way that survives JSON, as a delta has to where it travels between peers or through the assistant's plans.
 
-### Board classes and attributes
+### Board classes
 
 Besides core's objects, a board holds the properties that its board class adds ([Board objects](Rewrite-1.1.1#the-board)), such as a dock board's views, its grids and which view is active, and its `extensions`, which hold what the dock's extensions carry by each extension's id, as today's dock board writes them ([blockr.dock R/utils-serdes.R#L46-L96](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L46-L96)), such as the DAG's positions, blockr.md's document or the assistant's threads.
-An attribute is a value that is not state, kept on every block, such as core's `visible`, which says which sections of a block's card show.
 
 A package defines each board class it ships from its startup module, under the class's R name.
 The definition names the class's parent and the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), gives the properties it adds, each with a schema and a default, one function that keeps those properties consistent with the rest of the board, and one that migrates them (below), while what sits inside a property is the class's own design.
 Its package, its front-end and its version come from R, where the package names them through its methods of `board_front_end()` and `board_version()`, and R sends them with the reply to `hello` ([Plugins](Rewrite-1.1.12#a-plugin)).
 Registering a class checks that it names a registered parent, as every class but core's `board` does, that it adds no property named as one of core's, such as `blocks`, nor one that a parent adds, and that each property's default fits its schema, while the store refuses to open a board whose `class` is no array of class names.
 The store registers nothing inside a property: it checks a property's whole value against its schema after every change, keeps what a change replaced for undo, and saves the property with the board.
-An attribute is registered under a name, `visible` for core's, which a block's `mod` sets, and registering a name that another package registered fails.
 With illustrative names:
 
 ```ts
@@ -122,12 +122,6 @@ interface BoardClass {
   properties: Record<string, { schema: JsonSchema; default: Json }>;   // what it adds beside core's properties
   update?(delta: Delta, board: Board): Patch[];        // patches to its own properties that follow from a change (below)
   migrate?(properties: Record<string, Json>, version: number): Record<string, Json>;   // its properties of an older version in today's shape (below)
-}
-
-interface Attribute {
-  name: string;                                        // "visible"
-  schema: JsonSchema;
-  initial?: Json;                                      // what it holds where nothing set it
 }
 
 store.register({                                       // the dock's, from its startup module
@@ -163,7 +157,6 @@ What a JSON board holds migrates by the version of each shape that it records, n
 A board class migrates its properties in its definition's `migrate`, given every property beside core's, as the JSON board holds them, and the version of the class that the board records, and returns them in today's shape, changing only its own class's, which only its package enforces.
 A package registers the migration of each of its block classes' states under the class's registry id, from its startup module, since the class's UI module owns the state's shape but loads only once core mounts a block, and no migration runs in R any more.
 A board option migrates its value in its definition's `migrate`, given the value and the version of its shape that the JSON board records ([Serialization](Rewrite-1.1.4#board-options)).
-Attributes are not migrated: one that its schema refuses is dropped as the board opens, so that it reads as its initial value.
 
 ```ts
 type Migration = (state: Record<string, Json>, version: number) => Record<string, Json>;   // version: the class's, as the block records it
@@ -174,9 +167,9 @@ store.registerMigration("blockr.dplyr-filter_block", (state, version) =>   // fr
 
 When a board opens, the store runs the `migrate` of each class it builds the board as whose version the board records below the one R gives, root first, the migration of each block's class where the block records a version below its class's, and the `migrate` of each board option whose value the board records at a version below the one R gives, each given what it migrates frozen, and the board opens with what they return, so that what a migration leaves out is gone, as a property that a class renamed is.
 A version above the one R gives refuses the board, since no migration converts back, while a class that the board records no version of keeps what the board holds, since its writer knew no version of it.
-What a board reads where nothing set a value comes from what packages define, a property's `default`, an attribute's `initial` and a board option's `default`, rather than from a migration, which only a JSON board's opening runs.
-Only then does the store drop every property that the class it builds the board as defines neither itself nor through its parents, such as the dock's views on a board opened in a core app, and every attribute and board option value that no package loaded in the app registered, such as those of a package whose startup module failed ([UI modules in JS](Rewrite-1.1.7#startup-modules)), without naming them, so a board saved afterwards is written without them.
-Every package therefore defines its board classes and registers its attributes, board options and migrations before the store opens a board, from its startup module, which core initializes before the store opens any board ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
+What a board reads where nothing set a value comes from what packages define, a property's `default` and a board option's `default`, rather than from a migration, which only a JSON board's opening runs.
+Only then does the store drop every property that the class it builds the board as defines neither itself nor through its parents, such as the dock's views on a board opened in a core app, and every board option value that no package loaded in the app registered, such as those of a package whose startup module failed ([UI modules in JS](Rewrite-1.1.7#startup-modules)), without naming them, so a board saved afterwards is written without them.
+Every package therefore defines its board classes and registers its board options and migrations before the store opens a board, from its startup module, which core initializes before the store opens any board ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
 
 ### Applying a delta
 
@@ -190,7 +183,7 @@ The store expands a delta, checks it, commits it and tells whoever follows it:
    Core's part expands as today's augment step does, so removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)), and the board's class through its `update`, a pure function from the delta and the board to patches of that class's own properties, so the dock drops a removed block's panels.
    It runs `update` again on what the last round added, until it adds nothing, as `augment_board_update()` runs today ([#L2357-L2368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2357-L2368)).
 2. It checks the invariants of [Board objects](Rewrite-1.1.1) on the result, the schema of each property a patch changed, and that every block and property a `mod` or a patch changes still has the edit id it names, and a failing check rejects the whole delta, so nothing is ever half applied, with an error that names each failure and its property.
-3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed block, link or stack comes back whole and in its place, a patched property gets its old value, and a state arg, field or attribute that the delta set where there was none is unset again, while the inverse holds no board option values ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed block, link or stack comes back whole and in its place, a patched property gets its old value, and a state arg or field that the delta set where there was none is unset again, while the inverse holds no board option values ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 4. It hands the expanded delta and the new board to whoever follows the board.
 
 Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, while the edit ids they name are checked against those the board had as the step started, since `run()` and `plan()` build all of a step's deltas on one board, none is committed unless all pass, and followers are told of each in turn.
@@ -222,7 +215,7 @@ await commands.run("blockr.core-remove_block", { id: "b" });      // one step of
 await commands.plan("blockr.dag-relayout", { direction: "LR" });
 ```
 
-Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, and set a board option, and set a block's attribute, typed by the schema it registers.
+Core's commands cover what its plugins and the dock's actions do today: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`.
 Changing a stack sets its blocks, its colour or both, and clears its colour with `null` ([Board objects](Rewrite-1.1.1#stacks)).
 Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a board class's properties through those of its owner, while any package runs another's.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.

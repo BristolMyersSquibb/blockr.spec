@@ -41,8 +41,8 @@ serve(
 
 ### The script
 
-That script stays as it is, while the objects its constructors return hold only what their counterparts in the client's board hold: each its class, its id, name and state, and a block core's attribute `visible` too ([Board objects](Rewrite-1.1.1#the-board)).
-A block holds its state, its name and its `visible` and refers to its block class ([Block classes in R](Rewrite-1.1.5)), a link its ends and input, a stack its blocks, name and colour ([Board objects](Rewrite-1.1.1#stacks)), and the board its blocks, links, stacks, board option values, name and the properties its class adds, while its class vector says which class the client builds it as ([Board objects](Rewrite-1.1.1#the-board)).
+That script stays as it is, while the objects its constructors return hold only what their counterparts in the client's board hold: each its class, its id, name and state, and a block its `locked` too ([Board objects](Rewrite-1.1.1#the-board)).
+A block holds its state, its name and its `locked` and refers to its block class ([Block classes in R](Rewrite-1.1.5)), a link its ends and input, a stack its blocks, name and colour ([Board objects](Rewrite-1.1.1#stacks)), and the board its blocks, links, stacks, board option values, name and the properties its class adds, while its class vector says which class the client builds it as ([Board objects](Rewrite-1.1.1#the-board)).
 The Shiny servers and UI functions they hold today go, and a board's plugins become commands and extensions.
 
 The constructors keep the arguments that carry such state, and `class`, through which a constructor that extends a board, a link or a stack, such as `new_dock_board()`, names its class in R ([R/board-class.R#L38-L62](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-class.R#L38-L62), [R/stack-class.R#L47-L78](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/stack-class.R#L47-L78)).
@@ -75,7 +75,7 @@ These registrations are the app script's own, so they stay when another board is
 
 The `loader` argument goes, since neither of today's loaders keeps its job: `store.open()` replaces the board in place, so no reload needs `local_loader()` to carry a board across it ([Board updates](Rewrite-1.1.2#opening-a-board)), and session management opens the board a URL names from the browser, which makes every storage call ([Session management extension](Rewrite-1.6)).
 So R writes the opening board once per process and sends it to every session.
-A locked session shows its script's board, since a locked board loads no other board ([Wire protocol](Rewrite-1.1.9#locked-boards)), and no app today picks a locked session's board in R.
+A session under the load lock shows its script's board, since the load lock fixes the app to its opening board ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-load-lock)), and no app today picks a locked session's board in R.
 What remains of the loader is an ordering on the client: where `rack_loader()` resolves the board a URL names before the page is drawn, session management fetches it from its package's startup module a few round trips after the `hello`, and core opens it in place of the script's board, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 ### Writing the opening board
