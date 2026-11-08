@@ -79,7 +79,7 @@ Core, the store or every frontend reads each member, while the board holds each 
 ```ts
 interface PluginClass {
   id: PluginClassId;                                // "blockr.dag-dag_plugin", as R names it
-  options?: OptionId[];                             // the board options it requires, added as a board opens with one of its plugins or a change adds one
+  options?: OptionId[];                             // the board options it requires, resolved as a board opens with one of its plugins or a change adds one
   state?: { schema: JsonSchema; default: Json };    // what each of its plugins keeps in the board, which the store reads, as it reads the next two
   update?(delta: Delta, board: Board, plugin: PluginId): Patch[];   // patches to that plugin's state that follow from a change
   migrate?(state: Json, version: number): Json;     // a plugin's state of an older version, in today's shape
@@ -108,7 +108,7 @@ Vite and Rollup take plugins in the same way, as one object whose optional hooks
 Every other contract of core's client has this shape too, the module contract that follows anywidget's among them ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 
 A package registers the commands and board options of its plugin classes as it registers any others, through `core.commands.register()` and `core.options.register()`, and gives their requests in R ([A plugin's requests](#a-plugins-requests)).
-A plugin class names the board options it requires in `options`, and core adds each one that the board lacks, with its default, before it starts the plugin or mounts its UI ([Which board options a board holds](Rewrite-1.1.13#which-board-options-a-board-holds)).
+A plugin class names the board options it requires in `options`, and core resolves the default of each one that the board holds no value for before it starts the plugin or mounts its UI ([Which board options a board holds](Rewrite-1.1.13#which-board-options-a-board-holds)).
 A plugin works on the board through `CoreApi` alone ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, with no per-block callback.
 
 A plugin class comes from a package, since a startup module registers it and only a package declares one ([UI modules in JS](Rewrite-1.1.7#startup-modules)).

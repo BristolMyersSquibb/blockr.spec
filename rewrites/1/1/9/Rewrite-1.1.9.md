@@ -156,7 +156,7 @@ No request times out, since no reply is lost on a live connection and giving up 
 
 ### Outputs
 
-An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, or, in a block's first output request where its registry entry names no renderer, of every board option that the board holds ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)), what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+An output request asks for the output that the coercion its block class names in `output` makes from the block's result at a revision, which R knows by the registry id it keeps with the result ([Block classes in R](Rewrite-1.1.5#outputs)), with the values of the board options that its renderer requires, or, in a block's first output request where its registry entry names no renderer, of every board option that a loaded package defines, the board's value or else its default ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)), what the client measured for the output's element, and the output's parameters, which its renderer keeps ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```json
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
