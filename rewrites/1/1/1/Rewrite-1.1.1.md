@@ -29,14 +29,14 @@ The board holds only what changes while the app runs, with the ids and registry 
 | Object | Where | Lives | What it is for |
 |---|---|---|---|
 | Board, with its blocks, links, stacks, board option values and plugins | The client, in the store | Until another board is opened, and in files | The only copy of what the user built (this proposal) |
-| Store | The client, one per board | The page | Holds the board and applies every change to it, with undo ([Board updates](Rewrite-1.1.2)) |
-| Command registry | The client | The page | The edits that menus, shortcuts and plugins, the assistant among them, run ([Board updates](Rewrite-1.1.2)) |
-| Scheduler | The client | The page | Revisions, statuses, conditions and demand, computed from the board and R's replies ([Evaluation in the client](Rewrite-1.1.10)) |
+| Store | The client, one per board | Until another board is opened | Holds the board and applies every change to it, with undo ([Board updates](Rewrite-1.1.2)) |
+| Command registry | The client | Until another board is opened | The edits that menus, shortcuts and plugins, the assistant among them, run ([Board updates](Rewrite-1.1.2)) |
+| Scheduler | The client | Until another board is opened | Revisions, statuses, conditions and demand, computed from the board and R's replies ([Evaluation in the client](Rewrite-1.1.10)) |
 | Block registry entries | The client | The page | Each block class by registry id, with its UI, inputs and arg specs and the schema of its state that its UI ships, which R sends with the versions of its packages when the client connects, for neither side to edit ([Block classes in R](Rewrite-1.1.5#registration)) |
-| Board options | The client | The page | Each board option's definition, an `Option`, which the package that ships the board option registers from its JS, for neither side to edit, while the board holds its value ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) |
+| Board options | The client | Until another board is opened | Each board option's definition, an `Option`, which the package that ships the board option registers from its JS, for neither side to edit, while the board holds its value ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) |
 | Blockr options | The client | The page | The values of the blockr options that core and plugins read, each asked of R the first time client code reads it and kept for the page, since a blockr option is fixed for the app, for neither side to edit, while the board holds none of them ([Board options and blockr options](Rewrite-1.1.13#blockr-options)) |
-| Plugin classes | The client | The page | Each plugin class's definition, a `PluginClass` under the class's id, which the package that ships the class registers from its startup module, with its version, which R sends from the class's method of `plugin_version()`, for neither side to edit, while the board holds its plugins ([Plugins](Rewrite-1.1.12#a-plugin)) |
-| Frontend and other plugins | The client | Until another board is opened | Draw the board and work on it through `CoreApi`, its store, commands, demand and requests, each keeping its data in its state in the board ([Plugins](Rewrite-1.1.12#running-a-plugin), [Drawing the board](Rewrite-1.1.8)) |
+| Plugin classes | The client | Until another board is opened | Each plugin class's definition, a `PluginClass` under the class's id, which the package that ships the class registers from its startup module, with its version, which R sends from the class's method of `plugin_version()`, for neither side to edit, while the board holds its plugins ([Plugins](Rewrite-1.1.12#a-plugin)) |
+| Frontend and other plugins | The client | Until another board is opened | Draw the board and work on it through `CoreApi`, its store, commands, demand and requests, each keeping its data, where it has any, in its state in the board ([Plugins](Rewrite-1.1.12#running-a-plugin), [Drawing the board](Rewrite-1.1.8)) |
 | Block registry | R | The process | Each registered block class, a value holding its UI, inputs, `expr`, requests and output, with its constructor and metadata ([Block classes in R](Rewrite-1.1.5)) |
 | R board | R | While R converts it | Built by an app script's constructor calls, whose block classes R registers, then converted to the client's board and dropped, so it never exists beside the client's board |
 | Results | R | Until the client forgets the block | For each block R has evaluated, the revision, value, block expression and registry id of its latest evaluation, with the previous value kept while the next computes. They hold no state, which each evaluation brings, so they cannot fall out of step with the board ([Block classes in R](Rewrite-1.1.5#evaluation)) |
@@ -47,12 +47,12 @@ The board holds only what changes while the app runs, with the ids and registry 
 R holds no copy of the board, so nothing in R has to follow it: an R object either exists only while a board is defined or opened or holds no state, and R reads the current state from the request that needs it.
 
 - An R board, with its blocks, links, stacks, board options and plugins, exists only while R converts it to the client's board: the one an app script builds with constructors, whose block classes R registers.
-  R hands it to the client as its board and drops it, while a JSON board it neither builds nor opens, since the client opens every board ([Board updates](Rewrite-1.1.2#opening-a-board)).
+  R hands it to the client as its board and drops it, while it never opens a JSON board, since the client opens every board ([Board updates](Rewrite-1.1.2#opening-a-board)), and builds from one only where both locks are on ([Locked boards and the properties of blocks](Rewrite-1.1.11#serving-a-json-board-locked)).
   Its S3 classes do their work there, in the constructors, and none reaches the client, since the board names block classes by registry id and plugin classes by their ids (below).
 - A block class is a value, defined once with `new_block_class()` and held by the block registry: its UI, inputs, requests and output, and its `expr`, which checks a state and returns what the block expression is made from, while `block_eval()` runs that expression ([Block classes in R](Rewrite-1.1.5)).
   Nothing about a class is copied into a block.
 - A block, as its constructor returns it, holds its state and name and refers to its class.
-  R builds blocks only where a board is built, in an app script and when a board is opened, and keeps none while the app runs.
+  R builds blocks only where a board is built, in an app script, and, where both locks are on, from the JSON board that `serve()` is given, and keeps none while the app runs.
 - Results are an environment keyed by block id, holding for each block R has evaluated the revision, value, block expression and registry id of its latest evaluation, with the previous value kept while the next computes.
   They hold no state: an evaluation brings the recipe's state, from which the class's `expr` builds the block expression that `block_eval()` runs, and the coercion its class names makes an output from a result ([Wire protocol](Rewrite-1.1.9#outputs)).
   R drops a block's results when the client says the block is gone ([Wire protocol](Rewrite-1.1.9)).
@@ -83,12 +83,12 @@ A board has no class of its own, so that every R board is of class `board`, and 
 What a plugin is, which plugins a board holds and takes over as it opens, and the frontend, the plugin that draws the page, are [Plugins](Rewrite-1.1.12)'s.
 
 R builds an R board only where an app script defines one, which it converts to JSON once, when `serve()` is called ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
-A JSON board R never opens: it passes the one `serve()` is given on as it is, and the client opens that one as it opens the one `store.open()` opens, with the block registry of the reply to `hello` ([Board updates](Rewrite-1.1.2#opening-a-board)).
+A JSON board R never opens: it passes the one `serve()` is given on as it is, reading its blocks and links too where both locks are on ([Locked boards and the properties of blocks](Rewrite-1.1.11#serving-a-json-board-locked)), and the client opens that one as it opens the one `store.open()` opens, with the block registry of the reply to `hello` ([Board updates](Rewrite-1.1.2#opening-a-board)).
 R loads no package for a board, since installing the packages whose block classes an app offers is the deployment's job, and the packages that the app names fill the block registry as the app starts ([Block classes in R](Rewrite-1.1.5#registration)), so every block's class is registered before a recipe names it, or its block goes:
 
 1. A class defined outside a package is registered only by the script that defines it, so its blocks are dropped and named where it is not (below).
-2. A class from a package is registered as the script loads the package, which registers its classes.
-3. A block whose package the app does not load, or no longer has its class, is dropped and named (below).
+2. A class from a package is registered where the app names the package in the `packages` of `serve()`.
+3. A block whose package the app does not name, or that no longer has its class, is dropped and named (below), but on the board that the script builds, whose blocks' classes R registers itself (below).
 
 A block is built by its class's constructor only where an app script calls it, while opening a board and evaluating a block build none ([Block classes in R](Rewrite-1.1.5#evaluation)).
 A board from a constructor call may hold blocks of classes nobody registered too, and R registers those from the class each block refers to, as classes from outside a package, under the ids the defaults below give, before it writes the board as JSON ([Defining a board in R](Rewrite-1.1.3)), so both ways in end with every class registered.
@@ -96,7 +96,7 @@ R then turns the R board into the client's board and drops it.
 While the app runs, the client's board is the only board, so no edit changes an R object: R evaluates a block from its recipe with its class's `expr` and `block_eval()`, building no block, and keeps the result in an environment keyed by block id ([Block classes in R](Rewrite-1.1.5#evaluation)), and a request that needs more of the board than the blocks it reads carries it.
 
 Collections are keyed by id and ordered by insertion, as `blockr_ser()` writes them as named payloads.
-Order matters, since cards follow it and a variadic input takes its links in order, and a JS object keeps insertion order only for keys that do not look like integers, which is why an id may not be made of digits alone (below).
+Order matters, since cards follow it and a variadic input takes its links in order, and a JS object keeps insertion order only for property names that do not look like integers, which is why an id may not be made of digits alone (below).
 
 ### Blocks
 
@@ -119,7 +119,7 @@ A JSON board holds each block with `version`, the version of its class's state, 
 
 A block's state is its constructor's args and nothing else, so calling its class's constructor with the state, its name and its `locked` rebuilds it.
 Its `locked` says whether the board lock fixes its state: `true` locks it, `false` leaves it open, and `null`, which a block holds unless a script or a command sets it, follows the board lock ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
-What another package keeps about a block, such as which of the dock's card sections show, which travel today as a `visible` field in the block's payload ([blockr.dock R/utils-serdes.R#L12-L33](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L12-L33)), sits outside the block, keyed by its id ([Extending core's objects](#extending-cores-objects)).
+What another package keeps about a block, such as which of the dock's card sections show, which travel today as a `visible` property in the block's payload ([blockr.dock R/utils-serdes.R#L12-L33](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L12-L33)), sits outside the block, keyed by its id ([Extending core's objects](#extending-cores-objects)).
 The name is a property of its own, since every block has one and the client titles cards and panels with it.
 
 A block's state is part of the board and its status is not, because the board holds what someone wrote, while the scheduler holds what is computed from it, beside the board and keyed by block id ([Evaluation in the client](Rewrite-1.1.10)).
@@ -153,7 +153,7 @@ A file holds the blocks of such a class by registry id, as it holds any block, a
 
 A file holds no class's source, because no form of it reproduces a class in general.
 Today `blockr_ser()` writes the constructor as a closure ([R/utils-serdes.R#L124-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L124-L142)), which brings its environment along: Shiny sources an app.R into a new environment rather than the global one ([shiny R/shinyapp.R#L486-L494](https://github.com/rstudio/shiny/blob/dffc756a2867533fafc0858baf4c3fdbed165692/R/shinyapp.R#L486-L494)), so for a block class defined in an app.R that reads an API key and loads a 3.8 MB data frame, `blockr_ser()` writes 4.0 MB with every block of that class, the key included, while a constructor defined at a script's top level loses the script's globals, since `serialize()` writes the global environment as a reference.
-The call that defined a class would reproduce it only where it names nothing else of the script, and not where `new_block_class()` is aliased, a field comes from a variable or a function of the script makes the class.
+The call that defined a class would reproduce it only where it names nothing else of the script, and not where `new_block_class()` is aliased, a property comes from a variable or a function of the script makes the class.
 A file from today's stack holds such a constructor as a closure, which its conversion outside core leaves unread ([Serialization](Rewrite-1.1.4#files)): a function saved today builds its block from a Shiny server, which the contract of [Block classes in R](Rewrite-1.1.5) replaces, so such a block keeps the name the file records as its registry id, and opens only where a block class of that name is registered, such as one the developer has rewritten to that contract, and is dropped and named otherwise.
 
 ### Links
@@ -231,27 +231,28 @@ Its R side only writes its plugins' state for a script's board, while a board th
 
 ### Ids
 
-Every object, the board, a block, a link or a stack, has an id, and all but a link have a name.
-The id identifies the object, and is the key the board holds a block, a link or a stack under, so none of them repeats it: references and collection keys use it, it never changes, and it is unique within its collection.
+Every object, the board, a block, a link, a stack or a plugin, has an id, and all but a link have a name.
+The id identifies the object, and the board holds a block, a link or a stack under it, so none of them repeats it: references and collections use it, it never changes, and it is unique within its collection.
 The name is what the user calls the object: free text the user can change at any time and nothing refers to, so renaming a block changes its name, as today.
 An app script may give an object its id, as it must for a block that a link or a stack refers to, or leave it out, and R draws each id it leaves out with `rand_names()`, in `new_board()` and in the containers of blocks, links and stacks, as today's stack does ([R/utils-misc.R#L66-L103](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-misc.R#L66-L103)), and names a board without a name after its id, in sentence case, as core's `board_name` board option does today ([R/board-option.R#L285-L296](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L285-L296)).
+A plugin that the list in `plugins` gives no name takes the name of its class without `_plugin` as its id instead ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 The client mints the ids of the objects and boards it creates, in the same shapes, which the blockr option `rand_id` names, such as `calm_heron`, and from the same words, which core ships, so that an id looks the same whichever side drew it.
 So every board that reaches the client holds every id, with its collections keyed by id, as a JSON board does ([Serialization](Rewrite-1.1.4#files)), and R draws the opening board's ids once per process, as the script runs, so every session of an app opens the same ids.
-An id is any string that is not empty and not made of digits alone, since a JS object, `JSON.parse()` included, puts keys that look like integers first, whatever the order they were inserted in.
+An id is any string that is not empty and not made of digits alone, since a JS object, `JSON.parse()` included, puts property names that look like integers first, whatever the order they were inserted in.
 Nothing else about an id needs a rule: exported code backticks an id that is not a syntactic name, and the client escapes ids in CSS selectors or keeps them out of element ids, while the Shiny input names that [blockr.core#390](https://github.com/BristolMyersSquibb/blockr.core/issues/390) shows breaking are gone, since every message travels through one input ([Wire protocol](Rewrite-1.1.9)).
 The store refuses to open a board with an id made of digits alone, with an error that names the id.
 
 ### What the store checks
 
 The store checks after every delta that ids are unique and well formed, that a link's endpoints exist, its target declares its input, a fixed input takes at most one link and no links form a cycle, as `validate_links()` and the board's checks do today ([R/links-class.R#L308-L368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/links-class.R#L308-L368), [R/board-class.R#L64-L122](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-class.R#L64-L122)), that a stack names existing blocks and a block sits in at most one stack, and that every value a delta sets for a board option fits that board option's schema.
-It also checks that a block's class is in the block registry, since opening a board drops a block whose class it lacks, so that no delta makes a board that no opening would, and that a block, link or stack that a delta adds or changes has core's fields and nothing else, since deltas come from plain JS and from the assistant's tools too.
+It also checks that a block's class is in the block registry, since opening a board drops a block whose class it lacks, so that no delta makes a board that no opening would, and that a block, link or stack that a delta adds or changes has core's properties and nothing else, since deltas come from plain JS and from the assistant's tools too.
 These two look only at what a delta changed: on a board of 1,000 blocks they take 0.4 µs of an `apply()` that takes 3.8 ms, most of it in the checks of the whole board.
-With the fields of a stack that a delta adds or changes, the store checks that its colour is `null` or a hex colour of six digits ([Stacks](#stacks)).
+With the properties of a stack that a delta adds or changes, the store checks that its colour is `null` or a hex colour of six digits ([Stacks](#stacks)).
 With the plugins that a delta adds or changes, the store checks that each one's class is registered, as it checks a block's, and that the board holds at most one frontend and one storage plugin, since no opening makes a board that holds two ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 
 ### Objects that cannot be rebuilt
 
-When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, a plugin whose class none of the packages that the app names registers ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and, once the migrations have run, the board option values that no package loaded in the app registered, as those of a package that is missing ([Board updates](Rewrite-1.1.2#plugins)).
+When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, a plugin whose class none of the packages that the app names registers ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and, once the migrations have run, the board option values that no package that the app names registers, as those of a package that is missing ([Board updates](Rewrite-1.1.2#plugins)).
 So a board that holds the dock opens without it where blockr.dock is missing, and takes the frontend of the app's opening board, so that only what the missing package's plugins keep goes, such as the dock's views ([Plugins](Rewrite-1.1.12#the-frontend)).
 Saved and opened again in a dock app, it takes the dock over from that app's opening board, with the dock's default layout.
 The client names each block and each plugin it drops with the package to install, which the block's registry id and the plugin's class id give, and each package that the JSON board lists and the app does not offer, with the version it records, so the user learns what to install, while it drops board option values without naming them, which is the business of whoever keeps them, and a board saved afterwards is written without any of them.

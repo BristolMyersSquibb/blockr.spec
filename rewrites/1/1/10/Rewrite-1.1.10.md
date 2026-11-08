@@ -109,7 +109,7 @@ scheduler.status("b");                                         // the block's st
 scheduler.subscribe(changed => { /* redraw these blocks */ });  // after statuses change, naming the blocks whose status changed
 ```
 
-The names are today's ([R/block-server.R#L20-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L20-L71)), with `invalid` in place of `unset`, since a block class says only whether a state can run, by signalling `invalid()` in its `expr` or its `block_eval()` method or using an arg the state leaves unset ([Block classes in R](Rewrite-1.1.5#expressions)), and the conditions are those a reply carries ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
+The names are today's ([R/block-server.R#L20-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L20-L71)), with `invalid` in place of `unset`, since a block class says only whether a state can run, by signalling `blockr_invalid()` in its `expr` or its `block_eval()` method or using an arg the state leaves unset ([Block classes in R](Rewrite-1.1.5#expressions)), and the conditions are those a reply carries ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 A block's status is the first of these that holds:
 
 1. It is `waiting` while an input without a default is unlinked and R does not bind it itself, as it binds the data `serve()` is given for a block it serves alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)), while a variadic block has no link, or while a block upstream reads `failed`, `invalid` or `waiting`, which the client sees from the block registry, the board and the reply to `hello` without asking R ([Block classes in R](Rewrite-1.1.5#the-block-class), [Wire protocol](Rewrite-1.1.9#handshake)).
@@ -123,7 +123,7 @@ The scheduler then invalidates that block, so that it is evaluated again.
 An evaluation that the transport cannot send fails its block, with the transport's error as its condition.
 The scheduler then sends that revision no more, and tries again once the block's revision moves.
 A block nothing demands reads the same way, so one that failed and has not changed since still reads `failed`, and a `stale` block keeps its latest reply's conditions, so one that failed before it went stale shows why.
-The conditions of an `invalid` reply hold the message of its `invalid()` or name the unset arg.
+The conditions of an `invalid` reply hold the message of its `blockr_invalid()` or name the unset arg.
 While a block is `waiting`, its status holds no summary, and as its conditions only one the scheduler writes, of the phase `status`, naming the unlinked input or the upstream block that keeps it waiting, as today's board server records a note for `waiting` and `unset` with no result ([R/block-server.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L66-L71)).
 That condition is a message, of the class `blockr_message`, since the status already says that the block waits.
 It names every unlinked input, or else every block upstream that keeps the block waiting, by id.
@@ -154,7 +154,7 @@ After its `hello`, the scheduler gives every block a new revision, as invalidati
 Every block then reads `stale` until the new session has evaluated it, with the conditions and summary of its latest reply, while frontends keep drawing the last outputs core holds.
 So a status never reads `ready` for a result that R has lost.
 What is demanded, and what a one-time evaluation still waits for, evaluates again with everything upstream.
-The scheduler sends again every request of a block class or an output class still unanswered ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
+The scheduler sends again every output and every request of a block class, an output class or a renderer still unanswered ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 Where such a request names an old revision, R replies `missing`, and the request goes back to the code that sent it.
 That code asks again at the new revisions.
 A one-time evaluation with parameters, an action, and a board option's or a plugin's request still unanswered reject instead, since they may have run and may write.

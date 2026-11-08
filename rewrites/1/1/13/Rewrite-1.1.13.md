@@ -2,19 +2,19 @@
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the two kinds of option, board options and blockr options, what sets them apart, and how each reaches the code that reads it, in the client and in R.
-It takes over what [Board objects](Rewrite-1.1.1#board-options) and [Defining a board in R](Rewrite-1.1.3#blockr-options) said about them, and shapes `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), the lock ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)) and leaving board option values out of undo and redo ([blockr.core#503](https://github.com/BristolMyersSquibb/blockr.core/issues/503)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It takes over what [Board objects](Rewrite-1.1.1#board-options) and [Defining a board in R](Rewrite-1.1.3#blockr-options) said about them, and shapes `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), the locks ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)) and leaving board option values out of undo and redo ([blockr.core#503](https://github.com/BristolMyersSquibb/blockr.core/issues/503)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How a delta sets a board option's value is [Board updates](Rewrite-1.1.2#deltas)'s, how a JSON board records the value is [Serialization](Rewrite-1.1.4#board-options)'s, the hosts through which a module reads it are [UI modules in JS](Rewrite-1.1.7#the-contract)'s, and the `blockr_options` message is [Wire protocol](Rewrite-1.1.9#blockr-options)'s.
 Each blockr option belongs to the page of the code that reads it, as the three that the scheduler reads belong to [Evaluation in the client](Rewrite-1.1.10#scheduling).
 
 ## What must hold
 
-1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it.
+1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it, beside what its package gives in R for the board option's class `{id}_option`: the version of the value's shape and the board option's own requests.
 2. Each component that reads a board option's value names the board option in its own definition: a plugin class, a renderer, a board option's UI, or a block class in its UI module, which also names every board option that the class's requests read.
    The board holds a value for the board option before that component first reads it, on a locked board too.
 3. A board holds a value only for a board option that something on the page has required since the board opened, or that a script, a file or a command has set.
 4. A change to a board option's value evaluates no block, since no board option reaches `expr`, and neither undo nor redo changes a board option's value.
 5. A blockr option is fixed when the app starts or is deployed, by an R option or an environment variable, and neither a board nor a file holds one.
-6. Client code reads a blockr option only by asking R for it by name, and nothing declares a blockr option in R.
+6. Client code reads a blockr option only by asking R for it by name, but for the two locks, `lock_load` and `locked`, which R sends in the reply to `hello`, and nothing declares a blockr option in R.
 7. A board option takes a blockr option's value only as its default, which its definition in the client reads, so that R computes no default.
 
 ## Today
@@ -49,14 +49,14 @@ So a board's JSON describes the board in full, and holds nothing of the deployme
 ### Defining a board option
 
 A board option is an instance of one type, `Option`, rather than a type of its own ([State in JS](Rewrite-1#principles)).
-What R's methods for a board option's class do today becomes data or a function on the instance, so nothing dispatches on a board option's type.
+What R's methods for a board option's class do today becomes data or a function on the instance, so nothing in the client dispatches on a board option's type.
 The package defines it in the client because what a new value does on the page, such as switching the theme for `dark_mode`, is code that the board option's Shiny `server` runs in R today ([R/board-option.R#L572-L582](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L572-L582)), which R could not describe to the client.
 The package that ships a board option registers it from its startup module, through `core.options.register()`, before the store opens a board ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
 Core registers its own three, `n_rows`, `show_conditions` and `dark_mode`, which `coreOptions(core)` makes, as it starts the page.
 
 ```ts
 interface Option {                                 // as the package that ships it registers it in the client
-  id: OptionId;                                    // "n_rows", stable, the key of its value in the board
+  id: OptionId;                                    // "n_rows", stable, which the board holds its value under
   label: string;                                   // "Preview rows", what the user sees
   category: string;                                // "Table options"
   schema: JsonSchema;                              // the values it takes, with a description for a model
@@ -79,11 +79,11 @@ const nRows = (core: CoreApi): Option => ({
     minimum: 1,                                    // a page of a table holds a row at least
     description: "How many rows of a table a block's output shows",
   },
-  default: () => core.blockrOption("n_rows", 50),  // the blockr option n_rows where it is set, else 50
+  default: () => core.blockrOption("n_rows", 10),  // the blockr option n_rows where it is set, else 10
   ui: nRowsInput,                                  // the module blockr.core ships for it
 });
 
-// and in the board, once a component that requires it has come onto the page: options: { n_rows: 50 }
+// and in the board, once a component that requires it has come onto the page: options: { n_rows: 10 }
 ```
 
 The id says which board option it is and never changes, while the label is only what the user sees.
@@ -93,7 +93,7 @@ The store checks every value that a delta sets against the board option's schema
 
 A definition's `default` is a value, or a function that core calls the first time the board option is required after a board opens.
 Core keeps the function's result until the next board opens, so nothing is read for a board option that nothing requires.
-A default that reads a blockr option whose value the schema refuses, such as an `n_rows` of `"many"`, reports the value and takes its fallback.
+A default that reads a blockr option whose value does not convert to the fallback's type, such as an `n_rows` of `"many"`, reports the value and takes the fallback ([Blockr options](#blockr-options)).
 Core calls `onChange` with each value that the board takes for the board option, both as a board opens holding one and as a delta changes it, which `dark_mode` needs to switch the page's theme.
 The `migrate` function converts a value that a JSON board records at a version of its shape below the one that the package's method of `board_option_version()` gives in R ([Serialization](Rewrite-1.1.4#board-options)).
 
@@ -175,13 +175,13 @@ No board option reaches `expr` or `block_eval()`, so a change to one evaluates n
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, or else the board option's default, which core resolves before it calls the module's `render()`, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
   A frontend mounts it with `mountOption()` where it shows the board options that the board holds, as core's basic frontend does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
   An app replaces it with a renderer that it names in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)).
-- A plugin, like any other client code, reads the values in `store.board().options` and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
+- A plugin reads the values of the board options that its class names in `store.board().options`, and follows them through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
 ### Locked boards
 
 A locked board leaves its board options open, so that a reader may switch to dark mode or show more rows of a table on it, as on any other board.
 The store applies a delta that sets or removes a board option's value on a locked board as on any other, and core adds the board options that something on the page requires there too, each with its default ([Which board options a board holds](#which-board-options-a-board-holds)).
-What a lock fixes, and so which values R takes for a request on a locked board, is [Locked boards and the properties of blocks](Rewrite-1.1.11#board-options-on-a-locked-board)'s.
+No lock fixes a board option, so R takes the values that a request carries on a locked board as on any other ([Locked boards and the properties of blocks](Rewrite-1.1.11#board-options-on-a-locked-board)).
 
 ### Blockr options
 
@@ -208,7 +208,7 @@ It is R code only because ellmer runs the agent loop in R, and it becomes JS log
 
 ### Where the two meet
 
-A board option's definition may take its default from a blockr option, through `CoreApi.blockrOption()`, as core's `n_rows`, `show_conditions` and `dark_mode` each read the blockr option of their own id, with today's fallback.
+A board option's definition may take its default from a blockr option, through `CoreApi.blockrOption()`, as core's `n_rows`, `show_conditions` and `dark_mode` each read the blockr option of their own id, with today's fallback but for `n_rows`, which falls back on 10 rather than 50, so that a card's table fits its output without scrolling ([blockr.core#501](https://github.com/BristolMyersSquibb/blockr.core/pull/501)).
 So a deployment that sets `BLOCKR_N_ROWS=25` gives 25 rows per page to every board that holds no value for `n_rows`.
 The default applies only where the board lacks a value: a value that a script gives wins over it, and a board saved with 50 rows per page opens with 50 under any deployment.
 Where no blockr option sets `dark_mode`, its default is the theme that the user's system prefers, read from `prefers-color-scheme`, as today's fallback of `NULL` has the page follow that theme.
@@ -222,7 +222,7 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The departures that this page takes in come from the bodies of [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451) (requests name their board options through `new_block_request()`), [blockr.core#460](https://github.com/BristolMyersSquibb/blockr.core/pull/460) (a board option's R object holds its id and value, with a table of today's functions and what replaced each), [blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468) (a module names its board options in `options`), [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) (board classes require board options), [blockr.core#480](https://github.com/BristolMyersSquibb/blockr.core/pull/480) (core's definitions and the output host's `options()`) and [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) (the renderer in the registry entry, the caller of `onChange` and the reads of blockr options).
+The departures that this page takes in come from the bodies of [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451) (requests name their board options through `new_block_request()`), [blockr.core#460](https://github.com/BristolMyersSquibb/blockr.core/pull/460) (a board option's R object holds its id and value, with a table of today's functions and what replaced each), [blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468) (a module names its board options in `options`), [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) (board classes require board options), [blockr.core#480](https://github.com/BristolMyersSquibb/blockr.core/pull/480) (core's definitions and the output host's `options()`), [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) (the renderer in the registry entry, the caller of `onChange` and the reads of blockr options) and [blockr.core#501](https://github.com/BristolMyersSquibb/blockr.core/pull/501) (the fallback of `n_rows`).
 
 On `js-state`, core adds the board options that a module names in `addOptions()` in `srcts/mount/block.ts`, as this page has it, but does not check them against those that the `requests` of the class's registry entry name.
 This page has core refuse there a module that leaves one of them out, before it adds the module's board options.
