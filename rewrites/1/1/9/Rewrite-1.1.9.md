@@ -2,7 +2,7 @@
 Status: settled on 2026-10-29. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the messages the client and R exchange, and what R does with each.
-It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [block classes](Rewrite-1.1.5) proposals, and shapes writing the wire protocol ([blockr.core#420](https://github.com/BristolMyersSquibb/blockr.core/issues/420)), building the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)) and the Shiny transport ([blockr.core#431](https://github.com/BristolMyersSquibb/blockr.core/issues/431)), locking a board when the app starts ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the client scheduler ([blockr.core#435](https://github.com/BristolMyersSquibb/blockr.core/issues/435)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), filling the block registry from the packages that the app names ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), the versions of plugin classes in the reply to `hello` ([blockr.core#504](https://github.com/BristolMyersSquibb/blockr.core/issues/504)), a plugin's requests ([blockr.core#505](https://github.com/BristolMyersSquibb/blockr.core/issues/505)), the reply to `blockr_options` ([blockr.core#510](https://github.com/BristolMyersSquibb/blockr.core/issues/510)), bounding the summary of an evaluation's reply ([blockr.core#512](https://github.com/BristolMyersSquibb/blockr.core/issues/512)) and stopping the page on a later `hello` that it cannot take ([blockr.core#515](https://github.com/BristolMyersSquibb/blockr.core/issues/515)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It builds on the [board objects](Rewrite-1.1.1), [board updates](Rewrite-1.1.2) and [block classes](Rewrite-1.1.5) proposals, and shapes writing the wire protocol ([blockr.core#420](https://github.com/BristolMyersSquibb/blockr.core/issues/420)), building the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)) and the Shiny transport ([blockr.core#431](https://github.com/BristolMyersSquibb/blockr.core/issues/431)), locking a board when the app starts ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), the client scheduler ([blockr.core#435](https://github.com/BristolMyersSquibb/blockr.core/issues/435)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), filling the block registry from the packages that the app names ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), the versions of plugin classes in the reply to `hello` ([blockr.core#504](https://github.com/BristolMyersSquibb/blockr.core/issues/504)), a plugin's requests ([blockr.core#505](https://github.com/BristolMyersSquibb/blockr.core/issues/505)), the reply to `blockr_options` ([blockr.core#510](https://github.com/BristolMyersSquibb/blockr.core/issues/510)), bounding only the size of a message, rather than each property of a reply ([blockr.core#512](https://github.com/BristolMyersSquibb/blockr.core/issues/512)) and stopping the page on a later `hello` that it cannot take ([blockr.core#515](https://github.com/BristolMyersSquibb/blockr.core/issues/515)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How R evaluates a block with its class and describes its output is [Block classes in R](Rewrite-1.1.5)'s, how R decodes state values is the [serialization proposal](Rewrite-1.1.4)'s, how a module sends requests through its host is [UI modules in JS](Rewrite-1.1.7)'s, and what the client does with replies, its revisions, demand and statuses, is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)).
 
 ## What must hold
@@ -29,7 +29,7 @@ interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" |
 interface Progress { id: string; progress: { value?: number; message?: string } }
 ```
 
-A reply's status belongs to its request alone: an `error` carries the conditions raised, bounded as an evaluation's are (below), and a request or an output that fails never marks its block `failed`, which only an evaluation's reply does ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+A reply's status belongs to its request alone: an `error` carries every condition raised, as an evaluation's reply does (below), and a request or an output that fails never marks its block `failed`, which only an evaluation's reply does ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 
 ### Handshake
 
@@ -78,16 +78,17 @@ A one-time evaluation's parameters, such as the write block's `save`, travel in 
               "inputs": [ { "input": "x", "block": "a", "revision": 2 }, { "input": "y", "block": "b", "revision": 3 } ] } }
 ```
 
-R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and a plugin's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), the conditions raised, and the standard output and error, all bounded.
+R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and a plugin's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), every condition raised, and the standard output and error, each whole, since only the size of a message is bounded ([The Shiny transport](#the-shiny-transport)).
 It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a client extension](Rewrite-1.5)).
 
 ```json
 { "id": "17", "status": "ok", "block": "c", "revision": 4, "summary": "<data.frame> [150 × 7]",
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "block_eval", "message": "..." } ],
-  "omitted": { "warning": 0, "message": 0 }, "stdout": "", "stderr": "" }
+  "stdout": "", "stderr": "" }
 ```
 
-A reply keeps the first few conditions of each severity and counts the rest in `omitted`, carries no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)).
+A reply carries every condition raised, however many, and no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)).
+No property of a reply has a limit of its own, since such a limit guesses a size for one property, and a count drops a condition however short it is, while what matters is the size of a whole message, which the transport bounds (below).
 The phase names what raised a condition: the class's `expr`, which builds the expression, its `inputs`, whose body checks the data, `block_eval()`, which runs the block expression, or `result_summary()`, which describes the result, and in the reply to an output request or a request, `output` or `request`, for the coercion or the request's function.
 The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `blockr_invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
 A request on a revision that is still computing waits for it.
@@ -245,6 +246,7 @@ block_expression_for <- function(req, lock = NULL) {         # for every evaluat
 
 The protocol has a version of its own, apart from the JS API major that modules declare ([UI modules in JS](Rewrite-1.1.7#the-contract)), the format, the versions of shapes and the package versions that a JSON board records ([Serialization](Rewrite-1.1.4#files)) and a block's revision, which names its result ([Evaluation in the client](Rewrite-1.1.10#revisions)).
 Its major changes only for what an existing peer would misread, and both sides ignore properties they do not know, as [shinyreact's protocol](https://github.com/posit-dev/shinyreact/blob/e8812353d5f076f6e98a27a7e210d0a3e177ea1d/protocol/README.md) does.
+Until the switch, nothing ships from `js-state`, so a change there leaves the protocol at 1.0.
 
 ### The Shiny transport
 
@@ -252,6 +254,11 @@ The client sends each message as text, with `Shiny.setInputValue("blockr", JSON.
 R answers with `session$sendCustomMessage("blockr", message)`, which writes to the websocket at once, so that a request running in the session's process can send progress before it ends.
 The transport's observer hands each message to R's queue and returns no promise, so Shiny never holds the session's inputs while a request runs, as it does for an observer that returns one.
 How a body travels is the transport's choice too, which [blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455) settled by measuring (notes).
+No message on the websocket is larger than the blockr option `max_message_size` says, 4 MiB by default, in either direction, which neither Shiny nor httpuv bounds (notes).
+R sends nothing of a larger message, but an `error` in place of the reply, whose condition gives the message's size and the limit, so that the client shows why.
+An `error` in place of an evaluation's reply carries its block and revision, and R drops that evaluation's result, as it holds none for an evaluation that fails.
+The client refuses to send a larger message itself, which fails its requests with the reason, since R gives it the limit as each session starts (notes).
+R refuses a larger message rather than serving it from a URL, as it serves a large body, since R, on one thread, would answer the URL only once it had finished what it runs next, while the client held every later message behind it, progress notes included (notes).
 A later `hello` drops the bodies that the transport holds for the session too, those that requests posted and those that wait for the client to fetch them, since it starts the session afresh (above).
 Leaving Shiny later replaces this module and nothing else.
 
@@ -292,9 +299,13 @@ Connect's proxy is closed source, and Shiny documents a new session after a reco
 When it reconnects, shiny.js 1.14.0 sends the new session the last value of every input, the transport's last message among them, and then the messages queued while the page was offline, all of which R ignores until the session's `hello`, the replayed last message included, since the transport ignores the value that an input starts a session with ([blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455)), before the client's own `hello` starts the session afresh.
 
 How a body travels was settled by measuring as the transport was built ([blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455)).
-A body from R of up to the blockr option `max_message_body` bytes, by default 1 MiB, or 4 MiB in binary frames, goes in its reply's message, as base64 in the JSON, a third larger, and a larger one from a session-scoped URL that `session$registerDataObj()` serves, which the browser fetches itself, so that a download streams to disk and no large body holds up the messages behind it on the websocket ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
+A body from R of up to the blockr option `max_message_body` bytes, by default 1 MiB, or 4 MiB in binary frames, goes in its reply's message where the message then stays within `max_message_size`, as base64 in the JSON, a third larger, and any other from a session-scoped URL that `session$registerDataObj()` serves, which the browser fetches itself, so that a download streams to disk and no large body holds up the messages behind it on the websocket ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 A body goes in a binary frame from `session$sendBinaryMessage()` only where the blockr option `message_body_encoding` is `"binary"`, which is off by default, since Shiny Server's proxy writes each message of R's into the page's channel as text.
-A body from the client is posted to another such URL, which R gives the client in the message that starts each session, `{ "body_url": ..., "max_request_size": ... }`, so that the deployment's `shiny.maxRequestSize` still limits it, while the client never goes through Shiny's `uploadInit`, which was never faster.
+A body from the client is posted to another such URL, which R gives the client in the message that starts each session, `{ "body_url": ..., "max_request_size": ..., "max_message_size": ... }`, so that the deployment's `shiny.maxRequestSize` still limits it, while the client never goes through Shiny's `uploadInit`, which was never faster.
 Core's output classes carry one page of rows as JSON, so core needs no Arrow writer, and an output class that needs one brings its own.
+
+Neither Shiny 1.14.0 nor httpuv 1.6.17 bounds a message on the websocket: httpuv grows a message from the client frame by frame with no maximum ([src/websockets.cpp#L343-L380](https://github.com/rstudio/httpuv/blob/5e3d6827c284210b6a7cba7009cf73beb2e03525/src/websockets.cpp#L343-L380)), Shiny writes R's JSON to the socket as it is, and its option `shiny.maxRequestSize` bounds only HTTP requests ([R/middleware.R#L311-L330](https://github.com/rstudio/shiny/blob/dffc756a2867533fafc0858baf4c3fdbed165692/R/middleware.R#L311-L330)).
+Shiny Server's proxy takes up to about 512 MiB from R, the longest string Node holds, and about 64 MB from the browser, faye-websocket's default, and closes the connection past either ([lib/transport/tcp.js#L130-L143](https://github.com/rstudio/shiny-server/blob/a8d11665323ed68bbdb96e8da16375e6e886d136/lib/transport/tcp.js#L130-L143)).
+Served from a URL, a reply of 1.1 MB reached the page only once the 3 s request that R ran next had ended, at 3.1 s, and so did that request's progress note, where on the websocket the reply took 0.1 s ([blockr.core#524](https://github.com/BristolMyersSquibb/blockr.core/pull/524)).
 
 </details>

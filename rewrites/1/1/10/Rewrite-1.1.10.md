@@ -99,8 +99,7 @@ interface BlockStatus {
   evaluated: number | null;                        // the revision its latest reply was for
   running: boolean;                                // whether an evaluation of it is sent and not yet answered
   conditions: Condition[];                         // from the latest reply, which replaces the ones before
-  omitted: { warning: number; message: number };   // the conditions that reply counted rather than kept
-  stdout: string;                                  // its standard output and error, bounded
+  stdout: string;                                  // its standard output and error
   stderr: string;
   summary: string | null;                          // the result's summary from that reply, "<data.frame> [150 × 7]"
 }
