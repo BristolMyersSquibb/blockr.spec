@@ -278,8 +278,15 @@ Today's extension mechanism maps onto this proposal: `external_ctrl` and the pay
 
 The store merges the patches that an `update` returns into the delta and stops once a round adds nothing new, so an `update` may return what the delta holds already, and after a fixed number of rounds it rejects the delta, naming the class that kept adding.
 What an `update` returns never overrides what the delta given to the store says, so that an undo that puts back an old value in a plugin's state puts back that value, and not one that an `update` makes up for a new object.
-So the store leaves out a patch of an `update` whose path lies at, under or above a path that one of the given delta's own patches changes, while a patch at an array's index, or at its end as `-`, names no element, so that two patches into one array at different indices both apply.
+So the store leaves out a patch of an `update` whose path lies at, under or above a path that one of the given delta's own patches changes.
+An array is the exception: a patch at an array's index, or at its end as `-`, names no element.
+A patch at an index changes whatever the array holds there by then, and one at `-` adds an element of its own.
+So the paths of two patches that both index one array never overlap, even at the same index or below it, and both patches apply, as two appends at `/plugins/dock/state/views/main/grid/-` do.
+Where one of the delta's own patches and a patch of an `update` both replace the element at the same index, the update's patch applies last and wins.
+A patch of the delta's own at the array itself, or above it, still leaves out what an `update` changes inside the array.
+The store reads the board before the delta to tell an array's index from an object's member named by digits.
 An `update` that adds something for a new object, such as a panel for a block that a delta adds, first checks whether the delta's own patches add it already, which it can, since it gets the delta.
+An `update` that changes an element of an array checks the delta's own patches in the same way, since the store applies both patches there.
 An `update` gets the board before the delta, so that it sees what the delta removes.
 Once a command's `prepare()` resolves, the command registry checks `enabled()` again before it calls `run()`, since the board may have changed while the command waited, and opening a board drops every command still in its `prepare()`.
 An `update` leaves the edit ids out, as a command does, since it builds on the board the delta applies to.
