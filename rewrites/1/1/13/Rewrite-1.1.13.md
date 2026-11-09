@@ -115,7 +115,7 @@ It shows the error in the block's element, naming the module, the request and th
 
 Core resolves the `default` of each board option that a component requires and the board holds no value for:
 
-1. A plugin class's, as a board opens with one of its plugins and as a change adds one, before core calls the plugin's `start` or mounts its UI module ([Running a plugin](Rewrite-1.1.12#running-a-plugin)).
+1. A plugin class's, as a board opens with one of its plugins, before core calls the plugin's `start` or mounts its UI module ([Running a plugin](Rewrite-1.1.12#running-a-plugin)).
    No board holds core's basic frontend or core's own storage plugin, so core resolves their board options as either takes the place of one that the board lacks, and the basic frontend gets `show_conditions` and `dark_mode` before it draws ([Plugins](Rewrite-1.1.12#the-frontend)).
 2. A block class's, before core first calls its module's `render()` after the board opens.
 3. A renderer's, before core first asks R for an output that the renderer draws, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
