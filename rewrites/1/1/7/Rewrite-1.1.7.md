@@ -244,7 +244,10 @@ What a module ships beside it sits in its folder under its name, so that `head-b
 Core's utilities sit in one stylesheet of their own, `blockr-core.css`, beside its runtime, and a module's stylesheet uses them through Tailwind's `@reference`, since utilities spread over several stylesheets override each other by load order ([blockr.core#448](https://github.com/BristolMyersSquibb/blockr.core/pull/448)).
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)).
 R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads.
-A package ships the JSON Schemas of its plugin classes' state and of the board options that it registers beside the startup module that registers them, in the same way, each plugin class's by the class's id and each board option's by its id, by which R writes their values ([Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+A package ships the JSON Schemas of its plugin classes' state and of the board options that it registers beside the startup module that registers them, in the same way, a file each, named by the class in R on which `plugin_version()` or `board_option_version()` dispatches: `dag_plugin.schema.json` for the plugin class `blockr.dag-dag_plugin`, and `grid_gap_option.schema.json` for the board option `grid_gap` ([Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+The suffix keeps a board option's file apart from a module's schema, since `filter.schema.json` beside `filter.js` is that module's.
+R writes a plugin's state by the file beside the startup module of the package that its class's id names, and a board option's value by the file beside any startup module, since a board option's id names no package.
+Core ships the files of its own board options beside its runtime.
 
 ### Testing
 

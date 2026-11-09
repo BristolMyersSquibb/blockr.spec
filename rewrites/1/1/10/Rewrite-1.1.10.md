@@ -141,9 +141,9 @@ At startup the scheduler sends nothing until the frontend's `render()` has retur
 A block that `serve()` serves alone has no frontend, so core's client, which draws it, demands it as a frontend would, and the scheduler starts once core has mounted it ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 Outputs are fetched by whatever draws them, once a block is `ready`, and core keeps drawing a block's last output whatever its status, so that the frontend decides from the status what an output that is not current looks like ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), while it asks R for no other output of a block that is not `ready`, even when a board option or the output's `info` changes, since R may no longer hold the revision that output was made from.
 
-Core calls five more methods of the scheduler, which plugins do not get through `CoreApi`.
-It calls `start()` once the frontend's `render()` has returned, as the page starts and as each board opens ([Drawing the board](Rewrite-1.1.8#starting-the-page)), and `hold()` while the page switches frontends in place ([Drawing the board](Rewrite-1.1.8#switching-frontends)).
-Both hold evaluations only, so that a startup module that waits on a request before `render()` still gets its answer.
+Core calls four more methods of the scheduler, which plugins do not get through `CoreApi`.
+It calls `start()` once the frontend's `render()` has returned, as the page starts and as each board opens ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+Until then the scheduler holds evaluations only, so that a startup module that waits on a request before `render()` still gets its answer.
 It calls `session()` after the `hello` of each new session (below).
 A block's host reads the inputs of the block's recipe through `inputs()`, each with the upstream block that feeds it, for the module and for the block's requests ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Outputs and requests go to R through `request()`, so the scheduler sees everything R has to run, as the idle delay and the 5 s rule need.

@@ -44,7 +44,7 @@ It fixes nothing of the opening board itself, so an app with the load lock alone
 
 The blockr option `locked`, which an app sets as `blockr.locked` and a deployment as `BLOCKR_LOCKED`, as today, locks whichever board the app shows, and is off unless one of them sets it.
 While it is on, the store refuses every change but three: one to the state of a block that the board lock leaves open ([Block locks](#block-locks)), one to a board option's value ([Board options on a locked board](#board-options-on-a-locked-board)), and one inside a plugin's state ([Plugins on a locked board](#plugins-on-a-locked-board)).
-So it fixes the board's DAG, its blocks and links, and with it the board's name, every block's name and `locked`, the stacks, and which plugins the board holds, with their classes and names.
+So it fixes the board's DAG, its blocks and links, and with it the board's name, every block's name and `locked`, the stacks, and the names of the board's plugins, while the app's opening board sets which plugins the board holds, on a locked board as on any other ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 A frontend draws no control for what it fixes, and nor does a plugin.
 Without the load lock, a reader may open other boards, each locked, but change the setup of none, as today's dock restores any board in locked mode ([blockr.dock#125](https://github.com/BristolMyersSquibb/blockr.dock/pull/125)), while a deployment that only hides the authoring controls keeps the dock's option for that, which refuses nothing ([blockr.dock#475](https://github.com/BristolMyersSquibb/blockr.dock/issues/475)).
 
@@ -67,8 +67,8 @@ A board option's own request runs under the board lock as on any board, as a plu
 
 ### Plugins on a locked board
 
-A board holds its plugins in `plugins`, a property of core's board ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), so the board lock fixes which plugins it holds, as it fixes its blocks.
-While the board lock is on, the store refuses every patch but those inside a plugin's state, such as `/plugins/dag/state/positions/a`, so that no command adds or removes a plugin, and no frontend replaces the one the board holds.
+A board holds its plugins in `plugins`, a property of core's board, and the app's opening board sets which plugins it holds, since no change adds or removes a plugin ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+While the board lock is on, the store refuses every patch but those inside a plugin's state, such as `/plugins/dag/state/positions/a`, so that no command renames a plugin, as none renames a block.
 A plugin goes on running under the board lock, but only reads the board: the store refuses every change that a lock fixes, whichever plugin's command makes it, so that neither the DAG nor the assistant adds a block, links one or changes a locked block's state.
 A plugin reads the board and its results as on any board, and draws no control for what a lock fixes, as a frontend draws none, by the locks that core's API holds ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 What sits inside a plugin's state stays the plugin's own to lock, so the store applies a patch inside a plugin's state under the board lock, and the plugin's commands refuse what the plugin locks.
