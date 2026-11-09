@@ -213,7 +213,7 @@ await commands.run("blockr.core-remove_block", { id: "b" });      // one step of
 await commands.plan("blockr.dag-relayout", { direction: "LR" });
 ```
 
-Core's commands cover what its plugins of today and the dock's actions do: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`, and they set a plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+Core's commands cover what its plugins of today and the dock's actions do: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`, as `blockr.core-set_block_lock` does, and they set a plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Changing a stack sets its blocks, its colour or both, and clears its colour with `null` ([Board objects](Rewrite-1.1.1#stacks)).
 Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.

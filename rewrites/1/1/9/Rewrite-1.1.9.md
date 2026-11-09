@@ -224,8 +224,8 @@ lock_board <- function(board, open = character()) {        # once, when the app 
     cls    <- block_registry[[blk$registry_id]]
     inputs <- upstream_ids(board$links, id)                  # input -> upstream id, list(data = "a")
     list(cls = cls, inputs = inputs,
-         expression = if (!id %in% open)                     # or the blockr_invalid() that building it signals
-           tryCatch(build_block_expression(cls, blk$state, inputs), blockr_invalid = identity))
+         expression = if (!id %in% open)                     # or the blockr_invalid() that building it signals,
+           tryCatch(build_block_expression(cls, blk$state, inputs), blockr_invalid = identity))   # while another error stops the app
   })
 }
 
@@ -236,6 +236,7 @@ block_expression_for <- function(req, lock = NULL) {         # for every evaluat
   }
   fixed <- lock[[req$block]]
   if (is.null(fixed)) refuse("The locked board has no block ", req$block)
+  refuse_unless_opening(req, fixed)                          # inputs of other blocks, or a locked block's other state
   fixed$expression %||% build_block_expression(fixed$cls, req$recipe$state, fixed$inputs)   # a block left open: its state from the request
 }
 ```
