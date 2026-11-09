@@ -33,6 +33,9 @@ An app sets three locks, each on its own, while a frontend or a plugin may lock 
 The load lock fixes the app to its opening board, the board lock fixes what the board holds, its blocks and links above all, and a block's lock fixes the block's state.
 They meet in two places: a block's lock takes effect only under the board lock, and R can guarantee the board lock and the block locks only where the load lock is on too ([What R refuses](#what-r-refuses)).
 A locked board is one under the board lock, whatever the load lock says.
+R reads each of the two blockr options as `TRUE` or `FALSE`.
+An environment variable gives a string, which R reads with `as.logical()`, as the client does for a blockr option whose fallback is a logical ([Wire protocol](Rewrite-1.1.9#blockr-options)).
+R refuses any other value, so that a deployment that misspells one fails as the app starts rather than running unlocked.
 
 ### The load lock
 
@@ -87,8 +90,11 @@ What R holds a block to depends on the load lock, since R can hold a block to a 
 Where the load lock is on too, R holds every block to the opening board, which it built, or read where `serve()` was given a JSON board (below): it evaluates only that board's blocks, with their opening links, and every locked block with its opening state, whatever a client sends, so that the R process evaluates only what the deployer intends.
 When the app starts, R builds from the opening board every block's class and the ids its inputs bind to, and for a locked block the block expression it evaluates, such as `dplyr::filter(a, Species == "setosa")`, so that a locked block's state and the bindings of its inputs are fixed together, and its `expr` never runs again, as `lock_board()` sketches it ([Wire protocol](Rewrite-1.1.9#locked-boards)).
 A locked block whose opening state cannot run, such as a merge whose `by` is unset, keeps the `blockr_invalid()` that building it signalled, and R replies `invalid` with it to every evaluation of the block.
+Any other error from building a locked block's expression stops the app as it starts, naming each such block, since a broken board served locked is the operator's to fix.
 In a session with both locks, R evaluates a locked block with the block expression it built at startup, and a block left open with a block expression it builds from the request's state and the class and bindings it built at startup.
-From the request it reads only the block's id, refusing one the opening board lacks, the revisions of the inputs, which say only which of its own results to bind, the parameters, and the state of a block left open.
+To evaluate, it takes from the request only the block's id, refusing one the opening board lacks, the revisions of the inputs, which say only which of its own results to bind, the parameters, and the state of a block left open.
+It reads the rest of the request only to check it against the opening board.
+An evaluation whose inputs name other blocks than the opening links, or that gives a locked block another state, gets an `error` that names the lock.
 
 Without the load lock, R cannot tell which board the client shows, since the board is the client's, so it holds a block to what the client sent before.
 An evaluation carries the block's `locked`, which R reads as the store does, and once R has evaluated a block since the board opened, which starts the session afresh ([Wire protocol](Rewrite-1.1.9#opening-a-board)), it holds the block to the data inputs of that evaluation and, where the block is locked, to its state.
@@ -132,5 +138,10 @@ None.
 The page was started from the session of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), which removed `attrs`, core's `visible` and `blockr.core-set_block_attribute`, and left the lock's list of open blocks to this page.
 R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the state of its plugin classes.
 Both yyjsonr and jsonlite write `NA` as `null` but read `null` in an object back as `NULL`, so R reads a block's `locked` by the schema of core's block, which turns `null` into `NA`.
+R reads the opening board in `lock_board()`, in `R/evaluator-lock.R` on `js-state`.
+A method of `serve()` calls it once as the app starts, and hands what it returns to the evaluator of every session ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)).
+Until `serve()` has its methods, `new_evaluator()` calls it itself where its caller passes none ([blockr.core#532](https://github.com/BristolMyersSquibb/blockr.core/pull/532)).
+R compares a request's state with the state it holds by their JSON, in `same_json()`, so that a whole number matches whether R decodes it as an integer or a double.
+An `identical()` shortcut comes first, which keeps the check to about 0.1 ms, where evaluating the cheapest block, a head block, takes about 3 ms.
 
 </details>
