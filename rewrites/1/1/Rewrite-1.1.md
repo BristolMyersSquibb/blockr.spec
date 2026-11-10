@@ -97,6 +97,7 @@ The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503
 - [Locked boards and the properties of blocks](Rewrite-1.1.11): the load lock, the board lock and block locks, board options and plugins on a locked board, what R refuses, serving a JSON board locked, the locks in the reply to `hello`, what a plugin keeps about a block, and a block's properties in R
 - [Plugins for the client-owned board](Rewrite-1.1.12): what a plugin is in R and in JS, plugin classes, the frontend and storage plugins, which plugins a board has, and a plugin's state, in place of board classes and the dock's extensions
 - [Board options and blockr options](Rewrite-1.1.13): the two kinds side by side, defining a board option, which board options a board holds, the renderer before the first output, how R and the client read a board option's value, locked boards, blockr options, and where the two kinds meet
+- [Notifications and logging: what the user is told and what is logged where](Rewrite-1.1.14): one member of `CoreApi` for every message, warning and error that the user should see, whether R or the client raised it, what R and the client log, and telemetry
 
 <details><summary>Notes for implementers</summary>
 
