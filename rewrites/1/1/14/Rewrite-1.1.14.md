@@ -1,5 +1,5 @@
 # Notifications, logging and tracing: what the user is told and what is recorded where
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-11-10. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log and trace.
 Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a plugin sent it.
