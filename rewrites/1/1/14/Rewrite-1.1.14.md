@@ -4,7 +4,7 @@ Status: settled on 2026-11-10. Design for [Client-owned board state](Rewrite-1.1
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log and trace.
 Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a plugin sent it.
 Log lines go to the console by default, and log lines and spans go to an OpenTelemetry collector wherever the deployment names one, from R and from the browser alike.
-It shapes sending core's own failures to the frontend ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and how core's basic frontend shows notifications, and the notifications of [The dock's services](Rewrite-1.2.6) build on it.
+It shapes the notifications of `CoreApi` ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and their toasts in core's basic frontend ([blockr.core#549](https://github.com/BristolMyersSquibb/blockr.core/issues/549)), logging in R ([blockr.core#550](https://github.com/BristolMyersSquibb/blockr.core/issues/550)) and in the client ([blockr.core#551](https://github.com/BristolMyersSquibb/blockr.core/issues/551)), tracing ([blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552)) and the guide for deployments ([blockr.core#553](https://github.com/BristolMyersSquibb/blockr.core/issues/553)), and the notifications of [The dock's services](Rewrite-1.2.6) build on it.
 How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evaluating-a-block)'s, how a block's status holds them [Evaluation in the client](Rewrite-1.1.10#statuses)'s, and how a frontend draws the board [Drawing the board](Rewrite-1.1.8)'s.
 
 ## What must hold
@@ -154,11 +154,11 @@ A frontend draws notifications as it chooses, by their class, origin and what th
 A frontend may one day also show some as desktop notifications, such as an error while the page's tab is hidden, which needs nothing from core.
 Core's basic frontend shows each notification once, on a block's card or as a toast:
 
-- A block's card lists the notifications that R and core raise about the block, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
+- A block's card shows the notifications that R and core raise about the block, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
   It leaves out what core or the renderer already shows in an element of the card: a module that cannot draw, and an output that R could not make.
 - Every other notification shows as a toast, whatever its severity: those that concern no block, and those that plugins raise.
 
-So `show_conditions` filters what a card lists, as it filters blocks' conditions today, and keeps its name, since a card lists the block's conditions.
+So `show_conditions` filters what a card shows, as it filters blocks' conditions today, and keeps its name, since a card shows the block's conditions.
 
 The toasts stack in the page's bottom right corner, as Shiny's do on main (Today), and each names what it concerns, such as the block, the board option, the plugin or the package.
 A message's toast fades after five seconds, as a toast of `notify()` does by default, though not while the pointer rests on it.
