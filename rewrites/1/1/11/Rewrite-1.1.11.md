@@ -139,8 +139,7 @@ The page was started from the session of [blockr.core#474](https://github.com/Br
 R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the state of its plugin classes.
 Both yyjsonr and jsonlite write `NA` as `null` but read `null` in an object back as `NULL`, so R reads a block's `locked` by the schema of core's block, which turns `null` into `NA`.
 R reads the opening board in `lock_board()`, in `R/evaluator-lock.R` on `js-state`.
-A method of `serve()` calls it once as the app starts, and hands what it returns to the evaluator of every session ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)).
-Until `serve()` has its methods, `new_evaluator()` calls it itself where its caller passes none ([blockr.core#532](https://github.com/BristolMyersSquibb/blockr.core/pull/532)).
+A method of `serve()` calls it once as the app starts, in `serve_app()` in `R/utils-serve.R` on `js-state`, and hands what it returns to the evaluator of every session, which no longer calls it itself ([blockr.core#545](https://github.com/BristolMyersSquibb/blockr.core/pull/545)).
 R compares a request's state with the state it holds by their JSON, in `same_json()`, so that a whole number matches whether R decodes it as an integer or a double.
 An `identical()` shortcut comes first, which keeps the check to about 0.1 ms, where evaluating the cheapest block, a head block, takes about 3 ms.
 

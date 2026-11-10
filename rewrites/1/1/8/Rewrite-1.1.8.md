@@ -95,6 +95,7 @@ Core then calls `start` for each plugin of the board whose class has one, so tha
 A frontend's package registers its plugin class and its commands from its startup module ([Plugins](Rewrite-1.1.12#a-plugin)), and subscribes to the store there too, so that it sees the board open, with what the store dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the frontend's module only draws.
 
 A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except under the load lock, which fixes the app to its opening board, where core keeps the board R sent and names the package ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-load-lock)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
+Core keeps the board R sent for a block that `serve()` serves alone too, which no frontend draws, and names no package there ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 Should two resolve with a board, core opens the one R sent and names both packages.
 
 ### Opening a board

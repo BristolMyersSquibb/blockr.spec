@@ -191,7 +191,7 @@ Where [Client-drawn dock and extensions](Rewrite-1.2) has extensions render Reac
 A frontend is a plugin whose class has `frontend`, the module that draws the page, and whose class in R extends `frontend_plugin`.
 The module meets the contract of a UI module above, and core calls it with the page's element.
 A page has one frontend: the one that the open board holds, or core's basic frontend where it holds none.
-A block that `serve()` serves alone is the exception, since core mounts its UI and its output with nothing around them ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
+A block that `serve()` serves alone is the exception, since core draws it in a card of its own ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 No board holds core's basic frontend: it draws every board that holds no frontend, and it keeps no state.
 A board holds the frontend of the app's opening board, as it holds the opening board's other plugins, and core's basic frontend draws it where the opening board holds none ([Which plugins a board has](#which-plugins-a-board-has)).
 So a dock app opens a board made in a core app with the dock's default layout.
