@@ -4,7 +4,7 @@ Status: draft. Design for [Client-owned board state](Rewrite-1.1).
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, whether R raised it as a condition or the client threw it as an exception, through one member of `CoreApi`, and what is logged where, in R and in the client, with the telemetry that either may record.
 It shapes sending core's own failures to the frontend ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and what core's basic frontend shows ([blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507)), and the notifications of [The dock's services](Rewrite-1.2.6) build on it.
 Once settled, it takes over what [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) and [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins) say of `notifications`, while how a reply carries a block's conditions stays [Wire protocol](Rewrite-1.1.9#evaluating-a-block)'s, how a block's status holds them [Evaluation in the client](Rewrite-1.1.10#statuses)'s, and how a frontend draws [Drawing the board](Rewrite-1.1.8)'s.
-It is a seed, written from the discussion of [blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539), and nothing on it is agreed yet, its term included ([Open questions](#open-questions)).
+It is a seed, written from the discussion of [blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539), and of what it proposes only its term is agreed: "notification", with the property `origin` for whoever raised one.
 
 ## What must hold
 
@@ -40,6 +40,8 @@ Core records no telemetry of its own, in R or in the client.
 ### Notifications
 
 A notification is a message, warning or error that the user should see, whoever raised it: R, as a condition while it evaluates a block or makes its output, core, where it fails at something that the user asked for or that the board needs, or a plugin, the frontend among them.
+The term names what reaches the user rather than how it arose, since R raises conditions and the client throws exceptions, of which some reach the user and others are only logged, and the pages used it in that sense before ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins), [Client-drawn dock and extensions](Rewrite-1.2)), so that "condition" keeps R's sense.
+A notification's `origin` names who raised it, as a delta's names who made it ([Board updates](Rewrite-1.1.2#the-store)).
 The `notifications` member of `CoreApi` holds every notification of the open board, which a frontend follows as it follows focus, through a getter and a subscription ([State in JS](Rewrite-1#principles)):
 
 ```ts
@@ -102,8 +104,7 @@ That context is a property of the protocol's messages, which [Wire protocol](Rew
 
 ## Open questions
 
-- The term: this page proposes "notification" for every message, warning and error that the user should see, with a row in the [Glossary](Glossary), since R raises conditions and the client throws exceptions, of which some reach the user and others are only logged, so the word for what reaches the user names neither, and since the pages use it in that sense already ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins), [Client-drawn dock and extensions](Rewrite-1.2)).
-  It blocks every use of the word here, and the user's agreement settles it, with the name of the type, which the DOM's `Notification` makes awkward, and of `origin`, which takes the sense that a delta gives it ([Board updates](Rewrite-1.1.2#the-store)).
+- The name of the type, since a type named `Notification` shadows the DOM's global in each module that imports it, blocks the code of [blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539), and a name that the user agrees settles it.
 - The classes of core's own notifications, such as one for a module that cannot draw, which a frontend matches to choose how to draw them, block [blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539), and listing them here settles them.
 - Whether a condition that a block's next reply raises again is the same notification, by a digest of its class and message, as today's `id` is a digest of the message, so that one the user dismissed stays dismissed, blocks `id`, and the user's choice settles it.
 - Whether core raises a notification for each object that the store dropped, in place of each frontend's package subscribing to the store to learn of them, would change [Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt), [Drawing the board](Rewrite-1.1.8#starting-the-page) and [blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507), and the user's choice settles it.
