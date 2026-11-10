@@ -115,7 +115,7 @@ The store registers nothing inside a plugin's state: it checks the state's whole
 With illustrative names:
 
 ```ts
-type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's top, as "/plugins/dock/state/views/main/grid/1", with the edit id of the plugin it changes
+type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/dock/state/views/main/grid/1", with the edit id of the plugin it changes
 
 core.plugins.register({                                // the dock's, from its startup module
   id: "blockr.dock-dock_plugin",
