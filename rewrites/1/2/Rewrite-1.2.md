@@ -19,7 +19,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 1. The browser draws the dock with dockview directly, without dockViewR.
 2. Views, layouts and arrangement are properties of the dock board, and no arrangement change reaches R.
-3. An extension contributes panels, navbar items and sidebar sections through the dock's client API, and works on the board through core's JS API, which is enough to rebuild the DAG, the assistant, the code extension, session management and the Edit board extension on.
+3. An extension contributes panels, navbar items and sidebar sections through the dock's client API, and works on the board through core's JS API, which is enough to rebuild the DAG, the assistant, the code extension and session management on.
 4. What blockr.dock offers today carries over, but for what Today drops with its reason.
 5. Boards saved by today's blockr.dock open with their views and layouts.
 
@@ -41,10 +41,10 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 | Sidebars and menus: the sidebar that pins, pushes the page aside and keeps focus inside it, `sidebar_owned_by()`, the "+" menu that adds, appends, prepends and inserts a block, and the editors of links, inputs and stacks | 2,488 | Carried over as the dock's own sidebar and menus in React, which run core's commands, while `sidebar_owned_by()` is dropped, since an extension opens a sidebar section through the dock's API |
 | The core plugins the dock serves: `edit_block`, `preserve_board` with the dock's Import and Export, and `generate_code` with its "Show code" row | 78 | The card in place of `edit_block` (above), Import and Export as the dock's default storage service, which session management replaces ([Session management as a client extension](Rewrite-1.6)), and "Show code" as blockr.code's extension ([Code export as a client extension](Rewrite-1.5)) |
 | Extensions: `new_dock_extension()`, `external_ctrl`, `new_ext_meta()`, `extension_block_callback()` and the board update's `extensions`, with each extension's UI built once and moved into its panel | 822 | Replaced by ES modules that register with the dock from their package's startup module ([Plugins](Rewrite-1.1.12#a-plugin)), keep their state in the dock board's `extensions` and change it through their own commands, whose descriptions and schemas take the place of `new_ext_meta()` ([Board updates](Rewrite-1.1.2#plugins)), while the per-block callback is dropped, since an extension reads statuses through `CoreApi` |
-| The Edit board extension, `new_edit_board_extension()`, whose tables add and remove blocks, links and stacks | 1,310 | Carried over, ported to React as a dock extension ([The Edit board extension in React](Rewrite-1.2.8)) |
+| The Edit board extension, `new_edit_board_extension()`, whose tables add and remove blocks, links and stacks | 1,310 | Dropped, since core's Edit board plugin makes the same edits under every frontend, and the dock places it in a panel as it places any plugin ([The Edit board plugin](Rewrite-1.1.15)) |
 | Utilities | 97 | Dropped, as core's are not ported ([State in JS](Rewrite-1#principles)), apart from `next_color()`, which moves to the dock's stack editor in the client |
 | The JS of today's UI: the input bindings of the views menu, the sidebars and the menus, the rails' controller, the section toggles, renaming, the `move-element` handler and the busy logo | 2,809 of JS | Replaced by the dock's React app |
-| The dock's stylesheets: cards, navbar, views menu and tab line, rails, the logo's animation, the Edit board extension, and the bridge from blockr.ui's tokens to dockview's theme | 2,462 of CSS | Replaced by the styles of the dock's React components, which follow blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)), with the bridge to dockview's theme carried over |
+| The dock's stylesheets: cards, navbar, views menu and tab line, rails, the logo's animation, the Edit board extension, and the bridge from blockr.ui's tokens to dockview's theme | 2,462 of CSS | Replaced by the styles of the dock's React components, which follow blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)), with the bridge to dockview's theme carried over, while the Edit board extension's go with it |
 
 ## Proposal
 
@@ -76,10 +76,10 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   An extension declares the majors of the core and dock APIs it was built against.
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), the code extension ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt after the dock.
   This part settles only the API they build on, and leaves libraries, agent design and their R requests to them.
-- The Edit board extension is ported to React as a dock extension, and edits blocks, links and stacks on a board that mounts no DAG.
+- The dock places core's Edit board plugin in a panel, as it places any plugin, so that a board that mounts no DAG still edits its blocks, links and stacks ([The Edit board plugin](Rewrite-1.1.15)).
   As today, the dock itself only appends and removes a block, from a card's menu ([R/plugin-block.R#L389-L400](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L389-L400)).
   It has no place for stacks, and only the DAG's menus open its editors of links, inputs and stacks.
-  The port is mechanical, so it is the first extension built on the extension API, and the first test of it ([The Edit board extension in React](Rewrite-1.2.8)).
+  Core's plugin is built before the dock, so it is the first plugin the dock places, and the first test of the panels of [The dock's contribution points](Rewrite-1.2.4).
 - The dock draws block cards, with the header of [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) and status from core, and has core mount each block's UI and output in them ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), [Block cards in the dock](Rewrite-1.2.7)).
 - A block card's sections show as the dock board's `visible` says, which keeps them by block id, as `{ "a": ["outputs"] }`, and which the card's toggles set, as today the dock keeps them itself, while on a locked board the card mounts the UI only of a block that the board lock leaves open ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)).
   What else the dock locks is its own, and carries over from today: a locked dock offers no view to add, rename or remove and no panel to add or close, keeps every panel's size and place unless a deployment loosens that through the blockr options `lock_resize` and `lock_rearrange`, and offers only copying a block's id in the card's menu.
@@ -100,7 +100,6 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 - Define the dock board class, with its properties for views and layouts and the function that keeps them consistent with the board, and open boards saved by today's blockr.dock through its `migrate`, in blockr.dock
 - Draw the dock with dockview from the client's board, in blockr.dock
 - Add the client extension API for panels, navbar items and sidebar sections, in blockr.dock
-- Port the Edit board extension to React on the extension API, in blockr.dock
 - Write the guide for extension authors, and rewrite the layouts vignette for the dock board's views and layouts, in blockr.dock
 
 ## Design pages
@@ -112,7 +111,6 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 - [The dock's navbar](Rewrite-1.2.5): the bar's items and their order, what gives way on a narrow bar, the dock's default items, and how extensions and apps add, drop and reorder items
 - [The dock's services](Rewrite-1.2.6): notifications, storage, and what the dock tells extensions about the screen
 - [Block cards in the dock](Rewrite-1.2.7): the card's header, sections, status, conditions and menu, compact headers and the locked card
-- [The Edit board extension in React](Rewrite-1.2.8): the port of the extension that edits blocks, links and stacks on a board without the DAG, the first built on the extension API
 
 <details><summary>Notes for implementers</summary>
 
@@ -131,7 +129,7 @@ The layout that dockview saves, its `SerializedDockview`, was weighed as the sto
 It holds the dock's width and height and each node's size in pixels of the screen that saved it, and each panel's title, which the block's name gives, with its params and component names ([dockviewComponent.ts#L274-L286](https://github.com/mathuo/dockview/blob/6035014bca619c5aeb2076e13b8538bbc0a9ae6c/packages/dockview-core/src/dockview/dockviewComponent.ts#L274-L286), [types.ts#L62-L76](https://github.com/mathuo/dockview/blob/6035014bca619c5aeb2076e13b8538bbc0a9ae6c/packages/dockview-core/src/dockview/types.ts#L62-L76), at 8.8.3).
 Its majors come fast too: 5.0.0 on 2026-02-16, 6.0.0 on 2026-05-02, the first 7.x on 2026-06-22 and 8.0.0 on 2026-08-10, which added `pinned` to a panel's saved state.
 
-Today's core plugins ([`known_plugins()`](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-plugins.R#L72-L75)) map onto the mechanism: `preserve_board` becomes session management's extension on the command that replaces the board ([Session management extension](Rewrite-1.6)); `generate_code` the code extension ([Code export extension](Rewrite-1.5)); `manage_blocks`, `manage_links` and `manage_stacks` core commands under the dock's menus and the DAG's gestures; `edit_block` the dock's block card, with a block menu for extensions; `edit_stack` the stack editors of the DAG and the Edit board extension, since the dock has no place for stacks; `notify_user` the dock's notification service; and `ctrl_block` nothing, since any command can set any block's state ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)).
+Today's core plugins ([`known_plugins()`](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-plugins.R#L72-L75)) map onto the mechanism: `preserve_board` becomes session management's extension on the command that replaces the board ([Session management extension](Rewrite-1.6)); `generate_code` the code extension ([Code export extension](Rewrite-1.5)); `manage_blocks`, `manage_links` and `manage_stacks` core commands under core's Edit board plugin, the dock's menus and the DAG's gestures ([The Edit board plugin](Rewrite-1.1.15)); `edit_block` the dock's block card, with a block menu for extensions; `edit_stack` the stack editors of the DAG and of core's Edit board plugin, since the dock has no place for stacks; `notify_user` the dock's notification service; and `ctrl_block` nothing, since any command can set any block's state ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)).
 Of these, the dock serves only `edit_block`, `preserve_board` and `generate_code` today ([R/board-plugins.R](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-plugins.R#L1-L35)), and draws a block's conditions on its card.
 
 Coupling to replace, in the packages that use the dock today:
