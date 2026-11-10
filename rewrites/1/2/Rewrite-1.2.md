@@ -94,10 +94,11 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   Today blockr.viz's control bridge, an extension with no UI that the CEDX board mounts, opens the channel that blocks send selections over (notes).
   A link of its own for such edits is in the [Backlog](Backlog#control-links).
   It blocks porting blockr.viz's drill.
-- Whether `new_dock_board()` holds core's Edit board plugin by default, as `new_board()` does ([The Edit board plugin](Rewrite-1.1.15#what-new_board-holds-by-default)).
-  Today's adds no extension by default.
+- Which plugins a dock app's script passes to `serve()`, which takes the app's plugins while `new_dock_board()` gives only their state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and how blockr.dock spares a script from naming the dock and its extensions in both.
+  Among them is whether a dock app runs core's Edit board plugin, which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)), while today's `new_dock_board()` adds no extension by default.
   So a dock board with neither the DAG nor that plugin gets no first block, since the dock itself only appends a block after another, from a card's menu.
-  It blocks the default plugins of `new_dock_board()`, and settles as this part is revised for [Plugins](Rewrite-1.1.12).
+  A board saved in a core app holds that plugin too, so a dock app without it drops the plugin as such a board opens, and tells the user that the board lost it ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+  It blocks what blockr.dock offers a dock app's script, and settles as this part is revised for [Plugins](Rewrite-1.1.12).
 
 ## Work
 
