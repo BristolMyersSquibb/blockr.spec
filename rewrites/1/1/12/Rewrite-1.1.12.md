@@ -37,9 +37,10 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 | `preserve_board`, with core's Import and Export | Core's storage plugin, which saves a board as a download and opens an upload ([Storage](#storage)) |
 | `manage_project()` of blockr.session | Its storage plugin ([Session management as a client extension](Rewrite-1.6)) |
 | `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a client extension](Rewrite-1.5)) |
-| `manage_blocks`, `manage_links`, `manage_stacks`, `edit_block`, `edit_stack`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock and extensions](Rewrite-1.2) put them: core's commands, with the menus, cards, stack editors and notifications of the frontend and the DAG |
+| `manage_blocks`, `manage_links` and `manage_stacks`, with the dock's Edit board extension | Core's Edit board plugin, which runs core's commands under every frontend and which `new_board()` holds by default ([The Edit board plugin](Rewrite-1.1.15)) |
+| `edit_block`, `edit_stack`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock and extensions](Rewrite-1.2) put them: core's commands, with the menus, cards, stack editors and notifications of the frontend and the DAG |
 | The `ctrl_block` of blockr.ai, `ai_ctrl_block()`, a chat on every block ([blockr.ai R/ai-ctrl-block.R#L51-L56](https://github.com/BristolMyersSquibb/blockr.ai/blob/7441767266cd982858bef0c633bcad5597698a0a/R/ai-ctrl-block.R#L51-L56)) | Dropped, since the assistant, a plugin, replaces it ([Assistant as a client extension](Rewrite-1.4)) |
-| The dock's extensions: the DAG, blockr.md's document, the assistant, the Edit board extension, blockr.viz's control bridge, and the outline, slides, report and minidag of blockr.outline | A plugin each, whose state is the extension's state |
+| The dock's other extensions: the DAG, blockr.md's document, the assistant, blockr.viz's control bridge, and the outline, slides, report and minidag of blockr.outline | A plugin each, whose state is the extension's state |
 | Board classes, the dock board among them | A frontend each, the dock plugin among them, whose state holds what the class's properties held ([The frontend](#the-frontend)) |
 
 ## Proposal
@@ -128,8 +129,9 @@ A later version may let `serve()` take a startup module of the app's own, whose 
 
 ### Plugin classes
 
-In R, core defines two plugin classes beside `plugin`, `frontend_plugin` and `storage_plugin`, since every page relies on what each does (below).
+In R, core defines two plugin classes beside `plugin` for other classes to extend, `frontend_plugin` and `storage_plugin`, since every page relies on what each does (below).
 A package's class extends one of them or `plugin` itself, as blockr.session's is `c("session_plugin", "storage_plugin", "plugin")`.
+Core's own Edit board plugin extends `plugin` itself, as `c("edit_board_plugin", "plugin")` ([The Edit board plugin](Rewrite-1.1.15#the-plugin)).
 The board constructor refuses a second frontend or a second storage plugin by them.
 R calls a plugin class's methods of `plugin_version()` and `plugin_requests()` on an object of class `c("{name}_plugin", "plugin")`, which it makes from the class's id, since a request names the plugin's class by its id alone ([A plugin's requests](#a-plugins-requests)).
 So `frontend_plugin` and `storage_plugin` serve the board constructor alone.
@@ -139,7 +141,7 @@ A plugin whose class has `frontend` is a frontend, and one whose class has `stor
 So the dock has its save and open controls call the storage plugin of the open board, whichever package that plugin comes from.
 
 A frontend places every plugin whose class has a `ui`, once for each plugin, so that two documents of blockr.md get a panel each.
-It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a drawer in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a section in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 So every plugin with a UI works under every frontend.
 A frontend may know a plugin class by its id too, as the dock might know `blockr.dag-dag_plugin` to give the DAG a place of its own, but it needs nothing beyond core's members to place a plugin.
 A plugin without a UI module, such as blockr.viz's control bridge, runs from its class's `start` alone, with no place on the screen ([Running a plugin](#running-a-plugin)).
@@ -185,6 +187,8 @@ export default {
 So one module draws each plugin of its class, as two documents of blockr.md, each from its own state.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
 Where [Client-drawn dock and extensions](Rewrite-1.2) has extensions render React components inside the dock's own tree, a plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)).
+Core's own Edit board plugin cannot, since blockr.ui builds on blockr.core.
+It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugin](Rewrite-1.1.15#its-look)).
 
 ### The frontend
 
@@ -397,7 +401,8 @@ They are the `notifications` and `focus` of `CoreApi`, which [Drawing the board]
 - Board classes: the board class that `core.store.register()` takes today, a board's `class`, the board classes in its `versions`, which holds plugin classes instead, the R generics `board_front_end()` and `board_version()`, and the rule that the client builds a board as the first class in its `class` that a loaded package defines ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474)).
 - The `class` argument of `new_board()`, and the components that its `...` adds beside core's, which `plugins` replaces, so that every R board is of class `board`.
 - The dock board as a class, `dock_board`, with its `extensions`, whose entries become plugins of their own.
-- Core's nine plugin classes and `known_plugins()`, of which only storage keeps a class in core.
+- Core's nine plugin classes and `known_plugins()`.
+  Storage keeps a class in core, `storage_plugin`, and `manage_blocks`, `manage_links` and `manage_stacks` become one, `edit_board_plugin` ([The Edit board plugin](Rewrite-1.1.15)).
 - The `plugins` argument of `serve()`, with `custom_plugins()` and `blockr_app_plugins()`, since the plugins of the app's opening board are those of every board that the app opens ([Which plugins a board has](#which-plugins-a-board-has)).
 - Registering a frontend through its board class, which the frontend plugin replaces ([The frontend](#the-frontend)).
 

@@ -11,4 +11,5 @@
 - [The dock's navbar](Rewrite-1.2.5), draft
 - [The dock's services](Rewrite-1.2.6), draft
 - [Block cards in the dock](Rewrite-1.2.7), draft
-- [The Edit board extension in React](Rewrite-1.2.8), draft
+
+<!-- dropped: Rewrite-1.2.8 -->

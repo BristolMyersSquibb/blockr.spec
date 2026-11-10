@@ -17,3 +17,4 @@ Not drafted yet.
 ## Open questions
 
 - Whether `new_dock_stack()` stays, as a name for core's `new_stack()` that today's app scripts call, now that core keeps a stack's colour ([Board objects](Rewrite-1.1.1#stacks)), or goes, with a migration note.
+- Whether `new_edit_board_extension()` stays, as a name for core's `new_edit_board_plugin()` that six of blockr.dock's examples, its README, its layouts vignette and twelve of its test files call, or goes, with a migration note ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
