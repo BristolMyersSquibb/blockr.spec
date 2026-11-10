@@ -16,6 +16,6 @@
 - [Locked boards and the properties of blocks](Rewrite-1.1.11), settled
 - [Plugins for the client-owned board](Rewrite-1.1.12), settled
 - [Board options and blockr options](Rewrite-1.1.13), settled
-- [Notifications and logging: what the user is told and what is logged where](Rewrite-1.1.14), draft
+- [Notifications, logging and tracing: what the user is told and what is recorded where](Rewrite-1.1.14), review
 
 <!-- dropped: Rewrite-1.1.6 -->

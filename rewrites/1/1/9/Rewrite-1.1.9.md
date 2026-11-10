@@ -24,12 +24,13 @@ The client sends nothing but its `hello` until R has answered it, as an MCP clie
 ```ts
 type Kind = "hello" | "blockr_options" | "evaluate" | "request" | "output" | "cancel" | "forget";
 
-interface Request { id?: string; kind: Kind }                     // id on every kind but cancel and forget
+interface Request { id?: string; kind: Kind; traceparent?: string }   // id on every kind but cancel and forget, and traceparent while the client records spans
 interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "missing" }
 interface Progress { id: string; progress: { value?: number; message?: string } }
 ```
 
 A reply's status belongs to its request alone: an `error` carries every condition raised, as an evaluation's reply does (below), and a request or an output that fails never marks its block `failed`, which only an evaluation's reply does ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+While the client records spans, every request carries `traceparent`, the context of the client's span in the format that W3C's [Trace Context](https://www.w3.org/TR/trace-context/) gives its header of that name, so that R's span of the request joins the client's trace, and R ignores it while it records no spans ([Notifications, logging and tracing](Rewrite-1.1.14#tracing)).
 
 ### Handshake
 

@@ -47,7 +47,8 @@ interface CoreApi {
   };
   lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello
   outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for plugins to act on
-  notifications: { notify(note: Note): void; subscribe(fn: (note: Note) => void): () => void };   // a plugin notifies, and the frontend hears and draws each note
+  notifications: { notify(n: Omit<Notification, "id">): () => void; get(): readonly Notification[]; subscribe(fn: (all: readonly Notification[]) => void): () => void };   // every notification of the open board, which the frontend draws, from Notifications, logging and tracing
+  log(pkg: string): Log;           // log lines that name the package, from Notifications, logging and tracing
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
   request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by the plugin's id, as Plugins has it
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
@@ -69,10 +70,6 @@ interface OutputEvents {
   subscribe(fn: (event: { block: BlockId; name: string; payload: Json }) => void): () => void;   // each event a renderer emits ([UI modules in JS](Rewrite-1.1.7#the-contract))
 }
 
-interface Note {
-  message: string;
-  severity: "message" | "warning" | "error";
-}
 ```
 
 A frontend decides where things go and core fills them: it gives `mountBlock()` the body of a card or a panel, and core mounts the block's UI module there, so the dock's card sections stay the dock's business while what is in them stays core's.
@@ -92,7 +89,8 @@ Through `plugins` it reads which plugins run and what their classes give, and re
 Core starts the page in the order that [UI modules in JS](Rewrite-1.1.7#startup-modules) gives startup modules: once R replies to `hello`, core initializes the startup module of every package that the app names, one at a time, then opens the board R sent, or the one a startup module names in its place (below), which holds the plugins of the board R sent ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), then imports the module of the board's frontend, or of core's basic frontend where the board holds none, since a module's imports run as it loads and may need what a startup module puts on the page, such as a library on another package's global ([UI modules in JS](Rewrite-1.1.7#startup-modules)), and only then starts the scheduler and calls the frontend's `render()`, so nothing is evaluated or drawn before every package has registered.
 The scheduler sends nothing to R until `render()` has returned, or resolved where it is async, so a frontend demands what it first shows within `render()`, from the board, rather than from an effect that runs once it has drawn, as a React app's would, and those blocks are evaluated first ([Evaluation in the client](Rewrite-1.1.10#scheduling)).
 Core then calls `start` for each plugin of the board whose class has one, so that what the frontend first shows comes before what the plugins ask for as they start ([Plugins](Rewrite-1.1.12#running-a-plugin)).
-A frontend's package registers its plugin class and its commands from its startup module ([Plugins](Rewrite-1.1.12#a-plugin)), and subscribes to the store there too, so that it sees the board open, with what the store dropped, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the frontend's module only draws.
+A frontend's package registers its plugin class and its commands from its startup module ([Plugins](Rewrite-1.1.12#a-plugin)), and subscribes to the store there too where it needs to see the board open, which happens before `render()` ([Board updates](Rewrite-1.1.2#following-the-board)), while the frontend's module only draws.
+What the store dropped as the board opened reaches the frontend as a notification, which it reads as it draws ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 
 A startup module's `initialize()` may resolve with the text of a JSON board, as session management's does with the board a URL names ([Session management as a client extension](Rewrite-1.6)), and core then opens that board instead of the one R sent, except under the load lock, which fixes the app to its opening board, where core keeps the board R sent and names the package ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-load-lock)), so nothing of the script's board is drawn or evaluated, while the page shows that it is loading, as today's page waits for `rack_loader()` ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Core keeps the board R sent for a block that `serve()` serves alone too, which no frontend draws, and names no package there ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
@@ -127,7 +125,7 @@ Core's own frontend does what today's does wherever core's commands and store do
 It requires two board options, which it names in its `options`: `show_conditions`, for the severities that its cards show, and `dark_mode`, for the theme it draws in ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 On a locked board, its toolbar keeps undo, redo, saving and the board options, and keeps opening another board unless the load lock is on, since no lock fixes those ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 Its save and open controls call the `storage` that `core.plugins.storage()` gives, handing `save()` the JSON board that the store writes and opening what `open()` gives through `store.open()`, so that where the board holds no storage plugin they save a download and open an upload, as today's `preserve_board` plugin does ([Plugins](Rewrite-1.1.12#storage), [Serialization](Rewrite-1.1.4#files)).
-It also binds undo and redo to their shortcuts, which today's lacks, since the store keeps the steps and a frontend binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), gives a block focus as the user moves into its card, and tells the user what the store dropped when a board opened, which edit the store refused and what plugins notify ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt), [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
+It also binds undo and redo to their shortcuts, which today's lacks, since the store keeps the steps and a frontend binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), gives a block focus as the user moves into its card, and shows every notification, among them what the store dropped when a board opened, which edit the store refused and what plugins notify, as [Notifications, logging and tracing](Rewrite-1.1.14#cores-basic-frontend) has it.
 Code export is blockr.code's plugin, which the basic frontend places in a drawer as it places any other ([Code export as a client extension](Rewrite-1.5)), and the basic frontend reads no member of a plugin class beyond core's, so that a plugin needs only its `ui` to show under it ([Plugins](Rewrite-1.1.12#plugin-classes)).
 
 It shows every block, so it demands every block, and a board that it draws evaluates every block ([Evaluation in the client](Rewrite-1.1.10#demand)), where today's parks the blocks of collapsed stacks.
