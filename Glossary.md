@@ -1,5 +1,5 @@
 # Glossary
-Revised on 2026-11-09.
+Revised on 2026-11-10.
 
 Every page, spec and issue of the rewrites uses these names in these senses only, and a new term is agreed before it appears on a page.
 The terms outlast the rewrite that brought them in, so they live here rather than on a rewrite's root, and [State in JS](Rewrite-1) brought in these.
@@ -43,3 +43,4 @@ The terms outlast the rewrite that brought them in, so they live here rather tha
 | Recipe | What an evaluation request carries for a block: its registry id, its state, and its inputs as upstream blocks and revisions, in the order of its class's inputs, from which R builds the block expression ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)) |
 | Revision | A block's number in the scheduler, which goes up whenever the block's recipe changes or something invalidates it, as a new session does for every block, never goes back within the page, and names the block's result in R, unlike a version, which is always a package's, the protocol's, a JSON board's format, or a shape's, the version that a block class gives its state, a plugin class the state of its plugins and a board option its value, by which a JSON board migrates ([Evaluation in the client](Rewrite-1.1.10#revisions)) |
 | Edit id | What the store keeps for each block and for each plugin, which only their own edits change, and which a delta names so that the store refuses it where another edit came first ([Board updates](Rewrite-1.1.2#deltas)) |
+| Notification | A message, warning or error that the user should see, whoever raised it: R, as a condition while it evaluates a block or makes its output, core, where it fails at something that the user asked for or that the board needs, or a plugin, the frontend among them. Core holds every notification of the open board in the `notifications` member of `CoreApi`, outside the board, each with its severity, class, origin and what it concerns, until its cause goes, and the frontend decides how each shows. Unlike a condition, which R raises, or an exception, which the client throws, a notification is what reaches the user, while what fails and reaches no user is logged ([Notifications and logging](Rewrite-1.1.14)) |
