@@ -1,10 +1,11 @@
-# Notifications and logging: what the user is told and what is logged where
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+# Notifications, logging and tracing: what the user is told and what is recorded where
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log and trace.
 Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a plugin sent it.
+Log lines go to the console by default, and log lines and spans go to an OpenTelemetry collector wherever the deployment names one, from R and from the browser alike.
 It shapes sending core's own failures to the frontend ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and what core's basic frontend shows ([blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507)), and the notifications of [The dock's services](Rewrite-1.2.6) build on it.
-Once settled, it takes over what [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) and [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins) say of `notifications`.
+It takes over what [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) and [Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins) said of `notifications`.
 How a reply carries a block's conditions stays [Wire protocol](Rewrite-1.1.9#evaluating-a-block)'s, how a block's status holds them [Evaluation in the client](Rewrite-1.1.10#statuses)'s, and how a frontend draws the board [Drawing the board](Rewrite-1.1.8)'s.
 
 ## What must hold
@@ -19,9 +20,13 @@ How a reply carries a block's conditions stays [Wire protocol](Rewrite-1.1.9#eva
 5. The frontend alone decides how each shows.
    Core draws only what no frontend can: the error in the element of a module that cannot draw ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the error of a page that cannot start or whose frontend cannot draw.
 6. Core holds them outside the board, as it holds which block has focus, so that no file saves them and no undo brings one back ([Board objects](Rewrite-1.1.1#what-lives-where)).
-7. What fails in the client's code is logged in the console with its stack, and what fails in R's own machinery in R's log, whether or not the user is also told, so that whoever can fix it finds it.
-8. R's log holds every condition that R sends the client, as main's log holds every condition that a block raises.
-9. Nothing leaves the page or the R process as telemetry unless the deployment sets where it goes.
+7. What fails in the client's code is logged with its stack, and what fails in R's own machinery is logged in R, whether or not the user is also told, so that whoever can fix it finds it.
+8. R logs every condition that it sends the client, as main logs every condition that a block raises.
+9. Packages write log lines through one API on each side, `write_log()` in R and `log` in the client.
+   A deployment swaps the logger that writes the lines out, from the console's to OpenTelemetry's, without changing a package.
+10. R does none of the client's logging or tracing: the browser sends its own records to the collector, so that telemetry never delays an evaluation.
+11. A deployment can follow an edit as one trace, from the command in the client, through each evaluation that it causes in R, to the reply.
+12. Nothing leaves the page or the R process as telemetry unless the deployment sets where it goes.
 
 ## Today
 
@@ -34,6 +39,7 @@ The issue [blockr.core#93](https://github.com/BristolMyersSquibb/blockr.core/iss
 Each call of `notify()` also logs its message, at the level of its severity, unless it passes `log = FALSE` ([R/utils-shiny.R#L40-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-shiny.R#L40-L71)).
 
 R logs through core's own `write_log()` and its wrappers, `log_fatal()` to `log_trace()`, as the blockr options `log_level`, `logger`, `log_time` and `log_mem` set, at info and above unless `log_level` names another level ([R/utils-logging.R#L25-L104](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/R/utils-logging.R#L25-L104)).
+The function `write_log()` hands the logger that the blockr option `logger` picks one finished line, with the level, time and package written into the text and the text wrapped to the console's width ([#L68-L103](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/R/utils-logging.R#L68-L103)).
 Its default logger, `cat_logger()`, writes errors to standard error and the rest to standard output, which Connect keeps in the content's log ([#L200-L252](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/R/utils-logging.R#L200-L252)).
 On main, the handlers that catch a block's conditions log each one, a message at info, a warning at warn and an error at error ([R/utils-cnd.R#L157-L200](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-cnd.R#L157-L200)), so main's log holds every condition that a block raises.
 Main's `blockr_deser()` logs what it drops and tells the user nothing ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
@@ -41,14 +47,19 @@ On `js-state`, the evaluator and the Shiny transport log what they ignore, at de
 But R logs none of the conditions that it sends in a reply, so a block that fails leaves no line in R's log.
 
 In the client, `report()` throws what it is given from a microtask, so that it reaches the console as an uncaught error ([srcts/util/util.ts#L26-L33](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/srcts/util/util.ts#L26-L33)).
-Core calls it at 33 places, alike for what the user should hear of and for what only a developer should.
+Core calls it at 33 places, alike for what the user should hear of and for what only a developer should, and has no other log.
 The `notifications` member of `CoreApi` hands each `Note`, a message with a severity, to its subscribers and keeps none, so that a note sent before the frontend subscribes reaches nobody ([srcts/core/core.ts#L192-L223](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/srcts/core/core.ts#L192-L223)).
 Core's basic frontend lists above the board only the edits that the store refused ([srcts/modules/basic/notices.ts#L1-L20](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/srcts/modules/basic/notices.ts#L1-L20)), and draws a block's conditions on its card, from the block's status ([srcts/modules/basic/card.tsx#L214-L228](https://github.com/BristolMyersSquibb/blockr.core/blob/87263e40e313e7c5fed5021f66d9966420c18bb4/srcts/modules/basic/card.tsx#L214-L228)).
 
 Shiny imports otel, the OpenTelemetry API for R.
 Since 1.12.0, Shiny records spans of sessions, reactive updates, reactives, observers and outputs, and logs of fatal and unhandled errors, wherever `otel::is_tracing_enabled()` holds, as it does once otelsdk is configured to export ([NEWS.md#L1-L56](https://github.com/rstudio/shiny/blob/b5da7868fa0c2924bcb6febad4b78d33da1fdb86/NEWS.md#L1-L56)).
 It sanitizes the errors it logs unless `shiny.otel.sanitize.errors` is `FALSE`.
+It names the session in each span and record by `session.id`, its session token, as OpenTelemetry's [conventions for sessions](https://opentelemetry.io/docs/specs/semconv/general/session/) have it ([R/otel-session.R#L81-L93](https://github.com/rstudio/shiny/blob/b5da7868fa0c2924bcb6febad4b78d33da1fdb86/R/otel-session.R#L81-L93)).
 Core records no telemetry of its own, in R or in the client.
+
+Connect has OpenTelemetry built in since 2026.02.0: an administrator points it at a collector, to which it exports its own traces, metrics and logs ([OpenTelemetry](https://docs.posit.co/connect/admin/opentelemetry/)).
+Since 2026.09.0, it also sets up otelsdk for each R content item that opts in, so that the item's process exports traces ([Content telemetry](https://docs.posit.co/connect/admin/opentelemetry/content-telemetry.html)).
+Its documentation describes no address to which a browser, or content, can send records of its own.
 
 ## Proposal
 
@@ -64,7 +75,7 @@ The `notifications` member of `CoreApi` holds every notification of the open boa
 A frontend follows them as it follows focus, through a getter and a subscription ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```ts
-interface Notification {             // its name is to settle (Open questions)
+interface Notification {
   id: string;                        // the same while it holds, so that a frontend keeps what the user dismissed
   severity: "message" | "warning" | "error";
   class: string[];                   // a condition's class, or core's own, such as ["module_failed", "blockr_error", "error", "condition"]
@@ -85,6 +96,8 @@ notifications: {
 ```
 
 A frontend reads `get()` as it draws and follows `subscribe()` from then on, the pair that React's `useSyncExternalStore` takes.
+The type takes the term's name, `Notification`.
+The browser has a global of that name too, for desktop notifications, and it stays usable: core's type hides only the browser's type, and only in a module that imports core's, where the browser's constructor still works.
 Whoever raises a notification gives its origin and its class, since `CoreApi` is one object for every plugin and cannot tell who calls it.
 The class lets a frontend choose how to draw a notification, such as a button that reloads the page for `page_reload_needed`.
 The origin lets a frontend say who raised one, and lets a plugin find its own.
@@ -113,6 +126,10 @@ Each names what failed and what needed it, and its class starts with the class t
 | A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#startup-modules)) | Warning, `page_reload_needed` | The board, naming the packages | The next board opens, which raises it again while the versions differ |
 | What the store dropped as the board opened ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)) | Warning, `board_objects_dropped` | The board, naming each object with its package | The next board opens |
 
+So what the store dropped as the board opened reaches every frontend with no code of its own, where each frontend's package would otherwise subscribe to the store before the board opens to learn of it.
+One notification covers the whole opening, so that a board that loses twenty blocks shows one message.
+The store still announces what it dropped with the opening, for code that acts on it ([Board updates](Rewrite-1.1.2#following-the-board)).
+
 Core logs every failure that it raises a notification for as well, with its stack, which a notification does not carry ([Logging](#logging)).
 A module that cannot draw also shows its error in its element, so that the user sees which spot failed.
 The frontend's own module is the exception: where it cannot draw, no frontend runs to draw a notification, so core shows the error in the page's element alone, as it does for a page that cannot start.
@@ -131,6 +148,7 @@ It withdraws every notification that concerns a block as the block leaves the bo
 ### Core's basic frontend
 
 A frontend draws notifications as it chooses, by their class, origin and what they concern, and the dock draws them as [The dock's services](Rewrite-1.2.6) will have it.
+A frontend may one day also show some as desktop notifications, such as an error while the page's tab is hidden, which needs nothing from core.
 Core's basic frontend shows each notification once, next to what it concerns:
 
 - A block's card lists the notifications that concern the block, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
@@ -142,46 +160,106 @@ The basic frontend keeps the ids of the notifications that the user dismissed, f
 
 ### Logging
 
-R logs through `write_log()`, as today, and so to the R process's standard output and standard error, which Connect keeps in the content's log.
-An app that wants the lines elsewhere sets the blockr option `logger` to a function of its own, as today.
+Every log line, in R and in the client, has a level, a message and the package that wrote it.
+Packages write log lines through one API on each side: `write_log()` and its wrappers in R, as today, and `log` in the client.
+A logger writes the lines out, the console's by default, and a deployment swaps it for OpenTelemetry's without changing a package ([Where the records go](#where-the-records-go)).
+In R it sets the blockr option `logger` to `otel_logger()` in place of `cat_logger()`, and in the client it sets the blockr option `otel_client_endpoint`.
+The blockr option `log_level` sets the lowest level written, on both sides, and is info unless it names another.
+
+In R, the blockr option `logger` picks the logger, as today, and core adds `otel_logger()`, which writes each line through `otel::log()`, with its level as the record's severity and its package as an attribute.
+Where no SDK exports logs, `otel_logger()` writes as `cat_logger()` does, so that no line is lost.
+Since `otel_logger()` records the level and the package as fields of their own, `write_log()` hands its logger the message as written, its level and its package, where today it hands over one finished line (Today).
+So `cat_logger()` itself adds the prefix of level, time and package, as the blockr options `log_time` and `log_mem` set, and wraps the text.
+With otelsdk's exporter over HTTP, the records leave R from a background thread, so that R's own thread only queues each one.
 The evaluator and the transport log what they fail at, at error, naming the request where there is one, and what they ignore, at warn or debug.
 R also logs every condition that it sends in a reply, of an evaluation, an output or a request, at the level of its severity: a message at info, a warning at warn and an error at error.
-Each line names the block and its revision, so that R's log holds every condition that a block raises, as main's log does (Today).
+Each line names the block and its revision, so that R logs every condition that a block raises, as main does (Today).
 
-The client logs to the console.
-Core reports each failure that nobody waits on through `report()`, which throws it from a microtask with its stack, as now, whether or not core also raises a notification for it.
-Core's client keeps no logger and no levels of its own: core logs only what fails, and packages log to the console as any JS does, whose levels the browser's developer tools filter.
-A logger can join `CoreApi` later as a new member, without a new major, once a package needs one ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-Whether the client's failures also reach R's log is open ([Open questions](#open-questions)).
+In the client, plugins and startup modules write log lines through `CoreApi`, and every other module through its host, whose `log` names the module's package already ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
-### Telemetry
+```ts
+log(pkg: string): Log;               // in CoreApi: log lines that name the package, as core.log("blockr.dock").warn("...")
+readonly log: Log;                   // in every host: log lines that name the package of the module's block class, renderer or board option
 
-Core would record telemetry through OpenTelemetry's APIs: otel in R, which Shiny already imports, and `@opentelemetry/api` in the client.
-Both record nothing until the deployment configures an SDK and where it exports, which keeps to condition 9.
-The spans worth having are an edit in the client, through the evaluations it causes, to their replies, and in R each evaluation and request, with the block's id, registry id and revision as attributes.
-A context that each evaluation request carries would join them into one trace, as the `traceparent` of [Trace Context](https://www.w3.org/TR/trace-context/) does in HTTP.
-That context would be a property of the protocol's messages, which a later minor version of [Wire protocol](Rewrite-1.1.9#versions) can add, since both sides ignore properties they do not know.
-Whether to record telemetry now is open ([Open questions](#open-questions)).
+interface Log {
+  error(message: string | Error, attributes?: Record<string, Json>): void;   // an Error is logged with its stack
+  warn(message: string, attributes?: Record<string, Json>): void;
+  info(message: string, attributes?: Record<string, Json>): void;
+  debug(message: string, attributes?: Record<string, Json>): void;
+  trace(message: string, attributes?: Record<string, Json>): void;
+}
+```
+
+The levels are R's but for fatal, which stops R and has nothing to stop in the client.
+Core logs every failure that it catches at error, with its stack, through its own `log`, where `report()` throws it from a microtask today, and so it logs every failure that it raises a notification for too.
+Core reads `log_level` with the blockr options that it reads as the page starts ([Drawing the board](Rewrite-1.1.8#starting-the-page)), and drops a line below that level before any logger sees it.
+The console's logger writes each line with `console.error()`, `console.warn()`, `console.info()` or `console.debug()`, and puts its package's name in front of it.
+OpenTelemetry's logger, which core uses once the blockr option `otel_client_endpoint` names a collector, sends each line as a log record from the browser to that collector, in batches, and sends what it holds as the page is hidden.
+R does none of that work.
+Tests replace the logger with one that holds the lines, as `reports()` holds what `report()` queues today.
+
+### Tracing
+
+Core records spans through OpenTelemetry on both sides: through otel in R, which Shiny already imports, and through `@opentelemetry/api` in the client.
+Core ships one copy of `@opentelemetry/api` on the page and maps it in the page's import map, as it does React ([UI modules in JS](Rewrite-1.1.7#react)), so that a package records spans of its own into the same traces, such as the assistant's calls to its model.
+Neither side records a span until the deployment sends its records to a collector ([Where the records go](#where-the-records-go)).
+Spans carry ids and revisions, never a block's state or data.
+
+In the client, core records a span for:
+
+1. Each command, from `run()` until the store commits its delta, with the command's id and the delta's origin ([Board updates](Rewrite-1.1.2#commands)).
+2. Each evaluation, output and request, from sending it to its reply, with the block's id, registry id and revision.
+   An evaluation's span links to the span of the command whose delta changed the block's recipe, where one did, so that a trace leads from an edit to every evaluation that it caused.
+3. Starting the page and each opening of a board, with a span for each step inside it: `hello`, each startup module's `initialize()`, the store's `open()` and the frontend's `render()` ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+
+In R, core records a span for each `evaluate`, `request` and `output` message that it handles, with the block's id, registry id and revision, and a span inside it for each phase of an evaluation: `expr`, `inputs`, `block_eval` and `result_summary` ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
+Each request carries the context of the client's span in `traceparent`, in the format that W3C's [Trace Context](https://www.w3.org/TR/trace-context/) gives its header of that name ([Wire protocol](Rewrite-1.1.9#messages)).
+So R's span is a child of the client's, and one trace runs from the edit, through R, to the reply.
+The client sends `traceparent` only while it records spans, and R ignores it while it records none.
+Both sides name the session in every record and span by `session.id`, Shiny's session token, as Shiny's own telemetry does (Today), so that a collector joins a session's records from R and from the browser.
+
+### Where the records go
+
+A deployment sends the records of both sides to one OpenTelemetry collector, which passes them on wherever it is set to.
+R exports through otelsdk, which OpenTelemetry's environment variables set, or, for traces, Connect's own setup for content that opts in (Today).
+The browser exports to the address that the blockr option `otel_client_endpoint` gives, which every user's browser must reach.
+A record from the client holds what R's log lines hold, so the collector needs the care that wherever R's logs go needs.
+
+On Connect, that address is best a collector run beside Connect under Connect's host name, such as `https://connect.example.com/otlp/`.
+The page then sends to its own origin and needs no CORS, and Connect's own export can point at the same collector, so that Connect's, R's and the browser's records meet in one place.
+Connect itself offers no such address (Today), and running a collector as content on Connect is undocumented.
+A hosted service that takes records from browsers works too, but its key then sits in every user's page.
 
 ## Open questions
 
-- The name of the type, since a type named `Notification` shadows the DOM's global of that name in each module that imports it.
-  It blocks the code of [blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539), and a name that the user agrees settles it.
-- Whether core raises the notification for what the store dropped as a board opened, in place of each frontend's package subscribing to the store to learn of it.
-  It would change [Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt), [Drawing the board](Rewrite-1.1.8#starting-the-page) and [blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507), and the user's choice settles it.
-- Whether the client's failures reach R's log, through a message kind of the protocol that the client sends at a bounded rate, so that an operator on Connect sees what failed in a user's browser.
-  It costs a message kind ([Wire protocol](Rewrite-1.1.9#messages)), and the user's choice settles it.
-- Whether to record telemetry now, in R first, where otel brings no dependency that Shiny does not, or in the client too, where `@opentelemetry/api` and a context in the protocol's messages would.
-  The user's choice settles it, and a spike that traces one evaluation from an edit to its reply would settle how.
+None.
 
 <details><summary>Notes for implementers</summary>
 
 Core's calls of `report()` on `js-state`, at `87263e4`, sorted by this page.
 Those that become notifications: `srcts/core/start.ts` at lines 376, 451, 465, 469 and 479, the startup modules and the boards they name, and at 565, the request to reload the page; `srcts/core/plugins.ts` at 222 and 265, a plugin's `start` and its UI; `srcts/mount/block.ts` at 142 and 346, board options and a block's UI; `srcts/mount/option.ts` at 204, a board option's UI; `srcts/mount/output.ts` at 483 and 533, a renderer; and `srcts/core/core.ts` at 183, an `onChange`.
 Those that core shows in the page's element: `srcts/core/frontends.ts` at 96 and 129, the frontend's module, and `srcts/core/page.ts` at 46, a page that cannot start.
-Those for the console alone: `srcts/core/start.ts` at 167, 224, 388 and 441; `srcts/core/plugins.ts` at 198, a plugin left out for a board option whose failure is reported already; `srcts/protocol/client.ts` at 297 and 453; `srcts/scheduler/scheduler.ts` at 582 and 630; `srcts/mount/answers.ts` at 135; `srcts/mount/shared.ts` at 54; `srcts/mount/load.ts` at 103, a stylesheet; `srcts/mount/block.ts` at 461; `srcts/core/core.ts` at 103; `srcts/store/store.ts` at 226; and `srcts/react/module.tsx` at 123, the error boundary of a renderer written with the React SDK, which shows what it caught in the renderer's element.
+Those for the log alone: `srcts/core/start.ts` at 167, 224, 388 and 441; `srcts/core/plugins.ts` at 198, a plugin left out for a board option whose failure is reported already; `srcts/protocol/client.ts` at 297 and 453; `srcts/scheduler/scheduler.ts` at 582 and 630; `srcts/mount/answers.ts` at 135; `srcts/mount/shared.ts` at 54; `srcts/mount/load.ts` at 103, a stylesheet; `srcts/mount/block.ts` at 461; `srcts/core/core.ts` at 103; `srcts/store/store.ts` at 226; and `srcts/react/module.tsx` at 123, the error boundary of a renderer written with the React SDK, which shows what it caught in the renderer's element.
 Board options' failures are reported once per board and message already (`srcts/mount/block.ts` at 142), and a renderer's `ModuleError` once per object (`srcts/mount/output.ts` at 483).
 The two conditions that the scheduler writes itself are in `srcts/scheduler/status.ts`: `waitingFor()`, of the phase `status`, and `unsent()`, which has no phase.
 Tests capture what core reports with `reports()` from `srcts/testing/reports.ts`, which holds what `report()` queues.
+
+A module that imports core's `Notification` and also shows desktop notifications still calls the browser's constructor as `new Notification()`, since core's type has no value, as TypeScript 5.9 compiles it.
+But its type errors would then name two types `Notification`, so such a module imports core's type under another name.
+Core keeps the type a module export and never declares it global, since TypeScript would then merge it into the browser's interface.
+The type replaces `Note` in `CoreApi` and the basic frontend's `Notice`.
+
+A logger in R becomes a function of the message, its level and its package, which also gets `asis`, whether to keep the message's line breaks rather than wrap it.
+The one logger in the workspace outside core, `blockr.logger = function(msg, level)` in the tests of blockr.assistant (`tests/testthat/helper-skills.R`), takes the new arguments.
+Whether otel logs at all is `otel::is_logging_enabled()`, which is false until otelsdk is configured, as through `OTEL_LOGS_EXPORTER=otlp` and `OTEL_EXPORTER_OTLP_ENDPOINT`.
+The OTLP/HTTP exporters of otelsdk 0.3.0 export from a worker thread of opentelemetry-cpp's batch processors, and drop a record when their queue of 2,048 is full, while its file and console exporters write on R's thread, which a deployment avoids for that reason ([src/stdstream.cc](https://github.com/r-lib/otelsdk/blob/main/src/stdstream.cc)).
+
+The client's OpenTelemetry logger and its tracing are a module of core's that core imports only where `otel_client_endpoint` is set, so that a page without telemetry loads none of it.
+It builds on `@opentelemetry/sdk-logs`, stable since the JS SDK's 3.0.0, and on `@opentelemetry/exporter-logs-otlp-http`, still marked experimental, which send OTLP's JSON encoding, stable for logs and traces, by `fetch`, about 15 to 20 kB gzipped for logs, and on the 3.x trace SDK, `@opentelemetry/sdk-trace` with its `StackContextManager`, and its OTLP/HTTP exporter ([JS SDK 3.0.0](https://github.com/open-telemetry/opentelemetry-js/releases/tag/v3.0.0)).
+The browser's batch processor sends what it holds on `visibilitychange` to hidden, with `fetch`'s `keepalive`.
+The Logs API is part of `@opentelemetry/api` from 1.10.0, which replaced `@opentelemetry/api-logs`.
+A collector at another origin than the page lists the page's origin in its OTLP/HTTP receiver's `cors.allowed_origins`, and never `*`, since its responses allow credentials.
+In R, Shiny's own spans would show mostly the observer through which the transport takes each message, and `SHINY_OTEL_COLLECT=session` keeps them to sessions.
+The guide for deployments first tries the setup on a Connect server of 2026.09.0 or later: which of OpenTelemetry's environment variables Connect sets for content that opts in, whether R's log records reach the collector beside Connect while it does, and whether a page reaches that collector under Connect's host name.
 
 </details>

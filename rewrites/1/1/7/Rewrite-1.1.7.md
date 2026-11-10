@@ -53,6 +53,7 @@ interface BlockHost<S extends State = State> {
   request<T = Json>(name: string, args?: Partial<S> & Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the block class, with state args and parameters
   evaluate(params: Record<string, Json>): Promise<BlockStatus>;   // a one-time evaluation of the block with parameters, which its block_eval() method reads
   module<T = unknown>(id: string): Promise<T>;       // a module another package offers, by id, such as "blockr.dplyr-filter"
+  readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
 }
 
 interface BlockContext {
@@ -120,6 +121,7 @@ interface OptionHost<V extends Json = Json> {
   on(event: "value", fn: () => void): () => void;
   submit(value: V): Promise<void>;                   // runs core's command that sets a board option
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
+  readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
 }
 
 interface OutputHost {
@@ -134,6 +136,7 @@ interface OutputHost {
   setParams(params: Json): void;                     // asks R for an output made with these, which params() returns once it arrives
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts & { scope?: "class" | "renderer" }): Promise<T | Blob>;   // a request of its output class, or with scope "renderer" of the renderer, run with the result the output was made from
   emit(name: string, payload: Json): void;           // reports what the user did on the output, such as a selection, for a plugin to act on
+  readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
 }
 ```
 
@@ -199,8 +202,8 @@ Core imports and initializes them one at a time in that order, awaiting each `in
 It does so before the frontend mounts and before the store opens the board R sent, so that the store finds every plugin class and every board option registered.
 
 Core initializes each package's startup module as each board opens, since opening a board starts core again ([Drawing the board](Rewrite-1.1.8#opening-a-board)), with a new `CoreApi` and a signal that aborts as the next board opens, and skips it when a later reply of the same opening names the package again.
-A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask for the page to be reloaded rather than load a second copy.
-A startup module that fails to load or throws in `initialize()` is named in an error, and core carries on with the rest, so the board opens without what that package registers, and without the plugins of its classes, as without those of a package that the app does not name ([Board updates](Rewrite-1.1.2#plugins)).
+A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask the user, through a notification, to reload the page rather than load a second copy ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A startup module that fails to load or throws in `initialize()` is named in a notification ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)), and core carries on with the rest, so the board opens without what that package registers, and without the plugins of its classes, as without those of a package that the app does not name ([Board updates](Rewrite-1.1.2#plugins)).
 
 A package relies on the order only for the packages it imports, which is what a module needs as it loads, such as a library on another package's global.
 Between any other two packages the order is unspecified, and core keeps what they share independent of it:

@@ -386,7 +386,7 @@ A board with the dock, the DAG and two documents of blockr.md, with illustrative
 
 Part of what [The dock's services](Rewrite-1.2.6) gives the dock's extensions, every frontend gives every plugin through `CoreApi`, so a plugin that uses it works under any frontend:
 
-- Notifications, which the frontend draws, as it draws what the store refused and what it dropped when a board opened ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+- Notifications, which the frontend draws, core's own among them, such as what the store dropped when a board opened ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 - Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a client extension](Rewrite-1.4)).
   Core holds it for the page, outside the board, since only one person's screen needs it ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
 
