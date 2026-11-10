@@ -129,6 +129,7 @@ Each names what failed and what needed it, and its class starts with the class t
 So what the store dropped as the board opened reaches every frontend with no code of its own, where each frontend's package would otherwise subscribe to the store before the board opens to learn of it.
 One notification covers the whole opening, so that a board that loses twenty blocks shows one message.
 The store still announces what it dropped with the opening, for code that acts on it ([Board updates](Rewrite-1.1.2#following-the-board)).
+Where `serve()` serves a block alone, core keeps the board R sent whatever a startup module names, and raises no notification for it, since no frontend draws that page ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 Core logs every failure that it raises a notification for as well, with its stack, which a notification does not carry ([Logging](#logging)).
 A module that cannot draw also shows its error in its element, so that the user sees which spot failed.
