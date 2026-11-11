@@ -82,11 +82,11 @@ interface Notification {
   severity: "message" | "warning" | "error";
   class: string[];                   // a condition's class, or core's own, such as ["module_failed", "blockr_error", "error", "condition"]
   message: string;
-  origin: Origin;                    // who raised it: "r", "core" or a plugin's id
+  origin: Origin;                    // who raised it: "r", "core" or a plugin's class's id
   phase?: Phase;                     // what raised a block's condition, as on the protocol's Condition
   block?: BlockId;                   // what it concerns, none of these for the board
   option?: OptionId;
-  plugin?: PluginId;
+  plugin?: PluginClassId;
   package?: string;                  // the package whose code failed, such as a module's or a startup module's
 }
 

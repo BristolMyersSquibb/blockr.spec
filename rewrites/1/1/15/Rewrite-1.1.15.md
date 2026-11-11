@@ -1,9 +1,9 @@
 # The Edit board plugin for blocks, links and stacks
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-11-11. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the plugin in blockr.core that adds, changes and removes the board's blocks, links and stacks, which every frontend places as it places any plugin.
 It replaces the toolbar's dialogs for adding a block and for links and stacks that [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built into core's basic frontend, and the port of the dock's Edit board extension that [The Edit board extension in React](Rewrite-1.2.8) planned.
-It shapes the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), and its own Work item joins the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503) once this page settles.
+It shapes the plugin itself ([blockr.core#565](https://github.com/BristolMyersSquibb/blockr.core/issues/565)), an item in the Work list of the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503), and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
 What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, the commands it runs are [Board updates](Rewrite-1.1.2#commands)'s, and the rest of core's basic frontend, its card's menu among it, is [Drawing the board](Rewrite-1.1.8#cores-basic-frontend)'s.
 
 ## What must hold
@@ -27,7 +27,7 @@ The dock's Edit board extension, `new_edit_board_extension()`, makes the same ed
 Its docs call it "a simplistic example of an extension" that is "mainly relevant for testing purposes" ([R/ext-edit.R#L1-L25](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/ext-edit.R#L1-L25)).
 It adds a block under an id the user picks, and removes the blocks the user selects, each at once.
 Its tables of links and stacks stage their edits until "Apply changes" sends one update of the links and one of the stacks ([#L832-L942](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/ext-edit.R#L832-L942)).
-An open issue, [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199), asks to stage the block edits too, so that a block, a link to it and a stack that holds it go in one update.
+An issue, [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199), asked to stage the block edits too, so that a block, a link to it and a stack that holds it go in one update, and closed once this page settled that each edit applies at once (below).
 Six of blockr.dock's examples, its README, its layouts vignette and twelve of its test files use the extension.
 
 On `js-state`, core's basic frontend makes these edits itself ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)).
@@ -50,7 +50,7 @@ new_edit_board_plugin <- function() {
 ```
 
 Its class's id is `blockr.core-edit_board_plugin`.
-Its id is `edit_board` where the rows of `plugins` give it none, and its name "Edit board", the default name that core lists for the class ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+Its name is "Edit board", which core lists for the class ([Plugins](Rewrite-1.1.12#a-plugin)).
 Its class gives R no requests, since the plugin needs no R, and no method of `plugin_version()`, since the plugin keeps no state.
 
 In JS, core registers the class itself as it starts, before the store opens a board, as it registers its own board options and the classes of its basic frontend and its storage plugin ([Plugins](Rewrite-1.1.12#the-frontend)).
@@ -87,11 +87,12 @@ Each edit applies as the user makes it, while the tables of today's Edit board e
 Each edit is one command, so undo takes back each one, and the user learns at once why the store refused one ([Board updates](Rewrite-1.1.2#undo)).
 A block that the user adds is on the board at once, so the next edit can link it or put it in a stack.
 The forms therefore read the board as it is.
-Staging the block edits as well, as [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199) asks, would have them read a staged copy of the board, in which a link can name a block that the board does not hold yet.
+Staging the block edits as well, as [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199) asked, would have them read a staged copy of the board, in which a link can name a block that the board does not hold yet.
 The plugin keeps nothing in its state, and nothing staged in its module.
+That is this plugin's choice, not the API's: another plugin may stage edits and apply them later as one delta, which holds any number of blocks, links and stacks, through `core.store.apply()` or a command of its own, as one step that one undo takes back ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 
 The plugin raises a notification for each of its edits that the store or the command registry refuses, as core's basic frontend does for its own edits ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-It is an error of the class `edit_refused` that concerns no block, with the plugin's id as its origin.
+It is an error of the class `edit_refused` that concerns no block, with the plugin's class's id as its origin.
 
 ### Where it shows
 
@@ -121,8 +122,7 @@ So an app script that gives `serve()` no plugins gets it, and the user can add t
 A file that `serve()` is given gets it too, since a file gives only the state of its plugins ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), as today's `serve()` gives the defaults to a core board that it reads from a file ([R/utils-serve.R#L297-L305](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L297-L305)).
 Rows that a script passes hold the plugin where it wants it, and a locked app may leave it out.
 A block that `serve()` serves alone gets no plugin, since no frontend places one for it ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
-A dock app runs it too, since the dock takes the place of core's basic frontend alone.
-Today's `new_dock_board()` adds no extension by default ([blockr.dock R/dock-board.R#L55-L56](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L55-L56)).
+A dock app runs it too, since the dock takes the place of core's basic frontend alone, where today's `new_dock_board()` adds no extension by default ([blockr.dock R/dock-board.R#L55-L56](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L55-L56)).
 A dock app whose rows hold neither this plugin nor the DAG offers no way to add the first block, as a dock board without either does today, since the dock itself only appends a block after another, from a card's menu ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
 
 ### Boards and app scripts from today

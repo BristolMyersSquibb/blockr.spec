@@ -42,8 +42,8 @@ interface CoreApi {
   options: Options;                // register(), the board options packages define, by id, value(), the board's value or else its default, and inUse(), those that something on the page requires or that the board holds a value for
   plugins: {                       // from Plugins
     register(def: PluginClass): () => void;        // a plugin class, from its package's startup module
-    running(): Record<PluginId, Plugin>;           // the app's plugins whose classes are registered, each with its class and name
-    pluginClass(plugin: PluginId): PluginClass;    // the definition of a running plugin's class
+    running(): Record<PluginClassId, Plugin>;      // the app's plugins whose classes are registered, each under its class's id with its name
+    pluginClass(plugin: PluginClassId): PluginClass;   // the definition of a running plugin's class
     storage(): Storage | undefined;                // the app's storage plugin's, or undefined where the app holds none
   };
   lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello
@@ -51,13 +51,13 @@ interface CoreApi {
   notifications: { notify(n: Omit<Notification, "id">): () => void; get(): readonly Notification[]; subscribe(fn: (all: readonly Notification[]) => void): () => void };   // every notification of the open board, which the frontend draws, from Notifications, logging and tracing
   log(pkg: string): Log;           // log lines that name the package, from Notifications, logging and tracing
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
-  request<T = Json>(plugin: PluginId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by the plugin's id, as Plugins has it
+  request<T = Json>(plugin: PluginClassId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by its class's id, as Plugins has it
   module<T = unknown>(id: string): Promise<T>;                // a module another package offers, by id
   blockrOption<T extends Json>(name: string, fallback: T): Promise<T>;   // a blockr option, asked of R once per page, or fallback where R has none
   mountBlock(el: HTMLElement, block: BlockId): () => void;    // the block's UI module
   mountOutput(el: HTMLElement, block: BlockId): () => void;   // its output, measured, fetched and drawn by the renderer R names in it
   mountOption(el: HTMLElement, option: OptionId): () => void; // a board option's UI, or the renderer the app names for it
-  mountPlugin(el: HTMLElement, plugin: PluginId): () => void; // a plugin's UI module, where a frontend places the plugin
+  mountPlugin(el: HTMLElement, plugin: PluginClassId): () => void; // a plugin's UI module, where a frontend places the plugin
 }
 
 interface RequestOpts {

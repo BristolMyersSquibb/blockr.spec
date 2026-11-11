@@ -70,7 +70,7 @@ interface Store {
   readonly options: Options;                                 // the board options that packages register (Board options and blockr options)
   blockRegistry(): BlockRegistry;                            // the block registry's entries of the reply to hello that it opened its board with
   packages(): Record<string, string>;                        // the versions of the packages in that reply, which jsonBoard() records
-  editId(of: { block: BlockId } | { plugin: PluginId }): number | undefined;   // the edit id of a block or a plugin, which the command registry fills into the deltas of a command (below)
+  editId(of: { block: BlockId } | { plugin: PluginClassId }): number | undefined;   // the edit id of a block or a plugin, which the command registry fills into the deltas of a command (below)
 }
 ```
 
@@ -106,7 +106,7 @@ Board option values are set and removed as a collection entry's properties are, 
 
 ### Plugins
 
-Besides core's objects, a board holds the state of its plugins in `plugins`, each under the plugin's id with its class's id, for each plugin whose class has state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), such as the dock's views and which view is active, the DAG's positions, blockr.md's document or the assistant's threads, which today's dock board writes in properties of its own and, by each extension's id, in its `extensions` ([blockr.dock R/utils-serdes.R#L46-L96](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L46-L96)).
+Besides core's objects, a board holds the state of its plugins in `plugins`, each under its class's id, for each plugin whose class has state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), such as the dock's views and which view is active, the DAG's positions, blockr.md's document or the assistant's threads, which today's dock board writes in properties of its own and, by each extension's id, in its `extensions` ([blockr.dock R/utils-serdes.R#L46-L96](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L46-L96)).
 
 A package registers each plugin class it ships from its startup module, under the class's id ([Plugins](Rewrite-1.1.12#a-plugin)).
 Of the class's members, the store reads the schema and the default of its plugins' state, one function that keeps that state consistent with the rest of the board, and one that migrates it (below), while what sits inside a plugin's state is the class's own design.
@@ -115,7 +115,7 @@ The store registers nothing inside a plugin's state: it checks the state's whole
 With illustrative names:
 
 ```ts
-type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/dock/state/views/main/grid/1", with the edit id of the plugin it changes
+type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/blockr.dock-dock_plugin/views/main/grid/1", with the edit id of the plugin it changes
 
 core.plugins.register({                                // the dock's, from its startup module
   id: "blockr.dock-dock_plugin",
@@ -125,8 +125,8 @@ core.plugins.register({                                // the dock's, from its s
 });
 ```
 
-A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/dock/state/views/main/grid/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
-A patch changes the state of the board's plugins and never one of core's objects: a patch at or below a plugin's `state` changes it, while the store refuses any other patch to `plugins`, as one at `/plugins/dag`, which would set or remove what the board holds for the plugin whole, since the app sets which plugins run and names them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/blockr.dock-dock_plugin/views/main/grid/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
+A patch changes the state of the board's plugins and never one of core's objects: a patch at or below `/plugins/{id}` changes a plugin's state, while the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.dag-dag_plugin` would, since the app sets which plugins run and their classes name them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 The store checks the patched state against its class's schema, keeps the inverse patches for undo, and tells followers of the patches, so the DAG's paste adds blocks, their links and their positions in one delta, which one undo takes back.
 The package of a plugin class registers the commands for the operations on its plugins' state, such as `blockr.dock-add_view` and `blockr.dag-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Everything else, menus, shortcuts and the assistant, changes a plugin's state through those commands, which is external control (below).
@@ -155,7 +155,7 @@ store.registerMigration("blockr.dplyr-filter_block", (state, version) =>   // fr
   version < 2 ? { ...state, conditions: [state.condition] } : state);
 ```
 
-When a board opens, the store first drops the state of each plugin that the app does not hold under the same id and of the same class, or whose class no package that the app uses registers, such as the dock's on a board opened in a core app ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+When a board opens, the store first drops the state of each plugin of a class that the app does not run, or that no package that the app uses registers, such as the dock's on a board opened in a core app ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 It names each such plugin with its class's package, and reads nothing more of its state.
 Then it runs the `migrate` of each remaining plugin's class whose version the board records below the one R gives, the migration of each block's class where the block records a version below its class's, and the `migrate` of each board option whose value the board records at a version below the one R gives, each given what it migrates frozen, and the board opens with what they return, so that what a migration leaves out is gone, as a part of a plugin's state that its class renamed is.
 A version above the one R gives refuses the board, since no migration converts back, while a class that the board records no version of keeps what the board holds, since its writer knew no version of it.
@@ -176,7 +176,7 @@ store.apply(delta);
 The store expands a delta, checks it, commits it and tells whoever follows it:
 
 1. The store expands the delta with what follows from it.
-   Core's part expands as today's augment step does, so removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)), and each plugin's class through its `update`, a pure function from the delta, the board and the plugin's id to patches of that plugin's state, so the dock drops a removed block's panels.
+   Core's part expands as today's augment step does, so removing a block removes its links and takes it out of its stack ([R/board-server.R#L2072-L2134](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2072-L2134)), and each plugin's class through its `update`, a pure function from the delta, the board and the plugin's class's id to patches of that plugin's state, so the dock drops a removed block's panels.
    It runs `update` again on what the last round added, until it adds nothing, as `augment_board_update()` runs today ([#L2357-L2368](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-server.R#L2357-L2368)).
 2. It checks the invariants of [Board objects](Rewrite-1.1.1) on the result, the schema of each plugin's state that a patch changed, and that every block and plugin a `mod` or a patch changes still has the edit id it names, and a failing check rejects the whole delta, so nothing is ever half applied, with an error that names each failure and what it concerns.
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed block, link, stack or plugin comes back whole and in its place, a patched plugin's state gets its old value, and a state arg or property that the delta set where there was none is unset again, while the inverse holds no board option values ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
@@ -281,7 +281,7 @@ What an `update` returns never overrides what the delta given to the store says,
 So the store leaves out a patch of an `update` whose path lies at, under or above a path that one of the given delta's own patches changes.
 An array is the exception: a patch at an array's index, or at its end as `-`, names no element.
 A patch at an index changes whatever the array holds there by then, and one at `-` adds an element of its own.
-So the paths of two patches that both index one array never overlap, even at the same index or below it, and both patches apply, as two appends at `/plugins/dock/state/views/main/grid/-` do.
+So the paths of two patches that both index one array never overlap, even at the same index or below it, and both patches apply, as two appends at `/plugins/blockr.dock-dock_plugin/views/main/grid/-` do.
 Where one of the delta's own patches and a patch of an `update` both replace the element at the same index, the update's patch applies last and wins.
 A patch of the delta's own at the array itself, or above it, still leaves out what an `update` changes inside the array.
 The store reads the board before the delta to tell an array's index from an object's member named by digits.

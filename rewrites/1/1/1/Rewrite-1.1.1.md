@@ -70,7 +70,7 @@ interface Board {
   links: Record<LinkId, Link>;
   stacks: Record<StackId, Stack>;
   options: Record<OptionId, Json>;      // the board option values that someone set, { n_rows: 50 }
-  plugins: Record<PluginId, { class: PluginClassId; state: Json }>;   // the state of each plugin whose class has state, with its class's id, as Plugins has it
+  plugins: Record<PluginClassId, Json>;   // the state of each plugin whose class has state, under its class's id, as Plugins has it
 }
 ```
 
@@ -79,7 +79,7 @@ A block names its block class by registry id (below), and a plugin its plugin cl
 No object in it carries an R class vector, and none names a constructor or a package, since the client dispatches on none of them, and neither does a JSON board, the board as a file holds it, with the versions of the shapes it holds and of the packages its content comes from ([Serialization](Rewrite-1.1.4#files)).
 When the client opens a JSON board, it finds each block's class among the block registry's entries by registry id, and each plugin's class among the plugin classes that the app's packages register, by the class's id ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), while a file from today's stack, which names constructors instead, is converted to a JSON board outside core first ([Serialization](Rewrite-1.1.4#files)).
 
-A board has no class of its own, so that every R board is of class `board`, and what a package adds to a board, such as the dock's views, is the state of one of the board's plugins, which `plugins` holds under the plugin's id, with its class's id and its name ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+A board has no class of its own, so that every R board is of class `board`, and what a package adds to a board, such as the dock's views, is the state of one of the board's plugins, which `plugins` holds under its class's id ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 What a plugin is, which plugins run on a board as it opens, and the frontend, the plugin that draws the page, are [Plugins](Rewrite-1.1.12)'s.
 
 R builds an R board only where an app script defines one, which it converts to JSON once, when `serve()` is called ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
@@ -138,10 +138,10 @@ Code that draws a block need not see the split, since its host hands a block's U
 
 ### Registry ids
 
-A registry id is `{pkg}-{name}`, such as `blockr.core-head_block`: the package is the one the constructor lives in, and the name is unique within it, which `register_block()` checks.
+A registry id is `{pkg}-{id}`, such as `blockr.core-head_block`: the package is the one the class's constructor lives in, and the id is the one that `new_block_class()` takes, unique within the package, which `register_block()` checks.
 A package name holds only letters, digits and dots, so an id splits at its first `-`, and two packages that do not know of each other cannot produce the same id.
-The name defaults to the constructor's name without `new_`, which a namespace keeps unique, and `uid` sets it for a package that renames a constructor and wants its saved boards to keep working.
-For the 46 entries that blockr.core, blockr.dplyr, blockr.dm, blockr.ggplot and blockr.io register, only the prefix is new, since each uid equals its constructor's name without `new_` and each entry's package is its constructor's.
+The id is the class's own, declared with the class rather than read off its constructor's name or its class vector, so that a package that renames a constructor keeps the id and its saved boards keep working ([Block classes in R](Rewrite-1.1.5#the-block-class)).
+For the 46 entries that blockr.core, blockr.dplyr, blockr.dm, blockr.ggplot and blockr.io register, only the prefix is new, since each class can take as its id the uid it has today, its constructor's name without `new_`, and each entry's package is its constructor's.
 A class registered outside a package has the name alone as its id, which cannot equal a package's and only needs to be unique within one process, and since a function object comes without a name, its name defaults to the block's class.
 
 R finds the entry of a block it holds by the class the block refers to, where `registry_id_from_block()` goes by class today ([R/block-registry.R#L304-L318](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L304-L318)), so each class has one entry ([Block classes in R](Rewrite-1.1.5)).
@@ -201,7 +201,7 @@ What a board option is, which board options a board holds and how code reads the
 
 ### Extending core's objects
 
-A package adds to the board through a plugin, whose state the board holds under the plugin's id, beside core's objects, where the dock board adds views, grids and extensions as properties of its own today ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)).
+A package adds to the board through a plugin, whose state the board holds under its class's id, beside core's objects, where the dock board adds views, grids and extensions as properties of its own today ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)).
 These become the state of the dock plugin and of one plugin for each extension ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)), held as the dock's design has it ([Client-drawn dock and extensions](Rewrite-1.2)).
 Today the dock also adds a colour to every stack, since `new_dock_board()` makes each of its stacks a dock stack ([R/dock-stack.R#L171-L192](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-stack.R#L171-L192)), and that colour becomes core's ([Stacks](#stacks)).
 Core carries each plugin's state without reading it: it registers nothing inside it, and checks the state's whole value against the schema that the plugin's class gives, after every change, while what sits inside, such as how the dock lays out its views, is the class's own design ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -252,7 +252,7 @@ With the state of a plugin that a delta changes, the store checks that the plugi
 
 ### Objects that cannot be rebuilt
 
-When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, the state of a plugin that the app does not hold under the same id and of the same class, or whose class none of the packages that the app uses registers ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and, once the migrations have run, the board option values that no package that the app uses registers, as those of a package that is missing ([Board updates](Rewrite-1.1.2#plugins)).
+When the client opens a board, it drops what the app cannot rebuild: a block whose class the block registry lacks, as when its package is not installed or no longer has the class, as in [blockr.core#386](https://github.com/BristolMyersSquibb/blockr.core/issues/386), or its class comes from no package and is not registered, together with the links and stack places that refer to it, the state of a plugin of a class that the app does not run, or that none of the packages that the app uses registers ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and, once the migrations have run, the board option values that no package that the app uses registers, as those of a package that is missing ([Board updates](Rewrite-1.1.2#plugins)).
 So a board that holds the dock's state opens without it where blockr.dock is missing, with the app's frontend, so that only what the missing package's plugins keep goes, such as the dock's views ([Plugins](Rewrite-1.1.12#the-frontend)).
 Saved and opened again in a dock app, it gets that app's dock, with the dock's default layout.
 The client names each block it drops, and each plugin whose state it drops, with the package of its class, which the block's registry id and the plugin's class id give, and each package that the JSON board lists and the app does not offer, with the version it records, so the user learns what to install, and it names each board option value it drops by its id, while a board saved afterwards is written without any of them.
