@@ -2,7 +2,7 @@
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.session, whose session management becomes a dock extension that makes its storage calls from the browser.
-It builds on [Client-drawn dock and extensions](Rewrite-1.2) and on core's command that replaces the board ([Client-owned board state](Rewrite-1.1)).
+It builds on [Client-drawn dock](Rewrite-1.2) and on core's command that replaces the board ([Client-owned board state](Rewrite-1.1)).
 
 ## Problem
 
@@ -12,7 +12,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 
 ## What must hold
 
-1. Opening, saving, versioning, sharing and tagging boards work as today, from a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) and without a session reload.
+1. Opening, saving, versioning, sharing and tagging boards work as today, from a dock extension ([Client-drawn dock](Rewrite-1.2)) and without a session reload.
 2. The browser makes every storage call.
    R takes part once per session, to exchange the visitor's credential, which only the content's process receives.
 3. A URL still names a board by `board_name`, `user` and `version`, and a new board gets a fresh id, so saving it forks a record instead of overwriting the one served.
@@ -52,6 +52,6 @@ On Connect a renamed record changes its content title through the API, tags go t
 Pins has clients for R and Python only, and npm has none, so the Connect backend writes and reads pin bundles itself, including those of records saved today.
 
 Drafts are rack records with `draft = TRUE`, written every `session_autosave` seconds when that blockr option is set and kept for `session_draft_ttl` days, 7 by default ([`draft.R#L1-L30`](https://github.com/BristolMyersSquibb/blockr.session/blob/5f9b8e6aff54a58f84d2658963194c60e8a4262a/R/draft.R#L1-L30)).
-The avatar relies on the dock taking no room for a navbar item whose output renders nothing, which is among the coupling listed in [Client-drawn dock and extensions](Rewrite-1.2).
+The avatar relies on the dock taking no room for a navbar item whose output renders nothing, which is among the coupling listed in [Client-drawn dock](Rewrite-1.2).
 
 </details>

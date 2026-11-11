@@ -2,7 +2,7 @@
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, whose agent loop moves to the browser as a dock extension.
-It builds on [Client-drawn dock and extensions](Rewrite-1.2) and on core's commands and scheduler ([Client-owned board state](Rewrite-1.1)).
+It builds on [Client-drawn dock](Rewrite-1.2) and on core's commands and scheduler ([Client-owned board state](Rewrite-1.1)).
 
 ## Problem
 
@@ -12,7 +12,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), the
 
 ## What must hold
 
-1. The assistant is a dock extension ([Client-drawn dock and extensions](Rewrite-1.2)) whose edits are deltas through core's commands, applied all or none and marked as its own, so undo keeps its steps apart from the user's ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)).
+1. The assistant is a dock extension ([Client-drawn dock](Rewrite-1.2)) whose edits are deltas through core's commands, applied all or none and marked as its own, so undo keeps its steps apart from the user's ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)).
 2. An edit reports done only once the blocks it changed, and those downstream of them, are current, with each block's status and conditions.
 3. The loop works with the visitor's own credential as with one that R obtains or the deployment provides, and nothing in it changes to switch between them.
 4. A turn keeps going while its tab is hidden, until the browser discards the page.

@@ -29,7 +29,7 @@ So a script can set a block's sections in its constructor, as `new_head_block(vi
 
 ### Three locks
 
-An app sets three locks, each on its own, while a frontend or a plugin may lock more of what it alone keeps, as the dock locks the arrangement of its panels ([Client-drawn dock and extensions](Rewrite-1.2)).
+An app sets three locks, each on its own, while a frontend or a plugin may lock more of what it alone keeps, as the dock locks the arrangement of its panels ([Client-drawn dock](Rewrite-1.2)).
 The load lock fixes the app to its opening board, the board lock fixes what the board holds, its blocks and links above all, and a block's lock fixes the block's state.
 They meet in two places: a block's lock takes effect only under the board lock, and R can guarantee the board lock and the block locks only where the load lock is on too ([What R refuses](#what-r-refuses)).
 A locked board is one under the board lock, whatever the load lock says.
@@ -75,7 +75,7 @@ So every patch to `plugins` is inside a plugin's state, such as `/plugins/blockr
 A plugin goes on running under the board lock, but only reads the board: the store refuses every change that a lock fixes, whichever plugin's command makes it, so that neither the DAG nor the assistant adds a block, links one or changes a locked block's state.
 A plugin reads the board and its results as on any board, and draws no control for what a lock fixes, as a frontend draws none, by the locks that core's API holds ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 What sits inside a plugin's state stays the plugin's own to lock, so the store applies a patch inside a plugin's state under the board lock, and the plugin's commands refuse what the plugin locks.
-A locked dock, for example, still lets a reader switch views, though the active view is part of the dock's state, while it offers no view to add, rename or remove, as today ([blockr.dock R/dock-view.R#L32-L35](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L32-L35), [Client-drawn dock and extensions](Rewrite-1.2)).
+A locked dock, for example, still lets a reader switch views, though the active view is part of the dock's state, while it offers no view to add, rename or remove, as today ([blockr.dock R/dock-view.R#L32-L35](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L32-L35), [Client-drawn dock](Rewrite-1.2)).
 R reads no plugin's state, so a plugin's own lock is the client's alone, and R runs a plugin's request under the board lock as on any board ([Plugins](Rewrite-1.1.12#a-plugins-requests), [Wire protocol](Rewrite-1.1.9#requests)).
 A request that should not run on a locked board, such as the assistant's trial of proposed args, which evaluates what the client sends, is its package's to refuse, by reading the blockr option `locked`.
 

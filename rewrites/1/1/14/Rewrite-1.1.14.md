@@ -4,7 +4,7 @@ Status: settled on 2026-11-10. Design for [Client-owned board state](Rewrite-1.1
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log and trace.
 Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a plugin sent it.
 Log lines go to the console by default, and log lines and spans go to an OpenTelemetry collector wherever the deployment names one, from R and from the browser alike.
-It shapes the notifications of `CoreApi` ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and their toasts in core's basic frontend ([blockr.core#549](https://github.com/BristolMyersSquibb/blockr.core/issues/549)), logging in R ([blockr.core#550](https://github.com/BristolMyersSquibb/blockr.core/issues/550)) and in the client ([blockr.core#551](https://github.com/BristolMyersSquibb/blockr.core/issues/551)), tracing ([blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552)) and the guide for deployments ([blockr.core#553](https://github.com/BristolMyersSquibb/blockr.core/issues/553)), and the notifications of [The dock's services](Rewrite-1.2.6) build on it.
+It shapes the notifications of `CoreApi` ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and their toasts in core's basic frontend ([blockr.core#549](https://github.com/BristolMyersSquibb/blockr.core/issues/549)), logging in R ([blockr.core#550](https://github.com/BristolMyersSquibb/blockr.core/issues/550)) and in the client ([blockr.core#551](https://github.com/BristolMyersSquibb/blockr.core/issues/551)), tracing ([blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552)) and the guide for deployments ([blockr.core#553](https://github.com/BristolMyersSquibb/blockr.core/issues/553)), and the dock's notifications build on it ([Client-drawn dock](Rewrite-1.2)).
 How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evaluating-a-block)'s, how a block's status holds them [Evaluation in the client](Rewrite-1.1.10#statuses)'s, and how a frontend draws the board [Drawing the board](Rewrite-1.1.8)'s.
 
 ## What must hold
@@ -150,7 +150,7 @@ It withdraws every notification that concerns a block as the block leaves the bo
 
 ### Core's basic frontend
 
-A frontend draws notifications as it chooses, by their class, origin and what they concern, and the dock draws them as [The dock's services](Rewrite-1.2.6) will have it.
+A frontend draws notifications as it chooses, by their class, origin and what they concern, and the dock draws them as [Client-drawn dock](Rewrite-1.2) has it.
 A frontend may one day also show some as desktop notifications, such as an error while the page's tab is hidden, which needs nothing from core.
 Core's basic frontend shows each notification once, on a block's card or as a toast:
 

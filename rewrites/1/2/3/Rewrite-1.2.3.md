@@ -1,14 +1,14 @@
 # Registering extensions with the dock
-Status: draft. Design for [Client-drawn dock and extensions](Rewrite-1.2).
+Status: dropped on 2026-11-11, because core's plugins replace the dock's extensions, and [Plugins for the client-owned board](Rewrite-1.1.12) settles how they register, which run, their state and their requests. Design for [Client-drawn dock](Rewrite-1.2).
 
-One of the design pages of the client-drawn dock ([Client-drawn dock and extensions](Rewrite-1.2)): how an extension registers with the dock from its package's startup module, and which extensions a board has.
+One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): how an extension registers with the dock from its package's startup module, and which extensions a board has.
 It covers the state an extension keeps in the dock board's `extensions`, with the commands that change it, the hook that keeps it consistent with the board and the way it migrates, the board options and requests an extension brings, the API majors it declares, and how it is tested.
 It builds on [Plugins](Rewrite-1.1.12#a-plugin) and [Board updates](Rewrite-1.1.2#plugins).
-Where an extension draws is [The dock's contribution points](Rewrite-1.2.4)'s and [The dock's navbar](Rewrite-1.2.5)'s, and what the dock offers it besides is [The dock's services](Rewrite-1.2.6)'s.
+Where an extension draws is [Places the dock offers plugins](Rewrite-1.2.4)'s and [The dock's navbar](Rewrite-1.2.5)'s, and what the dock offers it besides is [The dock's services](Rewrite-1.2.6)'s.
 
 ## What must hold
 
-Condition 3 of [Client-drawn dock and extensions](Rewrite-1.2#what-must-hold) rests on this page, with [The dock's contribution points](Rewrite-1.2.4), [The dock's navbar](Rewrite-1.2.5) and [The dock's services](Rewrite-1.2.6).
+Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this page, with [Places the dock offers plugins](Rewrite-1.2.4), [The dock's navbar](Rewrite-1.2.5) and [The dock's services](Rewrite-1.2.6).
 
 ## Proposal
 

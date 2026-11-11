@@ -1,9 +1,9 @@
 # The Edit board extension in React
-Status: dropped on 2026-11-10, because it moved to [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15). Design for [Client-drawn dock and extensions](Rewrite-1.2).
+Status: dropped on 2026-11-10, because it moved to [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15). Design for [Client-drawn dock](Rewrite-1.2).
 
-One of the design pages of the client-drawn dock ([Client-drawn dock and extensions](Rewrite-1.2)): the Edit board extension, ported to React as a dock extension.
+One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the Edit board extension, ported to React as a dock extension.
 Its panel adds and removes blocks, and edits the board's links and stacks in tables, on a board that mounts no DAG.
-It is the first extension built on the extension API, so it tests [Registering extensions with the dock](Rewrite-1.2.3) and the panels of [The dock's contribution points](Rewrite-1.2.4) before the DAG, the assistant, code export and session management are rebuilt on them.
+It is the first extension built on the extension API, so it tests [Registering extensions with the dock](Rewrite-1.2.3) and the panels of [Places the dock offers plugins](Rewrite-1.2.4) before the DAG, the assistant, code export and session management are rebuilt on them.
 
 ## What must hold
 

@@ -17,8 +17,8 @@ Weeks are ISO weeks.
 | 44 | 2026-10-26 | Spec blockr.core | [Client-owned board state](Rewrite-1.1) |
 | 45 | 2026-11-02 | Implement blockr.core, and add the TypeScript gates to blockr.ci's workflows | [Client-owned board state](Rewrite-1.1) |
 | 46 | 2026-11-09 | Buffer | |
-| 47 | 2026-11-16 | Spec blockr.dock and blockr.ui | [Client-drawn dock and extensions](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
-| 48 | 2026-11-23 | Implement blockr.ui and blockr.dock | [Client-drawn dock and extensions](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
+| 47 | 2026-11-16 | Spec blockr.dock and blockr.ui | [Client-drawn dock](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
+| 48 | 2026-11-23 | Implement blockr.ui and blockr.dock | [Client-drawn dock](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
 | 49 | 2026-11-30 | Buffer | |
 | 50–51 | 2026-12-07 | Spec and implement blockr.assistant | [Assistant as a client extension](Rewrite-1.4) |
 | 52–53 | 2026-12-21 | Holidays | |
