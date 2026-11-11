@@ -15,7 +15,7 @@ This page maps the extension's panels to that plugin's.
 2. A converted board names nothing of today's stack, neither an R class, a constructor nor an extension's key, so that only the conversion reads today's names.
 3. An app script that builds its board with `new_dock_board()`, with views and grids written by `dock_view()`, `dock_grid()`, `panels()`, `group()`, `rail()`, `blk()` and `ext()`, builds a board with the same views, grids, active view and card sections as today, once it makes the changes that the migration notes of blockr.core and blockr.dock list.
 4. The migration notes of blockr.dock list every change that a dock app script needs, written so that an AI can apply them, since a function that the new stack replaces goes without an alias ([State in JS](Rewrite-1#migration)).
-5. A script and a file that today's packages save from that script open into the same dock plugin's state, the script's board through `new_dock_board()` and the file through the conversion and the `migrate` of the dock plugin's class.
+5. A script that gives its views or grids and a file that today's packages save from that script open into the same dock plugin's state, the script's board through `new_dock_board()` and the file through the conversion and the `migrate` of the dock plugin's class, while a script that gives neither gets the view that the dock adds to a board without views ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
 
 ## Today
 
@@ -189,7 +189,7 @@ They list each change of this page, with what takes the place of each function t
 The conversion's tests hold files that today's packages wrote, each beside the JSON board that the conversion writes for it.
 They are a file of each of blockr.dock's examples, written by blockr.dock 0.1.2 and by main at the switch, and a file of the CEDX board, once the packages it uses have been ported.
 The client's tests open each JSON board with the dock plugin's class, and check its views, their names and order, their grids, the active view, the sections of each card and the stacks' colours against what today's dock shows for the file.
-The script of each example and that of the CEDX board, changed as the migration notes say, then open into the same dock plugin's state as the conversion of the file that today's packages saved from the same script (condition 5).
+The script of each example that gives its views or grids and that of the CEDX board, changed as the migration notes say, then open into the same dock plugin's state as the conversion of the file that today's packages saved from the same script (condition 5).
 
 ## Open questions
 
