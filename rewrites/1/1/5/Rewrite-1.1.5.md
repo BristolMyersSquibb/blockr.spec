@@ -2,12 +2,12 @@
 Status: settled on 2026-10-30. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how a package defines and registers a block class in R, and how R evaluates a block with it.
-It shapes removing the generics of a block's server and output ([blockr.core#418](https://github.com/BristolMyersSquibb/blockr.core/issues/418)), defining block classes ([blockr.core#421](https://github.com/BristolMyersSquibb/blockr.core/issues/421)), output classes ([blockr.core#422](https://github.com/BristolMyersSquibb/blockr.core/issues/422)), porting core's built-in blocks ([blockr.core#423](https://github.com/BristolMyersSquibb/blockr.core/issues/423)), renderers ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)), testing a block class's module ([blockr.core#437](https://github.com/BristolMyersSquibb/blockr.core/issues/437)), the guide for block class authors ([blockr.core#444](https://github.com/BristolMyersSquibb/blockr.core/issues/444)), filling the block registry from the packages that the app names ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)) and bringing the guide and the help in line with the pages ([blockr.core#516](https://github.com/BristolMyersSquibb/blockr.core/issues/516)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It shapes removing the generics of a block's server and output ([blockr.core#418](https://github.com/BristolMyersSquibb/blockr.core/issues/418)), defining block classes ([blockr.core#421](https://github.com/BristolMyersSquibb/blockr.core/issues/421)), output classes ([blockr.core#422](https://github.com/BristolMyersSquibb/blockr.core/issues/422)), porting core's built-in blocks ([blockr.core#423](https://github.com/BristolMyersSquibb/blockr.core/issues/423)), renderers ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)), testing a block class's module ([blockr.core#437](https://github.com/BristolMyersSquibb/blockr.core/issues/437)), the guide for block class authors ([blockr.core#444](https://github.com/BristolMyersSquibb/blockr.core/issues/444)), filling the block registry from the block classes that the app offers ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)) and bringing the guide and the help in line with the pages ([blockr.core#516](https://github.com/BristolMyersSquibb/blockr.core/issues/516)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 A block class's UI, a module that meets the contract, is the UI modules proposal ([UI modules in JS](Rewrite-1.1.7)), the messages that carry a block's recipe and its result are the [wire protocol proposal](Rewrite-1.1.9), how state values travel between the client and R is the [serialization proposal](Rewrite-1.1.4), which renderer draws an output is [Drawing the board](Rewrite-1.1.8#renderers)'s, and when a block is evaluated is the [evaluation proposal](Rewrite-1.1.10).
 
 ## What must hold
 
-1. A block class is defined once, as a value, and the constructor made from it returns an S3 block whose args are the block's state; classes are registered under a registry id, as today, but from the packages that the app names rather than as a package loads ([Registration](#registration)).
+1. A block class is defined once, as a value, and the constructor made from it returns an S3 block whose args are the block's state; classes are registered under a registry id, as today, but from the block classes that the app offers rather than as a package loads ([Registration](#registration)).
 2. Its R side is plain functions, with no Shiny module server and no reactives.
 3. The generics packages implement today keep working wherever they still have a job.
 4. Nothing about a class is copied into its blocks, and nothing builds a block to learn about its class.
@@ -257,17 +257,29 @@ No package in the workspace overrides another's block methods today, and the two
 ### Registration
 
 Which block classes an app offers is the app's choice, never a board's, and loading a package registers nothing.
-A block package exports one object that lists what it offers core: the registry metadata of each of its block classes, which the roclet writes from the `@block` tags in place of `inst/registry/blocks.yml`, and the modules and the startup module the package declares ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
-The app names the packages it offers in `serve()`'s `packages`, with core always among them ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)), and R reads the object of each as the app starts and fills the block registry from it.
-So the block registry, and everything else that the reply to `hello` holds, stays what the app named for the life of the process, whatever a block's code loads ([Wire protocol](Rewrite-1.1.9#handshake)).
-A package that the app names and that is not installed, or that exports no such object, stops the app as it starts, naming the package.
-Two steps stay open for later.
-A blockr option may narrow what the app offers, such as one that names a YAML file listing packages and, for each, the block classes to offer, all of them where it lists none ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
-Once block packages export the object, `packages = NULL` may become the default, offering every installed package that exports one.
+A package exports one object, `._BLOCKR_MODULES_`, that lists what it offers core: the registry metadata of each of its block classes, which the roclet writes from the `@block` tags in place of `inst/registry/blocks.yml`, each of its plugin classes with its constructor and its default name ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and the modules and the startup module the package declares ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
+The available packages are those that export it, among the installed packages that depend on blockr.core and those that `pkgload::load_all()` loaded, which sit in no library.
+R loads each of them as the app starts, since it reads an object only from a loaded namespace, and `available_blocks()` gives their block classes as a data frame, one row per class, with the class's package in `package`, its name in `class` and its registry metadata in columns beside them, such as its category.
+The app offers the block classes that `serve()` takes in `block_classes`, which default to `available_blocks()`, so that an app offers every available class unless its script narrows them ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)), and R fills the block registry from them.
+A script narrows them with plain R, as `subset(available_blocks(), package != "blockr.ggplot")` offers every class but blockr.ggplot's, or gives the path of a YAML file that lists packages and, for each, the block classes to offer, all of them where it lists none:
+
+```yaml
+- blockr.core:
+  - dataset_block
+  - head_block
+- blockr.dplyr
+```
+
+R reads the file into the same rows, so that `serve()` handles one shape, and a package that the file leaves out offers nothing.
+A row that names a package that is not available, or a class that its package does not list, stops the app as it starts, naming it.
+So one argument narrows the classes of every package, in place of today's blockr option `core_blocks`, through which core alone narrows its own ([R/block-registry.R#L524](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L524)), and which goes.
+Today's `available_blocks()`, which gives the block registry's entries by registry id ([#L358](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L358)), gives the data frame instead.
+The packages that an app uses are core and those whose block classes it offers or whose plugins it runs ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+So the block registry, and everything else that the reply to `hello` holds, stays what the app script set for the life of the process, whatever a block's code loads ([Wire protocol](Rewrite-1.1.9#handshake)).
 
 An entry of the object holds what `register_block()` takes but `classes` ([R/block-registry.R#L80](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L80)), as the roclet writes it from the `@block` tags: the constructor, as today, from which R reads its block class, which gives the class vector (notes).
-The `register_block()` and `register_blocks()` functions stay for the block classes that an app script defines, which the script registers before `serve()` starts the app, and refuse once it has started.
-As R writes the board that the script builds, it also registers the class of each of its blocks that no entry holds, as a class from outside a package under its name, so that every block on the served board runs, whether or not the app names its package ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
+The `register_block()` and `register_blocks()` functions stay for the block classes that an app script defines, which the script registers before `serve()` starts the app, and refuse once it has started, while `block_classes` narrows only the classes of packages, since a script registers its own.
+As R writes the board that the script builds, it also registers the class of each of its blocks that no entry holds, as a class from outside a package under its name, so that every block on the served board runs, whether or not the app offers its class ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Core's static and fixed blocks reach the block registry this way alone, as today, since no UI sets their code, so core's own entries leave both out ([blockr.core#461](https://github.com/BristolMyersSquibb/blockr.core/pull/461)).
 The `uid` argument sets the name part of the registry id, `{pkg}-{name}`, whose name defaults to the constructor's name without `new_` ([Board objects](Rewrite-1.1.1)).
 A constructor registered by name comes with its package, as every package in the workspace registers its constructors today, while one registered as a function is from outside a package, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
@@ -531,5 +543,7 @@ Each case shows its block expression in the script.
 
 Today `register_block()` builds a block to read its classes and, without `arguments`, its arg specs, and checks the specs' examples against it ([R/block-registry.R#L143-L162](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L143-L162)).
 The class gives the first two, and the examples are checked by calling `expr` with them instead.
+Loading the 14 blockr packages installed in the workspace's default library took 2.30 s in one R process, 1.86 s of it for the `blockr` meta-package and the six packages that it imports, so an app script that calls `library(blockr)` pays most of that today.
+A namespace that `pkgload::load_all()` loaded holds `._BLOCKR_MODULES_` as an installed one does, so the listing needs nothing of its own under `load_all()` ([blockr.core#523](https://github.com/BristolMyersSquibb/blockr.core/issues/523)), while a package's modules and schemas stay files, which `package_system_file()` of [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) finds.
 
 </details>

@@ -77,6 +77,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), the code extension ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt after the dock.
   This part settles only the API they build on, and leaves libraries, agent design and their R requests to them.
 - The dock places core's Edit board plugin in a panel, as it places any plugin, so that a board that mounts no DAG still edits its blocks, links and stacks ([The Edit board plugin](Rewrite-1.1.15)).
+  A dock app runs that plugin, the dock and the dock's extensions without its script naming any, since `serve()` runs a plugin of each class that an available package lists, the dock in place of core's basic frontend ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
   As today, the dock itself only appends and removes a block, from a card's menu ([R/plugin-block.R#L389-L400](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L389-L400)).
   It has no place for stacks, and only the DAG's menus open its editors of links, inputs and stacks.
   Core's plugin is built before the dock, so it is the first plugin the dock places, and the first test of the panels of [The dock's contribution points](Rewrite-1.2.4).
@@ -94,10 +95,6 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   Today blockr.viz's control bridge, an extension with no UI that the CEDX board mounts, opens the channel that blocks send selections over (notes).
   A link of its own for such edits is in the [Backlog](Backlog#control-links).
   It blocks porting blockr.viz's drill.
-- Which plugins a dock app's script passes to `serve()`, which takes the app's plugins while `new_dock_board()` gives only their state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and how blockr.dock spares a script from naming the dock and its extensions in both.
-  Among them is whether a dock app runs core's Edit board plugin, which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)), while today's `new_dock_board()` adds no extension by default.
-  So a dock board with neither the DAG nor that plugin gets no first block, since the dock itself only appends a block after another, from a card's menu.
-  A board saved in a core app holds that plugin too, so a dock app without it drops the plugin as such a board opens, and tells the user that the board lost it ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
   It blocks what blockr.dock offers a dock app's script, and settles as this part is revised for [Plugins](Rewrite-1.1.12).
 
 ## Work
