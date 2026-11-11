@@ -105,7 +105,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 ## Design pages
 
-- [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1): the dock plugin's state, the commands that change it, its class's `update`, the R functions that write it for an app script, and the conversion to and from dockview's layout
+- [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1): the dock plugin's state, the commands that change it, its class's `update` and `migrate`, the R functions that write it for an app script, and the conversion to and from dockview's layout
 - [Saved boards and app scripts across the switch](Rewrite-1.2.2): how boards saved by today's blockr.dock open, through the conversion outside core and the `migrate` of the dock plugin's class, and how app scripts that call its constructors keep working
 - [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, and the places it offers besides, such as menus, settings and the block card, for plugins and the dock alike
 - [The dock's navbar](Rewrite-1.2.5): the bar's items and their order, what gives way on a narrow bar, the dock's default items, the items that plugins add through `dockNavbar`, and how an app drops and reorders items

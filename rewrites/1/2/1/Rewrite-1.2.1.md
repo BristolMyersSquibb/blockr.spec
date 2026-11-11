@@ -2,9 +2,9 @@
 Status: draft. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the dock plugin's state, which holds the dock's views, the folders that group them in the navigation, each view's grid, which view is active and which sections of each block's card show.
-It covers the commands that change that state, the `update` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
+It covers the commands that change that state, the `update` and the `migrate` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
 It builds on [Plugins](Rewrite-1.1.12#a-plugins-state) and [Board updates](Rewrite-1.1.2#plugins).
-How boards saved today reach this state, through the conversion outside core and the `migrate` of the dock plugin's class, is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s.
+How boards saved today reach the dock plugin's state at version 1, through the conversion in blockr.convert, and how today's app scripts keep working are [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s, while this page gives the `migrate` that brings that state to its own shape.
 How the navbar draws the views and folders is [The dock's navbar](Rewrite-1.2.5)'s, and how a card draws its sections is [Block cards in the dock](Rewrite-1.2.7)'s.
 
 ## What must hold
@@ -19,6 +19,7 @@ Conditions 1 and 2 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rest on th
 5. Removing a block takes its panels out of every view and its entry out of the card sections, in the same step, which one undo takes back.
 6. Folders group and order the navigation alone, at any depth, and removing a folder removes no view.
 7. An app script writes views, folders and grids in R, as today, and R turns them into the dock's state as the app starts, with every id.
+8. A board that holds no state for the dock opens with one view that shows its blocks and the app's plugins, and no view shows a panel that the dock cannot draw.
 
 ## Today
 
@@ -40,7 +41,7 @@ The board holds the dock plugin's state under the class's id, at `/plugins/block
 interface DockState {
   views: Record<ViewId, View>;           // every view, under its id
   folders: Record<FolderId, Folder>;     // every folder, under its id
-  active: ViewId;                        // the active view, which a board opens on
+  active: ViewId | null;                 // the active view, which a board opens on, or null while the state holds no view
   visible: Record<BlockId, Section[]>;   // the sections of a block's card that show, where they are not both
 }
 
@@ -232,33 +233,61 @@ Where the active view's stored grid changes otherwise, through an undo or anothe
 In a window narrower than the blockr option `narrow_breakpoint`, the dock draws a view's tab groups and rails stacked in one column, each as tall as the wide grid makes it, up to the blockr option `narrow_group_fraction` of the window, as today ([R/dock-grid.R#L534-L630](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L534-L630)).
 It reads nothing back there, so the board keeps its wide grid, while a command changes the stored grid as on a wide screen and the column follows.
 
+### Starting on a board
+
+The default of the dock plugin class's state holds no view, `{ "views": {}, "folders": {}, "active": null, "visible": {} }`, since the default of a plugin class's state is one value, which cannot list a board's blocks ([Plugins](Rewrite-1.1.12#a-plugin)).
+The dock's state holds no view where the board was made in a core app, where it is a core board that today's stack saved and the conversion turned into a JSON board, or where its app script gives the dock neither views nor grids (below).
+
+As the dock starts on a board, before it first draws, it applies one delta of its own where the state needs one, with the origin `blockr.dock-dock_plugin` and `undo: false` ([Board updates](Rewrite-1.1.2#undo)):
+
+1. Where the state holds no view, it adds one, named "Page", and makes it active, with today's default grid: the panels of the app's plugins whose class has a `ui` in one tab group, beside the panels of the board's blocks in another ([R/dock-grid.R#L760-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L760-L775)).
+2. It removes every panel that it cannot draw, that of a plugin that the app does not run or whose class has no `ui`, as the store drops the state of a plugin that the app does not run as the board opens ([Board updates](Rewrite-1.1.2#plugins)).
+
+So undo never takes the user back to an empty page or to a panel that the app cannot draw.
+A fresh start of the same app takes the same step on the same board, so the page is what a fresh start would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+A panel of a block that the board lacks needs no such step, since the store drops such a block as a delta removes it, through the class's `update` (above).
+
+### The migration from version 1
+
+A board that the conversion wrote holds the dock plugin's state at version 1, in today's shape ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)): its views with their members, its `grids` beside them, its panels as the strings `block_panel-<id>` and `ext_panel-<id>`, the latter naming a plugin's class, and each value of length one bare, as typedjson read it.
+The `migrate` of the dock plugin's class takes that state to the shape of this page, which is version 2 ([Board updates](Rewrite-1.1.2#plugins)):
+
+1. It reads each value of length one as an array where this page's shape has one, as `"sizes": 1` and `"panels": "block_panel-a"`, and `"rails": []` as a grid without rails.
+2. It turns each view's members and grid into one grid, as today's dock reads a view: the grid restricted to the members, each member that the grid lacks in a tab group of its own at the end of the top split, and today's default grid over the members where the view has no grid ([R/dock-grid.R#L725-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L725-L775)).
+3. It names each panel by an object, by the prefix of its id, as `block_panel-a` becomes `{ "block": "a" }` and `ext_panel-blockr.dag-dag_plugin` becomes `{ "plugin": "blockr.dag-dag_plugin" }`, and drops a rail's `position`, which the rail's edge gives.
+4. It puts every view at the top, with an `index` in the order of the views, and gives the state no folders.
+5. It keeps `active` and `visible`, with each value of `visible` as an array.
+
+R applies the rule of the second step to an app script's views too (below), so that a script and the file that today's packages save from it give the same grids, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#what-must-hold) asks.
+
 ### Defining the state in R
 
-An app script writes the dock's state through `new_dock_board()`, which stays and builds a board that holds the dock plugin's state ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
-It passes its `views`, `folders`, `active` and `visible` on to the dock plugin's constructor.
-Its `views` and `active` keep their meaning, `folders` and `visible` are new, and how its other arguments carry over, `grids` and `extensions` among them, is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s.
-The dock plugin's constructor takes the state as its args, as every plugin's constructor does ([Plugins](Rewrite-1.1.12#a-plugin)), and `visible` among them, as [Locked boards and the properties of blocks](Rewrite-1.1.11#block-properties-in-r) has it:
+An app script writes the dock's state through `new_dock_board()`, which [Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts) keeps for today's scripts, with its `views`, `grids` and `active` as today and its `visible`, which takes the place of a block's `visible` attribute.
+It hands them to the dock plugin's constructor, with the `folders` that this page adds:
 
 ```r
 new_dock_board(
   blocks = c(a = new_dataset_block(), b = new_head_block(), d = new_head_block()),
   views = list(
-    overview = dock_view(dock_grid(c("a", "b"), plg("blockr.dag-dag_plugin"), sizes = c(0.3, 0.7)), name = "Overview"),
-    ae = dock_view(dock_grid("d"), name = "Adverse events", folder = "safety")
+    overview = dock_view(c("a", "b", ext("blockr.dag-dag_plugin")), name = "Overview"),
+    ae = dock_view("d", name = "Adverse events", folder = "safety")
   ),
+  grids = list(overview = dock_grid(c("a", "b"), ext("blockr.dag-dag_plugin"), sizes = c(0.3, 0.7))),
   folders = list(safety = dock_folder("Safety")),
   active = "overview",
   visible = list(b = "outputs")
 )
 
-new_dock_plugin(views = list(), folders = list(), active = NULL, visible = list())   # its args, with their defaults
+new_dock_plugin(views = NULL, grids = NULL, folders = list(), active = NULL, visible = list())   # its args, with their defaults
 ```
 
-A view is `dock_view(grid, name = NULL, folder = NULL)` and a folder `dock_folder(name, folder = NULL)`, while `dock_grid()`, `panels()`, `group()` and `rail()` write a grid as today ([R/dock-grid.R#L809-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L809-L1008)).
-A grid names a block's panel by the block's id or `blk()`, and a plugin's by the id of the plugin's class or `plg()`, which takes the place of `ext()`, and R resolves a bare id to a block first, as today ([R/dock-view.R#L1237-L1262](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L1237-L1262)).
-Given a view's panels in place of a grid, as `dock_view(c("a", "b"))` today gives a view's members, R writes the grid that today's dock draws for a view without one: the plugins' panels in one tab group beside the blocks' panels in another ([R/dock-grid.R#L760-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L760-L775)).
+A view is written with `dock_view(members, name = NULL, folder = NULL)`, as today with the folder it sits in added, and a folder with `dock_folder(name, folder = NULL)`.
+A grid is written with `dock_grid()`, `panels()`, `group()` and `rail()`, as today ([R/dock-grid.R#L809-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L809-L1008)).
+A grid or a view's members name a block's panel by the block's id or `blk()`, and a plugin's by `ext()`, which takes the id of the plugin's class ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)), while R resolves a bare id to a block first, as today ([R/dock-view.R#L1237-L1262](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L1237-L1262)).
 
+R turns them into the state once, as the script runs, by today's rules: each view's grid comes from its members and its grid by the second step of the migration from version 1 (above), and a script that gives grids alone gets a view for each grid, with the grid's panels as its members ([R/dock-board.R#L81-L125](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L81-L125)).
 R draws the id of each view and folder that the script leaves out, names a view without a name after its id, as today's views menu labels one ([R/dock-view.R#L355-L366](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L355-L366)), writes each `index` in the order that the script gives, makes the first view active where the script names none, and writes the state by the schema of the dock plugin class's state ([Plugins](Rewrite-1.1.12#a-plugin)).
+Where the script gives neither views nor grids, R writes no view, and the dock lays out its default as it starts (Starting on a board, above), so that the default comes from one place, the client, which alone knows which plugins have a `ui`.
 It refuses, as the script runs, a grid that places a panel twice or names a block that the board lacks, sizes that are not positive, and a folder that sits in itself, naming each, so that a broken layout fails where it is written, as today's `validate_dock_grid()` does ([R/dock-grid.R#L180-L238](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L180-L238)).
 
 ### On a locked board
@@ -273,9 +302,11 @@ Core's `blockr.core-set_plugin_state` is not enabled on a locked board ([Plugins
 
 ## Open questions
 
-- How a board that holds no state for the dock gets its views, such as a board made in a core app, since the default of a plugin class's state is one value ([Plugins](Rewrite-1.1.12#a-plugin)), while today's default layout depends on the board's blocks and extensions, which it puts in one tab group and on the left rail ([R/dock-grid.R#L992-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L992-L1008)).
-  With it goes what the dock does with a panel of a plugin that the app does not run, since the store drops only such a plugin's own state as a board opens ([Board updates](Rewrite-1.1.2#plugins)), and what R writes for a script that gives no views.
-  It blocks the default of the dock plugin class's state.
+- Whether an app script that gives neither views nor grids gets the dock's default as the dock starts, as this page has it, or today's default from R, with the board's plugins on the left rail ([R/dock-grid.R#L992-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L992-L1008)).
+  A file that today's packages save from such a script holds today's default, so with this page's default the script and its file open into different states, which condition 5 of [Saved boards and app scripts across the switch](Rewrite-1.2.2#what-must-hold) rules out unless it holds only for scripts that give their views.
+  It blocks that condition and what R writes for such a script.
+- Whether `ext()` keeps its name for a plugin's panel, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts) has it, or gives way to another, since "ext" stands for the extensions that plugins replace.
+  It blocks the R functions that write a grid.
 
 <details><summary>Notes for implementers</summary>
 
@@ -292,6 +323,8 @@ On a locked board the dock passes dockview `locked` where resizing is locked and
 The dock's commands write grids in their canonical form, which `gridToLayout()` draws without a repair: shares that sum to 1 in each split, no empty tab group, rail or split, and a tab group's or rail's `active` among its panels.
 A patch set with core's command can leave a grid otherwise, which the schema cannot refuse, so `gridToLayout()` draws such a grid all the same: a tab group shows its first panel where `active` names none of them, a split divides evenly where its `sizes` do not fit its children, and a panel that a grid places twice shows where it comes first.
 It draws a folder that sits in itself, which only such a patch can make, at the top.
+
+The dock takes its step on starting within the `render()` of its frontend's module, which may be async, and which core awaits before it starts the scheduler, so that the first paint shows the default view ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 The dock makes a new `index` with `generateKeyBetween()` of fractional-indexing 4.0.0, as `generateKeyBetween("a0", "a1")` gives `"a0V"`.
 R writes the keys that `generateNKeysBetween(null, null, n)` gives for `n` items in a row, `a0` to `a9`, `aA` to `aZ` and `aa` to `az`, then `b00`, which a short function of the dock's R code yields.
