@@ -12,7 +12,7 @@ What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, 
    That covers every edit that today's `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack` and the dock's Edit board extension make, but for giving a new link or stack an id, which the commands mint.
 2. It works on the board through `CoreApi` alone, and every frontend places it as it places any plugin whose class has a `ui`, as condition 2 of [Plugins](Rewrite-1.1.12#what-must-hold) asks of every plugin.
 3. Each edit is one of core's commands, applied as the user makes it, so that undo takes back each one and the user learns at once why the store refused one.
-4. An app script that gives `serve()` no plugins gets this one, beside core's basic frontend and core's storage plugin, so that the user can add the first block to the board that `serve(new_board())` draws, and edit a board that `serve()` is given as a file, as today's `manage_blocks` lets them.
+4. An app script that gives `serve()` no plugins gets this one, as it gets a plugin of each class that an available package lists, so that the user can add the first block to the board that `serve(new_board())` draws, and edit a board that `serve()` is given as a file, as today's `manage_blocks` lets them.
 5. Under the board lock, it draws no control, as condition 3 of [Locked boards and the properties of blocks](Rewrite-1.1.11#what-must-hold) asks for what a lock fixes.
 
 ## Today
@@ -44,13 +44,13 @@ The group that draws a stack holds no control ([card.tsx#L173-L187](https://gith
 In R, blockr.core exports the constructor, which makes a plugin of class `c("edit_board_plugin", "plugin")` with no state ([Plugins](Rewrite-1.1.12#a-plugin)):
 
 ```r
-new_edit_board_plugin <- function(plugin_name = "Edit board") {
-  new_plugin(list(), plugin_name, "edit_board_plugin")
+new_edit_board_plugin <- function() {
+  new_plugin(list(), "edit_board_plugin")
 }
 ```
 
 Its class's id is `blockr.core-edit_board_plugin`.
-Its id is `edit_board` where the list of plugins gives it no name ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+Its id is `edit_board` where the rows of `plugins` give it none, and its name "Edit board", the default name that core lists for the class ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 Its class gives R no requests, since the plugin needs no R, and no method of `plugin_version()`, since the plugin keeps no state.
 
 In JS, core registers the class itself as it starts, before the store opens a board, as it registers its own board options and the classes of its basic frontend and its storage plugin ([Plugins](Rewrite-1.1.12#the-frontend)).
@@ -116,14 +116,14 @@ It takes its colours, fonts and radii from Tailwind's theme variables, which the
 
 ### What `serve()` gives by default
 
-By default, an app runs the plugin: the `plugins` of `serve()` default to `list(new_basic_frontend_plugin(), new_file_storage_plugin(), new_edit_board_plugin())`, core's basic frontend, its storage plugin and this one, for a board and for a path alike ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has), [Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
+By default, an app runs the plugin, since core lists its class, and the `plugins` of `serve()` default to `available_plugins()`, a row for each plugin class that an available package lists, for a board and for a path alike ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has), [Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
 So an app script that gives `serve()` no plugins gets it, and the user can add the first block to the board that `serve(new_board())` draws, as today's `serve()` gives every core board `manage_blocks`.
 A file that `serve()` is given gets it too, since a file gives only the state of its plugins ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), as today's `serve()` gives the defaults to a core board that it reads from a file ([R/utils-serve.R#L297-L305](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L297-L305)).
-A script that passes `plugins` lists the plugin where it wants it, and a locked app may leave it out.
+Rows that a script passes hold the plugin where it wants it, and a locked app may leave it out.
 A block that `serve()` serves alone gets no plugin, since no frontend places one for it ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
-Whether a dock app runs it, through what blockr.dock offers a script to pass to `serve()`, is an open question of [Client-drawn dock and extensions](Rewrite-1.2#open-questions).
+A dock app runs it too, since the dock takes the place of core's basic frontend alone.
 Today's `new_dock_board()` adds no extension by default ([blockr.dock R/dock-board.R#L55-L56](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L55-L56)).
-A dock app with neither this plugin nor the DAG offers no way to add the first block, as a dock board without either does today, since the dock itself only appends a block after another, from a card's menu ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
+A dock app whose rows hold neither this plugin nor the DAG offers no way to add the first block, as a dock board without either does today, since the dock itself only appends a block after another, from a card's menu ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
 
 ### Boards and app scripts from today
 
@@ -132,7 +132,7 @@ Whether blockr.dock keeps `new_edit_board_extension()` as a name for `new_edit_b
 An app that adds `manage_links()` or `manage_stacks()` through `serve(plugins = ...)` gets their edits from this plugin, since both go ([Plugins](Rewrite-1.1.12#what-goes)).
 A script that today extends the defaults through `serve(plugins = custom_plugins(...))` keeps `manage_blocks` among them, since `custom_plugins()` keeps every default that it does not replace ([R/utils-serve.R#L147-L163](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L147-L163)).
 The README of blockr.code does so for a core board ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)).
-Such a script passes `serve()` its plugins as a list instead, which `custom_plugins()` no longer builds ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)), and lists this plugin in it, beside a frontend, since a list that a script passes replaces the default.
+Such a script passes `serve()` no plugins instead, since `custom_plugins()` goes and the plugins it added run by default where their packages are available, this one among them ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ## Open questions
 
@@ -146,7 +146,7 @@ The card's menu keeps opening the picker in its `after` and `before` modes, so t
 Changing a link through `blockr.core-change_link` is new, since the dialog on `js-state` only adds and removes links.
 
 Core registers the class in `srcts/core/start.ts`, beside its own board options, before the store opens a board.
-In R, the constructor goes beside `new_plugin()` in `R/plugin-class.R`, and `serve.board()` and `serve.character()` in `R/utils-serve.R` add it to the default of `plugins`, after core's basic frontend and its storage plugin, while `new_board()` keeps `plugins = list()`, since a board holds only the state of its plugins.
+In R, the constructor goes beside `new_plugin()` in `R/plugin-class.R`, and core lists the class beside those of its basic frontend and its storage plugin, so that `available_plugins()` gives it a row, while `new_board()` keeps `plugins = list()`, since a board holds only the state of its plugins.
 The `serve.block()` method gives the app no plugin for its board of one block, which it builds with `new_board(x)` ([R/utils-serve.R#L102](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/R/utils-serve.R#L102)), since no frontend places a plugin for a block served alone.
 
 Today's plugins are `R/plugin-blocks.R`, `R/plugin-links.R` and `R/plugin-stacks.R` at `da3fcb4`, of 218, 574 and 558 lines.

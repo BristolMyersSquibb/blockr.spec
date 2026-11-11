@@ -11,11 +11,11 @@ What core gives plugins through `CoreApi`, starting the page, opening a board, c
 1. Core has two ways to extend a board, block classes and plugins, and no other, so a board has no class of its own.
 2. A plugin works under every frontend: it works on the board through `CoreApi`, keeps its state in the board, and offers its UI as a module that core mounts where the frontend puts it.
 3. The frontend is a plugin, and every frontend places every plugin that has a UI, including one from a package it does not know.
-4. The app's plugins, which the app script passes to `serve()`, are the plugins that run on every board that the app opens, the opening board among them, its frontend and its storage plugin included, each with the id, the class and the name that the app gives it: a board keeps the state of each plugin that the app holds under the same id and of the same class, and drops the state of every other plugin, naming the package of each, as it drops a block ([Board objects](Rewrite-1.1.1#what-must-hold)).
+4. The app's plugins, which `serve()` takes in `plugins`, every plugin of the available packages by default, are the plugins that run on every board that the app opens, the opening board among them, its frontend and its storage plugin included, each with the id, the class and the name that the app gives it: a board keeps the state of each plugin that the app holds under the same id and of the same class, and drops the state of every other plugin, naming the package of each, as it drops a block ([Board objects](Rewrite-1.1.1#what-must-hold)).
    So the page is what opening that board in a fresh app would give, whatever was open before, as condition 6 of [Board updates](Rewrite-1.1.2#what-must-hold) asks.
    A board gives only the state of its plugins, whether a script builds it or a file holds it, and a JSON board holds that of every plugin that ran on the page that saved it and keeps any, so that no board names a plugin that keeps nothing, such as core's basic frontend.
 5. A plugin of the app whose state a board does not hold starts with its class's default state, and no plugin runs that the app does not hold, core's basic frontend and core's own storage plugin included, so that which plugins run, what draws the page and where it saves depend on the app alone, never on the board or on what was open before.
-   So a plugin that an app script passes to `serve()` reaches every board that the app opens, saved ones and a file given to `serve()` included, as a plugin that `serve()` takes reaches every board it serves today, and a file never changes the frontend or the storage plugin.
+   So a plugin of the app reaches every board that the app opens, saved ones and a file given to `serve()` included, as a plugin that `serve()` takes reaches every board it serves today, and a file never changes the frontend or the storage plugin.
 6. A plugin's state belongs to that plugin alone, keyed by its id: it is saved, undone and migrated with the board, and its shape is its class's own, so that the states of two frontends share nothing.
 7. Boards saved by today's blockr.dock open with their views, their layouts and the state of their extensions, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 8. An app holds as many plugins of one class as its script passes, such as two documents of blockr.md, but one frontend and at most one storage plugin, and what a user adds more of while the app runs lives in the state of one plugin, as the dock's views do.
@@ -35,7 +35,7 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 
 | Today | Where it goes |
 |---|---|
-| `preserve_board`, with core's Import and Export | Core's storage plugin, which saves a board as a download and opens an upload, and which `serve()` gives an app by default ([Storage](#storage)) |
+| `preserve_board`, with core's Import and Export | Core's storage plugin, which saves a board as a download and opens an upload, and which an app runs unless another available package gives a storage plugin ([Storage](#storage)) |
 | `manage_project()` of blockr.session | Its storage plugin ([Session management as a client extension](Rewrite-1.6)) |
 | `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a client extension](Rewrite-1.5)) |
 | `manage_blocks`, `manage_links` and `manage_stacks`, with the dock's Edit board extension | Core's Edit board plugin, which runs core's commands under every frontend and which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15)) |
@@ -50,12 +50,12 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 
 In R, a plugin is an S3 object of class `c("{name}_plugin", ..., "plugin")`.
 A package's constructor `new_{name}_plugin()` returns one, made with core's `new_plugin()`.
-Its args are the state it gives the board an app script builds, such as the DAG's `positions`, as a block's args are its state, and `plugin_name` gives its name, as `block_name` gives a block's.
-The constructor passes `new_plugin()` the state as a list of its args by name, then `plugin_name` and the class vector without `plugin`, and the plugin holds that list as its state:
+Its args are the state it gives the board an app script builds, such as the DAG's `positions`, as a block's args are its state, and nothing else, since the app gives each of its plugins its name (below).
+The constructor passes `new_plugin()` the state as a list of its args by name, then the class vector without `plugin`, and the plugin holds that list as its state:
 
 ```r
-new_dag_plugin <- function(positions = list(), plugin_name = "DAG") {   # in blockr.dag
-  new_plugin(list(positions = positions), plugin_name, "dag_plugin")
+new_dag_plugin <- function(positions = list()) {   # in blockr.dag
+  new_plugin(list(positions = positions), "dag_plugin")
 }
 ```
 
@@ -64,10 +64,12 @@ A `new_plugin()` that read the state off the constructor would instead store eve
 Its class's id is `{pkg}-{name}_plugin`, as `blockr.dag-dag_plugin`.
 That id joins the class to its package, the one its constructor lives in, as a registry id carries its package ([Board objects](Rewrite-1.1.1#registry-ids)).
 The version of its state's shape is what its class's method of `plugin_version()` returns, 1 where it has none, in place of `board_version()`.
-An app script passes the app's plugins to `serve()` in `plugins`, as it passes today's plugins, and the board constructor takes the state of the board's plugins in `plugins`, as `new_dock_board(extensions = ...)` takes extensions today ([Which plugins a board has](#which-plugins-a-board-has)).
-A plugin's id is its name in either list, so that the two lists name a plugin alike:
+The app's plugins are the rows that `serve()` takes in `plugins`, each a plugin class with the plugin's id and name, while the board constructor takes the state of the board's plugins in `plugins`, as `new_dock_board(extensions = ...)` takes extensions today ([Which plugins a board has](#which-plugins-a-board-has)).
+A plugin's id is its `id` in the rows and its name in the board's list, so that the two name a plugin alike, here where blockr.dock, blockr.dag and blockr.md are installed beside core:
 
 ```r
+plugins <- subset(available_plugins(), class != "md_plugin")
+
 serve(
   new_board(
     blocks = blks,
@@ -76,25 +78,22 @@ serve(
       notes = new_md_plugin(content = "# Notes")
     )
   ),
-  plugins = list(
-    new_dock_plugin(),
-    new_file_storage_plugin(),
-    new_dag_plugin(),
-    notes = new_md_plugin(plugin_name = "Notes"),
-    report = new_md_plugin(plugin_name = "Report"),
-    new_edit_board_plugin()
+  plugins = rbind(
+    plugins,
+    data.frame(package = "blockr.md", class = "md_plugin", id = c("notes", "report"), name = c("Notes", "Report"))
   )
 )
 ```
 
-So the board opens with the DAG's positions and the notes' content, the dock and the report start with their classes' default state, and the board holds nothing for core's storage plugin and its Edit board plugin, which keep no state.
-Of each plugin that `serve()` takes, R reads its class and its name, and of each in the board's list, its class and its state, so a constructor's state args go in the board's list and `plugin_name` in that of `serve()`.
+So the app runs the dock in place of core's basic frontend, core's storage and Edit board plugins, the DAG and the two documents (below).
+The board opens with the DAG's positions and the notes' content, the dock and the report start with their classes' default state, and the board holds nothing for core's storage plugin and its Edit board plugin, which keep no state.
+Of each row that `serve()` takes, R reads the plugin class, the id and the name, and of each plugin in the board's list, its class and its state, so a constructor's args go in the board's list alone.
 R writes the state of each plugin in the board's list into the opening board, under the plugin's id with its class's id, where its constructor gives it any, and records the version of each such class ([Serialization](Rewrite-1.1.4#files)).
 It sends the app's plugins in its reply to `hello`, in `plugins`, each under its id with its class's id and its name ([Wire protocol](Rewrite-1.1.9#handshake)).
 As `serve()` runs, R refuses a board that the script builds with a plugin that the app does not hold under the same id and of the same class, naming each such plugin, since the store would drop its state as the board opens.
 It writes the state by the JSON Schema of the class's state, which the package ships beside its startup module, as it ships those of its board options, so that a value of length one that the schema has as an array stays an array ([UI modules in JS](Rewrite-1.1.7#packaging)).
-In the reply to `hello`, R sends the versions that the packages the app names give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1, as `option_versions` has it for board options ([Wire protocol](Rewrite-1.1.9#handshake)).
-The client takes a plugin's package from its class's id, and where its UI module is served from the modules that packages offer each other, so R keeps no list of plugin classes.
+In the reply to `hello`, R sends the versions that the packages that the app uses give their plugin classes, by the class's id, in `plugin_versions`, where a class without a method of `plugin_version()` is at version 1, as `option_versions` has it for board options ([Wire protocol](Rewrite-1.1.9#handshake)).
+The client takes a plugin's package from its class's id, and where its UI module is served from the modules that packages offer each other, while R lists the plugin classes of the available packages from their `._BLOCKR_MODULES_` ([Which plugins a board has](#which-plugins-a-board-has)).
 
 In JS, the package's startup module registers each of its plugin classes once, under the class's id, where it registered a board class before ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
 Every plugin class is defined by an object of one type, `PluginClass`, which the client looks up by the class's id, as it looks up block classes in the block registry, while R's class vectors stay in R ([State in JS](Rewrite-1#principles)).
@@ -146,7 +145,7 @@ A later version may let `serve()` take a startup module of the app's own, whose 
 In R, core defines two plugin classes beside `plugin` for other classes to extend, `frontend_plugin` and `storage_plugin`, since every page relies on what each does (below).
 A package's class extends one of them or `plugin` itself, as blockr.session's is `c("session_plugin", "storage_plugin", "plugin")`.
 Core's own plugins do so too: its basic frontend is `c("basic_frontend_plugin", "frontend_plugin", "plugin")`, its storage plugin `c("file_storage_plugin", "storage_plugin", "plugin")` and its Edit board plugin `c("edit_board_plugin", "plugin")` ([The frontend](#the-frontend), [Storage](#storage), [The Edit board plugin](Rewrite-1.1.15#the-plugin)).
-R's `serve()` reads them to refuse a list of plugins that holds no frontend, two frontends or two storage plugins.
+R's `serve()` reads them to run core's basic frontend and storage plugin only where no other row is a frontend or a storage plugin, and to refuse rows that hold no frontend, or two frontends or two storage plugins besides core's ([Which plugins a board has](#which-plugins-a-board-has)).
 R calls a plugin class's methods of `plugin_version()` and `plugin_requests()` on an object of class `c("{name}_plugin", "plugin")`, which it makes from the class's id, since a request names the plugin's class by its id alone ([A plugin's requests](#a-plugins-requests)).
 So only `serve()` reads `frontend_plugin` and `storage_plugin`.
 
@@ -208,10 +207,10 @@ It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugi
 
 A frontend is a plugin whose class has `frontend`, the module that draws the page, and whose class in R extends `frontend_plugin`.
 The module meets the contract of a UI module above, and core calls it with the page's element.
-A page has one frontend, the app's, since `serve()` refuses a list of plugins that holds none or two ([Plugin classes](#plugin-classes)).
+A page has one frontend, the app's, since `serve()` refuses rows that hold none, or two besides core's basic frontend ([Plugin classes](#plugin-classes)).
 A block that `serve()` serves alone is the exception, since core draws it in a card of its own ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
 Core's basic frontend is a frontend like any other, which `new_basic_frontend_plugin()` makes, of class `c("basic_frontend_plugin", "frontend_plugin", "plugin")`, and whose class core registers in JS as it starts, with the module `blockr.core-basic` as its `frontend`.
-It keeps no state, so the board holds nothing for it, and `serve()` gives it an app by default ([Which plugins a board has](#which-plugins-a-board-has)).
+It keeps no state, so the board holds nothing for it, and an app runs it unless its rows hold another frontend, as they do by default wherever another available package gives one ([Which plugins a board has](#which-plugins-a-board-has)).
 Every board that the app opens runs the app's frontend, as it runs the app's other plugins, with the state that the board holds for it where its class has any.
 So a dock app opens a board made in a core app with the dock's default layout, since that board holds nothing for the dock.
 Core starts the page with the app's frontend, and starts the app's other plugins once the frontend has drawn, as [Drawing the board](Rewrite-1.1.8#starting-the-page) has it.
@@ -232,20 +231,20 @@ interface Storage {
 ```
 
 Core's own storage plugin, which `new_file_storage_plugin()` makes, of class `c("file_storage_plugin", "storage_plugin", "plugin")`, saves a board as a download and opens an upload, as today's `preserve_board` does, and has no `ui`, since the frontend draws the controls.
-Core registers its class in JS as it starts, and it keeps no state, so the board holds nothing for it, while `serve()` gives it an app by default ([Which plugins a board has](#which-plugins-a-board-has)).
+Core registers its class in JS as it starts, and it keeps no state, so the board holds nothing for it, while an app runs it unless its rows hold another storage plugin ([Which plugins a board has](#which-plugins-a-board-has)).
 A frontend's save and open controls call `core.plugins.storage()`, which gives the `storage` of the app's storage plugin, and a frontend draws neither control where the app holds none ([What a frontend offers other plugins](#what-a-frontend-offers-other-plugins)).
 The storage plugin of blockr.session saves to Connect and opens from it ([Session management as a client extension](Rewrite-1.6)).
 
-An app holds its storage plugin as it holds any other, among the plugins that its script passes to `serve()`:
+An app holds its storage plugin as it holds any other, among the rows of `plugins`, so that an app with blockr.session installed saves to Connect by default, and one that keeps core's storage leaves blockr.session's plugin out:
 
 ```r
-serve(new_board(blocks = blks), plugins = list(new_dock_plugin(), new_session_plugin()))
+serve(new_board(blocks = blks), plugins = subset(available_plugins(), package != "blockr.session"))
 ```
 
-An app holds at most one storage plugin, since `serve()` refuses a second.
+An app holds at most one storage plugin, since `serve()` refuses a second besides core's.
 Every board that the app opens saves through the app's storage plugin, as it runs the app's other plugins, while a frontend draws no save or open control in an app without one, as today's app without `preserve_board` has no Import and Export ([Which plugins a board has](#which-plugins-a-board-has)).
 So a board that a user saved as a download through core's storage plugin saves to Connect once it opens in a Connect app, since neither storage plugin keeps anything in the board (below).
-So a deployment alone chooses where its pages save, through the plugins its script passes to `serve()` and the packages it names.
+So a deployment alone chooses where its pages save, through the packages it installs and the rows its script passes to `serve()`.
 
 The interface holds only what every frontend's save and open controls call, and it can grow once a frontend needs more of every storage plugin.
 A storage plugin offers the rest through its own UI, which every frontend places, as session management offers its board list, its versions and its sharing, and its `open()` may show a picker of its own before it resolves.
@@ -256,30 +255,35 @@ This settles the open question of [Session management as a client extension](Rew
 
 A board holds the state of its plugins in `plugins`, a property of core's board, each under the plugin's id as `{ class, state }`, naming the plugin's class by the class's id ([A plugin's state](#a-plugins-state)).
 It holds the state of each plugin whose class has `state`, and nothing for any other, so that no board names a plugin that keeps nothing, and a plugin's name is the app's alone ([A plugin](#a-plugin)).
-A plugin's id is its name in the list that `serve()` or the board constructor takes, as a block's id is its name among the blocks.
+A plugin's id is its `id` in the rows that `serve()` takes and its name in the list that the board constructor takes, as a block's id is its name among the blocks.
 It keeps the rules of every id: it is unique within its list, and it is not made of digits alone ([Board objects](Rewrite-1.1.1#ids)).
-Where the list gives no name, the id is the class's name without `_plugin`, as `dag`, as today's dock names an extension after its class.
-So two plugins of one class need names of their own, as two extensions of one class do today.
-An app holds as many plugins of a class as its script passes, as two documents of blockr.md, but one frontend ([The frontend](#the-frontend)) and at most one storage plugin ([Storage](#storage)).
+Where the rows or the list give none, the id is the class's name without `_plugin`, as `dag`, as today's dock names an extension after its class.
+So two plugins of one class need ids of their own, as two extensions of one class need names today.
+An app holds as many plugins of a class as its rows hold, as two documents of blockr.md, but one frontend ([The frontend](#the-frontend)) and at most one storage plugin ([Storage](#storage)).
 
-The app's plugins are those that the app script passes to `serve()` in `plugins`, which R sends in its reply to `hello`, and they run on every board that the app opens, the opening board among them, whatever state a board holds.
-Where the script passes none, they are the default of `plugins`, `list(new_basic_frontend_plugin(), new_file_storage_plugin(), new_edit_board_plugin())`, so that an app whose script names no plugin draws the board with core's basic frontend, saves it as a download and opens an upload, and lets the user add blocks and edit links and stacks, as today's `serve()` gives a core board its UI, `preserve_board` and `manage_blocks` ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)).
-A list that a script passes replaces the default, so it names a frontend, which `serve()` refuses to do without, and a storage plugin wherever the app's pages save.
+The app's plugins are those of the rows that `serve()` takes in `plugins`, which R sends in its reply to `hello`, and they run on every board that the app opens, the opening board among them, whatever state a board holds.
+The rows are a data frame that gives a plugin class in `package` and `class`, and the plugin's id and name in `id` and `name`, either of which a row may leave as `NA` for the class's: the id above, and the default name that its package lists for the class ([Block classes in R](Rewrite-1.1.5#registration)).
+They default to `available_plugins()`, a row for each plugin class that an available package lists, so that an app runs every plugin that its packages offer unless its script narrows them, as it offers every available block class.
+A script narrows them with plain R, or gives the path of a YAML file that lists packages and, for each, the plugin classes to run, all of them where it lists none, each under its default id and name, while ids and names of the script's own, as for two documents, go through the data frame.
+Core's basic frontend runs only where no other row is a frontend, and core's storage plugin only where no other row is a storage plugin, so that an app with blockr.dock installed draws with the dock, and one with blockr.session saves to Connect, without its script naming either.
+Rows that hold two frontends or two storage plugins besides core's, or no frontend, stop the app as it starts, naming them, so that where two frontends are installed, the script drops one of them.
+So an app whose script passes no plugins, where no other package gives a frontend or a storage plugin, draws the board with core's basic frontend, saves it as a download and opens an upload, and lets the user add blocks and edit links and stacks, as today's `serve()` gives a core board its UI, `preserve_board` and `manage_blocks` ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)).
+Rows that a script passes replace the default, so they hold a frontend, which `serve()` refuses to do without, and a storage plugin wherever the app's pages save.
 A board gives only the state of its plugins, whether the script builds it with `new_board()` or a file holds it.
 Since a board and a JSON board are one thing, which plugins run is stated outside every board, so that no file sets them.
 Opening a board starts them again, the frontend among them, once they have stopped as they ran on the board before, since core starts again as a board opens ([Drawing the board](Rewrite-1.1.8#opening-a-board)), so that a plugin starts again with the state of the board that opens.
 So the page is what opening that board in a fresh app would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 
-As a board opens, the store keeps the state that the board holds for each plugin that the app holds under the same id and of the same class, where a package that the app names registers the class.
+As a board opens, the store keeps the state that the board holds for each plugin that the app holds under the same id and of the same class, where a package that the app uses registers the class.
 Such a plugin starts with that state, which its class's `migrate` brings to today's shape ([Board updates](Rewrite-1.1.2#plugins)).
 The store drops every other state that the board holds, as it drops a block whose class the block registry lacks, and names its plugin with the package of the plugin's class, which the class's id gives ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 It drops them before it checks or migrates any version, since it drops a plugin's state for its id or its class, never for its version ([Board updates](Rewrite-1.1.2#plugins)).
 So no plugin starts from state that a board kept while it changed without the plugin's package, and a board saved afterwards is written without that state, as condition 4 of [Board objects](Rewrite-1.1.1#what-must-hold) has it for blocks.
 
-Then each other plugin of the app whose class a package that the app names registers, and has `state`, starts with its class's default state, which the board then holds for it.
+Then each other plugin of the app whose class a package that the app uses registers, and has `state`, starts with its class's default state, which the board then holds for it.
 So the app sets the plugins that run on every board that it opens, and the page runs, draws and saves a board as a fresh start of the same app would, whatever was open before:
 
-- An app whose script passes no plugins draws every board with core's basic frontend and saves it through core's storage plugin, whether its script built the board or `serve()` was given the board's file.
+- An app whose script passes no plugins, where no other package gives a frontend or a storage plugin, draws every board with core's basic frontend and saves it through core's storage plugin, whether its script built the board or `serve()` was given the board's file.
 - A file that `serve()` is given gives only the state of its plugins too, so a core board that today's stack saved, which holds no plugin's state once converted, runs core's Edit board plugin from the default of `serve()` ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)).
 - A board saved before an app added the assistant to its plugins runs the assistant as it opens, from its class's default state, as a plugin that `serve()` takes reaches every board today ([Today](#today)).
 - A board keeps the state of its DAG and of its documents of blockr.md where the app holds them under the same ids, each other document of the app starts empty, and the board drops the state of a document under an id that the app does not hold.
@@ -290,7 +294,7 @@ So the app sets the plugins that run on every board that it opens, and the page 
 
 No change adds a plugin or removes one, since the app sets the plugins: a patch changes a plugin's state at or below its `state`, as `/plugins/dag/state/positions/a`, and the store refuses any other patch to `plugins`, as one at `/plugins/dag`, which would set or remove what the board holds for the plugin whole ([Board updates](Rewrite-1.1.2#plugins)).
 So the app alone decides which plugins run, what each is named, what draws the page and where it saves, as `serve(plugins = ...)` does today, with no union of the board's plugins and the app's that would need a rule for each clash.
-An app that offers a plugin passes it to `serve()`, and what a user adds more of while the app runs, such as another document, lives in the state of one plugin, as the dock's views do.
+An app runs a plugin through the rows of `plugins`, and what a user adds more of while the app runs, such as another document, lives in the state of one plugin, as the dock's views do.
 On a locked board, each plugin locks what it alone governs in its state, as the dock does the arrangement of its panels, while the board lock fixes no plugin's name, since the app gives each ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 
 ### Running a plugin
@@ -432,10 +436,10 @@ Both become plugins of their own, and the board holds only the state of a plugin
 
 - The conversion outside core ([Serialization](Rewrite-1.1.4#files)) turns a dock board into a board that holds the state of the dock plugin, taken from the dock board's `views` and `grids`, and the state of a plugin for each extension that keeps any, under the name the board gave the extension and taken from the extension's, each class at version 1.
   So a board with two documents of blockr.md keeps both, and an app whose plugins hold both under the same ids opens them with their content.
-- An app script's `new_dock_board()` keeps working, as a board that holds the state of the dock plugin and of the plugins its `extensions` give, while the script passes those plugins to `serve()`, which [Saved boards and app scripts across the switch](Rewrite-1.2.2) settles in detail.
-- An app script that sets storage through `serve(plugins = custom_plugins(manage_project()))` passes blockr.session's storage plugin to `serve()` in a list instead, from where it reaches every board that the app opens.
-- An app script that sets code export through `serve(plugins = custom_plugins(generate_flat_code()))`, as blockr.code's README does ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)), passes blockr.code's plugin to `serve()` in a list instead, from where it reaches every board that the app opens, as `serve()` gives it to every board today.
-- Either script, for a core board, lists core's basic frontend and core's Edit board plugin in that list as well, and one that keeps core's storage lists core's storage plugin too, since a list that a script passes replaces the default, where `custom_plugins()` kept every default that it did not replace, `preserve_board` and `manage_blocks` among them ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
+- An app script's `new_dock_board()` keeps working, as a board that holds the state of the dock plugin and of the plugins its `extensions` give, while the app runs those plugins where their packages are available, as by default, which [Saved boards and app scripts across the switch](Rewrite-1.2.2) settles in detail.
+- An app script that sets storage through `serve(plugins = custom_plugins(manage_project()))` passes no plugins instead, since blockr.session's storage plugin runs by default where blockr.session is installed, from where it reaches every board that the app opens.
+- An app script that sets code export through `serve(plugins = custom_plugins(generate_flat_code()))`, as blockr.code's README does ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)), passes no plugins either, since blockr.code's plugin runs by default where blockr.code is installed, from where it reaches every board that the app opens, as `serve()` gives it to every board today.
+- Either script, for a core board, keeps core's basic frontend and its Edit board plugin without naming them, since both run by default too, as `custom_plugins()` kept every default that it did not replace, `preserve_board` and `manage_blocks` among them ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
 - An app script that defines a dock extension of its own with `new_dock_extension()` cannot define a plugin class in its place, since a plugin class comes from a package ([A plugin](#a-plugin)).
   Only four of blockr.dock's examples do so, `panel-ops` ([blockr.dock inst/examples/panel-ops/app.R#L79-L87](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/panel-ops/app.R#L79-L87)), `sidebar-menus`, `sidebar-inputs` and `sidebar-owner`, which its browser tests run, and those tests move to the `CoreApi` for tests, where a test registers the plugin classes it needs ([Testing](#testing)).
 
@@ -467,12 +471,13 @@ Both go, since no package adds a type ([A plugin's requests](#a-plugins-requests
 Where a board holds state under the id of one of the app's plugins but for another class, the store drops it, and the app's plugin starts with its class's default state.
 
 On `js-state`, at `1776bf1`, the store reads the app's plugins off the opening board with `openingPlugins()` in `srcts/store/open.ts` ([#L297](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/srcts/store/open.ts#L297), [#L339-L352](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/srcts/store/open.ts#L339-L352)), and `keptPlugins()` and `appPlugins()` in `srcts/store/plugins.ts` match a board against them.
-The store takes them from the `plugins` of the reply to `hello` instead, which `R/loaded-reply.R` writes from the plugins that `serve()` takes.
+The store takes them from the `plugins` of the reply to `hello` instead, which `R/loaded-reply.R` writes from the rows that `serve()` takes.
 At that commit, `serve.board()` and `serve.character()` refuse `plugins` ([R/utils-serve.R#L70-L80](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/R/utils-serve.R#L70-L80)).
 At `306e5af`, `appPlugins()` gives the board every plugin of the app with its name, and with its class's default state, `{}` for a class without `state` ([srcts/store/plugins.ts#L59-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/306e5af6e64b69f01d9eca6efe73ff93c3d0f03d/srcts/store/plugins.ts#L59-L71)), where the store holds `{ class, state }` for a plugin whose class has `state` alone, and takes each plugin's name from the reply's `plugins`.
 Core's basic frontend there is `BASIC_FRONTEND` in `srcts/core/plugins.ts`, which no board holds, so that `FrontendArgs` leaves its `plugin` out and `frontend()` falls back to it, while `storage()` falls back to `coreStorage()` from `srcts/storage/` ([srcts/core/plugins.ts#L41-L54](https://github.com/BristolMyersSquibb/blockr.core/blob/306e5af6e64b69f01d9eca6efe73ff93c3d0f03d/srcts/core/plugins.ts#L41-L54), [#L171-L186](https://github.com/BristolMyersSquibb/blockr.core/blob/306e5af6e64b69f01d9eca6efe73ff93c3d0f03d/srcts/core/plugins.ts#L171-L186)), and `srcts/core/start.ts` adds no board options for it.
 Core registers a class for each instead, `blockr.core-basic_frontend_plugin`, whose `frontend` is `blockr.core-basic` and whose `options` are `show_conditions` and `dark_mode`, and `blockr.core-file_storage_plugin`, whose `storage` is `coreStorage()`, and every fallback goes.
-In R, `new_board()` checks that a board holds at most one frontend and one storage plugin ([R/board-class.R#L150-L160](https://github.com/BristolMyersSquibb/blockr.core/blob/306e5af6e64b69f01d9eca6efe73ff93c3d0f03d/R/board-class.R#L150-L160)), which `serve()` checks of the app's plugins instead, refusing a list without a frontend as well.
+In R, `new_board()` checks that a board holds at most one frontend and one storage plugin ([R/board-class.R#L150-L160](https://github.com/BristolMyersSquibb/blockr.core/blob/306e5af6e64b69f01d9eca6efe73ff93c3d0f03d/R/board-class.R#L150-L160)), which `serve()` checks of the app's rows instead, once core's basic frontend and storage plugin give way to any other, refusing rows without a frontend as well.
+On `js-state`, R lists no plugin class, and finds one only through a method of `plugin_version()` ([R/plugin-class.R#L272-L304](https://github.com/BristolMyersSquibb/blockr.core/blob/cebaadeb809b56eb93efa95359c9d9b2b06309d4/R/plugin-class.R#L272-L304)), so `available_plugins()` lists core's three classes alone until each package lists its own in its `._BLOCKR_MODULES_` ([blockr.core#560](https://github.com/BristolMyersSquibb/blockr.core/issues/560)).
 
 Rewrite 1.2 to 1.8, drafts written before this page, still have the dock's extensions where this page has plugins, and "front-end" where it has "frontend", and follow it as each is revised.
 
