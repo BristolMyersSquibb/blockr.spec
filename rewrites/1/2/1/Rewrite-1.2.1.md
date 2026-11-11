@@ -1,5 +1,5 @@
 # The dock's state: views, folders, grids and card sections
-Status: review. Design for [Client-drawn dock](Rewrite-1.2).
+Status: settled on 2026-11-11. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the dock plugin's state, which holds the dock's views, the folders that group them in the navigation, each view's grid, which view is active and which sections of each block's card show.
 It covers the commands that change that state, the `update` and the `migrate` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
