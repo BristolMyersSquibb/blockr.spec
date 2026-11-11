@@ -2,13 +2,13 @@
 Status: draft. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the places where the dock puts plugins, which the dock uses for its own features too.
-They are the panel in which the dock mounts each plugin's `ui` with `mountPlugin()`, and the places it offers besides through members of its own on core's `PluginClass`, as `dockNavbar` adds navbar items ([Plugins](Rewrite-1.1.12#plugin-classes)): menus on the board, a block and a stack, settings, and the block card.
+They are the panel in which the dock mounts each plugin's `ui` with `mountPlugin()`, and the places it offers besides through members of its own on core's `PluginClass` ([Plugins](Rewrite-1.1.12#plugin-classes)): menus on the board, a block and a stack, settings, and the block card.
 It builds on [Plugins](Rewrite-1.1.12) and [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins).
 The navbar is [The dock's navbar](Rewrite-1.2.5)'s, and the card's own design is [Block cards in the dock](Rewrite-1.2.7)'s.
 
 ## What must hold
 
-Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this page, with [The dock's navbar](Rewrite-1.2.5).
+Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this page.
 
 ## Proposal
 
