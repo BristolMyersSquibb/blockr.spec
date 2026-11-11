@@ -69,7 +69,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   A plugin's UI renders in a root of its own, which shares no React context with the dock's, and takes its look from blockr.ui's design system ([Plugins](Rewrite-1.1.12#a-plugin)).
 - The dock offers plugins more places through members of its own on core's `PluginClass`, which TypeScript's module augmentation declares and which only the dock reads ([Plugins](Rewrite-1.1.12#plugin-classes), [Places the dock offers plugins](Rewrite-1.2.4)).
   So a plugin that uses them works under another frontend all the same, which reads none of them.
-  The dock builds its own items and menus on the same places, as JupyterLab's own main menu and file browser are extensions ([extension guide](https://jupyterlab.readthedocs.io/en/latest/extension/extension_dev.html)), so that a plugin can add what the dock adds.
+  The dock builds its own items on the same places, as JupyterLab's own main menu and file browser are extensions ([extension guide](https://jupyterlab.readthedocs.io/en/latest/extension/extension_dev.html)), so that a plugin can add what the dock adds.
 - What every frontend gives plugins, the dock gives too: it draws the notifications of `CoreApi`, a block's on its card and every other as a toast ([Notifications, logging and tracing](Rewrite-1.1.14), [Block cards in the dock](Rewrite-1.2.7)), and it draws the controls of the app's storage plugin, core's or session management's, in its navbar ([Plugins](Rewrite-1.1.12#storage), [The dock's navbar](Rewrite-1.2.5)).
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), code export ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt as plugins after the dock.
   This part settles only the places the dock offers them, and leaves libraries, agent design and their R requests to them.
@@ -87,11 +87,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 ## Open questions
 
-- How drill-down binds and applies selections.
-  The control bridge of blockr.viz, an extension with no UI that the CEDX board mounts, becomes a plugin that hears what renderers emit from its class's `start` and sets block state with commands ([Plugins](Rewrite-1.1.12#running-a-plugin)).
-  Two things are open: the UI that binds which block's selections go to which, which the plugin keeps in its state, such as a block menu's "Send selections to" among the places the dock offers, and how a target turns a selection into its state, which belongs to the target's block class, as a hook that R answers where it needs the data, as blockr.dm's drill filter needs the dm to place a column ([Block classes in R](Rewrite-1.1.5)).
-  A link of its own for such edits is in the [Backlog](Backlog#control-links).
-  It blocks porting blockr.viz's drill.
+None.
 
 ## Work
 
@@ -106,7 +102,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 - [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1): the dock plugin's state, the commands that change it, its class's `update` and `migrate`, the R functions that write it for an app script, and the conversion to and from dockview's layout
 - [Saved boards and app scripts across the switch](Rewrite-1.2.2): how boards saved by today's blockr.dock open, through the conversion outside core and the `migrate` of the dock plugin's class, and how app scripts that call its constructors keep working
-- [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, and the places it offers besides, such as menus, settings and the block card, for plugins and the dock alike
+- [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, how a plugin shows a panel, where a plugin's settings show, and the places the dock offers besides, none of them on its block cards
 - [The dock's navbar](Rewrite-1.2.5): what the bar holds and in what order, what gives way on a narrow bar, the dock's own parts, and where the storage plugin's controls go
 - [Block cards in the dock](Rewrite-1.2.7): the card's header, sections, status, notifications and menu, compact headers and the locked card
 
@@ -127,7 +123,7 @@ The layout that dockview saves, its `SerializedDockview`, was weighed as the sto
 It holds the dock's width and height and each node's size in pixels of the screen that saved it, and each panel's title, which the block's name gives, with its params and component names ([dockviewComponent.ts#L274-L286](https://github.com/mathuo/dockview/blob/6035014bca619c5aeb2076e13b8538bbc0a9ae6c/packages/dockview-core/src/dockview/dockviewComponent.ts#L274-L286), [types.ts#L62-L76](https://github.com/mathuo/dockview/blob/6035014bca619c5aeb2076e13b8538bbc0a9ae6c/packages/dockview-core/src/dockview/types.ts#L62-L76), at 8.8.3).
 Its majors come fast too: 5.0.0 on 2026-02-16, 6.0.0 on 2026-05-02, the first 7.x on 2026-06-22 and 8.0.0 on 2026-08-10, which added `pinned` to a panel's saved state.
 
-Of today's core plugins ([`known_plugins()`](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-plugins.R#L72-L75)), [Plugins](Rewrite-1.1.12#today) gives `preserve_board`, `generate_code` and `manage_blocks`, `manage_links` and `manage_stacks` their homes, and leaves the rest to these notes: `edit_block` becomes the dock's block card, with a block menu among the places the dock offers plugins; `edit_stack` the stack editors of the DAG and of core's Edit board plugin, since the dock has no place for stacks; `notify_user` the notifications of `CoreApi`, which the dock draws; and `ctrl_block` nothing, since any command can set any block's state ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)).
+Of today's core plugins ([`known_plugins()`](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-plugins.R#L72-L75)), [Plugins](Rewrite-1.1.12#today) gives `preserve_board`, `generate_code` and `manage_blocks`, `manage_links` and `manage_stacks` their homes, and leaves the rest to these notes: `edit_block` becomes the dock's block card, which offers plugins no place ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)); `edit_stack` the stack editors of the DAG and of core's Edit board plugin, since the dock has no place for stacks; `notify_user` the notifications of `CoreApi`, which the dock draws; and `ctrl_block` nothing, since any command can set any block's state ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)).
 Of these, the dock serves only `edit_block`, `preserve_board` and `generate_code` today ([R/board-plugins.R](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-plugins.R#L1-L35)), and draws a block's conditions on its card.
 
 Coupling to replace, in the packages whose extensions become plugins:

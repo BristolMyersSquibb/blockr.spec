@@ -9,7 +9,7 @@ The large projects after State in JS are on the [roadmap](Roadmap#after-state-in
 
 A control link would be a second kind of edge on the board, beside links, saying that a selection on one block's output sets another block's state, such as a click on "SEX = F" in a chart setting a cohort filter's condition.
 Today blockr.viz carries such a claim outside the DAG, from block code over a channel of its own, to a target that a block's setting names or that it finds by class ([R/ctrl-send.R#L1-L27](https://github.com/BristolMyersSquibb/blockr.viz/blob/332ce573ffafa86f5a41dc400b0f85e6800128f7/R/ctrl-send.R#L1-L27)).
-In State in JS a renderer reports a selection through `emit()` and a plugin turns it into a command, keeping which block's selections go where in its state ([UI modules in JS](Rewrite-1.1.7#the-contract), [Client-drawn dock](Rewrite-1.2#open-questions)).
+In State in JS a renderer reports a selection through `emit()` and a plugin turns it into a command, keeping which block's selections go where in its state ([UI modules in JS](Rewrite-1.1.7#the-contract), [Plugins](Rewrite-1.1.12#running-a-plugin)).
 
 What it would remove: a plugin's own record of where each block's selections go, and drill-down's need for a plugin at all, since core would route a selection to the state it sets.
 Every such dependency would show on the board and in the DAG, as a link does.
@@ -47,3 +47,18 @@ What it would remove: the gap that the deployments of blockr.sandbox have on the
 What it would cost: one more of the dock's own parts, which reads two blockr options with `core.blockrOption()`, with the labels of its entries and its look in blockr.ui's design system.
 
 What would settle it: whether the deployments of blockr.sandbox miss the menu after the switch, or other deployments ask for help links on the bar.
+
+## Entries of a block's menu in core
+
+Core would hold the entries of a block's menu, such as removing the block or appending one to it, and every frontend and the DAG would draw them in their menus of a block, so that a plugin adds an entry once for all of them.
+Today core, the dock and the DAG each keep a list of their own.
+Core's `edit_block` plugin offers a field for the block's name and buttons to remove the block and to add one before or after it ([R/plugin-block.R#L252-L294](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plugin-block.R#L252-L294)).
+The dock gives that plugin its own UI, its card, whose "…" menu has items that the dock fixes ([R/plugin-block.R#L191-L247](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L191-L247)).
+The DAG's context menu offers on a block's node to create a link, remove the block, append one and edit its inputs, through its own method of `context_menu_items()`, a generic that any extension may extend and no other does ([R/ext.R#L118-L419](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L118-L419)).
+In State in JS core's basic frontend, the dock and the DAG still draw a menu of a block each ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Client-drawn DAG extension](Rewrite-1.3)), and the dock's cards offer plugins no entry ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+
+What it would remove: the three lists of a block's entries that core, the dock and the DAG keep today, which share entries such as removing a block.
+
+What it would cost: a list in core of the commands that a block's menu offers, built on the command registry, whose `label` is for menus already ([Board updates](Rewrite-1.1.2#commands)), a way to offer what is no command, such as renaming a block in place or copying its id, and a menu in every frontend and in the DAG that draws the list and gathers the args of the commands it runs, as the dock's "+" menu gathers those of appending a block.
+
+What would settle it: a package that needs an entry in a block's menu, under every frontend.
