@@ -198,6 +198,10 @@ A command that changes a view's grid replaces the grid whole, so that undo puts 
 | `blockr.dock-collapse_rail` | `view`, `edge`, `collapsed` | Collapses a view's rail on the edge that `edge` names, or opens it, on every view at once while the board option `sync_rails` is on ([R/board-options.R#L155-L201](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-options.R#L155-L201)) |
 | `blockr.dock-set_sections` | `block`, `sections` | Sets the sections of a block's card that show |
 
+Three of them take no undo step, since they change only what the user looks at, as a step that sets only board option values takes none ([Board updates](Rewrite-1.1.2#undo)).
+The commands `blockr.dock-activate_view`, `blockr.dock-activate_panel` and `blockr.dock-collapse_rail` have `undo: false`, so that a user who switches views and then undoes takes back the last edit rather than the switch, while their deltas are saved as any others.
+Every other command of the dock's is one undo step, an arrangement made with a gesture among them.
+
 The default place of a panel in a view is a new tab, which it shows, in the last tab group of the view's splits that holds no plugin's panel, in reading order, or a new tab group at the end of the top split where every tab group holds one, with the mean of its siblings' shares ([R/dock-grid.R#L478-L497](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L478-L497)).
 So a block's panel never covers the DAG it was added from, as today, but for today's preference for the tab group that last had focus, which only one person's screen knows ([R/utils-ui.R#L130-L167](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-ui.R#L130-L167)).
 A menu that adds a block where the user points, such as a tab group's "+", gives the place in its command's own delta instead.
@@ -218,7 +222,8 @@ Only patches that someone sets with core's command can leave what the third rule
 
 1. To draw the active view, the dock turns its grid into dockview's layout with `gridToLayout()`, ported from today's `grid_to_tree()` ([R/dock-layout.R#L276-L323](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-layout.R#L276-L323)): a dockview group for each tab group, a dockview edge group for each rail, and a dockview panel for each panel.
 2. After each gesture that changes the arrangement, such as a drop, a released sash, a moved or closed tab, another tab shown, or a rail collapsed, opened or resized, the dock reads dockview's layout back into a grid with `layoutToGrid()`, ported from `tree_to_grid()` ([R/dock-layout.R#L325-L369](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-layout.R#L325-L369)).
-3. It compares that grid with the stored one, ignoring shares that differ by less than the blockr option `dock_grid_size_tol`, 0.005 by default ([R/dock-grid.R#L293-L300](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L293-L300)), and runs `blockr.dock-set_grid` where they differ, so that a window resize, which jitters the shares, changes nothing.
+3. It compares that grid with the stored one, ignoring shares that differ by less than the blockr option `dock_grid_size_tol`, 0.005 by default ([R/dock-grid.R#L293-L300](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L293-L300)), so that a window resize, which jitters the shares, changes nothing.
+4. Where only the panel that a tab group or rail shows or a rail's collapse changed, it runs `blockr.dock-activate_panel` or `blockr.dock-collapse_rail`, which take no undo step, and where anything else changed, `blockr.dock-set_grid`, which takes one, as dragging a tab into another tab group, which shows it there, does.
 
 A gesture commits once, when the user lets go, as [Board updates](Rewrite-1.1.2#undo) asks of every input that changes with every pointer move.
 A rail keeps its stored width across a change in the dock's own width, since dockview narrows a rail that a narrow dock cannot hold and leaves it narrow, as today's grid mirror has it ([R/dock-grid.R#L419-L444](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L419-L444)).
@@ -268,9 +273,6 @@ Core's `blockr.core-set_plugin_state` is not enabled on a locked board ([Plugins
 
 ## Open questions
 
-- Whether switching views, having a tab group show another panel, and opening or collapsing a rail take an undo step, as every command's deltas do ([Board updates](Rewrite-1.1.2#undo)), or none, as a step that sets only board option values takes none.
-  As steps, they come back one by one before an edit does, so a user who switches views and then undoes switches back first, while taking none needs core's `Command` to let a command's deltas stay out of undo.
-  It blocks `blockr.dock-activate_view`, `blockr.dock-activate_panel` and `blockr.dock-collapse_rail`, and what `blockr.dock-set_grid` does after a gesture that only shows another tab or collapses a rail.
 - How a board that holds no state for the dock gets its views, such as a board made in a core app, since the default of a plugin class's state is one value ([Plugins](Rewrite-1.1.12#a-plugin)), while today's default layout depends on the board's blocks and extensions, which it puts in one tab group and on the left rail ([R/dock-grid.R#L992-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L992-L1008)).
   With it goes what the dock does with a panel of a plugin that the app does not run, since the store drops only such a plugin's own state as a board opens ([Board updates](Rewrite-1.1.2#plugins)), and what R writes for a script that gives no views.
   It blocks the default of the dock plugin class's state.

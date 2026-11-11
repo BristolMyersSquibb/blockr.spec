@@ -54,7 +54,7 @@ interface Store {
   locked(block: BlockId): boolean;                           // whether a lock fixes the block's state: the board lock is on and its locked is not false (below)
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
-  apply(delta: Delta | Delta[], origin?: Origin): void;      // expands, checks, commits and announces the deltas as one step, or throws what rejected them
+  apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo)
   open(given: string | HelloReply): Promise<Dropped[]>;      // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
   check(text: string): Promise<Dropped[]>;                   // what opening a JSON board's text would drop, or the error that would refuse it, holding nothing
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
@@ -197,6 +197,7 @@ interface Command<A extends Json = Json, P = A> {
   args?: JsonSchema;                           // for forms and the assistant's tools
   shortcut?: string;                           // "Mod+Backspace"
   enabled?(board: Board, args: A): boolean;
+  undo?: false;                                // its deltas take no undo step, as switching the dock's views takes none (Undo)
   prepare?(board: Board, args: A): Promise<P>; // what has to wait, such as a layout that elkjs returns as a promise
   run(board: Board, args: P): Delta | Delta[]; // reads the board, returns deltas, changes nothing itself
 }
@@ -205,7 +206,7 @@ interface Commands {
   register(command: Command): () => void;
   registered(): Record<string, Command>;                         // the registered commands by id, for menus, a command palette and the assistant's tools
   enabled(id: string, args?: Json): boolean;                     // whether the command applies to the current board with these args
-  run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin
+  run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false
   plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
 }
 
@@ -251,6 +252,8 @@ Core resolves the defaults of the board options that the classes of its plugins 
 The deltas of one command are one undo step, which `store.undo()` takes back and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's.
 Undo works as it does in Figma, Google Slides and tldraw, as a new edit on the board as it is: it applies the inverse the store kept where what the step changed is still there, over what another origin changed since, the last writer winning, does nothing where it is gone, and is expanded, checked and announced as any delta, covering the state of its plugins as it covers core's objects.
 It leaves board option values alone, since a board option never changes what the board computes, so a step that sets only those is no undo step ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+For the same reason, a command whose definition has `undo: false` takes no undo step, as the dock's commands that switch views, show another tab and open or collapse a rail do, since they change only what the user looks at ([The dock's state](Rewrite-1.2.1#commands)).
+The store applies, announces and saves the deltas of such a command as any others, keeps no inverse of them, and leaves every origin's redo steps as they were.
 It keeps what it replaced for redo, so that undoing and then redoing leaves the board as it was, whatever another origin changed in between, which is Figma's principle ([How Figma's multiplayer technology works](https://www.figma.com/blog/how-figmas-multiplayer-technology-works/)).
 Undo and redo are steps of their own, so edit ids only grow and refuse a delta built on an older board, such as the assistant's plans, but no undo.
 Undo leaves out a patch whose path no longer leads to what it changes, as it leaves out a change of a block that is gone, and a patch at an array's index changes whatever the array holds there by then.
