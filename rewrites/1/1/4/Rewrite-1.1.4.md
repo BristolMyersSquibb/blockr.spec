@@ -7,7 +7,7 @@ How the client opens a board is the [board updates proposal](Rewrite-1.1.2#openi
 
 ## What must hold
 
-1. Boards written by today's `blockr_ser()` open in the new stack, with the dock's views and layouts and the DAG's positions, for block classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks: converted to JSON boards once, outside core, their blocks through `blockr_deser()` and the migrations packages already have, after which the client opens them as any JSON board, the state of plugins through the migrations of their classes, in JS.
+1. Boards written by today's `blockr_ser()` open in the new stack, with the dock's views, their grids and the DAG's positions, for block classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks: converted to JSON boards once, outside core, their blocks through `blockr_deser()` and the migrations packages already have, after which the client opens them as any JSON board, the state of plugins through the migrations of their classes, in JS.
 2. A board saved by the new stack is written in the browser, so saving needs no R and works while R is busy or gone.
 3. The client's board holds state values its UI can use as they are, so an arg that is a vector is always an array, whatever its length.
 4. A JSON board, the one format of a board outside the store, is the board as the client holds it, with only what opening it needs, and names no R class or constructor, while a file of today's stack is converted to one outside core.

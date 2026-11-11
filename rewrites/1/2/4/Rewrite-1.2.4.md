@@ -16,7 +16,7 @@ Not drafted yet.
 
 ## Open questions
 
-- Whether a plugin has more places on the screen than its one panel, such as a panel per block, and whether a command opens a plugin's panel in the active view, as the dock's command shows a block's.
+- Whether a plugin has more places on the screen than its one panel, such as a panel per block, while `blockr.dock-show_panel` opens a plugin's panel in the active view as it opens a block's ([The dock's state](Rewrite-1.2.1#commands)).
 - Whether a plugin names the major of the dock's members it was built against, as a module names the major of core's JS API ([UI modules in JS](Rewrite-1.1.7#the-contract)), so that the dock skips the members of a plugin built against another major.
 - Whether the dock's block card takes contributions from plugins, a section in its body and actions in its header, each a module the dock mounts per block with the block's id, through a member of the dock's on `PluginClass`, to keep what today's `edit_block` callbacks and `ctrl` section let a package add to every block.
   Core needs nothing new for it: the component works through `CoreApi`, a plugin's request reads the block's result in R ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and whether a section shows can live in the dock's `visible`, by block id, which core carries without reading ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)).
