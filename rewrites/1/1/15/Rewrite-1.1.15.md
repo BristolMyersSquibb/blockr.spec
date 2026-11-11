@@ -128,7 +128,7 @@ A dock app whose rows hold neither this plugin nor the DAG offers no way to add 
 ### Boards and app scripts from today
 
 A core board that today's stack saved holds no plugin's state once converted, since today's `serve()` takes the plugins and the file holds none, and served by its path it runs this plugin from the default of `serve()` (above).
-Whether blockr.dock keeps `new_edit_board_extension()` as a name for `new_edit_board_plugin()`, for the scripts, examples and tests that call it, is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s to settle.
+The dock's `new_edit_board_extension()` goes without an alias, and the scripts, examples and tests that call it drop it, since this plugin runs by default ([Saved boards and app scripts across the switch](Rewrite-1.2.2)).
 An app that adds `manage_links()` or `manage_stacks()` through `serve(plugins = ...)` gets their edits from this plugin, since both go ([Plugins](Rewrite-1.1.12#what-goes)).
 A script that today extends the defaults through `serve(plugins = custom_plugins(...))` keeps `manage_blocks` among them, since `custom_plugins()` keeps every default that it does not replace ([R/utils-serve.R#L147-L163](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L147-L163)).
 The README of blockr.code does so for a core board ([blockr.code README.Rmd#L43-L56](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/README.Rmd#L43-L56)).
