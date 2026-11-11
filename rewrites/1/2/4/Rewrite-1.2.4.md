@@ -1,9 +1,9 @@
 # Places the dock offers plugins
-Status: draft. Design for [Client-drawn dock](Rewrite-1.2).
+Status: review. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the places where the dock puts plugins.
 It covers the panel in which the dock mounts each plugin's `ui` with `mountPlugin()`, how a plugin shows a panel in the active view, and where a plugin's settings show.
-It also covers the places that the dock offers besides, through members of its own on core's `PluginClass` ([Plugins](Rewrite-1.1.12#plugin-classes)), and that its block cards offer plugins none.
+It also says why the panel is the only place that the dock offers plugins, so the dock declares no member of its own on core's `PluginClass` ([Plugins](Rewrite-1.1.12#plugin-classes)).
 It builds on [Plugins](Rewrite-1.1.12) and [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins).
 It shapes two items of the Work list of [Client-drawn dock](Rewrite-1.2#work): placing every plugin, and writing how a plugin uses the places that the dock offers.
 The navbar is [The dock's navbar](Rewrite-1.2.5)'s, the card's own design is [Block cards in the dock](Rewrite-1.2.7)'s, and the commands that change the dock's views are [The dock's state](Rewrite-1.2.1)'s.
@@ -15,7 +15,7 @@ Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this pag
 1. The dock can show every plugin whose class has a `ui` in a panel, with the plugin's name on the panel's tab, a plugin of a package that the dock does not know included.
 2. A plugin draws only in the elements that the dock gives it and in the browser's top layer, and nothing it draws depends on the dock's markup, so that it draws the same under any frontend.
 3. A plugin can show its own panel or a block's in the active view, and change which views hold which panels, as today's extensions can.
-4. Each place that the dock offers besides the panel is a member of its own on `PluginClass`, which only the dock reads, so that a plugin that sets one works under any other frontend all the same.
+4. The dock asks nothing of a plugin beyond what core's `PluginClass` holds, so that every plugin works under the dock as under any other frontend.
 5. What today's extensions take from the dock carries over where a package still needs it, as condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) asks, and Today names what goes, with the reason.
 
 ## Today
@@ -36,7 +36,7 @@ What the extensions of today's packages take from the dock, at `655e323`:
 | A callback for each block, `extension_block_callback()`, which every card's server runs with the block's status and conditions ([R/plugin-block.R#L402-L422](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L402-L422)) | The DAG and blockr.outline's minidag draw their status badges through it ([R/outline-ext.R#L787-L844](https://github.com/cynkra/blockr.outline/blob/d3499f4623f956f6691235f90fa84b46b925852c/R/outline-ext.R#L787-L844)) | Dropped, since a plugin reads every block's status through `scheduler.status()` and `scheduler.subscribe()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)) |
 | The card's section `ctrl`, which the dock fills with the UI of core's `ctrl_block` plugin. A button in the card's header shows or hides it, with that plugin's label and icon ([R/plugin-block.R#L128-L174](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L128-L174), [R/plugin-block.R#L258-L288](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L258-L288)) | The chat on every block of blockr.ai's `ai_ctrl_block()`, which CEDX's `run_cedx_view()` serves ([R/cedx_view_board.R#L107-L120](https://github.com/BristolMyersSquibb/blockr.cdex/blob/7792b7e0fd9eda417995dd7e460f086f671df73c/R/cedx_view_board.R#L107-L120)) | Dropped with that chat, which the assistant replaces ([Plugins](Rewrite-1.1.12#today)), and the card offers plugins no other place in its stead ([Places besides the panel](#places-besides-the-panel)) |
 | The board options that an extension brings in the `options` of `new_dock_extension()`. The options sidebar shows each on the page of its category ([R/board-options.R#L253-L339](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-options.R#L253-L339)) | The assistant brings `llm_model`, `chat_compact` and `chat_keep` ([R/ext-server.R#L147-L162](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-server.R#L147-L162)) | Carried over through core: the board options that a plugin's class requires, which the dock's options sidebar shows ([Settings](#settings)) |
-| Navbar items, which only an app adds, through `serve()` ([blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494)) | The avatar of blockr.session | Items that plugins add through `dockNavbar` ([The dock's navbar](Rewrite-1.2.5)) |
+| Navbar items, which only an app adds, through `serve()` ([blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494)) | The avatar of blockr.session | Dropped, since neither an app nor a plugin adds to the dock's navbar, and the avatar becomes a status among the storage controls of blockr.session's storage plugin ([The dock's navbar](Rewrite-1.2.5)) |
 
 No extension adds to the card's "…" menu.
 The dock fixes its items: Controls, Rename, Append block, Copy block ID and Remove block ([R/plugin-block.R#L191-L247](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L191-L247)).
@@ -86,7 +86,6 @@ The command has the panel's tab group show it where the view holds it, and adds 
 Today the DAG and the slides of blockr.outline show a block, and the outline shows an extension's panel, through deltas of `views$mod` of their own.
 A plugin changes which views hold which panels with the dock's commands `blockr.dock-add_panel` and `blockr.dock-remove_panel`, as the outline's menu of views does today.
 Any plugin runs these commands, as any package runs another's ([Board updates](Rewrite-1.1.2#commands)).
-So a navbar item that a plugin adds can open the plugin's own panel.
 A plugin reads which views there are, and which panels each holds, from the dock's state, which is open to every plugin ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 The outline reads the dock board's views in the same way today.
 
@@ -107,9 +106,10 @@ Today's sidebar shows only the code export on a locked board ([R/board-options.R
 
 ### Places besides the panel
 
-Each other place that the dock offers is a member of its own on core's `PluginClass`.
-The types of blockr.dock declare the member through TypeScript's module augmentation, and the dock reads it from the class of each plugin that runs.
-The dock reads `dockNavbar` in this way, for the items that plugins add to its navbar ([Plugins](Rewrite-1.1.12#plugin-classes), [The dock's navbar](Rewrite-1.2.5)).
+The panel is the only place that the dock offers plugins.
+No plugin adds to the dock's navbar, where the storage plugin's controls are the only ones of another plugin that the dock draws ([The dock's navbar](Rewrite-1.2.5)), and the dock's menus and cards offer plugins nothing, as below.
+So the dock declares no member of its own on core's `PluginClass`, and reads no member of a plugin's class beyond core's, as core's basic frontend reads none ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares, and which changes nothing for the plugins that do not set it ([Plugins](Rewrite-1.1.12#plugin-classes)).
 
 The dock takes no part in what a plugin draws, and offers plugins none of its own pickers, editors or sidebars.
 A plugin draws the UI that gathers the args of the commands it runs, in its panel or in the top layer, and runs core's commands with what the user picks.
@@ -124,9 +124,7 @@ Entries that plugins add to a block's menu would rather come from core, so that 
 
 ## Open questions
 
-- Whether a plugin class names the major of the dock's members that it was built against, as a module names the major of core's JS API ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-  The dock would then read none of the members of a plugin built against another major, and name the plugin's package, rather than break as it reads them.
-  It blocks the types of the dock's members.
+None.
 
 <details><summary>Notes for implementers</summary>
 

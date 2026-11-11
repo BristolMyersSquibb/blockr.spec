@@ -1,7 +1,7 @@
 # Client-drawn dock
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.dock, which becomes the dock plugin: a frontend, which draws the page as a React app on core's JS API, keeps its views and their grids in its state, places every plugin that has a UI, and offers plugins places of its own, such as its menus.
+This part covers blockr.dock, which becomes the dock plugin: a frontend, which draws the page as a React app on core's JS API, keeps its views and their grids in its state, and places every plugin that has a UI in a panel, the only place it offers plugins.
 It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), and whose core ships the one copy of React on the page ([UI modules in JS](Rewrite-1.1.7#react)).
 It follows the design system of [UI kit and design system for the client](Rewrite-1.7).
 
@@ -19,7 +19,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 1. The browser draws the dock with dockview directly, without dockViewR.
 2. Views, the folders that group them and their grids are the dock plugin's state, and no change of arrangement reaches R.
-3. The dock places every plugin that has a UI, from a package it does not know too, and offers plugins places of its own besides, such as its menus, which only the dock reads, so that every plugin still works under any other frontend ([Plugins](Rewrite-1.1.12#what-must-hold)).
+3. The dock places every plugin that has a UI in a panel, from a package it does not know too, and asks nothing of a plugin beyond what core's `PluginClass` holds, so that every plugin works under the dock as under any other frontend ([Plugins](Rewrite-1.1.12#what-must-hold)).
 4. What blockr.dock offers today carries over, but for what Today drops with its reason.
 5. Boards saved by today's blockr.dock open with their views, their grids and the sections that each card shows.
 
@@ -67,9 +67,9 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   Everything the dock changes goes through core's deltas, so undo and save cover arrangement too, while switching views and tabs takes no undo step ([The dock's state](Rewrite-1.2.1#commands)), and nothing the client does to its own arrangement reaches R.
 - The dock places every plugin whose class has a `ui` in a panel of its own, which it mounts with `mountPlugin()`, a plugin of a package it does not know included ([Plugins](Rewrite-1.1.12#plugin-classes), [Places the dock offers plugins](Rewrite-1.2.4)).
   A plugin's UI renders in a root of its own, which shares no React context with the dock's, and takes its look from blockr.ui's design system ([Plugins](Rewrite-1.1.12#a-plugin)).
-- The dock offers plugins more places through members of its own on core's `PluginClass`, which TypeScript's module augmentation declares and which only the dock reads ([Plugins](Rewrite-1.1.12#plugin-classes), [Places the dock offers plugins](Rewrite-1.2.4)).
-  So a plugin that uses them works under another frontend all the same, which reads none of them.
-  The dock builds its own items on the same places, as JupyterLab's own main menu and file browser are extensions ([extension guide](https://jupyterlab.readthedocs.io/en/latest/extension/extension_dev.html)), so that a plugin can add what the dock adds.
+- The dock offers plugins no place besides their panels.
+  No plugin adds to its navbar, where the storage plugin's controls are the only ones of another plugin that it draws ([The dock's navbar](Rewrite-1.2.5)), and its menus and cards offer plugins nothing ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+  So the dock declares no member of its own on core's `PluginClass`, though a frontend may ([Plugins](Rewrite-1.1.12#plugin-classes)), and every plugin works under it as under any other frontend.
 - What every frontend gives plugins, the dock gives too: it draws the notifications of `CoreApi`, a block's on its card and every other as a toast ([Notifications, logging and tracing](Rewrite-1.1.14), [Block cards in the dock](Rewrite-1.2.7)), and it draws the controls of the app's storage plugin, core's or session management's, in its navbar ([Plugins](Rewrite-1.1.12#storage), [The dock's navbar](Rewrite-1.2.5)).
 - The DAG ([Client-drawn DAG extension](Rewrite-1.3)), the assistant ([Assistant extension](Rewrite-1.4)), code export ([Code export extension](Rewrite-1.5)) and session management ([Session management extension](Rewrite-1.6)) have parts of their own and are rebuilt as plugins after the dock.
   This part settles only the places the dock offers them, and leaves libraries, agent design and their R requests to them.
@@ -95,14 +95,14 @@ None.
 - Convert boards saved by today's blockr.dock, turning their views, grids and card sections into the dock plugin's state at version 1 and the panels of their extensions into those of the plugins that take their place, in blockr.dock
 - Keep app scripts building their boards with `new_dock_board()`, which returns a board that holds the dock plugin's state and the plugins of its `extensions`, and write the migration notes for dock app scripts, for an AI to apply, in blockr.dock
 - Draw the dock with dockview from the client's board, in blockr.dock
-- Place every plugin that has a UI in a panel, and offer plugins the dock's other places, in blockr.dock
+- Place every plugin that has a UI in a panel, in blockr.dock
 - Write how a plugin uses the places the dock offers, and rewrite the vignette "Views and grids" for the dock's views, folders and grids, in blockr.dock
 
 ## Design pages
 
 - [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1): the dock plugin's state, the commands that change it, its class's `update` and `migrate`, the R functions that write it for an app script, and the conversion to and from dockview's layout
 - [Saved boards and app scripts across the switch](Rewrite-1.2.2): how boards saved by today's blockr.dock open, through the conversion outside core and the `migrate` of the dock plugin's class, and how app scripts that call its constructors keep working
-- [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, how a plugin shows a panel, where a plugin's settings show, and the places the dock offers besides, none of them on its block cards
+- [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, how a plugin shows a panel, where a plugin's settings show, and why the dock offers plugins no other place
 - [The dock's navbar](Rewrite-1.2.5): what the bar holds and in what order, what gives way on a narrow bar, the dock's own parts, and where the storage plugin's controls go
 - [Block cards in the dock](Rewrite-1.2.7): the card's header, sections, status, notifications and menu, compact headers and the locked card
 
