@@ -66,7 +66,7 @@ The client follows established JS patterns, as the module contract follows anywi
   A request carries the recipe, and a result is named by block id and revision, never by process, so a client that starts a new session with its board loses only recomputation, and putting several sessions on one process, or one session on several, stays a server-side change.
 - The client schedules: it bumps revisions, tracks what is stale and what is demanded, and requests results by the evaluation priority each demand gives and in topological order within one, which replaces construction ordering, the render gate and the visibility channels in R ([Evaluation in the client](Rewrite-1.1.10)).
 - Plugins are the only way to extend a board besides block classes, and core defines them: a plugin keeps its state in the board, works on it through core's JS API, and offers its UI as an ES module that core mounts where the frontend places it, so that it works under every frontend ([Plugins](Rewrite-1.1.12)).
-  The frontend is a plugin too: the dock is a React app on core's JS API, which places the other plugins in its contribution points, and core's basic frontend, which an app runs wherever no other available package gives a frontend, is another ([Client-drawn dock and extensions](Rewrite-1.2), [Plugins](Rewrite-1.1.12#the-frontend)).
+  The frontend is a plugin too: the dock is a React app on core's JS API, which places the other plugins in its panels and the other places it offers them, and core's basic frontend, which an app runs wherever no other available package gives a frontend, is another ([Client-drawn dock](Rewrite-1.2), [Plugins](Rewrite-1.1.12#the-frontend)).
 - Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy that core puts on the page ([UI modules in JS](Rewrite-1.1.7)).
   Core draws its own UIs with that copy too, as the dock does, so that they are written as the UIs of packages are ([UI modules in JS](Rewrite-1.1.7#react)).
   Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
@@ -76,7 +76,7 @@ The client follows established JS patterns, as the module contract follows anywi
 - Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process.
   One small module, the Shiny transport, carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Rewrite-1.1)).
 - The assistant is a collaborator, editing the board beside the user, which is why collaboration shapes the design now: a delta names its origin, so the user and the assistant each undo their own steps ([Board updates](Rewrite-1.1.2)).
-  Collaboration between people is not built, but stays open on the same terms, with the dock plugin's state holding what opening, saving and restoring a board need, and a later relay free to keep each person's switching between views on their own screen ([Client-drawn dock and extensions](Rewrite-1.2)).
+  Collaboration between people is not built, but stays open on the same terms, with the dock plugin's state holding what opening, saving and restoring a board need, and a later relay free to keep each person's switching between views on their own screen ([Client-drawn dock](Rewrite-1.2)).
   Early cutoff is not built either and can come later, opt-in per block class.
 
 ## Migration

@@ -101,11 +101,11 @@ Core's basic frontend shows it in a section of its own beside the board, as it s
 The card's menu keeps renaming and removing a block and adding one before or after it, since those edits act on one card.
 The menu and the plugin share the picker inside core.
 Renaming and removing a stack, which today's `edit_stack` does from the stack's own UI, is the plugin's alone, since the group that draws a stack holds no control.
-The dock shows the plugin in a panel wherever the app holds it, as it shows any plugin, so that a dock app without the DAG still edits its links and stacks ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
+The dock shows the plugin in a panel wherever the app holds it, as it shows any plugin, so that a dock app without the DAG still edits its links and stacks ([Client-drawn dock](Rewrite-1.2#proposal)).
 
 Under the board lock, the store refuses every edit that the plugin makes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 So the plugin draws no control there, and only lists the board's links and stacks.
-A frontend draws the blocks on their cards, but the dock draws no link and no stack without the DAG ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
+A frontend draws the blocks on their cards, but the dock draws no link and no stack without the DAG ([Client-drawn dock](Rewrite-1.2#proposal)).
 It reads the lock from `core.lock.board` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 
 ### Its look
@@ -123,7 +123,7 @@ A file that `serve()` is given gets it too, since a file gives only the state of
 Rows that a script passes hold the plugin where it wants it, and a locked app may leave it out.
 A block that `serve()` serves alone gets no plugin, since no frontend places one for it ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
 A dock app runs it too, since the dock takes the place of core's basic frontend alone, where today's `new_dock_board()` adds no extension by default ([blockr.dock R/dock-board.R#L55-L56](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L55-L56)).
-A dock app whose rows hold neither this plugin nor the DAG offers no way to add the first block, as a dock board without either does today, since the dock itself only appends a block after another, from a card's menu ([Client-drawn dock and extensions](Rewrite-1.2#proposal)).
+A dock app whose rows hold neither this plugin nor the DAG offers no way to add the first block, as a dock board without either does today, since the dock itself only appends a block after another, from a card's menu ([Client-drawn dock](Rewrite-1.2#proposal)).
 
 ### Boards and app scripts from today
 

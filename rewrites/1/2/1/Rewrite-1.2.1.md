@@ -1,14 +1,14 @@
-# The dock board: views and layouts
-Status: draft. Design for [Client-drawn dock and extensions](Rewrite-1.2).
+# The dock's state: views, layouts and card sections
+Status: draft. Design for [Client-drawn dock](Rewrite-1.2).
 
-One of the design pages of the client-drawn dock ([Client-drawn dock and extensions](Rewrite-1.2)): the properties that the dock board adds beside core's, which are its views and each view's grid.
-It covers the commands that change them, the `update` that keeps them consistent with the board, the R functions that write them for an app script, and how the client turns a grid into dockview's layout and back.
-It builds on the board classes of [Board updates](Rewrite-1.1.2#plugins).
-How boards saved today open is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s, and the state that extensions keep in the dock board's `extensions` is [Registering extensions with the dock](Rewrite-1.2.3)'s.
+One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the dock plugin's state, which holds its views, each view's grid, which view is active and which sections of each block's card show.
+It covers the commands that change that state, the `update` and the `migrate` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
+It builds on [Plugins](Rewrite-1.1.12#a-plugins-state) and [Board updates](Rewrite-1.1.2#plugins).
+How boards saved today open is [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s.
 
 ## What must hold
 
-Conditions 1 and 2 of [Client-drawn dock and extensions](Rewrite-1.2#what-must-hold) rest on this page.
+Conditions 1 and 2 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rest on this page.
 
 ## Proposal
 

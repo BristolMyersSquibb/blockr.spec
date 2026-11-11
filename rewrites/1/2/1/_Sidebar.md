@@ -1,3 +1,3 @@
 **Top:** [Home](Home)
 
-**Up:** [Client-drawn dock and extensions](Rewrite-1.2)
+**Up:** [Client-drawn dock](Rewrite-1.2)
