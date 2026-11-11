@@ -108,7 +108,7 @@ The board lock leaves whole blocks open rather than single args, which a later v
 
 Where the load lock and the board lock are both on, R reads the blocks, links and their `locked` of a JSON board that `serve()` was given, to hold every block to it ([What R refuses](#what-r-refuses)), where it passes any other JSON board on unread.
 R builds every block as the app starts and runs no migration, since migrations run in the client ([Serialization](Rewrite-1.1.4#migrations)).
-So, with both locks on, R refuses a JSON board that it cannot read as today's packages write one: a board with a block whose class the block registry lacks, or with a block's state recorded at a version other than the one R gives.
+So, with both locks on, R refuses a JSON board that it cannot read as today's packages write one: a board with a block whose class the app's block registry lacks, or with a block's state recorded at a version other than the one R gives.
 Its error names each such block, and the deployer opens and saves the board once with today's packages, which migrate it in the client.
 Locking only the blocks that R can read would leave the others open, against condition 1, or show readers a board without them.
 R ignores the versions of plugin classes, since it reads no plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
