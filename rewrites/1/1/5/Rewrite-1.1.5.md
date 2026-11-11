@@ -53,7 +53,7 @@ A package exports both: the class, from whose properties another class can be bu
 
 A class's properties:
 
-- The `name` argument gives the class's name, which leads a block's class vector, `c("head_block", "block")`, and a property the class leaves out, which may be any but `expr` and `ui`, is `NULL`, for which R does what core does by default (below).
+- The `id` argument gives the class's id, from which its registry id `{pkg}-{id}` comes, and which also leads a block's class vector, `c("head_block", "block")`, for S3 dispatch alone, since R identifies a block class by its id, as a plugin class by its own ([Plugins](Rewrite-1.1.12#a-plugin)), and a property the class leaves out, which may be any but `expr` and `ui`, is `NULL`, for which R does what core does by default (below).
 - The `inputs` property gives the data inputs, apart from the state args, as formals without defaults (below): a character vector names them, `"data"`, `c("x", "y")` for a merge or `"..."` for a variadic block; a list from `alist()` gives them as formals, `alist(x = , y = )`; and a function gives them as its formals and checks them in its body, `function(data) stopifnot(is.data.frame(data))`, which takes the place of `dat_valid`.
   A class's inputs are its own, and `NULL` for a class with none, such as a block that reads a file.
   No input has a default for now, so none is optional (notes).
@@ -81,10 +81,10 @@ All but the last read only the class's properties and the formals of its functio
 A sketch of `new_block_class()`, in which a property a class leaves out is `NULL`:
 
 ```r
-new_block_class <- function(name, inputs = NULL, expr, ui,
+new_block_class <- function(id, inputs = NULL, expr, ui,
                             requests = NULL, output = NULL, version = 1L) {
 
-  cls <- list(class = c(name, "block"), inputs = inputs, expr = expr, ui = ui,
+  cls <- list(id = id, class = c(id, "block"), inputs = inputs, expr = expr, ui = ui,
               requests = lapply(requests, as_block_request), output = output,
               version = version)
 
@@ -259,7 +259,7 @@ No package in the workspace overrides another's block methods today, and the two
 Which block classes an app offers is the app's choice, never a board's, and loading a package registers nothing.
 A package exports one object, `._BLOCKR_MODULES_`, that lists what it offers core: the registry metadata of each of its block classes, which the roclet writes from the `@block` tags in place of `inst/registry/blocks.yml`, each of its plugin classes with its constructor and its default name ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), and the modules and the startup module the package declares ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
 The available packages are those that export it, among the installed packages that depend on blockr.core and those that `pkgload::load_all()` loaded, which sit in no library.
-R loads each of them as the app starts, since it reads an object only from a loaded namespace, and `available_blocks()` gives their block classes as a data frame, one row per class, with the class's package in `package`, its name in `class` and its registry metadata in columns beside them, such as its category.
+R loads each of them as the app starts, since it reads an object only from a loaded namespace, and `available_blocks()` gives their block classes as a data frame, one row per class, with the class's package in `package`, its id in `id` and its registry metadata in columns beside them, such as its category.
 The app offers the block classes that `serve()` takes in `block_classes`, which default to `available_blocks()`, so that an app offers every available class unless its script narrows them ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)), and R fills the block registry from them.
 A script narrows them with plain R, as `subset(available_blocks(), package != "blockr.ggplot")` offers every class but blockr.ggplot's, or gives the path of a YAML file that lists packages and, for each, the block classes to offer, all of them where it lists none:
 
@@ -281,7 +281,7 @@ An entry of the object holds what `register_block()` takes but `classes` ([R/blo
 The `register_block()` and `register_blocks()` functions stay for the block classes that an app script defines, which the script registers before `serve()` starts the app, and refuse once it has started, while `block_classes` narrows only the classes of packages, since a script registers its own.
 As R writes the board that the script builds, it also registers the class of each of its blocks that no entry holds, as a class from outside a package under its name, so that every block on the served board runs, whether or not the app offers its class ([Defining a board in R](Rewrite-1.1.3#the-opening-board)).
 Core's static and fixed blocks reach the block registry this way alone, as today, since no UI sets their code, so core's own entries leave both out ([blockr.core#461](https://github.com/BristolMyersSquibb/blockr.core/pull/461)).
-The `uid` argument sets the name part of the registry id, `{pkg}-{name}`, whose name defaults to the constructor's name without `new_` ([Board objects](Rewrite-1.1.1)).
+R takes the registry id, `{pkg}-{id}`, from the class alone, its package and the id that `new_block_class()` takes, never from a constructor's name ([Board objects](Rewrite-1.1.1#registry-ids), [blockr.core#559](https://github.com/BristolMyersSquibb/blockr.core/issues/559)).
 A constructor registered by name comes with its package, as every package in the workspace registers its constructors today, while one registered as a function is from outside a package, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
 The block registry keeps one entry per class, and `registry_id_from_block()` finds a block's entry by the class the block refers to.
 Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests with the board options each names, the renderer of its outputs, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
@@ -543,6 +543,7 @@ Each case shows its block expression in the script.
 
 Today `register_block()` builds a block to read its classes and, without `arguments`, its arg specs, and checks the specs' examples against it ([R/block-registry.R#L143-L162](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L143-L162)).
 The class gives the first two, and the examples are checked by calling `expr` with them instead.
+The roclet writes each class's `id` into `inst/registry/blocks.yml`, and into `._BLOCKR_MODULES_` once that takes the file's place, reading it off the class that the constructor the `@block` tag documents makes, and `available_blocks()` reads it from there, since nothing ties a class's id to its constructor's name ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562)).
 Loading the 14 blockr packages installed in the workspace's default library took 2.30 s in one R process, 1.86 s of it for the `blockr` meta-package and the six packages that it imports, so an app script that calls `library(blockr)` pays most of that today.
 A namespace that `pkgload::load_all()` loaded holds `._BLOCKR_MODULES_` as an installed one does, so the listing needs nothing of its own under `load_all()` ([blockr.core#523](https://github.com/BristolMyersSquibb/blockr.core/issues/523)), while a package's modules and schemas stay files, which `package_system_file()` of [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) finds.
 

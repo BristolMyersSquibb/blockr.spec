@@ -170,7 +170,7 @@ A frontend that mounts other packages' UI itself, such as on its stacks, narrows
 
 ```ts
 // in the frontend's package, whose plugin keeps stack_notes in its state
-const stackHost = (core: CoreApi, plugin: PluginId, id: StackId) => ({
+const stackHost = (core: CoreApi, plugin: PluginClassId, id: StackId) => ({
   stack: () => core.store.board().stacks[id],
   note: () => (core.store.board().plugins[plugin].state as FrontendState).stack_notes[id],
   on: (fn: () => void) => core.store.subscribe(fn),
