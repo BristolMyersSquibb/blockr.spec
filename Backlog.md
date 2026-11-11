@@ -21,18 +21,18 @@ What would settle it: whether, once drill-down runs as a plugin in State in JS, 
 
 ## Block classes registered on demand
 
-The block registry fills once, as the app starts, from the block classes that `serve()` takes in `block_classes`, every class of the available packages by default, and the reply to `hello` sends each of them in full: its metadata, its schema, its default state, its arg specs and its requests ([Block classes in R](Rewrite-1.1.5#registration), [Wire protocol](Rewrite-1.1.9#handshake)).
+An app's block registry fills once, as `serve()` builds the app, from the block classes that it takes in `block_classes`, every class of the available packages by default, and the reply to `hello` sends each of them in full: its metadata, its schema, its default state, its arg specs and its requests ([Block classes in R](Rewrite-1.1.5#registration), [Wire protocol](Rewrite-1.1.9#handshake)).
 The first draw needs that only for the classes of the blocks on the opening board, while every other class needs only its id and the metadata that the picker shows, until a user adds a block of it, a board that holds one opens, or the assistant reads its arg specs.
 So the reply could send each offered class's id and picker metadata, and the rest of its entry the first time something needs it.
 The same would let an app take in a package installed while it runs.
-R loads a package that it has not loaded yet as it loads any other, and [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) lets a class registered after `serve()` reach every later reply to `hello`, so discovery could run again and add the package's classes, modules and version for the sessions that start afterwards.
+R loads a package that it has not loaded yet as it loads any other, so discovery could run again and add the package's classes, modules and version to the app for the sessions that start afterwards, where [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) builds each app's block registry once, as `serve()` runs, so that a class registered later reaches no app built before.
 Upgrading a package that the app has loaded still takes a restart, since R cannot swap a namespace in place, and a reconnecting page reloads where R names a package at another version than before ([Wire protocol](Rewrite-1.1.9#handshake)).
 Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/blockr.core/pull/454), when loading a package registered all of its classes, which `block_classes` and the object `._BLOCKR_MODULES_` that each package exports have since replaced ([Block classes in R](Rewrite-1.1.5#registration)).
 
 What it would remove: the full entries of the block classes that no block on the opening board uses, from every reply to `hello`, and the restart that a package installed while the app runs needs.
 
-What it would cost: a request for the rest of a class's entry, which the client makes before it draws, adds or migrates a block of the class or gives the assistant the class's arg specs, an `open` that names a board's registry ids ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and, for a package installed while the app runs, a second discovery and a reply to `hello` whose packages grow with it.
-The board options of a class registered while the app runs need nothing more, since core adds a component's board options as it first needs the component ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+What it would cost: a request for the rest of a class's entry, which the client makes before it draws, adds or migrates a block of the class or gives the assistant the class's arg specs, an `open` that names a board's registry ids ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and, for a package installed while the app runs, a second discovery, an app's block registry that grows after `serve()` built it, and a reply to `hello` whose packages grow with it.
+The board options of a class that an app takes in while it runs need nothing more, since core adds a component's board options as it first needs the component ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 
 What would settle it: the size of the block registry in the reply to `hello` with every available package offered, measured beside the time to the first draw, and whether apps want to take in packages installed while they run.
 

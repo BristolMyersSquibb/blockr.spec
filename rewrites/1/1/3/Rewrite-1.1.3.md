@@ -70,7 +70,7 @@ From then on the client owns the board, and R holds the session's results and, f
 
 Registering the classes first keeps an app's own block classes working.
 A class defined in the app script reaches the JSON only by its registry id ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)), so if the script's board were only JSON, the app would drop its own blocks.
-Registered from the blocks, as [Board objects](Rewrite-1.1.1#the-board) has it for a board from a constructor call, each class is in the block registry before any session evaluates a block of it.
+Registered from the blocks, as [Board objects](Rewrite-1.1.1#the-board) has it for a board from a constructor call, each class is in the app's block registry before any session evaluates a block of it.
 These registrations are the app script's own, so they stay when another board is opened, as a fresh app would have them ([Board updates](Rewrite-1.1.2#what-must-hold)), and a board saved from the app reopens in it, deployed or not.
 
 The `loader` argument goes, since neither of today's loaders keeps its job: `store.open()` replaces the board in place, so no reload needs `local_loader()` to carry a board across it ([Board updates](Rewrite-1.1.2#opening-a-board)), and session management opens the board a URL names from the browser, which makes every storage call ([Session management as a client extension](Rewrite-1.6)).
