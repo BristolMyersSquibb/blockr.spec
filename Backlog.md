@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-02.
+Revised on 2026-11-11.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -21,14 +21,17 @@ What would settle it: whether, once drill-down runs as a plugin in State in JS, 
 
 ## Block classes registered on demand
 
-A package registers every block class it ships as R loads it, in its `.onLoad()`, from the `blocks.yml` that `register_package_blocks()` reads, so `library()` makes all of a package's classes available to an app, and a board opened from a file that names the package brings all of them too, where it uses a few.
-The block registry could fill per class instead, from what an app offers and what a board names: an app script registers the classes it offers, all of a package's through one call where it wants them, and R resolves a class that a board names by its registry id when the board opens, loading its package as it looks the class up and registering that class alone, from the same `blocks.yml`, which stays the data while only what reads it moves out of `.onLoad()`.
-On top of that, a symbol that every block package exports would let a frontend list the installed block packages and offer to load any of them, and to register any of their block classes, while the app runs.
-Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/blockr.core/pull/454).
+The block registry fills once, as the app starts, from the block classes that `serve()` takes in `block_classes`, every class of the available packages by default, and the reply to `hello` sends each of them in full: its metadata, its schema, its default state, its arg specs and its requests ([Block classes in R](Rewrite-1.1.5#registration), [Wire protocol](Rewrite-1.1.9#handshake)).
+The first draw needs that only for the classes of the blocks on the opening board, while every other class needs only its id and the metadata that the picker shows, until a user adds a block of it, a board that holds one opens, or the assistant reads its arg specs.
+So the reply could send each offered class's id and picker metadata, and the rest of its entry the first time something needs it.
+The same would let an app take in a package installed while it runs.
+R loads a package that it has not loaded yet as it loads any other, and [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) lets a class registered after `serve()` reach every later reply to `hello`, so discovery could run again and add the package's classes, modules and version for the sessions that start afterwards.
+Upgrading a package that the app has loaded still takes a restart, since R cannot swap a namespace in place, and a reconnecting page reloads where R names a package at another version than before ([Wire protocol](Rewrite-1.1.9#handshake)).
+Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/blockr.core/pull/454), when loading a package registered all of its classes, which `block_classes` and the object `._BLOCKR_MODULES_` that each package exports have since replaced ([Block classes in R](Rewrite-1.1.5#registration)).
 
-What it would remove: the block classes that an app does not offer but gets because their package loaded, and the registration code in every block package's `.onLoad()`.
+What it would remove: the full entries of the block classes that no block on the opening board uses, from every reply to `hello`, and the restart that a package installed while the app runs needs.
 
-What it would cost: registration in R by class from a board's registry ids ([Block classes in R](Rewrite-1.1.5#registration)), an `open` that names a board's registry ids beside its packages ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and the same move for what else a package declares as it loads, its modules, its startup module and its renderers, which a board needs whole whatever block classes it uses ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
+What it would cost: a request for the rest of a class's entry, which the client makes before it draws, adds or migrates a block of the class or gives the assistant the class's arg specs, an `open` that names a board's registry ids ([Wire protocol](Rewrite-1.1.9#opening-a-board)), and, for a package installed while the app runs, a second discovery and a reply to `hello` whose packages grow with it.
 The board options of a class registered while the app runs need nothing more, since core adds a component's board options as it first needs the component ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 
-What would settle it: whether apps want to offer only some of a package's block classes, or to let a user load block packages while the app runs.
+What would settle it: the size of the block registry in the reply to `hello` with every available package offered, measured beside the time to the first draw, and whether apps want to take in packages installed while they run.
