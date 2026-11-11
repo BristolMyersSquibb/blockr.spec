@@ -40,7 +40,7 @@ R refuses any other value, so that a deployment that misspells one fails as the 
 ### The load lock
 
 The blockr option `lock_load`, which an app sets as `blockr.lock_load` and a deployment as `BLOCKR_LOCK_LOAD`, fixes the app to its opening board, the one that the app script built or that `serve()` was given, and is off unless one of them sets it.
-While it is on, the store refuses every `store.open()` of a board's text, so that no board that the storage plugin's `open()` returns replaces the opening board ([Plugins](Rewrite-1.1.12#storage)), a frontend draws no control for opening one, and core keeps the board R sent where a startup module names another, naming the package ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+While it is on, the store refuses every `store.open()` of a board's text, so that no board that a control of the storage plugin opens replaces the opening board, the storage plugin gives no control for opening one ([Plugins](Rewrite-1.1.12#storage)), a frontend draws no control of its own for it, and core keeps the board R sent where a startup module names another, naming the package ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 It fixes nothing of the opening board itself, so an app with the load lock alone shows one board that a user may still edit, while an app that shows a fixed setup to anyone on the internet sets the board lock too.
 
 ### The board lock
