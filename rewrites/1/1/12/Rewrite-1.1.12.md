@@ -170,7 +170,7 @@ declare module "@blockr/core" {                    // in blockr.dock's types
 }
 
 const items = Object.keys(core.plugins.running())   // the dock, as it draws its navbar
-  .flatMap(id => core.plugins.classOf(id).dockNavbar?.(id) ?? []);
+  .flatMap(id => core.plugins.pluginClass(id).dockNavbar?.(id) ?? []);
 
 core.plugins.register({                            // blockr.session's, with its avatar in the dock's navbar
   id: "blockr.session-session_plugin",

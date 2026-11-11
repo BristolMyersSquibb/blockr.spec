@@ -41,10 +41,10 @@ interface CoreApi {
   blockRegistry(): BlockRegistry;  // the block registry's entries by registry id, for pickers, which change as another board opens
   options: Options;                // register(), the board options packages define, by id, value(), the board's value or else its default, and inUse(), those that something on the page requires or that the board holds a value for
   plugins: {                       // from Plugins
-    register(def: PluginClass): () => void;    // a plugin class, from its package's startup module
-    running(): Record<PluginId, Plugin>;       // the open board's plugins whose classes are registered
-    classOf(plugin: PluginId): PluginClass;    // the definition of a running plugin's class
-    storage(): Storage;                        // the open board's storage plugin's, or core's own where it holds none
+    register(def: PluginClass): () => void;        // a plugin class, from its package's startup module
+    running(): Record<PluginId, Plugin>;           // the open board's plugins whose classes are registered
+    pluginClass(plugin: PluginId): PluginClass;    // the definition of a running plugin's class
+    storage(): Storage;                            // the open board's storage plugin's, or core's own where it holds none
   };
   lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello
   outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for plugins to act on
