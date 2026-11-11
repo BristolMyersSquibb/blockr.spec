@@ -85,6 +85,14 @@ The switch is one step, since a board mirrored in R would be two owners again.
 The new client and the slimmer core are built beside the current stack, on a `js-state` branch in every repo the rewrite changes, while main keeps the current stack until the switch.
 Block packages port one at a time.
 
+Files of today's stack cross through blockr.convert, a package of its own, rather than through core ([Serialization](Rewrite-1.1.4#files)).
+It depends on the new blockr.core and on typedjson, and holds `blockr_deser()` with core's methods and the function that turns a file of today's stack into a JSON board.
+Each package that wrote today's files keeps its own methods for them, as blockr.dplyr keeps its sixteen, and registers them on that `blockr_deser()`, as blockr.dock does for dock boards ([Saved boards and app scripts across the switch](Rewrite-1.2.2)).
+A user runs the function once on each download, a deployer once on the file that `serve()` is given, and session management on the records it stores.
+
+A function of today's that the new stack replaces goes, with no alias and no error of its own, since the blockr packages are still at 0.x.
+Each package's migration notes say what takes its place instead, written so that an AI can apply them to an app script.
+
 ## Open questions
 
 None.
