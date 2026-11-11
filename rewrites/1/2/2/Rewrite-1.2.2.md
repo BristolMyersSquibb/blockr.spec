@@ -4,7 +4,7 @@ Status: review. Design for [Client-drawn dock](Rewrite-1.2).
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): how what users made with today's blockr.dock crosses the switch.
 It covers the boards that today's blockr.dock saved, which the conversion in blockr.convert turns into JSON boards that hold the dock plugin's state at version 1.
 It also covers the app scripts that call blockr.dock's constructors, through `new_dock_board()` and the rest of what blockr.dock exports for scripts today.
-It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, layouts and card sections](Rewrite-1.2.1), whose `migrate` takes the dock plugin's state from version 1 and whose R functions write a view and its grid.
+It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), whose `migrate` takes the dock plugin's state from version 1 and whose R functions write a view and its grid.
 Each of today's extensions becomes a plugin, whose state the extension's own package takes from the extension's, as [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) has it.
 This page maps the extension's panels to that plugin's.
 

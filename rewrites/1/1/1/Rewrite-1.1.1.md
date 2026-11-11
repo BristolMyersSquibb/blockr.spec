@@ -213,14 +213,16 @@ Core publishes TypeScript types for its own objects, and a JSON Schema of a JSON
 
 ```ts
 type DockState = {                      // blockr.dock's type for its plugin's state, which core holds as Json
-  views: Record<ViewId, View>;          // { main: { name: "Main", grid: [{ block: "a" }, { plugin: "notes" }] } }
+  views: Record<ViewId, View>;          // { main: { name: "Main", folder: null, index: "a0", grid: { ... } } }
+  folders: Record<FolderId, Folder>;    // { safety: { name: "Safety", folder: null, index: "a1" } }
   active: ViewId;                       // "main"
+  visible: Record<BlockId, Section[]>;  // { a: ["outputs"] }, as The dock's state has it
 };
 ```
 
 Core carries a plugin's state without knowing it, as it carries a board's extra components today: `new_dock_board()` passes its views, grids and extensions to `new_board()` as extra components ([blockr.dock R/dock-board.R#L66-L78](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L66-L78)), and `blockr_ser.board()` serializes each of them by dispatch ([R/utils-serdes.R#L218-L231](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L218-L231)).
 What lives today in the reactive state of the dock's extensions, such as the DAG's positions and layout ([R/ext.R#L37-L47](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L37-L47)), blockr.md's content ([R/md-ext.R#L9-L26](https://github.com/BristolMyersSquibb/blockr.md/blob/32e088884d825813fb7ff0afc7d023df9e70a3b6/R/md-ext.R#L9-L26)) and the assistant's threads ([R/ext-serdes.R#L2-L28](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-serdes.R#L2-L28)), goes into the state of the plugin that takes the extension's place, rather than into the dock's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
-Of what a plugin keeps, the board holds what opening, saving and restoring it need, such as the dock's views, their layouts and which view is active, and leaves out what only one person's screen needs, such as the selection or which panel has focus, as [Client-drawn dock](Rewrite-1.2) has it for the dock, and each plugin sorts its own state by the same rule.
+Of what a plugin keeps, the board holds what opening, saving and restoring it need, such as the dock's views, their grids and which view is active, and leaves out what only one person's screen needs, such as the selection or which panel has focus, as [Client-drawn dock](Rewrite-1.2) has it for the dock, and each plugin sorts its own state by the same rule.
 
 A plugin's state that refers to core's objects stays consistent through the change that removes one.
 A plugin class gives core one function, its `update`, which the store calls for each of the class's plugins with every change it applies and which returns patches for that plugin's state, in the same step ([Board updates](Rewrite-1.1.2#applying-a-delta)).
@@ -322,7 +324,7 @@ A board with three blocks, three links and a stack, written by blockr.core 0.1.4
 }
 ```
 
-The dock's board subclass adds `extensions`, `views` and `grids` to the board ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)): a view lists its panels as `block_panel-<id>` and `ext_panel-<key>` ([R/dock-view.R#L86-L182](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L86-L182)), and a grid holds a view's layout ([R/dock-grid.R#L49-L64](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-grid.R#L49-L64)).
+The dock's board subclass adds `extensions`, `views` and `grids` to the board ([R/dock-board.R#L55-L79](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-board.R#L55-L79)): a view lists its panels as `block_panel-<id>` and `ext_panel-<key>` ([R/dock-view.R#L86-L182](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L86-L182)), and a grid arranges them ([R/dock-grid.R#L49-L64](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-grid.R#L49-L64)).
 No package other than blockr.dock subclasses a board or a stack, and none subclasses a link.
 
 A plugin's state is `Json` in core's types, so a package that types the state of its plugins, as blockr.dock would type `DockState`, declares that type with `type` rather than `interface`, since only an object type that `type` declares is assignable to `Json`'s `{ [key: string]: Json }`.

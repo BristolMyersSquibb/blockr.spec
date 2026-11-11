@@ -115,7 +115,7 @@ The store registers nothing inside a plugin's state: it checks the state's whole
 With illustrative names:
 
 ```ts
-type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/blockr.dock-dock_plugin/views/main/grid/1", with the edit id of the plugin it changes
+type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/blockr.dock-dock_plugin/views/main/grid/children/0/panels/1", with the edit id of the plugin it changes
 
 core.plugins.register({                                // the dock's, from its startup module
   id: "blockr.dock-dock_plugin",
@@ -125,7 +125,7 @@ core.plugins.register({                                // the dock's, from its s
 });
 ```
 
-A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/blockr.dock-dock_plugin/views/main/grid/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
+A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/blockr.dock-dock_plugin/views/main/grid/children/0/panels/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
 A patch changes the state of the board's plugins and never one of core's objects: a patch at or below `/plugins/{id}` changes a plugin's state, while the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.dag-dag_plugin` would, since the app sets which plugins run and their classes name them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 The store checks the patched state against its class's schema, keeps the inverse patches for undo, and tells followers of the patches, so the DAG's paste adds blocks, their links and their positions in one delta, which one undo takes back.
 The package of a plugin class registers the commands for the operations on its plugins' state, such as `blockr.dock-add_view` and `blockr.dag-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -281,7 +281,7 @@ What an `update` returns never overrides what the delta given to the store says,
 So the store leaves out a patch of an `update` whose path lies at, under or above a path that one of the given delta's own patches changes.
 An array is the exception: a patch at an array's index, or at its end as `-`, names no element.
 A patch at an index changes whatever the array holds there by then, and one at `-` adds an element of its own.
-So the paths of two patches that both index one array never overlap, even at the same index or below it, and both patches apply, as two appends at `/plugins/blockr.dock-dock_plugin/views/main/grid/-` do.
+So the paths of two patches that both index one array never overlap, even at the same index or below it, and both patches apply, as two appends at `/plugins/blockr.dock-dock_plugin/views/main/grid/children/-` do.
 Where one of the delta's own patches and a patch of an `update` both replace the element at the same index, the update's patch applies last and wins.
 A patch of the delta's own at the array itself, or above it, still leaves out what an `update` changes inside the array.
 The store reads the board before the delta to tell an array's index from an object's member named by digits.

@@ -17,7 +17,7 @@ What core gives plugins through `CoreApi`, starting the page, opening a board, c
 5. A plugin of the app whose state a board does not hold starts with its class's default state, and no plugin runs that the app does not hold, core's basic frontend and core's own storage plugin included, so that which plugins run, what draws the page and where it saves depend on the app alone, never on the board or on what was open before.
    So a plugin of the app reaches every board that the app opens, saved ones and a file given to `serve()` included, as a plugin that `serve()` takes reaches every board it serves today, and a file never changes the frontend or the storage plugin.
 6. A plugin's state belongs to that plugin alone, keyed by its class's id: it is saved, undone and migrated with the board, and its shape is its class's own, so that the states of two frontends share nothing.
-7. Boards saved by today's blockr.dock open with their views, their layouts and the state of their extensions, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
+7. Boards saved by today's blockr.dock open with their views, their grids and the state of their extensions, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 8. An app runs at most one plugin of each class, one frontend and at most one storage plugin among them, and what a plugin keeps several of, such as blockr.md's documents or what a user adds more of while the app runs, lives in that plugin's state, as the dock's views do.
 9. On a board that is not locked, every plugin, the assistant among them, can change another plugin's state as it can change a block's, whether or not the other's class registers a command for it, and the other plugin's UI shows the change at once, as a block's UI does.
 
@@ -31,7 +31,7 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 - **The dock's extensions** are Shiny module pairs that `new_dock_extension()` makes, which `new_dock_board(extensions = ...)` puts on the board.
   The board sets them: saving writes each with its constructor, the constructor's package and its state, and restoring calls each constructor that the file names, loading its package where it is installed ([blockr.dock R/utils-serdes.R#L78-L185](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-serdes.R#L78-L185), [R/utils-serdes.R#L518-L539](https://github.com/BristolMyersSquibb/blockr.core/blob/460afef170ed67ec926a75ed66021bc98ce61647/R/utils-serdes.R#L518-L539)).
 - **Board classes**, on `js-state`, are defined in JS with the properties they add, each with a schema and a default, and with an `update` and a `migrate` for them, while R names each class's frontend and version through `board_front_end()` and `board_version()` ([blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), [srcts/store/registrations.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/3536c4dad52b09bb6f9adb220d4981b1350276b9/srcts/store/registrations.ts)).
-  The dock board adds its views and layouts as properties, and keeps the state of its extensions in its `extensions`.
+  The dock board adds its views and grids as properties, and keeps the state of its extensions in its `extensions`.
 
 | Today | Where it goes |
 |---|---|
@@ -212,7 +212,7 @@ Every board that the app opens runs the app's frontend, as it runs the app's oth
 So a dock app opens a board made in a core app with the dock's default layout, since that board holds nothing for the dock.
 Core starts the page with the app's frontend, and starts the app's other plugins once the frontend has drawn, as [Drawing the board](Rewrite-1.1.8#starting-the-page) has it.
 Every board that the app opens runs the same frontend, so the page never switches to another, and opening a board starts that frontend again, as [Drawing the board](Rewrite-1.1.8#opening-a-board) has it.
-A frontend's state holds what it keeps of the board, as the dock's views, their layouts and which view is active, which were the dock board's properties ([The dock's state: views, layouts and card sections](Rewrite-1.2.1)).
+A frontend's state holds what it keeps of the board, as the dock's views, their grids and which view is active, which were the dock board's properties ([The dock's state: views, folders, grids and card sections](Rewrite-1.2.1)).
 A board that holds the dock's state, opened in an app without the dock, drops that state, naming the dock's package, and opens with the app's frontend ([Which plugins a board has](#which-plugins-a-board-has)).
 
 ### Storage
@@ -392,7 +392,7 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
     "stacks": {},
     "options": {},
     "plugins": {
-      "blockr.dock-dock_plugin": { "views": { "main": { "name": "Main", "grid": [{ "block": "a" }, { "plugin": "blockr.md-md_plugin" }] } }, "active": "main" },
+      "blockr.dock-dock_plugin": { "views": { "main": { "name": "Main", "folder": null, "index": "a0", "grid": { "orientation": "horizontal", "children": [{ "panels": [{ "block": "a" }, { "plugin": "blockr.md-md_plugin" }], "active": { "block": "a" } }], "sizes": [1] } } }, "folders": {}, "active": "main", "visible": {} },
       "blockr.dag-dag_plugin": { "positions": { "a": { "x": 120, "y": 80 } } },
       "blockr.md-md_plugin": { "content": "# Notes\n\n![Iris](blockr://a)" }
     }
