@@ -1,5 +1,5 @@
 # Client-drawn dock
-Status: settled on 2026-11-12. Part of [State in JS](Rewrite-1).
+Status: implementing in [blockr#504](https://github.com/orgs/BristolMyersSquibb/discussions/504). Part of [State in JS](Rewrite-1).
 
 This part covers blockr.dock, which becomes the dock plugin: a frontend, which draws the page as a React app on core's JS API, keeps its views, the folders that group them, their grids and the sections of each card in its state, places every plugin that has a UI in a panel, and draws the controls of the app's storage plugin in its navbar.
 It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), and whose core ships the one copy of React on the page ([UI modules in JS](Rewrite-1.1.7#react)).
@@ -93,16 +93,7 @@ None.
 
 ## Work
 
-- Define the dock plugin's class, with the schema and default of its state, its `update`, its `migrate` and the board options it requires, and define the dock's board options `compact`, `view_tabs` and `sync_rails`, in blockr.dock
-- Register the dock's commands for its views, folders, panels, rails and card sections, in blockr.dock
-- Convert boards saved by today's blockr.dock, turning their views, grids and card sections into the dock plugin's state at version 1 and the panels of their extensions into those of the plugins that take their place, in blockr.dock
-- Keep app scripts building their boards with `new_dock_board()`, which takes the board's plugins in `plugins` and each view with its grid, and returns a board that holds the dock plugin's state and those plugins, in blockr.dock
-- Write the migration notes for dock app scripts as a vignette, which says how a board saved by today's dock converts and lists every departure of a script from today, for an AI to apply, in blockr.dock
-- Take the bar's navbar items in the `navbar` that `serve()` hands the dock's `frontend_args()`, with `default_navbar()`, `custom_navbar()` and the functions that make items, in blockr.dock
-- Draw the dock with dockview from the client's board, in blockr.dock
-- Draw the block card, with its header, status dot, sections, padlock, notifications and menu, and demand the blocks whose cards are on screen and set which block has focus, in blockr.dock
-- Place every plugin that has a UI in a panel, in blockr.dock
-- Write how a plugin uses the places the dock offers, and rewrite the vignette "Views and grids" for the dock's views, folders and grids, in blockr.dock
+The spec [blockr#504](https://github.com/orgs/BristolMyersSquibb/discussions/504) holds the Work list from here, each item with its issue.
 
 ## Design pages
 

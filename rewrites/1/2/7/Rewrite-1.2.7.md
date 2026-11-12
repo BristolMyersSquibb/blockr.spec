@@ -5,6 +5,7 @@ One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.
 It covers the card's header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), with the block's mark, status, name, toggles, padlock and menu.
 It also covers the card's sections, which show as the dock's state says ([The dock's state](Rewrite-1.2.1#card-sections)), the look of the output by the block's status, the notifications that [Notifications, logging and tracing](Rewrite-1.1.14) has a card show, compact headers, which block has focus, what the dock demands for its cards, the padlock that sets the block's lock, and the card on a locked board.
 It builds on [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), through which core mounts the block's UI and output in the card.
+It shapes the card ([blockr.dock#578](https://github.com/BristolMyersSquibb/blockr.dock/issues/578)), its status and notifications ([blockr.dock#579](https://github.com/BristolMyersSquibb/blockr.dock/issues/579)), the toasts of the notifications that no card shows ([blockr.dock#580](https://github.com/BristolMyersSquibb/blockr.dock/issues/580)), and the dock's demand, which drawing a view makes ([blockr.dock#577](https://github.com/BristolMyersSquibb/blockr.dock/issues/577)).
 Which panels a view shows and the tab of a block's panel are [The dock's state](Rewrite-1.2.1#grids)'s, and why plugins add nothing to a card for now is [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)'s.
 
 ## What must hold
