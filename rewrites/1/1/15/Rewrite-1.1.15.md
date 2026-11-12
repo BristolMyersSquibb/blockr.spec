@@ -53,8 +53,7 @@ Its class's id is `blockr.core-edit_board_plugin`.
 Its name is "Edit board", which core lists for the class ([Plugins](Rewrite-1.1.12#a-plugin)).
 Its class gives R no requests, since the plugin needs no R, and no method of `plugin_version()`, since the plugin keeps no state.
 
-In JS, core registers the class itself as it starts, before the store opens a board, as it registers its own board options and the classes of its basic frontend and its storage plugin ([Plugins](Rewrite-1.1.12#the-frontend)).
-That needs no startup module, which blockr.core does not have ([blockr.core#544](https://github.com/BristolMyersSquibb/blockr.core/pull/544)).
+In JS, core registers the class from a module of its own, which core lists as any package lists a plugin class, before the store opens a board, as it registers its own board options and the classes of its basic frontend and its storage plugin ([Plugins](Rewrite-1.1.12#the-frontend), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 The class has a `ui` and nothing else, so the board holds nothing for its plugins, and the store has no `update` or `migrate` to call for it ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)):
 
 ```ts

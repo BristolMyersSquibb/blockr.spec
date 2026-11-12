@@ -1,7 +1,7 @@
 # UI modules in JS: the host, React and packaging
 Status: settled on 2026-10-30. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the contract that the UI of every block, board option and output meets, how core loads these modules and the startup modules packages declare, and how packages ship them.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the contract that the UI of every block, board option and output meets, how core loads these modules and those of the plugin classes and board options that packages list, and how packages ship them.
 It builds on the [board objects](Rewrite-1.1.1) and [board updates](Rewrite-1.1.2) proposals, and shapes blockr.ci's TypeScript gates ([blockr.ci#93](https://github.com/BristolMyersSquibb/blockr.ci/issues/93)) and installing core's types in them ([blockr.ci#97](https://github.com/BristolMyersSquibb/blockr.ci/issues/97)), the toolchain of core's client ([blockr.core#419](https://github.com/BristolMyersSquibb/blockr.core/issues/419)), what packages declare in R ([blockr.core#424](https://github.com/BristolMyersSquibb/blockr.core/issues/424)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), loading and mounting a block class's UI module ([blockr.core#437](https://github.com/BristolMyersSquibb/blockr.core/issues/437)), the UIs of core's built-in blocks ([blockr.core#438](https://github.com/BristolMyersSquibb/blockr.core/issues/438)), core's renderers and board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), the guide for block class authors ([blockr.core#444](https://github.com/BristolMyersSquibb/blockr.core/issues/444)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), filling the block registry from the block classes that the app offers ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)), the modules of plugins ([blockr.core#506](https://github.com/BristolMyersSquibb/blockr.core/issues/506)), keeping the defaults of board options beside the board ([blockr.core#508](https://github.com/BristolMyersSquibb/blockr.core/issues/508)), naming the package of a board option in its errors ([blockr.core#514](https://github.com/BristolMyersSquibb/blockr.core/issues/514)) and stopping the page on a later `hello` that it cannot take ([blockr.core#515](https://github.com/BristolMyersSquibb/blockr.core/issues/515)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 How R names a class's UI and its requests is [Block classes in R](Rewrite-1.1.5)'s, and how a frontend has core mount these modules is [Drawing the board](Rewrite-1.1.8)'s.
 Core ships the one copy of React that block UIs use, with the React SDK, while richer ready-made components for form-like UIs lie outside this page ([UI kit and design system for the client](Rewrite-1.7)).
@@ -14,7 +14,7 @@ Core ships the one copy of React that block UIs use, with the React SDK, while r
 4. One copy each of React, core's runtime and every shared module runs on the page.
 5. Core's runtime and every package's UIs ship inside their R packages, so installing a package pins the client code it runs.
 6. Core ships the one copy of React, so that a block class whose UI is written in React works under every frontend, core's basic one included, whichever other packages are loaded.
-7. What a package registers in the client, its board options, its plugin classes, the migrations of its block classes' states and its commands, is registered before the store opens a board.
+7. What a package gives the client, its board options and its plugin classes, with their commands, and the migrations of its block classes' states, is registered before the store opens a board.
 
 ## Proposal
 
@@ -165,7 +165,7 @@ Core keeps an answer as it keeps the output, unless the class marks the request 
 
 Only what core mounts inside a frontend's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer.
 A plugin's UI, which core mounts there too, gets the whole `CoreApi` instead ([Plugins](Rewrite-1.1.12#plugin-classes)).
-A frontend, which draws the whole board, its stacks and links included, gets `CoreApi`, as every other plugin and every startup module does, so core makes no host for a stack or for the board.
+A frontend, which draws the whole board, its stacks and links included, gets `CoreApi`, as every other plugin does, so core makes no host for a stack or for the board.
 A frontend that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in its own state, keyed by stack id ([Board updates](Rewrite-1.1.2#plugins)), as in this host for a note on each stack:
 
 ```ts
@@ -178,50 +178,47 @@ const stackHost = (core: CoreApi, plugin: PluginClassId, id: StackId) => ({
 });
 ```
 
-### Startup modules
+### Modules of plugin classes and board options
 
-A package may declare in R one startup module ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), for what has to run before anything mounts: registering the board options it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)), its plugin classes ([Plugins](Rewrite-1.1.12#a-plugin)), the migrations of its block classes' states and its commands ([Board updates](Rewrite-1.1.2#plugins)), putting on the page what it shares with other packages' modules, such as a UI kit's stylesheet, and naming a board to open in place of the one R sent unless the load lock is on, such as the board a URL names for session management ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
-The module exports the JS API major and a default with `initialize()`, after AFM's, which runs once before any view renders, and core calls it with `CoreApi`, as it calls the `render()` of a plugin's module ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)):
+A package lists each of its plugin classes and board options with one module, as it lists a block class with its UI module, in the object that it exports ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+A plugin class's module exports the class's `PluginClass` as its default, without the id, which R gives as `{package}-{id}`, and the class holds its UI, its frontend or its storage itself, and the commands that change its plugins' state ([Plugins](Rewrite-1.1.12#a-plugin)).
+A board option's module exports its `Option` as its default, without its id, which its package lists ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+A block class's UI module exports the migration of the class's state as `migrate`, which core imports before the store opens or checks a board that holds an older state of the class ([Board updates](Rewrite-1.1.2#plugins)).
+Each module exports the JS API major too:
 
 ```ts
 export const api = 1;                                // the JS API major it was built against
 
-export default {
-  initialize({ core, signal }: { core: CoreApi; signal: AbortSignal }): void | Promise<string | void> {
-    core.options.register(dataDir);                  // a board option it ships, such as blockr.io's data directory
-    core.plugins.register(dagPlugin);                // a plugin class, such as the DAG's
-    core.store.registerMigration("blockr.dplyr-filter_block", migrateFilter);   // a block class's migration of its state
-    core.commands.register(relayout);                // a command, such as the DAG's relayout
-    // it may also resolve with a JSON board's text, which core opens in place of the board R sent, unless the load lock is on
-  }
+export default {                                     // blockr.dag's plugin class, from dag.js, whose id R gives as blockr.dag-dag_plugin
+  state: { schema: dagState, default: { positions: {} } },
+  update: (delta, board, plugin) => dropPositions(delta.blocks?.rm ?? [], board, plugin),   // a removed block's position goes with it
+  ui: dagUi,                                         // what every frontend places for its plugin
+  commands: [relayout],                              // a command, such as the DAG's relayout
 };
 ```
 
-R sends the startup modules of the packages that the app uses with the block registry's entries, in its reply to `hello` ([Block classes in R](Rewrite-1.1.5#registration)), in the order in which the packages loaded, so that each package's comes after those of the packages it imports, which R loads before it ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562)).
-Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
-It does so before the frontend mounts and before the store opens the board R sent, so that the store finds every plugin class and every board option registered.
+R names each module in its reply to `hello`: that of each of the app's plugins' classes, in the plugin's entry of `plugins`, that of each board option that a loaded package lists, in `options`, and those that packages offer each other ([Wire protocol](Rewrite-1.1.9#handshake)).
+Core imports each module that the reply names once per page, and registers the default export of each under the id that R gives it before every board opens, with the commands that a plugin class holds, so that the store finds every plugin class and every board option registered as it opens the board ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+No package sets anything up for another, so no order holds between packages, and core imports the modules all at once.
+A package has no module of its own beside these: a storage plugin names a board to open in place of the one R sent through its class's `storage.load()` ([Plugins](Rewrite-1.1.12#storage)), and a package that follows the store, such as one that saves drafts, subscribes from its plugin's `start()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
-Core initializes each package's startup module as each board opens, since opening a board starts core again ([Drawing the board](Rewrite-1.1.8#opening-a-board)), with a new `CoreApi` and a signal that aborts as the next board opens, and skips it when a later reply of the same opening names the package again.
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask the user, through a notification, to reload the page rather than load a second copy ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-A startup module that fails to load or throws in `initialize()` is named in a notification ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)), and core carries on with the rest, so the board opens without what that package registers, and without the plugins of its classes, as without those of a package that the app does not use ([Board updates](Rewrite-1.1.2#plugins)).
+A module that fails to load is named in a notification with its package, and core carries on with the rest, so the board opens without that module's plugin class or board option, and without the plugins of the class, as without those of a package that the app does not use ([Board updates](Rewrite-1.1.2#plugins)).
 
-A package relies on the order only for the packages it imports, which is what a module needs as it loads, such as a library on another package's global.
-Between any other two packages the order is unspecified, and core keeps what they share independent of it:
+Core keeps what packages share independent of any order between them:
 
-- A startup module registers and subscribes in `initialize()`, and looks up what other packages registered when it uses it, as a plugin class's `update` runs with every change and a command's `run()` with every command.
-  It reads no board there, since none is open at startup.
-  It keeps nothing of a board at module scope, since its module loads once per page while core initializes it again with each board, and keeps what it needs for a board within `initialize()`, which ends with its signal ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-- Ids carry their package, and a board option id, which does not, fails when another package has registered it, naming both ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
-- Every startup module runs once R has replied and before the store migrates or drops anything, since core initializes them before it calls the store's `open()` ([Board updates](Rewrite-1.1.2#the-store)), and so before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)) and before the frontend reads what packages registered, such as the commands in its menus.
-  Only a startup module that runs as the page starts may name a board to open, and core ignores a board that one names as a later board opens, since that opening names its own.
-- A stylesheet loads with its module, so a UI kit's, beside its startup module, is in place before those of the packages that import the kit, which use its classes and refine them in their own CSS, loaded later.
-  A stylesheet styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties, and core's through the variables of its Tailwind theme ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+- A plugin class looks up what other packages registered when it uses it, as its `update` runs with every change and a command's `run()` with every command.
+  It keeps nothing of a board at module scope, since its module loads once per page while core registers it again with each board, and keeps what it needs for a board within its plugin's `start()`, which ends with its signal ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+- Ids carry their package, and two packages that list one board option, whose id carries none, stop the app as `serve()` is called, naming both ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+- Every module is registered once R has replied and before the store migrates or drops anything, since core registers them before it calls the store's `open()` ([Board updates](Rewrite-1.1.2#the-store)), and so before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)) and before the frontend reads what packages registered, such as the commands in its menus.
+- A stylesheet loads with its module and styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the kit's custom properties, and core's through the variables of its Tailwind theme ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+  How a UI kit puts its stylesheet, and the fonts that it refers to, on the page before the packages that use it is [UI kit and design system for the client](Rewrite-1.7)'s, since no module of a package's own carries them any more.
 
 ### React
 
 A module written in React imports `react` as any React code does, and its build maps `react`, `react-dom` and entry points such as `react/jsx-runtime` to the one copy that core puts on the page, so the module's bundle holds no React, as WordPress's build plugin maps `react` to the global `React` ([README](https://github.com/WordPress/gutenberg/blob/debb46ec9c901b95e31f8c420ef93dd61054f497/packages/dependency-extraction-webpack-plugin/README.md)) and Grafana builds plugins with `react`, `react/jsx-runtime` and `react-dom` as [externals](https://github.com/grafana/plugin-tools/blob/2115b27767554a555640300c7b4dc9c9e1842909/packages/create-plugin/templates/common/.config/bundler/externals.ts#L19-L22).
 React reaches the module through its build rather than through the host, since React libraries import `react` themselves, often as they load, as TanStack Query calls `createContext()` at the top of a module ([QueryClientProvider.tsx#L9](https://github.com/TanStack/query/blob/9e4253766f8015d1372bcd515f50103fd067a42d/packages/react-query/src/QueryClientProvider.tsx#L9)), while the host arrives only once the module renders.
-Core's runtime puts the copy on a global of its own as it loads, before core imports any startup module or other module, so that the copy is in place before any module that imports React loads, and a package needs no import of its own to find it.
+Core's runtime puts the copy on a global of its own as it loads, before core imports any other module, so that the copy is in place before any module that imports React loads, and a package needs no import of its own to find it.
 The global is core's rather than `window.React`, which may be taken already: reactR's dependency loads React's UMD build, which sets it ([R/dependencies.R#L35-L48](https://github.com/react-R/reactR/blob/808b21f4f2e5c374cb8ec910f8e2cc27f6b40e1b/R/dependencies.R#L35-L48)).
 Core ships the mapping as a build preset, which a package's build uses as core's own does.
 
@@ -247,10 +244,9 @@ What a module ships beside it sits in its folder under its name, so that `head-b
 Core's utilities sit in one stylesheet of their own, `blockr-core.css`, beside its runtime, and a module's stylesheet uses them through Tailwind's `@reference`, since utilities spread over several stylesheets override each other by load order ([blockr.core#448](https://github.com/BristolMyersSquibb/blockr.core/pull/448)).
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)).
 R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads.
-A package ships the JSON Schemas of its plugin classes' state and of the board options that it registers beside the startup module that registers them, in the same way, a file each, named for a plugin class by the id that its package declares, and for a board option by the class in R on which `board_option_version()` dispatches: `dag_plugin.schema.json` for the plugin class `blockr.dag-dag_plugin`, and `grid_gap_option.schema.json` for the board option `grid_gap`, since the class vector of a plugin in R may differ from its class's id ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566), [Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
-The suffix keeps a board option's file apart from a module's schema, since `filter.schema.json` beside `filter.js` is that module's.
-R writes a plugin's state by the file beside the startup module of the package that its class's id names, and a board option's value by the file beside any startup module, since a board option's id names no package.
-Core ships the files of its own board options beside its runtime.
+The JSON Schema of a plugin class's state, or of a board option's value, sits beside the class's or the board option's module in the same way, as `dag.schema.json` beside `dag.js` ([Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+R writes a plugin's state by the schema beside its class's module, and a board option's value by the one beside the board option's module.
+Core ships its own plugin classes and board options as any package does, each with a module and a schema of its own ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 
 ### Testing
 
@@ -264,8 +260,7 @@ None.
 
 An element that has left the page measures 0 by 0, as dockview warns of a hidden panel under its default renderer ([rendering.mdx#L18-L21](https://github.com/mathuo/dockview/blob/27a42c314a06ebc37f288d6d181d01b6cb84cd7a/packages/docs/docs/core/panels/rendering.mdx#L18-L21)), so `mountOutput()` asks R for no output while its element measures nothing, and asks again once it measures a size.
 
-Only running the startup modules and their `initialize()` follows the order, so core can fetch every one at once, such as with `<link rel="modulepreload">`.
-R keeps them in the order in which their packages loaded, rather than reading the packages' DESCRIPTION files for their dependencies ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562)).
+Core fetches every module that the reply names at once, such as with `<link rel="modulepreload">`, since no order holds between them ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 
 R serves the module of a class defined outside a package at a URL of its own, read from the path the script gave, as it serves a package's modules, so that the client imports every module alike, and a page whose content security policy forbids `blob:` scripts loads it too.
 

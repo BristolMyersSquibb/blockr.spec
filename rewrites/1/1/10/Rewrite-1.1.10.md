@@ -142,7 +142,7 @@ Outputs are fetched by whatever draws them, once a block is `ready`, and core ke
 
 Core calls four more methods of the scheduler, which plugins do not get through `CoreApi`.
 It calls `start()` once the frontend's `render()` has returned, as the page starts and as each board opens ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
-Until then the scheduler holds evaluations only, so that a startup module that waits on a request before `render()` still gets its answer.
+Until then the scheduler holds evaluations only, so that a board option's `default` that waits on a request before `render()` still gets its answer ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 It calls `session()` after the `hello` of each new session (below).
 A block's host reads the inputs of the block's recipe through `inputs()`, each with the upstream block that feeds it, for the module and for the block's requests ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Outputs and requests go to R through `request()`, so the scheduler sees everything R has to run, as the idle delay and the 5 s rule need.
@@ -172,7 +172,7 @@ Every revision comes from one counter for the page, as an auto-increment hands o
 A revision is a double, in R as in JS, which holds every whole number up to 2^53 − 1 exactly, so a page taking a million revisions a second would run out after about 285 years, and R reads it as one, as it reads every whole number the client sends ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 Should the counter reach 2^53 − 1 anyway, the scheduler stops with an error that asks for the page to be reloaded, which starts the counter again, rather than let a revision repeat, as it would once adding 1 no longer changes a double.
 A set may name blocks that are no longer on the board, which the scheduler passes over, so a block that undo brings back is demanded again by any set that still names it.
-A function of the board that throws demands nothing until it next returns, and the scheduler names its owner in an error, as core names a startup module that throws ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
+A function of the board that throws demands nothing until it next returns, and the scheduler names its owner in an error, as core names a module that fails to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 Two evaluations waiting in R hide a round trip of 40 ms, that of the link the blockx prototype was measured on ([blockr.core#395](https://github.com/BristolMyersSquibb/blockr.core/issues/395)), wherever they take that long together, while a view switch waits behind no more than those two and the one running.
 An app on a slower link with faster blocks raises `evaluation_queue`, one that wants view switches to react at once lowers it, 0 sends the next evaluation only once the last reply is back, and `Inf` sends every evaluation at once.
 Core asks R for `evaluation_queue`, `background_evaluation_delay` and `gate_visibility` as soon as R has answered its `hello`, as client code asks for every blockr option it reads, so that they are there before the scheduler starts ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).

@@ -40,7 +40,7 @@ R refuses any other value, so that a deployment that misspells one fails as the 
 ### The load lock
 
 The blockr option `lock_load`, which an app sets as `blockr.lock_load` and a deployment as `BLOCKR_LOCK_LOAD`, fixes the app to its opening board, the one that the app script built or that `serve()` was given, and is off unless one of them sets it.
-While it is on, the store refuses every `store.open()` of a board's text, so that no board that a control of the storage plugin opens replaces the opening board, the storage plugin gives no control for opening one ([Plugins](Rewrite-1.1.12#storage)), a frontend draws no control of its own for it, and core keeps the board R sent where a startup module names another, naming the package ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+While it is on, the store refuses every `store.open()` of a board's text, so that no board that a control of the storage plugin opens replaces the opening board, the storage plugin gives no control for opening one ([Plugins](Rewrite-1.1.12#storage)), a frontend draws no control of its own for it, and core keeps the board R sent, calling no `storage.load()` of the storage plugin, which could name another ([Drawing the board](Rewrite-1.1.8#starting-the-page), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 It fixes nothing of the opening board itself, so an app with the load lock alone shows one board that a user may still edit, while an app that shows a fixed setup to anyone on the internet sets the board lock too.
 
 ### The board lock
@@ -127,7 +127,7 @@ A block that a command copies gets what each plugin's `update` gives a new block
 ### Block properties in R
 
 A block constructor takes `block_name` and `locked` besides its state args, and nothing else, as `new_head_block(n = 10L, locked = FALSE)`, so a misspelled state arg still fails there, and `locked` is `NA` unless a script gives it.
-What a plugin keeps about a block, a script gives the plugin's constructor, keyed by the block's id, as `new_dock_plugin(visible = list(a = "outputs"))`, and R writes it by the schema of the plugin class's state, which the plugin's package ships beside its startup module ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
+What a plugin keeps about a block, a script gives the plugin's constructor, keyed by the block's id, as `new_dock_plugin(visible = list(a = "outputs"))`, and R writes it by the schema of the plugin class's state, which the plugin's package ships beside the class's module ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
 ## Open questions
 
@@ -136,7 +136,7 @@ None.
 <details><summary>Notes for implementers</summary>
 
 The page was started from the session of [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474), which removed `attrs`, core's `visible` and `blockr.core-set_block_attribute`, and left the lock's list of open blocks to this page.
-R applies every startup schema to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the state of its plugin classes.
+R applies the schemas of plugin classes' states and board options' values to the board in `shape_json_board()`, in `R/utils-serdes.R` on `js-state`, before core's schema of a JSON board, and core's build writes the schemas of its board options next to its runtime with `runtimeSchemas()` in `srcts/build/build.ts`, which a package's build can follow for the state of its plugin classes.
 Both yyjsonr and jsonlite write `NA` as `null` but read `null` in an object back as `NULL`, so R reads a block's `locked` by the schema of core's block, which turns `null` into `NA`.
 R reads the opening board in `lock_board()`, in `R/evaluator-lock.R` on `js-state`.
 A method of `serve()` calls it once as the app starts, in `serve_app()` in `R/utils-serve.R` on `js-state`, and hands what it returns to the evaluator of every session, which no longer calls it itself ([blockr.core#545](https://github.com/BristolMyersSquibb/blockr.core/pull/545)).

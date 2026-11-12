@@ -91,7 +91,7 @@ The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3): the app script, the opening board and how R writes it, `serve()` and data passed to it
 - [Serialization of the client-owned board](Rewrite-1.1.4): JSON boards, state values between the client and R, and migrations
 - [Block classes in R for the client-owned board](Rewrite-1.1.5): `new_block_class()`, expressions and interpolation, requests, core's classes and hooks, registration, evaluation, output classes, generics and testing
-- [UI modules in JS: the host, React and packaging](Rewrite-1.1.7): the host a module receives, startup modules, React, packaging and testing
+- [UI modules in JS: the host, React and packaging](Rewrite-1.1.7): the host a module receives, the modules of plugin classes and board options, React, packaging and testing
 - [Drawing the board: `CoreApi`, the page, core's basic frontend and renderers](Rewrite-1.1.8): what core gives plugins through `CoreApi`, starting the page, opening a board, core's basic frontend, renderers, what a package declares in R, what goes from R, and testing
 - [Wire protocol between the client and R](Rewrite-1.1.9): messages, the handshake, opening a board, blockr options, evaluation, requests, outputs, running one request at a time, cancelling, forgetting, decoding, locked boards, versions and the Shiny transport
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10): revisions, demand, invalidation, statuses and scheduling

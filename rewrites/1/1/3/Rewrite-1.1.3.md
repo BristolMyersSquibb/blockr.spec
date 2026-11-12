@@ -76,7 +76,7 @@ These registrations are the app script's own, so they stay when another board is
 The `loader` argument goes, since neither of today's loaders keeps its job: `store.open()` replaces the board in place, so no reload needs `local_loader()` to carry a board across it ([Board updates](Rewrite-1.1.2#opening-a-board)), and session management opens the board a URL names from the browser, which makes every storage call ([Session management as a client extension](Rewrite-1.6)).
 So R writes the opening board once per process and sends it to every session.
 A session under the load lock shows its script's board, since the load lock fixes the app to its opening board ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-load-lock)), and no app today picks in R the board that a session shows under today's lock.
-What remains of the loader is an ordering on the client: where `rack_loader()` resolves the board a URL names before the page is drawn, session management fetches it from its package's startup module a few round trips after the `hello`, and core opens it in place of the script's board, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+What remains of the loader is an ordering on the client: where `rack_loader()` resolves the board a URL names before the page is drawn, session management fetches it through its storage plugin's `storage.load()` a few round trips after the `hello`, and core opens it in place of the script's board, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 ### Writing the opening board
 
