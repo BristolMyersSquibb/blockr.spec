@@ -23,8 +23,9 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 
 - Session management is a storage plugin, whose controls every frontend draws in its bar ([Plugins](Rewrite-1.1.12#storage)).
   They are a menu named after the workflow, with its workflows and New, a button for drafts to recover where there are any, its save status, and a Save menu with Save, Save as, Download, Version history and Share, as today's navbar piece has them ([R/ui.R#L6-L184](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/ui.R#L6-L184)).
-  For a visitor who is signed in, a status with the visitor's initials follows them, in place of today's avatar, a navbar item of its own ([R/avatar.R#L23-L53](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/avatar.R#L23-L53)), so that `avatar_navbar_item()` goes.
-  It asks for the end of the bar with `placement: "end"`, so that the dock keeps it after its options button, where today's avatar sits.
+  For a visitor who is signed in, a status with the visitor's initials follows them, in place of today's avatar, a navbar item of its own ([R/avatar.R#L23-L53](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/avatar.R#L23-L53)), while `avatar_navbar_item()` returns the navbar item that places that status apart.
+  A dock app that appends that item to its `navbar`, as today's appends the avatar, keeps the status after the options button, where today's avatar sits ([The dock's navbar](Rewrite-1.2.5#what-the-bar-holds)).
+  Its workflows menu names the workflow by the record's key rather than by the board's name, which no storage plugin keys a record on, and a dock app leaves the board's name out of its bar, so that the bar shows one name ([The dock's navbar](Rewrite-1.2.5#the-docks-own-parts)).
   The plugin draws its board list, every version and its sharing in dialogs of its own, which its controls open.
   Opening a board or a version runs core's command that replaces the board, and the plugin updates the URL in place.
 - The rack layer becomes a TypeScript interface in the plugin, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
@@ -40,8 +41,8 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - Whether drafts go to the backend, recoverable from any device as today, or to the browser's own storage.
 - Whether the search over workflows stays at the top of the workflows menu, as today, which needs a kind of control that core's three lack, or moves into the dialog behind "All workflows" ([Plugins](Rewrite-1.1.12#storage)).
   It blocks rebuilding the workflows menu.
-- How the workflows menu, which names the record that is open, fits beside the board's name, which the dock's bar shows after its logo and core's basic frontend at the head of its toolbar, since the bar then shows two names next to each other ([The dock's navbar](Rewrite-1.2.5#the-docks-own-parts)).
-  Today the plugin sets the board's name from the record as it opens one ([R/server.R#L71-L81](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L71-L81)).
+- Whether the workflows menu shows the record's key read-only, or lets the user change it where the backend can rename a key, as today's dialog lets the user choose it at the first save ([R/server.R#L1439-L1457](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L1439-L1457)).
+  A dock app leaves the board's name out of its bar, while core's basic frontend still shows it at the head of its toolbar, beside the workflows menu, and today the plugin sets the board's name from the record as it opens one ([R/server.R#L71-L81](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L71-L81)).
   It blocks rebuilding the workflows menu as well.
 
 ## Work
