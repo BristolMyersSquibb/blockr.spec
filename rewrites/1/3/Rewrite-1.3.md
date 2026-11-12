@@ -18,10 +18,12 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 ## Proposal
 
-- The DAG is a dock extension drawn with React Flow (`@xyflow/react`): it is React, so a node is a component in the dock's own tree that reads core's store through hooks; Langflow, Flowise and Dify are built on it; and it is 59 KB gzipped against 390 KB for G6.
+- The DAG is a dock extension drawn with React Flow (`@xyflow/react`): it is React, so a node is a component in the DAG's own React root that reads core's store through hooks, since the DAG's UI shares no React context with the dock's ([Plugins](Rewrite-1.1.12#plugin-classes)); Langflow, Flowise and Dify are built on it; and it is 59 KB gzipped against 390 KB for G6.
 - React Flow has no layout engine ("We have not implemented our own layouting solution yet"), and of the libraries it suggests only elkjs lays out groups reliably, since a dagre issue "prevents it from laying out sub-flows correctly" when a node inside a group links to one outside it ([layouting](https://reactflow.dev/learn/layouting/layouting)), which stack members do all the time.
   Stacks become group nodes with a `parentId` ([sub flows](https://reactflow.dev/learn/layouting/sub-flows)), and collapsing one is the extension's own code.
 - The DAG draws each block's status badge from core's statuses ([Plugins](Rewrite-1.1.12#a-plugin)) and demands no block of its own, so a block that nothing demands reads `unevaluated` or `stale` there, as today ([`ext.R#L539-L545`](https://github.com/BristolMyersSquibb/blockr.dag/blob/68869c56f83a0ec0c4987c75e9a1c07a46cf529b/R/ext.R#L539-L545)), until an app has R evaluate in the background ([Evaluation in the client](Rewrite-1.1.10#demand)).
+- The DAG draws the UI that gathers the args of the edits its menus make, a block picker and the editors of links, inputs and stacks, in its panel or in the top layer, and runs core's commands with what the user picks, since the dock offers plugins none of its own pickers or editors ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+  It keeps a pinned editor on the selection by itself, where today it asks the dock's `sidebar_owned_by()` ([R/srv.R#L444-L474](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L444-L474)).
 - A test decides the library before the rebuild: the stacks of a real board laid out with elkjs and collapsed in React Flow.
   If that fails, the DAG uses G6, whose combos "can contain nodes and sub-combos" and collapse on a double click ([combos](https://g6.antv.antgroup.com/en/manual/element/combo/overview)).
 

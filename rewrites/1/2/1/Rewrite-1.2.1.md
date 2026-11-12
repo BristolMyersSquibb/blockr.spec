@@ -163,7 +163,7 @@ Top and bottom rails stay out, as today, since the top edge is where every tab g
 
 A panel shows the card of a block that the board holds, as `{ "block": "a" }`, or the `ui` of a plugin of the app, as `{ "plugin": "blockr.dag-dag_plugin" }`, which the dock mounts with `mountPlugin()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and its tab shows the block's name or the plugin's.
 A grid names a panel by an object, in place of today's strings `block_panel-<id>` and `ext_panel-<key>`, since an object needs no parsing.
-An object also leaves room for a plugin's panel per block, which [Places the dock offers plugins](Rewrite-1.2.4#open-questions) leaves open.
+An object also leaves room for a plugin's panel per block, which [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel) leaves for later.
 A string could join the two ids only with a separator, and a block id may hold any character ([Board objects](Rewrite-1.1.1#ids)).
 A block or a plugin has at most one panel in a view, and may have one in several views, where core mounts its UI in each ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 
@@ -172,7 +172,7 @@ A block or a plugin has at most one panel in a view, and may have one in several
 The state's `visible` holds, by block id, the sections of the block's card that show, `inputs`, `outputs` or both, as today's dock keeps them on each block ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block), [R/plugin-block.R#L38-L40](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L38-L40)).
 A block without an entry shows both, as today, and the command that sets a card's sections removes the entry where both show, so that the state lists only the cards that hide a section.
 A block that a command copies gets no entry, unless the command adds one in the same delta.
-Today's third section, `ctrl`, which shows what a `ctrl_block` plugin adds to a card, goes with that plugin ([Plugins](Rewrite-1.1.12#today)), while whether plugins add sections to a card is [Places the dock offers plugins](Rewrite-1.2.4#open-questions)'s question.
+Today's third section, `ctrl`, which shows what a `ctrl_block` plugin adds to a card, goes with that plugin ([Plugins](Rewrite-1.1.12#today)), and plugins add no sections to a card ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
 
 ### Commands
 
