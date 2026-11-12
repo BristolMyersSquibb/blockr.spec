@@ -90,8 +90,8 @@ It depends on the new blockr.core and on typedjson, and holds `blockr_deser()` w
 Each package that wrote today's files keeps its own methods for them, as blockr.dplyr keeps its sixteen, and registers them on that `blockr_deser()`, as blockr.dock does for dock boards ([Saved boards and app scripts across the switch](Rewrite-1.2.2)).
 A user runs the function once on each download, a deployer once on the file that `serve()` is given, and session management on the records it stores.
 
-A function of today's that the new stack replaces goes, with no alias and no error of its own, since the blockr packages are still at 0.x, but for blockr.dock's `ext()`, which stays as a deprecated alias of `plg()` ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)).
-Each package's migration notes say what takes the place of each such function, written so that an AI can apply them to an app script.
+A function of today's that the new stack replaces goes, with no alias and no error of its own, since the blockr packages are still at 0.x.
+Each package's migration notes say what takes its place instead, written so that an AI can apply them to an app script.
 
 ## Open questions
 
