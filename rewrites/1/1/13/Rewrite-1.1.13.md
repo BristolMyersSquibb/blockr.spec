@@ -33,8 +33,9 @@ Today's packages read 56 of them, such as core's `show_conditions` and the dock'
 
 ### The two kinds
 
-A value that the user changes while the app runs is a board option, and a value that the app or its deployment fixes is a blockr option.
+A board option is a value that the user changes while the app runs, meant above all for how the board is shown, and a value that the app or its deployment fixes is a blockr option.
 So a board's JSON describes the board in full, and holds nothing of the deployment.
+A board option is no substitute for a plugin's state, where a setting of the plugin's own goes first ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 
 | | Board option | Blockr option |
 |---|---|---|
