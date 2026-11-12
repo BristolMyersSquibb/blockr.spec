@@ -174,7 +174,7 @@ A renderer's module names the board options it requires, as core's table rendere
 
 ### What a package declares in R
 
-Besides its block classes, a package declares in R the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is: its startup module and the modules it offers others in the object it exports, `._BLOCKR_MODULES_`, which lists its block classes and plugin classes too and which R reads for each available package, so that loading a package registers nothing ([Block classes in R](Rewrite-1.1.5#registration)), and the rest through S3 methods.
+Besides its block classes, a package declares in R the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is: its startup module and the modules it offers others in the object it exports, `._BLOCKR_MODULES_`, which lists its block classes and plugin classes too and which R reads for each available package, so that a package registers nothing as it loads but block classes that it does not list ([Block classes in R](Rewrite-1.1.5#registration)), and the rest through S3 methods.
 With illustrative names:
 
 ```r
