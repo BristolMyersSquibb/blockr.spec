@@ -36,18 +36,6 @@ The board options of a class registered while the app runs need nothing more, si
 
 What would settle it: the size of the block registry in the reply to `hello` with every available package offered, measured beside the time to the first draw, and whether apps want to take in packages installed while they run.
 
-## A help menu in the dock's navbar
-
-The dock's navbar would draw a menu after the options button, with a link to the documentation and one for issues, from the blockr options `docs_url` and `issues_url`, wherever either is set, and nothing where neither is.
-Today blockr.bms draws such a menu into the navbar for the deployments of blockr.sandbox, through `use_help_nav()` ([R/navbar-help.R#L18-L22](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/R/navbar-help.R#L18-L22)).
-State in JS drops it, since no plugin adds to the dock's navbar ([The dock's navbar](Rewrite-1.2.5#what-the-bar-holds)).
-
-What it would remove: the gap that the deployments of blockr.sandbox have on their bar after the switch, and any package's need to reach into the dock's navbar for help links.
-
-What it would cost: one more of the dock's own parts, which reads two blockr options with `core.blockrOption()`, with the labels of its entries and its look in blockr.ui's design system.
-
-What would settle it: whether the deployments of blockr.sandbox miss the menu after the switch, or other deployments ask for help links on the bar.
-
 ## Entries of a block's menu in core
 
 Core would hold the entries of a block's menu, such as removing the block or appending one to it, and every frontend and the DAG would draw them in their menus of a block, so that a plugin adds an entry once for all of them.

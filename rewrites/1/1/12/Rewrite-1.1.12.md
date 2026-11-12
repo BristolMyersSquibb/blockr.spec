@@ -145,6 +145,7 @@ A package's class extends one of them or `plugin` itself, as blockr.session's is
 Core's own plugins do so too: its basic frontend is `c("basic_frontend_plugin", "frontend_plugin", "plugin")`, its storage plugin `c("file_storage_plugin", "storage_plugin", "plugin")` and its Edit board plugin `c("edit_board_plugin", "plugin")` ([The frontend](#the-frontend), [Storage](#storage), [The Edit board plugin](Rewrite-1.1.15#the-plugin)).
 R's `serve()` reads them to run core's basic frontend and storage plugin only where no other row is a frontend or a storage plugin, and to refuse rows that hold no frontend, or two frontends or two storage plugins besides core's ([Which plugins a board has](#which-plugins-a-board-has)).
 R calls a plugin class's methods of `plugin_version()` and `plugin_requests()` on an object of the class vector that the class's constructor gives, which it finds by the class's id among the classes that the available packages list, since a request names the plugin's class by its id alone ([A plugin's requests](#a-plugins-requests)).
+For the app's frontend, it also calls the method of `frontend_args()` on such an object ([The frontend](#the-frontend)).
 So only `serve()` reads `frontend_plugin` and `storage_plugin`.
 
 In JS, no plugin class extends another, and nothing walks a chain of classes.
@@ -177,7 +178,11 @@ It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugi
 ### The frontend
 
 A frontend is a plugin whose class has `frontend`, the module that draws the page, and whose class in R extends `frontend_plugin`.
-The module meets the contract of a UI module above, and core calls it with the page's element.
+The module meets the contract of a UI module above, and core calls it with the page's element and with what the method of `frontend_args()` of its class returned.
+Core defines that generic in R, and R calls the method as the app starts, with the arguments of `serve()` that core does not take itself ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
+A method takes the arguments that its frontend knows, refuses the rest, naming the frontend, and returns what the frontend reads of them as JSON, as the dock's returns the items of its bar from `navbar` ([The dock's navbar](Rewrite-1.2.5)).
+The reply to `hello` carries the result in `frontend`, beside the app's plugins and outside the board, so that no file sets it and every board that the app opens gets the same ([Wire protocol](Rewrite-1.1.9#handshake)).
+The method for `frontend_plugin` takes no argument, so core's basic frontend refuses every one.
 A page has one frontend, the app's, since `serve()` refuses rows that hold none, or two besides core's basic frontend ([Plugin classes](#plugin-classes)).
 Where no package registers in JS the class of the frontend that R names, as where its startup module failed, the page shows why in place of the board ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
 A block that `serve()` serves alone is the exception, since core draws it in a card of its own ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
@@ -203,15 +208,10 @@ interface Storage {
   subscribe?(listener: () => void): () => void;     // calls the listener when controls() would give something else, such as another save status
 }
 
-type StorageControl = Hints & (
+type StorageControl =
   | { kind: "button"; id: string; label: string; tooltip?: string; shortcut?: string; disabled?: boolean; run(): Promise<void> }
   | { kind: "menu"; id: string; label: string; items: StorageControl[] }   // its items open from it
-  | { kind: "status"; id: string; text: string; tooltip?: string }   // text that runs nothing, such as "Saved"
-);
-
-interface Hints {                                   // what a control asks of the frontend, which may ignore it
-  placement?: "end";                                // the end of the frontend's bar, after the frontend's own parts
-}
+  | { kind: "status"; id: string; text: string; tooltip?: string };   // text that runs nothing, such as "Saved"
 ```
 
 A storage plugin gives as many controls of these three kinds as it needs, and a menu holds buttons, statuses and further menus.
@@ -220,12 +220,6 @@ It draws them again whenever `subscribe()` calls back, and it binds the `shortcu
 It shows a `run()` that rejects as a notification ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 The controls do the saving and the opening themselves: they hand the JSON board that `core.store.save()` writes to where the plugin keeps boards, and open the text of a board with `core.store.open()` ([Serialization](Rewrite-1.1.4#files)).
 They leave out what a lock fixes, such as opening another board under the load lock, since `controls()` reads `core.lock` ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
-
-A control may also ask the frontend for something through its hints, which the frontend honors where it can and ignores otherwise, as an Android app bar shows an action that asks for `ifRoom` only where there is room ([Add and handle actions](https://developer.android.com/develop/ui/views/components/appbar/actions)).
-A control works without its hints, and a frontend that ignores a hint, or does not know it, draws the control as if it had none.
-So core can add a hint without breaking a frontend built before it, while every frontend has to draw a kind that core adds.
-The one hint is `placement: "end"`, which asks for the end of the frontend's bar, after the frontend's own parts, as the avatar of session management asks ([Session management as a client extension](Rewrite-1.6)).
-A frontend reads the hints of the controls on its bar alone, and ignores them inside a menu.
 
 Core's own storage plugin, which `new_file_storage_plugin()` makes, of class `c("file_storage_plugin", "storage_plugin", "plugin")` and named File storage after its class ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)), gives two buttons, as today's `preserve_board` gives Import and Export.
 Save saves the board as a download, and Open opens an upload, and the plugin leaves Open out under the load lock:
@@ -258,6 +252,7 @@ The three kinds are core's, so a frontend draws the controls of every storage pl
 What a storage plugin cannot build from them, such as the sharing settings of session management or every version of a workflow, it draws in a dialog of its own, which one of its controls opens and which takes its look from blockr.ui's design system, as every plugin's UI does ([Plugin classes](#plugin-classes)).
 A kind that core adds later needs a rule for a frontend built before it, such as skipping its controls, which the version of core that adds it settles.
 A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a client extension](Rewrite-1.6) has it.
+Nor does it key a record on the board's name, which a rename changes at any time while some backends cannot rename a key, so a frontend's field for the name renames the board alone ([The dock's navbar](Rewrite-1.2.5#the-docks-own-parts)).
 This settles the open question of [Session management as a client extension](Rewrite-1.6#open-questions) on whether storage becomes an interface of core.
 
 ### Which plugins a board has
