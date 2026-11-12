@@ -7,7 +7,7 @@ Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, and the thread
 
 ## What must hold
 
-1. The model changes the board through one tool alone, the edit tool, whose commands apply as one undo step of the assistant, all or none, through core's command registry ([Assistant as a client extension](Rewrite-1.4#what-must-hold)).
+1. The model edits the board through one tool alone, the edit tool, whose commands apply as one undo step of the assistant, all or none, through core's command registry, and takes such an edit back through `undo_edit` alone ([Assistant as a client extension](Rewrite-1.4#what-must-hold)).
 2. The edit tool returns only once the blocks it changed, and those downstream of them, are current, with each block's status, conditions and summary.
 3. The tools read the board, the block registry, the registered commands and each block's status in the browser, and send R a request only for what needs R: a block's result, the model's own R code, or the skills on the server.
 4. What each tool returns is bounded by today's blockr options, so that no call fills the model's context.
@@ -57,6 +57,7 @@ Each tool runs in the browser, and the three that need R send a request of the a
 | `inspect_results` | What the model's R code prints, and up to four of the plots it draws | The request `inspect_results` |
 | `read_skill` | A skill's text, or a file that the skill holds | The request `read_skill` |
 | `edit` | Runs a list of commands as one step of the assistant, and returns the status of each block it changed and of those downstream (below) | `commands.run()`, `scheduler.evaluate()` |
+| `undo_edit` | Takes back the assistant's last edit, as the chat's Undo does ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)) | `store.undo("assistant")` |
 
 The read tools keep today's names, and the two pairs that are new follow today's `list_block_types` and `describe_block_type`.
 They carry over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmarks to show ([Benchmarks of the new stack](Rewrite-1.8)).
