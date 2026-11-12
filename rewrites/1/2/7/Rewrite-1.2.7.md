@@ -1,5 +1,5 @@
 # Block cards in the dock
-Status: review. Design for [Client-drawn dock](Rewrite-1.2).
+Status: settled on 2026-11-12. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the card that the dock draws in a block's panel.
 It covers the card's header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), with the block's mark, status, name, toggles, padlock and menu.
