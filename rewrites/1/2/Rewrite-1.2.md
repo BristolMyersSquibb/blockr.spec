@@ -60,7 +60,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   A grid keeps the panel that each tab group shows, for the same reason.
   Folders are a departure from today's flat list of views, so that related views can be grouped, and they change only the navigation ([The dock's state](Rewrite-1.2.1#views-and-folders)).
   It leaves out which tab group has focus, which today's grid saves as `focus`, since only one person's screen needs it.
-  The dock sets which block has focus in `CoreApi.focus`, which core holds for the page and the assistant reads to tell which block the user is looking at ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
+  The dock sets which block has focus in `CoreApi.focus`, which core holds for the page and the assistant reads to tell which block the user is looking at ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins), [Block cards in the dock](Rewrite-1.2.7#focus)).
   Nothing syncs now, and if a relay for collaboration comes later as an add-on, it can keep each collaborator's switching between views on their own screen, as the tldraw store keeps session records "local to one editor instance, like which page you're viewing" ([tldraw store](https://tldraw.dev/sdk-features/store)), while the active view a board was saved with stays the view it opens on, so no JSON board needs migrating.
 - The dock's twelve actions make edits that core's commands make already: adding, appending, prepending, inserting and removing a block, adding, changing and removing a link or a stack, and editing a block's inputs ([Board updates](Rewrite-1.1.2#commands)).
   So the dock keeps only the UI that gathers the args of its own edits, the "+" menu from which a card's menu appends a block, and registers commands of its own for its state, such as adding a view, or showing a block in the active view, as blockr.dag and blockr.outline's slides do today with a `views$mod` of their own (notes, [The dock's state](Rewrite-1.2.1#commands)).
@@ -79,6 +79,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
   Core's plugin is built before the dock, so it is the first plugin the dock places, and the first test of the panels of [Places the dock offers plugins](Rewrite-1.2.4).
 - The dock draws block cards, with the header of [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) and status from core, and has core mount each block's UI and output in them ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), [Block cards in the dock](Rewrite-1.2.7)).
 - A block card's sections show as the dock's `visible` says, which its state keeps by block id, as `{ "a": ["outputs"] }`, and which the card's toggles set, as today the dock keeps them itself, while on a locked board the card mounts the UI only of a block that the board lock leaves open ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-a-plugin-keeps-about-a-block)).
+  A padlock on the card sets whether the board lock leaves the block open, through the block's `locked`, apart from which sections show ([Block cards in the dock](Rewrite-1.2.7#the-blocks-lock)).
   What else the dock locks is its own, and carries over from today: a locked dock offers no view or folder to add, rename, move or remove and no panel to add or close, keeps every panel's size and place unless a deployment loosens that through the blockr options `lock_resize` and `lock_rearrange`, and offers only copying a block's id in the card's menu.
 - From [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493), the prototype's findings carry over.
   Its transport, shinyreact, its hosting of block UIs written in R and its criterion of reusing the dock's model in R do not, since nothing in R draws UI ([Drawing the board](Rewrite-1.1.8#what-must-hold)).
@@ -95,6 +96,7 @@ None.
 - Keep app scripts building their boards with `new_dock_board()`, which takes the board's plugins in `plugins` and each view with its grid, and returns a board that holds the dock plugin's state and those plugins, in blockr.dock
 - Write the migration notes for dock app scripts as a vignette, which says how a board saved by today's dock converts and lists every departure of a script from today, for an AI to apply, in blockr.dock
 - Draw the dock with dockview from the client's board, in blockr.dock
+- Draw the block card, with its header, status dot, sections, padlock, notifications and menu, in blockr.dock
 - Place every plugin that has a UI in a panel, in blockr.dock
 - Write how a plugin uses the places the dock offers, and rewrite the vignette "Views and grids" for the dock's views, folders and grids, in blockr.dock
 
@@ -104,7 +106,7 @@ None.
 - [Saved boards and app scripts across the switch](Rewrite-1.2.2): how boards saved by today's blockr.dock open, through the conversion outside core and the `migrate` of the dock plugin's class, and how app scripts that call its constructors keep working
 - [Places the dock offers plugins](Rewrite-1.2.4): the panel in which the dock mounts each plugin's UI, how a plugin shows a panel, where a plugin's settings show, and why the dock offers plugins no other place
 - [The dock's navbar](Rewrite-1.2.5): what the bar holds and in what order, what gives way on a narrow bar, the dock's own parts, and where the storage plugin's controls go
-- [Block cards in the dock](Rewrite-1.2.7): the card's header, sections, status, notifications and menu, compact headers and the locked card
+- [Block cards in the dock](Rewrite-1.2.7): the card's header, sections, status and the look of its output, notifications and menu, compact headers, which block has focus, what the dock demands for its cards, the padlock that sets the block's lock, and the locked card
 
 <details><summary>Notes for implementers</summary>
 
