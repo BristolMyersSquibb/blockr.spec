@@ -91,7 +91,7 @@ Each package that wrote today's files keeps its own methods for them, as blockr.
 A user runs the function once on each download, a deployer once on the file that `serve()` is given, and session management on the records it stores.
 
 A function of today's that the new stack replaces goes, with no alias and no error of its own, since the blockr packages are still at 0.x.
-Each package's migration notes say what takes its place instead, written so that an AI can apply them to an app script.
+Each package's migration notes, a vignette, say what takes its place instead, written so that an AI can apply them to an app script.
 
 ## Open questions
 
