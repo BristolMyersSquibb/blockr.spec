@@ -197,7 +197,7 @@ export default {
 };
 ```
 
-R sends the startup modules of the packages that the app uses with the block registry's entries, in its reply to `hello` ([Block classes in R](Rewrite-1.1.5#registration)), and keeps them in the order of the packages' dependencies, which their DESCRIPTION files give, so that each package's comes after those of the packages it imports, and in the order of their names otherwise.
+R sends the startup modules of the packages that the app uses with the block registry's entries, in its reply to `hello` ([Block classes in R](Rewrite-1.1.5#registration)), in the order in which the packages loaded, so that each package's comes after those of the packages it imports, which R loads before it ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562)).
 Core imports and initializes them one at a time in that order, awaiting each `initialize()`, since a module's imports run as it loads, so that what a package sets up is in place before the module of a package that depends on it loads.
 It does so before the frontend mounts and before the store opens the board R sent, so that the store finds every plugin class and every board option registered.
 
@@ -265,7 +265,7 @@ None.
 An element that has left the page measures 0 by 0, as dockview warns of a hidden panel under its default renderer ([rendering.mdx#L18-L21](https://github.com/mathuo/dockview/blob/27a42c314a06ebc37f288d6d181d01b6cb84cd7a/packages/docs/docs/core/panels/rendering.mdx#L18-L21)), so `mountOutput()` asks R for no output while its element measures nothing, and asks again once it measures a size.
 
 Only running the startup modules and their `initialize()` follows the order, so core can fetch every one at once, such as with `<link rel="modulepreload">`.
-R orders them by the dependencies that the installed DESCRIPTION files of the packages that the app uses give, and by their names where those leave two packages unordered.
+R keeps them in the order in which their packages loaded, rather than reading the packages' DESCRIPTION files for their dependencies ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562)).
 
 R serves the module of a class defined outside a package at a URL of its own, read from the path the script gave, as it serves a package's modules, so that the client imports every module alike, and a page whose content security policy forbids `blob:` scripts loads it too.
 
