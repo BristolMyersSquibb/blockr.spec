@@ -30,7 +30,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - The rack layer becomes a TypeScript interface in the plugin, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser.
   The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the plugin load that record and open it in place of the opening board from its startup module, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the plugin load that record and open it in place of the opening board from blockr.session's startup module, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
 - Its controls take the place of core's Save and Open, which save a download and open an upload.
 
 ## Open questions
