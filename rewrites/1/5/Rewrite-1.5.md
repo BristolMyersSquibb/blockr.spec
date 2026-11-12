@@ -28,6 +28,7 @@ None.
 ## Work
 
 - Rebuild the code extension on the dock's client API, with generation as a request to R, in blockr.code
+- Write the migration notes for app scripts that use blockr.code as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.code
 
 <details><summary>Notes for implementers</summary>
 

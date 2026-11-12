@@ -51,7 +51,7 @@ So a change on main to what the dock writes comes with the same change to the do
 
 ### The dock board
 
-The methods of blockr.dock for the conversion, which it registers on the `blockr_deser()` of blockr.convert ([State in JS](Rewrite-1#migration)), turn a dock board into a board without a class of its own ([Board objects](Rewrite-1.1.1#the-board)).
+The methods of blockr.dock for the conversion, which it registers on the `blockr_deser()` of blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)), turn a dock board into a board without a class of its own ([Board objects](Rewrite-1.1.1#the-board)).
 That board holds the dock plugin's state under `blockr.dock-dock_plugin` at version 1, and the state of the plugin that takes the place of each extension that kept any ([Extensions](#extensions)).
 The dock plugin's state at version 1 holds what the dock board holds of its views, in today's shape, and nothing of today's stack:
 
