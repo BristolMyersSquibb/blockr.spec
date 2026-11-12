@@ -1,10 +1,10 @@
 # The dock's navbar
-Status: review. Design for [Client-drawn dock](Rewrite-1.2).
+Status: settled on 2026-11-12. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the bar across the top of the dock.
 It covers the navbar items that the bar holds and their order, which an app script gives `serve()`, what gives way on a narrow bar, the dock's own parts of the bar, a module on the bar, and how the dock draws the controls of the app's storage plugin.
 It also covers what becomes of the navbar's functions in R, which [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) settled.
-The bar is the dock's, and the app script composes it: by default it holds the dock's own parts and the controls of the app's storage plugin, and a script adds links, menus and JS modules of its own, while no plugin puts anything there by itself.
+The bar is the dock's, and the app script composes it: by default it holds the dock's own parts and the controls of the app's storage plugin, and a script adds links, menus and modules that packages offer, while no plugin puts anything there by itself.
 It shapes three items of the Work of [Client-drawn dock](Rewrite-1.2#work): taking the bar's navbar items in R, drawing the dock from the client's board, the bar among it, and writing the migration notes for dock app scripts.
 It builds on [Plugins](Rewrite-1.1.12#the-frontend), whose `frontend_args()` hands the dock what a script gives `serve()` and whose storage controls the bar draws, and on [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), whose `CoreApi` the bar works through.
 The views and folders that the views menu lists, with the commands that change them, are [The dock's state](Rewrite-1.2.1)'s, and which controls blockr.session's storage plugin gives is [Session management as a client extension](Rewrite-1.6)'s.
@@ -24,7 +24,7 @@ Condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this pag
 7. The dock's own parts draw no control for what a lock fixes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
    Under the board lock, the board's name only shows, the views menu only switches views, the read-only pill shows, and Undo and Redo stay, since what that lock leaves open still takes undo steps.
    The storage plugin's controls leave out what a lock fixes themselves, such as opening another board under the load lock ([Plugins](Rewrite-1.1.12#storage)).
-8. A navbar item that the dock cannot draw, such as a part whose id it does not know or a module whose file is missing, fails as the app starts, naming the item, and a module that fails in the page leaves the rest of the bar working.
+8. A navbar item that the dock cannot draw, such as a part whose id it does not know or a module that no available package offers, fails as the app starts, naming the item, and a module that fails in the page leaves the rest of the bar working.
 
 ## Today
 
@@ -98,7 +98,7 @@ Besides the dock's own parts, a navbar item is one of these, each made by a func
 navbar_link(id, label, href)      # a link, which opens in a new tab
 navbar_menu(id, label, ...)       # a menu of links and further menus
 navbar_storage(id)                # one of the storage plugin's controls, by its id, apart from the rest
-navbar_item(id, module)           # a JS module that draws the item, where today's navbar_item() takes ui and server
+navbar_item(id, module)           # a module that a package offers, by its id, which draws the item where today's takes ui and server
 ```
 
 The dock draws links and menus with its own components, as it draws its own parts, so that they look like the rest of the bar.
@@ -119,7 +119,7 @@ serve(
 )
 ```
 
-The dock's `frontend_args()` refuses an item that the dock cannot draw as the app starts, naming it: one whose id another item shares, a part or a kind that the dock does not know, or a module whose file is missing or that no available package offers (condition 8).
+The dock's `frontend_args()` refuses an item that the dock cannot draw as the app starts, naming it: one whose id another item shares, a part or a kind that the dock does not know, or a module that no available package offers (condition 8).
 A navbar item with nothing to show draws nothing and takes no room, as the read-only pill does without the board lock, `storage` in an app without a storage plugin, and `navbar_storage("avatar")` for a visitor who is not signed in (condition 6).
 
 The deck composer of blockr.topline, for which [blockr.dock#128](https://github.com/BristolMyersSquibb/blockr.dock/issues/128) asks a slot on the navbar, gets one as a module that blockr.topline offers and that an app's `navbar` places, so that no other plugin has to draw it.
@@ -127,14 +127,12 @@ A plugin's `ui` never goes on the bar, since the dock places it in a panel ([Pla
 
 ### A module on the bar
 
-A `navbar_item()` names its module in one of two ways:
-
-- By the id of a module that a package offers, such as `"blockr.topline-deck_button"`, which the dock loads with `core.module()` ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
-- By the path of a plain JS file, through `js_module()`, which resolves it against the script's working directory, and which R serves at a URL of its own, as it serves the module of a block class defined outside a package ([UI modules in JS](Rewrite-1.1.7#packaging)).
+A `navbar_item()` names its module by the id of a module that a package offers, such as `"blockr.topline-deck_button"`, which the dock loads with `core.module()` ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
+So every module on the bar comes from a package, which R serves as it serves every package's modules, and an app script that wants a widget of its own on the bar gives it a package.
 
 The module meets the contract of a UI module, with `CoreApi` in place of a host: the dock calls its `render()` with the item's element, `CoreApi` and a signal that it aborts when it takes the bar down, and runs the cleanup that `render()` returns ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Where the module fails to load, declares another `api` major or throws in `render()`, the dock leaves a warning icon in the item's place, whose tooltip names the module, as core leaves an error in the element of a module that fails, and the rest of the bar works (condition 8).
-A package's module may be written in TSX, which the package's build compiles, while a script's is plain JS, since the page has no import map ([UI modules in JS](Rewrite-1.1.7#packaging)).
+A module may be written in TSX, which its package's build compiles ([UI modules in JS](Rewrite-1.1.7#packaging)).
 A module draws itself, so it looks like the rest of the bar only where its author builds it from blockr.ui's components or its tokens, as a plugin's `ui` does in a panel.
 It keeps its width on a narrow bar, as the dock's own parts other than the board's name do.
 Nothing on the bar runs in R, so a module that needs R calls the requests of a plugin class of its package with `core.request()`, as a button that files an issue through R would ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
@@ -221,8 +219,8 @@ The function `avatar_navbar_item()` of blockr.session stays, and returns `navbar
 The migration notes of blockr.dock and blockr.session list what a script changes ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)):
 
 - A script that passes `navbar = custom_navbar(avatar_navbar_item())` keeps it, adding `drop = "name"` so that the bar shows the workflow's name alone, while one that leaves `navbar` out shows the avatar among the other controls of blockr.session's storage plugin, beside the board's name.
-- A script that passes items of its own gives each a module in place of its `ui` and `server`, or a link or a menu where the item showed links.
-  A module that needs R calls the requests of a plugin class in a package, since an app script defines no plugin class ([Plugins](Rewrite-1.1.12#a-plugin)).
+- A script that passes items of its own gives each a link or a menu where the item showed links, and otherwise a module that a package offers, in place of its `ui` and `server`.
+  Where the item needs R, that package gives a plugin class whose requests the module calls, since an app script defines no plugin class ([Plugins](Rewrite-1.1.12#a-plugin)).
 - A script that passes a function of its own as `navbar` passes the items that the function returns, since `navbar` takes items, with `default_navbar()` in place of `default_navbar_items(board, plugins)`.
 - A script that calls `use_help_nav()` of blockr.sandbox passes the help menu among its navbar items instead, as a menu of links that blockr.bms gives.
 
@@ -233,7 +231,7 @@ A test registers a storage plugin class whose controls hold every kind, a menu i
 It checks how the dock draws each kind, that a `navbar_storage()` item places its control apart while `storage` draws the rest, that it draws them again as `subscribe()` calls back, that it binds each `shortcut`, that a `run()` that rejects shows as a toast, and that the controls give way first on a narrow bar.
 It checks too that the dock draws links and menus, mounts a module and takes it down through its signal, and leaves a warning in the place of a module that fails to load, declares another major or throws, while the rest of the bar works.
 It also checks that a click on the board's name renames the board but not under the board lock, that Undo and Redo follow the store's history and run on their shortcuts but not in a text field, and what each of the dock's own parts shows under each lock and without a storage plugin.
-The R tests check that `serve()` hands `navbar` to the dock's `frontend_args()`, which gives `default_navbar()` where a script passes none, that `custom_navbar()` drops what `drop` names, that the method resolves a `js_module()` path for R to serve, and that it refuses an item that the dock cannot draw, naming it.
+The R tests check that `serve()` hands `navbar` to the dock's `frontend_args()`, which gives `default_navbar()` where a script passes none, that `custom_navbar()` drops what `drop` names, and that the method refuses an item that the dock cannot draw, naming it, a module that no available package offers among them.
 
 ## Open questions
 
