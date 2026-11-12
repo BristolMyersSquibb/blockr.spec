@@ -5,7 +5,7 @@
 ### Design pages
 
 - [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), settled
-- [Saved boards and app scripts across the switch](Rewrite-1.2.2), review
+- [Saved boards and app scripts across the switch](Rewrite-1.2.2), settled
 - [Places the dock offers plugins](Rewrite-1.2.4), review
 - [The dock's navbar](Rewrite-1.2.5), review
 - [Block cards in the dock](Rewrite-1.2.7), draft

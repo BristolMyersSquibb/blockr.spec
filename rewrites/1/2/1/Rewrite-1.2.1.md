@@ -270,10 +270,10 @@ It hands them to the dock plugin's constructor, with the `folders` that this pag
 new_dock_board(
   blocks = c(a = new_dataset_block(), b = new_head_block(), d = new_head_block()),
   views = list(
-    overview = dock_view(c("a", "b", ext("blockr.dag-dag_plugin")), name = "Overview"),
+    overview = dock_view(c("a", "b", plg("blockr.dag-dag_plugin")), name = "Overview"),
     ae = dock_view("d", name = "Adverse events", folder = "safety")
   ),
-  grids = list(overview = dock_grid(c("a", "b"), ext("blockr.dag-dag_plugin"), sizes = c(0.3, 0.7))),
+  grids = list(overview = dock_grid(c("a", "b"), plg("blockr.dag-dag_plugin"), sizes = c(0.3, 0.7))),
   folders = list(safety = dock_folder("Safety")),
   active = "overview",
   visible = list(b = "outputs")
@@ -284,7 +284,7 @@ new_dock_plugin(views = NULL, grids = NULL, folders = list(), active = NULL, vis
 
 A view is written with `dock_view(members, name = NULL, folder = NULL)`, as today with the folder it sits in added, and a folder with `dock_folder(name, folder = NULL)`.
 A grid is written with `dock_grid()`, `panels()`, `group()` and `rail()`, as today ([R/dock-grid.R#L809-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L809-L1008)).
-A grid or a view's members name a block's panel by the block's id or `blk()`, and a plugin's by `ext()`, which takes the id of the plugin's class ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)), while R resolves a bare id to a block first, as today ([R/dock-view.R#L1237-L1262](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L1237-L1262)).
+A grid or a view's members name a block's panel by the block's id or `blk()`, and a plugin's by `plg()`, which takes the id of the plugin's class, with today's `ext()` as its deprecated alias ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)), while R resolves a bare id to a block first, as today ([R/dock-view.R#L1237-L1262](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L1237-L1262)).
 
 R turns them into the state once, as the script runs, by today's rules: each view's grid comes from its members and its grid by the second step of the migration from version 1 (above), and a script that gives grids alone gets a view for each grid, with the grid's panels as its members ([R/dock-board.R#L81-L125](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L81-L125)).
 R draws the id of each view and folder that the script leaves out, names a view without a name after its id, as today's views menu labels one ([R/dock-view.R#L355-L366](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L355-L366)), writes each `index` in the order that the script gives, makes the first view active where the script names none, and writes the state by the schema of the dock plugin class's state ([Plugins](Rewrite-1.1.12#a-plugin)).

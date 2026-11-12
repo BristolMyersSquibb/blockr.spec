@@ -1,5 +1,5 @@
 # Saved boards and app scripts across the switch
-Status: review. Design for [Client-drawn dock](Rewrite-1.2).
+Status: settled on 2026-11-12. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): how what users made with today's blockr.dock crosses the switch.
 It covers the boards that today's blockr.dock saved, which the conversion in blockr.convert turns into JSON boards that hold the dock plugin's state at version 1.
@@ -14,7 +14,7 @@ This page maps the extension's panels to that plugin's.
    A dock app opens it with the same views, in their order and with their names and grids, the same active view, the same sections on each card, the same stack colours and dock board option values, and the panels of the plugins that take the place of its extensions.
 2. A converted board names nothing of today's stack, neither an R class, a constructor nor an extension's key, so that only the conversion reads today's names.
 3. An app script that builds its board with `new_dock_board()`, with views and grids written by `dock_view()`, `dock_grid()`, `panels()`, `group()`, `rail()`, `blk()` and `ext()`, builds a board with the same views, grids, active view and card sections as today, once it makes the changes that the migration notes of blockr.core and blockr.dock list.
-4. The migration notes of blockr.dock list every change that a dock app script needs, written so that an AI can apply them, since a function that the new stack replaces goes without an alias ([State in JS](Rewrite-1#migration)).
+4. The migration notes of blockr.dock list every change that a dock app script needs, written so that an AI can apply them, since a function that the new stack replaces goes without an alias, but for `ext()`, which stays as a deprecated alias of `plg()` ([State in JS](Rewrite-1#migration)).
 5. A script that gives its views or grids and a file that today's packages save from that script open into the same dock plugin's state, the script's board through `new_dock_board()` and the file through the conversion and the `migrate` of the dock plugin's class, while a script that gives neither gets the view that the dock adds to a board without views ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
 
 ## Today
@@ -154,7 +154,7 @@ Its arguments are these:
 - Its `blocks`, `links`, `stacks` and `options` are those that `new_board()` takes, with no board option by default, since a board holds only the values that a script sets ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)).
 - Its `extensions` are the plugins whose state the board holds, each made by a plugin's constructor, as `new_dag_plugin()` makes the DAG's.
 - Its `views`, `grids` and `active` are written as today, beside the `folders` that [The dock's state](Rewrite-1.2.1#views-and-folders) adds, and it hands them to `new_dock_plugin()` as they are ([The dock's state](Rewrite-1.2.1#defining-the-state-in-r)).
-  A reference to a plugin's panel names the plugin as [The dock's state](Rewrite-1.2.1) has `ext()` name it, so a reference by an extension's key, as `ext("analysis")` in blockr.dock's `views` example ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)), changes as the migration notes say.
+  A reference to a plugin's panel names the plugin's class by its id, through `plg()` ([The dock's state](Rewrite-1.2.1#defining-the-state-in-r)), so a reference by an extension's key, as `ext("analysis")` names the DAG in blockr.dock's `views` example ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)), becomes `plg("blockr.dag-dag_plugin")`, as the migration notes say.
 - Its `visible` gives the sections that each card shows, by block id, as `list(a = "outputs")`, and it hands that to `new_dock_plugin()` too.
   The argument takes the place of a block's `visible` attribute, which no longer reaches the board, since a block holds nothing beside its state, its name and its `locked` now ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-properties-in-r)).
   So the migration notes move what a script such as CEDX's sets on its blocks into this argument, and the test of condition 5 fails for a script that still sets the attribute.
@@ -170,7 +170,8 @@ The rest of what scripts call goes as follows:
 
 | Today | In the new stack |
 |---|---|
-| `dock_view()`, `dock_grid()`, `panels()`, `group()`, `rail()`, `blk()`, `ext()` and `layout_panel_ids()` | Kept, writing the dock plugin's state, as [The dock's state](Rewrite-1.2.1) has it |
+| `dock_view()`, `dock_grid()`, `panels()`, `group()`, `rail()`, `blk()` and `layout_panel_ids()` | Kept, writing the dock plugin's state, as [The dock's state](Rewrite-1.2.1) has it |
+| `ext()` | Deprecated in favour of `plg()`, which names a plugin's panel by the id of the plugin's class ([The dock's state](Rewrite-1.2.1#defining-the-state-in-r)), since the new stack has no extensions: it returns what `plg()` returns for the same id, with a warning, once per session, that names `plg()` |
 | `board_views()`, `board_grids()`, `active_view()`, `view_members()`, `view_name()` and `dock_extensions()` | Kept, reading the dock plugin's state and the other plugins of an R board, so that a script can derive one board from another, as CEDX's script of one view does |
 | `board_views<-()`, `board_grids<-()`, `active_view<-()`, `view_name<-()`, `dock_extensions<-()` and `stack_color<-()` | Dropped, as core's setters are, since nothing changes a board in R ([Defining a board in R](Rewrite-1.1.3#the-script)) |
 | `as_dock_board()` and `is_dock_board()` | Dropped, since no board has a class of its own ([Board objects](Rewrite-1.1.1#the-board)) |
@@ -182,7 +183,7 @@ The rest of what scripts call goes as follows:
 | `new_dock_extension()` and the rest of the extension API | Replaced by plugin classes, which only a package defines ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)) |
 
 The migration notes for dock app scripts are blockr.dock's, beside those of core ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
-They list each change of this page, with what takes the place of each function that goes, written so that an AI can apply them to a script ([State in JS](Rewrite-1#migration)).
+They list each change of this page, with what takes the place of each function that goes or is deprecated, written so that an AI can apply them to a script ([State in JS](Rewrite-1#migration)).
 
 ### Testing
 
@@ -207,5 +208,8 @@ The conversion writes the members as one array of ids.
 
 The CEDX board sets its cards' sections in `cedx_outputs_hidden()` ([dev/cedx/board.R#L1220-L1227](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1220-L1227)), passes `c(dock_board_options(), new_board_options(...))` as its options ([#L1196-L1202](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1196-L1202)), and mounts the DAG, the outline and slides of blockr.outline, the control bridge of blockr.viz and, with `assistant = TRUE`, the assistant ([#L1167-L1177](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1167-L1177)).
 Its script of one view serves its board with `serve(plugins = custom_plugins(c(ai_ctrl_block(), manage_project())))` ([dev/cedx/views.R#L84-L91](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L84-L91)), which core's migration notes cover ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+
+The deprecated `ext()` follows blockr.core's deprecated wrappers, as `new_block_arg()` warns once through `blockr_warn()` and forwards to `new_arg_spec()` ([R/arg-spec.R#L562-L565](https://github.com/BristolMyersSquibb/blockr.core/blob/5abaa52bc04bf202dab9c6e17772f2a170b10a38/R/arg-spec.R#L562-L565), [#L595-L602](https://github.com/BristolMyersSquibb/blockr.core/blob/5abaa52bc04bf202dab9c6e17772f2a170b10a38/R/arg-spec.R#L595-L602)).
+It forwards the id as it is, so its warning also says that `plg()` takes the id of a plugin's class: a script's `ext("analysis")` names no plugin's class, and the dock removes that panel as it starts ([The dock's state](Rewrite-1.2.1#starting-on-a-board)), unless the script changes the id as the migration notes say.
 
 </details>
