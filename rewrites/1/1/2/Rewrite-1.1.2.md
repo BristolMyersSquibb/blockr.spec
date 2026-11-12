@@ -181,7 +181,7 @@ The store expands a delta, checks it, commits it and tells whoever follows it:
 3. It makes the new board, sharing what did not change with the old one, and keeps the inverse of the expanded delta for undo, taken from the board it replaces, so that no package writes undo code: a removed block, link, stack or plugin comes back whole and in its place, a patched plugin's state gets its old value, and a state arg or property that the delta set where there was none is unset again, while the inverse holds no board option values ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 4. It hands the expanded delta and the new board to whoever follows the board.
 
-Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, while the edit ids they name are checked against those the board had as the step started, since `run()` and `plan()` build all of a step's deltas on one board, none is committed unless all pass, and followers are told of each in turn.
+Several deltas, as a command's `run()` or a plan returns them, apply in order as one step: each is expanded and checked on the board the one before it left, while the edit ids they name are checked against those the board had as the step started, since the command registry fills them in from that board, for each command of a list too (Commands), none is committed unless all pass, and followers are told of each in turn.
 Each call to `apply()` applies in full before the next, so no write replaces another.
 A subscriber does not apply a delta while it is told of one, since what follows from a delta is what a plugin class's `update` returns, and `apply()` called from one throws.
 So `apply()` always applies at once, and throws what rejects a delta.
@@ -206,11 +206,18 @@ interface Commands {
   registered(): Record<string, Command>;                         // the registered commands by id, for menus, a command palette and the assistant's tools
   enabled(id: string, args?: Json): boolean;                     // whether the command applies to the current board with these args
   run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false
+  run(list: { id: string; args?: Json }[], origin?: Origin): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
   plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
+  plan(list: { id: string; args?: Json }[]): Promise<Delta[]>;    // the deltas of the commands in order, each built on the board that those before it leave, not applied
 }
 
 await commands.run("blockr.core-remove_block", { id: "b" });      // one step of "user"
 await commands.plan("blockr.dag-relayout", { direction: "LR" });
+await commands.run([                                              // one step of "assistant": a block, its link and its panel
+  { id: "blockr.core-add_block", args: { registry_id: "blockr.dplyr-filter_block", id: "f" } },
+  { id: "blockr.core-add_link", args: { from: "data", to: "f" } },
+  { id: "blockr.dock-add_panel", args: { view: "main", panel: { block: "f" }, near: { block: "data" }, side: "right" } },
+], "assistant");
 ```
 
 Core's commands cover what its plugins of today and the dock's actions do: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`, as `blockr.core-set_block_lock` does, and they set a plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -218,7 +225,9 @@ Changing a stack sets its blocks, its colour or both, and clears its colour with
 Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.
 A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to.
-The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from the schema its class's UI ships, described by its arg specs, and for a plugin's state from the schema of its class's state and the args its owner's commands declare, and its staging is `commands.plan()`, with a commit passing what it planned to `store.apply()` as one step.
+The assistant's tools are commands too, named by their ids, described by their `description` and typed by their `args`, which for a block's state come from the schema its class's UI ships, described by its arg specs, and for a plugin's state from the schema of its class's state and the args its owner's commands declare, and its edit tool runs a list of commands as one step of its origin ([Assistant as a client extension](Rewrite-1.4)).
+A list of commands runs as one step: the command registry plans each command on the board that the deltas of those before it leave, which the store works out without committing them, so that a command finds the block that an earlier one adds, as `blockr.core-add_link` needs both of its blocks on the board.
+Then the store applies every delta of the list as one step of the origin given, which takes one undo step unless every command of the list has `undo: false`, or applies none where one command is refused, and the command registry names that command.
 A frontend binds the shortcuts, and a block's `submit()` runs the command that sets its state.
 
 ### Opening a board
