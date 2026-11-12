@@ -64,18 +64,18 @@ core.plugins.register({ id: "blockr.core-edit_board_plugin", ui: "blockr.core-ed
 ### What it shows
 
 Its UI shows three sections.
-Each section lists what the board holds, with the controls that edit it, and each control runs one of core's commands as one of the user's steps ([Board updates](Rewrite-1.1.2#commands)):
+Each section lists what the board holds in a table that searches its rows and shows them ten to a page, so that it stays usable on a large board, with the controls that edit it, and each control runs one of core's commands as one of the user's steps ([Board updates](Rewrite-1.1.2#commands), [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)):
 
-- Blocks: a picker of the block registry's entries, which searches their names, descriptions and keywords and groups them by category, with fields for the new block's id and name.
+- Blocks: a form with a picker of the block registry's entries, which searches their names, descriptions and keywords and groups them by category, and fields for the new block's id and name, which adds nothing as the user picks a class, but only once the user submits it, so that the id and the name go in first ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
   The command `blockr.core-add_block` adds the block.
   Where the user leaves a field empty, the command mints the id, or takes the name from the block's class.
-  Below the picker, each of the board's blocks shows with its name, which `blockr.core-rename_block` changes, and a button that removes the block with `blockr.core-remove_block`.
-- Links: each link with the block it comes from, the block it goes to and the input it feeds, which `blockr.core-change_link` changes and `blockr.core-remove_link` removes.
-  A form adds a link with `blockr.core-add_link`, and offers the inputs of the target block that no link feeds.
-- Stacks: each stack with its name, which `blockr.core-rename_stack` changes, with its colour and its blocks, which `blockr.core-change_stack` changes, and with a button for `blockr.core-remove_stack`, which leaves the stack's blocks on the board.
-  A button adds an empty stack with `blockr.core-add_stack`.
+  Below the form, each of the board's blocks shows with its name, which `blockr.core-rename_block` changes, and a button that removes the block with `blockr.core-remove_block`.
+- Links: each link with the block it comes from, the block it goes to and the input it feeds, which a form in its row changes with `blockr.core-change_link` once the user saves it, and `blockr.core-remove_link` removes.
+  A form adds a link with `blockr.core-add_link`, and offers as its target only a block that takes a link, and none that would close a cycle, as the dock's menus do today, and of that block the inputs that no link feeds, or for a variadic block an optional name for the link, as `b2` in `rbind(a, b2 = b)`, which no other link into the block gives ([Block classes in R](Rewrite-1.1.5#expressions), [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+- Stacks: each stack with its name, its colour and its blocks, which a form in its row changes once the user saves it, through `blockr.core-rename_stack` for the name and `blockr.core-change_stack` for the rest, each where it changed, and with a button for `blockr.core-remove_stack`, which leaves the stack's blocks on the board.
+  A form adds a stack with one `blockr.core-add_stack`, taking its name, its colour and its blocks first, and suggests a name and a colour that no other stack has, as the dock gives its stacks colours today ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
 
-The form for a link and the button for a stack ask for no id, and the command mints one.
+The forms for a link and for a stack ask for no id, and the command mints one.
 Today's tables take an id for a new link or stack, but nothing that the user reads shows either id.
 A block's id differs: an exported script assigns the block's result to it, so the picker asks for it.
 
@@ -83,8 +83,8 @@ It draws nothing of a block's state, which the block's own UI sets, nor the boar
 
 ### Each edit at once
 
-Each edit applies as the user makes it, while the tables of today's Edit board extension hold their edits until "Apply changes".
-Each edit is one command, so undo takes back each one, and the user learns at once why the store refused one ([Board updates](Rewrite-1.1.2#undo)).
+Each edit applies as the user makes it, by submitting a form or pressing a button, while the tables of today's Edit board extension hold their edits until "Apply changes".
+Each edit is one command, so undo takes back each one, and the user learns at once why the store refused one ([Board updates](Rewrite-1.1.2#undo)), so that saving a stack whose name and blocks both changed makes two steps, which undo takes back one at a time ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
 A block that the user adds is on the board at once, so the next edit can link it or put it in a stack.
 The forms therefore read the board as it is.
 Staging the block edits as well, as [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199) asked, would have them read a staged copy of the board, in which a link can name a block that the board does not hold yet.
