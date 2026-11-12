@@ -157,14 +157,6 @@ So every plugin with a UI works under every frontend.
 A frontend may know a plugin class by its id too, as the dock might know `blockr.dag-dag_plugin` to give the DAG a place of its own, but it needs nothing beyond core's members to place a plugin.
 A plugin without a UI module, such as blockr.viz's control bridge, runs from its class's `start` alone, with no place on the screen ([Running a plugin](#running-a-plugin)).
 
-A frontend may offer plugins more places than the one where it mounts their `ui`, through members of its own.
-It declares each such member on core's type, which TypeScript's module augmentation lets a package do ([TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)), and reads it from the class of each plugin that runs, while core reads nothing of it.
-Under another frontend, nothing reads such a member, and the plugin works all the same.
-A plugin's package needs the frontend's types only to build, so the frontend's package need not be loaded where the plugin runs.
-A package prefixes the members it adds with a name of its own, so that two packages never pick the same name, and TypeScript reports two declarations of one member with different types where a build sees both.
-Such a member follows the open board by itself, since the frontend reads it from the plugins that run, so nothing is registered as a plugin starts or dropped as it stops ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
-Which places the dock offers is [Places the dock offers plugins](Rewrite-1.2.4)'s to settle.
-
 A plugin's module, the `ui` or the `frontend` of its class, meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls with an element, the id of the plugin it draws and a signal, and which returns the cleanup, so it never names its own id.
 Core calls a plugin's `ui` with the element that the frontend gave `mountPlugin()`, and a frontend's module with the page's element ([The frontend](#the-frontend)):
 

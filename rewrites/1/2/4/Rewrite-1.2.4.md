@@ -109,7 +109,7 @@ Today's sidebar shows only the code export on a locked board ([R/board-options.R
 The panel is the only place that the dock offers plugins.
 No plugin adds to the dock's navbar, where the storage plugin's controls are the only ones of another plugin that the dock draws ([The dock's navbar](Rewrite-1.2.5)), and the dock's menus and cards offer plugins nothing, as below.
 So the dock declares no member of its own on core's `PluginClass`, and reads no member of a plugin's class beyond core's, as core's basic frontend reads none ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
-A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares, and which changes nothing for the plugins that do not set it ([Plugins](Rewrite-1.1.12#plugin-classes)).
+A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares ([TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)), and which changes nothing for the plugins that do not set it.
 
 The dock takes no part in what a plugin draws, and offers plugins none of its own pickers, editors or sidebars.
 A plugin draws the UI that gathers the args of the commands it runs, in its panel or in the top layer, and runs core's commands with what the user picks.
