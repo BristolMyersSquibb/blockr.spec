@@ -1,5 +1,5 @@
 # Client-drawn dock
-Status: review. Part of [State in JS](Rewrite-1).
+Status: settled on 2026-11-12. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.dock, which becomes the dock plugin: a frontend, which draws the page as a React app on core's JS API, keeps its views, the folders that group them, their grids and the sections of each card in its state, places every plugin that has a UI in a panel, and draws the controls of the app's storage plugin in its navbar.
 It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), and whose core ships the one copy of React on the page ([UI modules in JS](Rewrite-1.1.7#react)).
