@@ -10,3 +10,4 @@
 - [Session management as a client extension](Rewrite-1.6), draft
 - [UI kit and design system for the client](Rewrite-1.7), draft
 - [Benchmarks of the new stack](Rewrite-1.8), draft
+- [The conversion and the migration notes](Rewrite-1.9), review

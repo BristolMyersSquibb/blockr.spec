@@ -50,6 +50,8 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), the
 - Spike the agent loop on the AI SDK and on pi, and choose between them by the conditions in the Proposal, in blockr.assistant
 - Rebuild the assistant as a client extension on the library the spike chose, with its agent loop in the browser, in blockr.assistant
 - Give the browser its credential as the open question settles, with the stateless proxy in R where a provider needs it, in blockr.assistant
+- Convert the assistant extension of boards saved today into the state of the assistant's plugin, with blockr.assistant's method of blockr.convert's `blockr_deser()`, in blockr.assistant
+- Write the migration notes for app scripts that use the assistant as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.assistant
 
 <details><summary>Notes for implementers</summary>
 

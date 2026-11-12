@@ -37,6 +37,8 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 - Lay out and collapse the stacks of a real board with React Flow and elkjs, to decide between React Flow and G6, in blockr.dag
 - Rebuild the DAG as a client extension on the dock's extension API, in blockr.dag
+- Convert the DAG extension of boards saved today into the state of the DAG's plugin, with a method of blockr.convert's `blockr_deser()`, in blockr.dag
+- Write the migration notes for app scripts that use the DAG as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.dag
 
 <details><summary>Notes for implementers</summary>
 
