@@ -42,7 +42,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), the
 - Whether an answer that needs a number adds a block, so that every number the assistant reports is in the exported code, or the assistant may run R outside blocks.
 - How the browser gets its credential: the visitor's own key, a token R obtains for the visitor, a short-lived token R mints, or a key of the app's that R hands over, with the proxy in R only for a provider that visitors' browsers cannot reach (notes), or a key that the server the [Roadmap](Roadmap#a-server-of-our-own) considers holds out of R's reach.
   It blocks the last Work item, not the loop (What must hold 3), and choosing which of these the assistant supports first settles it.
-- Whether the assistant keeps `llm_model`, `chat_compact` and `chat_keep` as board options, as today, or in its state, since a board option is meant above all for how the board is shown, and a setting of the assistant's own goes in its state first ([Board options and blockr options](Rewrite-1.1.13#the-two-kinds)).
+- Whether the assistant keeps `llm_model`, `chat_compact_tokens` and `chat_compact_keep` as board options, as today, or in its state, since a board option is meant above all for how the board is shown, and a setting of the assistant's own goes in its state first ([Board options and blockr options](Rewrite-1.1.13#the-two-kinds)).
   It blocks the item of the Proposal on `llm_model`, and weighing each of the three settles it.
 
 ## Work

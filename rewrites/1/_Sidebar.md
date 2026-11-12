@@ -3,7 +3,7 @@
 ### Parts
 
 - [Client-owned board state](Rewrite-1.1), implementing
-- [Client-drawn dock](Rewrite-1.2), draft
+- [Client-drawn dock](Rewrite-1.2), review
 - [Client-drawn DAG extension](Rewrite-1.3), draft
 - [Assistant as a client extension](Rewrite-1.4), draft
 - [Code export as a client extension](Rewrite-1.5), draft

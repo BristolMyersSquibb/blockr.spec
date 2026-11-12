@@ -19,7 +19,7 @@ Conditions 1 and 2 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rest on th
 5. Removing a block takes its panels out of every view and its entry out of the card sections, in the same step, which one undo takes back.
 6. Folders group and order the navigation alone, at any depth, and removing a folder removes no view.
 7. An app script writes views, folders and grids in R, each view with its grid, and R turns them into the dock's state as the app starts, with every id.
-8. A board that holds no state for the dock opens with one view, with the default grid over its blocks and the app's plugins that have a `ui`, and no view shows a panel that the dock cannot draw.
+8. A board that holds no state for the dock opens with one view, with the app's plugins that have a `ui` on its left rail and the default grid over its blocks, as today, and no view shows a panel that the dock cannot draw.
 
 ## Today
 
@@ -30,6 +30,7 @@ The members decide which panels a view shows and the grid only arranges them, so
 The two have different writers.
 R changes the members through the `views$mod` grammar of the board's updates, while the grid changes only when the browser's settled layout reaches R's grid mirror, which stores it where it differs from the stored grid by more than a tolerance ([R/board-server.R#L435-L520](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-server.R#L435-L520)).
 The views form one flat list, in the order that the views menu shows and the user drags ([R/dock-view.R#L184-L199](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L184-L199)).
+The views menu refuses, in the browser alone, an empty name and a name that another view has ([inst/assets/js/view-binding.js#L147-L163](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/view-binding.js#L147-L163)), a rule that dates from when a view's name was its key ([blockr.dock#166](https://github.com/BristolMyersSquibb/blockr.dock/issues/166)).
 
 ## Proposal
 
@@ -177,6 +178,8 @@ Today's third section, `ctrl`, which shows what a `ctrl_block` plugin adds to a 
 ### Commands
 
 The dock registers a command for each operation on its state, whose description and args describe it to menus and to the assistant's tools ([Board updates](Rewrite-1.1.2#commands)), while core's `blockr.core-set_plugin_state` sets any part of the state on a board that is not locked, which the schema keeps valid ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+The commands that add or rename a view or a folder refuse an empty name, or one of spaces alone, as a card refuses one for a block ([Block cards in the dock](Rewrite-1.2.7#the-header)).
+They refuse no name for being another view's or folder's, since each is known by its id, and two of one name differ by their place in the navigation ([Principles](Principles#an-object-is-known-by-an-id-that-never-changes-and-its-name-is-only-a-label)).
 A command that changes a view's grid replaces the grid whole, so that undo puts back the grid that was there, where a patch inside it would name an index that may hold something else by then ([Board updates](Rewrite-1.1.2#undo)).
 
 | Command | Args | What it does |
@@ -241,8 +244,9 @@ The dock's state holds no view where the board was made in a core app, where it 
 
 As the dock starts on a board, before it first draws, it applies one delta of its own where the state needs one, with the origin `blockr.dock-dock_plugin` and `undo: false` ([Board updates](Rewrite-1.1.2#undo)):
 
-1. Where the state holds no view, it adds one, named "Page", and makes it active, with the default grid over the panels of the board's blocks and of the app's plugins whose class has a `ui` (Grids, above).
+1. Where the state holds no view, it adds one, named "Page", and makes it active, with the panels of the app's plugins whose class has a `ui` on its left rail, open and at the default width, and the default grid over the panels of the board's blocks (Grids, above), as today's dock lays out a fresh board ([R/dock-grid.R#L994-L1008](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L994-L1008), [R/dock-rail.R#L339-L349](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L339-L349)).
 2. It removes every panel that it cannot draw, that of a plugin that the app does not run or whose class has no `ui`, as the store drops the state of a plugin that the app does not run as the board opens ([Board updates](Rewrite-1.1.2#plugins)).
+3. As the page starts, where its URL names one of the board's views by id in the query parameter `view`, it makes that view active, as today's served board does, while an id that names no view changes nothing ([R/utils-serve.R#L87-L111](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-serve.R#L87-L111)).
 
 So undo never takes the user back to an empty page or to a panel that the app cannot draw.
 A fresh start of the same app takes the same step on the same board, so the page is what a fresh start would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
