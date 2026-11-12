@@ -42,8 +42,8 @@ interface CoreApi {
   options: Options;                // register(), the board options packages define, by id, value(), the board's value or else its default, and inUse(), those that something on the page requires or that the board holds a value for
   plugins: {                       // from Plugins
     register(def: PluginClass): () => void;        // a plugin class, from its package's startup module
-    running(): Record<PluginClassId, Plugin>;      // the app's plugins whose classes are registered, each under its class's id with its name
-    pluginClass(plugin: PluginClassId): PluginClass;   // the definition of a running plugin's class
+    appPlugins(): Record<PluginClassId, Plugin>;   // the app's plugins whose classes are registered, each under its class's id with its name
+    pluginClass(plugin: PluginClassId): PluginClass;   // the definition of the class of one of the app's plugins
     storage(): Storage | undefined;                // the app's storage plugin's, or undefined where the app holds none
   };
   lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello

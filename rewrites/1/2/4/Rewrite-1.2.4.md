@@ -50,7 +50,7 @@ Carrying those places over is [Client-drawn DAG extension](Rewrite-1.3)'s.
 
 The dock offers each plugin whose class has a `ui` one panel, in which it mounts the plugin's module with `core.mountPlugin(el, plugin)` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 A view's grid names the panel by the plugin's class id, as `{ "plugin": "blockr.md-md_plugin" }`, and a view has at most one panel for each plugin, as for each block ([The dock's state](Rewrite-1.2.1#grids)).
-The panel's tab shows the plugin's name, which `core.plugins.running()` gives ([Plugins](Rewrite-1.1.12#a-plugin)).
+The panel's tab shows the plugin's name, which `core.plugins.appPlugins()` gives ([Plugins](Rewrite-1.1.12#a-plugin)).
 The panel picker lists, after the blocks and under "Plugins", each plugin with a `ui` that the active view does not show, by its name.
 Core's Edit board plugin is the first plugin that the dock places in a panel, since core builds it before the dock ([Client-drawn dock](Rewrite-1.2#proposal)).
 
