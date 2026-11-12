@@ -219,5 +219,6 @@ Its script of one view serves its board with `serve(plugins = custom_plugins(c(a
 
 Today's `panel_id_map()` and `resolve_panel_ids()` resolve the name that a script gives an extension ([R/dock-view.R#L465-L521](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L465-L521)), and the names of the plugins in `plugins` resolve the same way.
 Where today's `check_panel_refs()` refuses a reference that names neither a block nor an extension of the board, R refuses no reference to a plugin, since it may name the class of a plugin that `serve()` adds, and the dock removes a panel of a plugin that the app does not run as it starts ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
+A script that needs the panels that a view shows, as CEDX's script of one view does to find the view's blocks ([dev/cedx/views.R#L50-L56](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L50-L56)), walks the view's grid, and whether blockr.dock gives it a function for that, as today's `view_members()` is, stays open until the scripts are ported.
 
 </details>
