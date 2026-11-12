@@ -44,6 +44,7 @@ Its R helpers draw into Shiny UIs, and its table preview implements the Shiny me
 ## Work
 
 - Port the table preview to a renderer of the output class `table_output`, paging and sorting through the output's parameters, in blockr.ui
+- Bring the design system's locked mode in line with block locks: under the board lock a locked block shows no UI, its reader controls included, and an open block shows all of its UI, its gear included ([UI modules in JS](Rewrite-1.1.7#the-contract), [Block cards in the dock](Rewrite-1.2.7#the-blocks-lock)), in blockr.ui
 
 ## Design pages
 

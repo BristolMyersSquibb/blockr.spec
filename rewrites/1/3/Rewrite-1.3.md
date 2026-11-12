@@ -30,6 +30,8 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 ## Open questions
 
 - When layout runs: on every change, or on request with the positions a user placed kept, as `positions` and `layout` coexist today.
+- How the DAG's badge shows the same status as the card's status dot, whose spec the dock's client holds as one function ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)): blockr.dag re-implements the function, or both take it from another package.
+  It blocks the rebuild of the DAG, and is decided once the dock's function is built.
 
 ## Work
 

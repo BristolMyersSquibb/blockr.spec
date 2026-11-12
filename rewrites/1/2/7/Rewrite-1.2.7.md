@@ -1,11 +1,11 @@
 # Block cards in the dock
-Status: draft. Design for [Client-drawn dock](Rewrite-1.2).
+Status: review. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the card that the dock draws in a block's panel.
-It covers the card's header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), with the block's mark, status, name, toggles and menu.
-It also covers the card's sections, which show as the dock's state says ([The dock's state](Rewrite-1.2.1#card-sections)), the look of the output by the block's status, the notifications that [Notifications, logging and tracing](Rewrite-1.1.14) has a card show, compact headers, which block has focus, what the dock demands for its cards, and the card on a locked board.
+It covers the card's header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), with the block's mark, status, name, toggles, padlock and menu.
+It also covers the card's sections, which show as the dock's state says ([The dock's state](Rewrite-1.2.1#card-sections)), the look of the output by the block's status, the notifications that [Notifications, logging and tracing](Rewrite-1.1.14) has a card show, compact headers, which block has focus, what the dock demands for its cards, the padlock that sets the block's lock, and the card on a locked board.
 It builds on [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), through which core mounts the block's UI and output in the card.
-Which panels a view shows and the tab of a block's panel are [The dock's state](Rewrite-1.2.1)'s, and what plugins add to a card is [Places the dock offers plugins](Rewrite-1.2.4)'s.
+Which panels a view shows and the tab of a block's panel are [The dock's state](Rewrite-1.2.1#grids)'s, and why plugins add nothing to a card for now is [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)'s.
 
 ## What must hold
 
@@ -13,11 +13,12 @@ Condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this pag
 
 1. The dock draws everything of a card but the block's UI and output, which core mounts in it, so that every block class draws in the dock with no code for the dock ([Drawing the board](Rewrite-1.1.8#what-must-hold)).
 2. The header has a one-click toggle for the block's inputs and one for its output, drawn alike, and a block whose UI draws nothing gets no toggle for its inputs, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) asks.
-3. A card's sections show as the dock's state says, and the card changes them only through a command, so that saving, undo and other plugins see each change ([The dock's state](Rewrite-1.2.1)).
-4. The card's status dot and the DAG's badge show the same status for the same block at the same moment.
+3. A card's sections show as the dock's state says, and the card changes them only through a command, so that saving, undo and other plugins see each change ([The dock's state](Rewrite-1.2.1#commands)).
+4. The card's status dot follows the design system's spec of block status, and draws from the block's status and its notifications alone, so that the DAG's badge can show the same status for the same block.
 5. A block's notifications show on its card, each once, of the severities that the board option `show_conditions` names, from when core raises them until core withdraws them.
 6. Under the board lock, the card draws no control for what a lock fixes, and it mounts the UI only of a block that the board lock leaves open ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 7. The dock demands the blocks whose cards are on screen, and no other block.
+8. The card shows whether the board lock leaves the block open, and its author sets that apart from which sections show, so that how a card looks never decides what readers may change ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
 
 ## Today
 
@@ -30,18 +31,18 @@ Core clears the output of a block that is not `ready` ([R/block-server.R#L64-L66
 |---|---|
 | The card's frame: `block_ui()`, `insert_block_ui()` and `remove_block_ui()` for the dock board, the offcanvas that parks each card, and `show-block.js`, which moves a card into its panel | Replaced by the card that the dock draws in React in each block's panel, so that nothing parks or moves a card ([The card](#the-card)) |
 | The mark, `block_card_mark()`, which draws blockr.ui's `block_mark()` at 32px with the block's type and package as its tooltip | Carried over, from the block registry's entry ([The header](#the-header)) |
-| The status dot, `block_status_dot()`, drawn by the spec that `block_status_badge()` gives the card and blockr.dag's node badge, and the notes of a `waiting` and an `unset` block | Carried over, from `scheduler.status()`, with `invalid` in place of `unset` ([The status dot](#the-status-dot), [The output](#the-output)) |
+| The status dot, `block_status_dot()`, drawn by the spec that `block_status_badge()` gives the card and blockr.dag's node badge, and the notes of a `waiting` and an `unset` block | Carried over into the dock's client, from `scheduler.status()`, with `invalid` in place of `unset` ([The status dot](#the-status-dot), [The output](#the-output)) |
 | The name, `block_card_title()`, which `block-rename.js` renames in place | Carried over, renaming through `blockr.core-rename_block` ([The header](#the-header)) |
 | The toggles, `block_card_toggles()` and `section-toggle.js`: the preview's eye, and the control that a `ctrl_block` plugin adds | The eye carried over, with the Controls toggle beside it, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), while the control goes with `ctrl_block` ([Plugins](Rewrite-1.1.12#today)) |
 | The "…" menu, `block_card_dropdown()` and `block-menu.js`: Controls, Rename, Append block, Copy block ID and Remove block | Carried over without Controls, which moves to the header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), and with core's commands in place of the dock's actions ([The menu](#the-menu)) |
 | Whether a block has controls, `has_expr_ui()`, which renders the block's R UI and looks for markup | Replaced by whether the block's UI module draws anything ([The header](#the-header)) |
-| The sections, `block_card_content()`: the control's, the inputs and the preview, which fold | The inputs and the preview carried over as the sections `inputs` and `outputs` of the dock's state ([The dock's state](Rewrite-1.2.1)), while the control's section goes with `ctrl_block` ([Sections](#sections)) |
+| The sections, `block_card_content()`: the control's, the inputs and the preview, which fold | The inputs and the preview carried over as the sections `inputs` and `outputs` of the dock's state ([The dock's state](Rewrite-1.2.1#card-sections)), while the control's section goes with `ctrl_block` ([Sections](#sections)) |
 | The conditions, which `update_blk_cond_observer()` inserts and removes: errors above the sections, and warnings and messages folded under the preview | Carried over, from the notifications of `CoreApi`, with warnings above the sections beside errors, as the design system has them ([Notifications](#notifications)) |
 | The compact header, which the board option `compact` turns on through `compact.js` | Carried over ([Compact headers](#compact-headers)) |
-| The sections that a card reports, `reported_sections()`, and core's `frozen` channel, which the dock sets for every block on a locked board and for a block whose card hides its inputs | Replaced by the dock's state, while the channel goes, since a hidden UI takes no input and the store refuses what a lock fixes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)) |
+| The sections that a card reports, `reported_sections()`, and core's `frozen` channel, which the dock sets for every block on a locked board and for a block whose card hides its inputs | Replaced by the dock's state and the block's lock, while the channel goes, since a hidden UI takes no input and the store refuses what a lock fixes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)), so a block whose card hides its inputs is fixed under the board lock unless its author opened it ([The block's lock](#the-blocks-lock)) |
 | The ledger of built cards, `built_cards()` and the `mark_cards_*()` functions, which drive core's visibility channels, and the front panels that the dock holds eager | Replaced by the dock's demand of the blocks whose cards are on screen ([Demand](#demand)) |
 | Shiny's fade of a recalculating output, and core's clearing of the output of a block that is not `ready` | Replaced by the card's look for each status ([The output](#the-output)) |
-| The `callbacks` of `edit_block_server()`, through which a package runs code for every block | Open, with whether plugins add to a card ([Places the dock offers plugins](Rewrite-1.2.4#open-questions)) |
+| The `callbacks` of `edit_block_server()`, through which a package runs code for every block | Dropped with `extension_block_callback()`, which hands them over, since a plugin reads every block's status through `scheduler.status()` ([Places the dock offers plugins](Rewrite-1.2.4#today)) |
 
 ## Proposal
 
@@ -63,7 +64,7 @@ The header is one row, as the design system's "Dock header" has it ([design-syst
 
 1. The block's mark, a 32px square in the colour of the block's category with the block's icon, carrying the status dot ([The status dot](#the-status-dot)).
 2. The block's name, at 16px, which wraps to a second line and is cut after it.
-3. The Controls toggle and the Preview toggle, in that order.
+3. The Controls toggle, the Preview toggle and the padlock, in that order.
 4. The "…" button, which opens the block's menu ([The menu](#the-menu)).
 
 The mark takes its icon and category from the entry of the block's class in the block registry, which `core.blockRegistry()` gives by the block's registry id ([Block classes in R](Rewrite-1.1.5#registration)).
@@ -81,8 +82,11 @@ A single click on the name stays free to select the panel.
 
 Each toggle shows and hides one section of the card: the Controls toggle the `inputs` section and the Preview toggle the `outputs` section.
 The toggles are drawn alike, as the design system's header tools: 26px, bare, with the sliders and the eye as their icons, "Controls" and "Preview" as their tooltips and labels, and `aria-pressed` while their section shows.
-A click runs `blockr.dock-set_sections` with the block's new set of sections, as one undo step ([The dock's state](Rewrite-1.2.1)).
+A click runs `blockr.dock-set_sections` with the block's new set of sections, as one undo step ([The dock's state](Rewrite-1.2.1#commands)).
 So the eye keeps its place and look, and the Controls toggle moves from the menu into the header, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
+
+The padlock shows whether the board lock leaves the block open to readers: closed while the block's `locked` is `true` or `null`, and open while it is `false` ([The block's lock](#the-blocks-lock)).
+It is drawn as the toggles are, with the lock and the open lock as its icons, "Locked for readers" and "Open to readers" as its tooltips and labels, and `aria-pressed` while the block is open.
 
 A block whose UI draws nothing gets no Controls toggle, as today's card gives none to a block whose R UI renders no markup ([R/block-ui.R#L71-L82](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/block-ui.R#L71-L82)).
 Every block class names a UI module, since its module ships the schema of its state, and the modules of core's row-bind, static and fixed blocks draw nothing ([Block classes in R](Rewrite-1.1.5#the-block-class)).
@@ -109,9 +113,12 @@ That carries over: the dot reads `failed` while a notification of the severity e
 A `stale` block is the exception, as today, since its errors were raised for inputs it no longer has.
 The dot shows no evaluation that is running, as today's shows none, while the card fades the output ([The output](#the-output)).
 
+The dock's client holds this spec as one function, which takes a block's status and its notifications and gives the dot's fill, ring and tooltip, with the light value of each colour for a renderer that cannot read CSS, as today's `block_status_badge()` gives them to the card and to blockr.dag's node badge.
+The function uses nothing else of the dock's, so that blockr.dag can draw the same badge, whether it re-implements the function or both take it from another package, which [Client-drawn DAG extension](Rewrite-1.3#open-questions) leaves open.
+
 ### Sections
 
-The card's `inputs` and `outputs` sections show as the dock's `visible` says for the block, and both show where it holds no entry for the block ([The dock's state](Rewrite-1.2.1)).
+The card's `inputs` and `outputs` sections show as the dock's `visible` says for the block, and both show where it holds no entry for the block ([The dock's state](Rewrite-1.2.1#card-sections)).
 A section folds over 0.22s as it closes and unfolds as it opens, whoever changed `visible`, unless the user's system asks for reduced motion, as today ([inst/assets/js/section-toggle.js](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/section-toggle.js)).
 A rule divides the two sections only while both show, as today.
 
@@ -170,11 +177,12 @@ The "…" button opens the block's menu, drawn as the design system's menus are,
 
 1. Rename, which starts renaming the block in place ([The header](#the-header)).
 2. Append block, which opens the dock's "+" menu from the button.
-   The dock appends a block of the class that the user picks there, through `blockr.core-append_block`.
+   The dock appends a block of the class that the user picks there, as `blockr.core-append_block` does.
 3. Copy block ID, with the id as monospaced meta text, which puts the id on the clipboard.
 4. A divider, then Remove block, with the bin icon and the danger colour, which runs `blockr.core-remove_block`.
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
+The rows are the dock's own for now, and entries that plugins come to add to a block's menu would come from core, so that every menu of a block draws them ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
 The rows that edit the board run core's commands, which make the edits that the dock's actions made today, each as one undo step of the user's ([Client-drawn dock](Rewrite-1.2#proposal), [Board updates](Rewrite-1.1.2#undo)).
 
 ### Compact headers
@@ -187,41 +195,43 @@ The card reads the option's value through `core.options`, and the dock plugin's 
 
 The dock sets which block has focus in `CoreApi.focus`, which the assistant reads to tell which block the user is looking at ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)):
 
-- A block takes focus when its panel becomes the active panel, as when the user clicks into its card or onto its tab, or when a command fronts its panel.
+- A block takes focus when the user clicks into its card or onto its tab, or when a command shows its panel, such as `blockr.dock-show_panel` ([The dock's state](Rewrite-1.2.1#commands)).
 - A block takes focus when the keyboard's focus moves into its card.
 - Hovering over a card gives no focus.
-- Focus stays where it is when a plugin's panel becomes the active panel, so that the block the user clicked on the way to the assistant's panel keeps focus, as today's assistant reads only block panels ([blockr.assistant R/focus.R#L10-L17](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/focus.R#L10-L17)).
+- Focus stays where it is when the user clicks into a plugin's panel, so that the block the user clicked before moving to the assistant's panel keeps focus, as today's assistant reads only block panels ([blockr.assistant R/focus.R#L10-L17](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/focus.R#L10-L17)).
 - The dock sets focus to `null` when the focused block leaves the board.
 
 ### Demand
 
 The dock demands the blocks whose cards are on screen, at the evaluation priority 1, above the default ([Evaluation in the client](Rewrite-1.1.10#demand)).
-A card is on screen where it is in the active view and its panel is the one that its tab group or rail shows, as today's dock holds the front panel of each group eager ([R/utils-ui.R#L105-L111](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-ui.R#L105-L111)).
+A card is on screen where it is in the active view and its panel is the one that its tab group shows, or that an open rail shows, as today's dock holds eager the front panel of each tab group and of each rail that is not collapsed ([R/utils-ui.R#L101-L111](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-ui.R#L101-L111)).
 A card whose sections are both closed is on screen too, so that its status dot stays current.
-The dock replaces its demand with the new set whenever the active view, its grid or the panel that a tab group shows changes.
+The dock replaces its demand with the new set whenever the active view or its grid changes, as when a tab group shows another panel or a rail collapses or opens ([The dock's state](Rewrite-1.2.1#commands)).
 It makes its first demand within the frontend's `render()`, from the board, so that the blocks of the opening view are evaluated first ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+
+### The block's lock
+
+Which sections a card shows and whether readers may change the block are set apart: the toggles set the dock's `visible`, and the padlock sets the block's `locked`, core's property, which says whether the board lock leaves the block open ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
+So the two never conflict, and they meet only on a locked board, where the card mounts no locked block's UI, whatever `visible` says ([On a locked board](#on-a-locked-board)).
+
+A click on a closed padlock runs `blockr.core-set_block_lock` with `false`, which leaves the block open to readers, and one on an open padlock runs it with `null`, which gives the block back to the board lock, each as one undo step ([Board updates](Rewrite-1.1.2#undo)).
+Every block starts with `null`, however it is added, so its padlock shows closed, and readers may change only the blocks whose padlock their author opened, as an author leaves a block open by setting its `locked` to `false` in an app without the board lock ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
+Without the board lock, core fixes no block, so the author edits a block whatever its padlock shows, and no input greys out.
 
 ### On a locked board
 
 Under the board lock, the card draws no control for what a lock fixes, as `core.lock` and `store.locked()` say ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)):
 
-- It shows no toggle, so its sections show as the dock's `visible` says, as today's locked card does ([R/plugin-block.R#L131-L137](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L131-L137)).
+- It shows no toggle and no padlock, since no command sets a card's sections or a block's lock there ([The dock's state](Rewrite-1.2.1#on-a-locked-board), [Locked boards and the properties of blocks](Rewrite-1.1.11#the-board-lock)), and its sections show as the dock's `visible` says, as today's locked card does ([R/plugin-block.R#L131-L137](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L131-L137)).
 - A double-click on its name starts no rename, since the board lock fixes every block's name.
 - Its menu holds Copy block ID alone, as today.
 - It mounts the UI only of a block that the board lock leaves open, and shows no `inputs` section for any other block, whatever `visible` says.
 
-A block whose `inputs` show on a locked board is one that its author left open to readers, so a reader sets its state there as on any board.
+A block whose `inputs` show on a locked board is one that its author left open to readers, by opening its padlock or through a script, so a reader sets its state there as on any board ([The block's lock](#the-blocks-lock)).
 
 ## Open questions
 
-- Where the spec of the status dot lives, which the DAG's badge draws from too.
-  Today it is blockr.dock's exported `block_status_badge()`, which blockr.dag calls ([blockr.dag R/ext.R#L521-L583](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L521-L583)).
-  A plugin works under every frontend, so the DAG cannot rely on blockr.dock's code being on the page ([Plugins](Rewrite-1.1.12#what-must-hold)).
-  The design system of blockr.ui already specifies the dot for both, so a function of blockr.ui's client that gives the spec from a block's status and notifications would settle it.
-  It blocks condition 4.
-- Whether the card's menu sets a block's `locked` through `blockr.core-set_block_lock`, so that an author leaves a block open to readers in the app, as [Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks) describes, and whether the card marks such a block.
-  Neither today's dock nor core's basic frontend offers it, and core's Edit board plugin does not either.
-  It blocks the menu.
+None.
 
 <details><summary>Notes for implementers</summary>
 
@@ -230,11 +240,20 @@ Today's code, at `655e323`: the frame of the card, the offcanvas and the ledger 
 The card reads whether the block's UI drew anything with a `MutationObserver` on the element it gave `mountBlock()`, since a module written in React draws after `render()` returns.
 The `inputs` section takes no room while that element is empty, so a block whose UI draws nothing shows no empty section either.
 
-The status dot's fills are blockr.ui's meaning tokens, with the light value of each beside it for a renderer that cannot read CSS, such as the DAG's canvas, as `block_status_style()` gives them today: `text-muted` `#6b7280`, `border-warning` `#d97706`, `border-danger` `#dc2626`, and the ring `bg-surface` `#ffffff`.
+The status dot's fills are the design system's meaning tokens, with these light values, as `block_status_style()` gives them today: `text-muted` `#6b7280`, `border-warning` `#d97706`, `border-danger` `#dc2626`, and the ring `bg-surface` `#ffffff`.
 The waiting ring is 1.5px wide, inside an 8px dot.
+Today's card reads each token with its light value as the fallback, as `var(--blockr-color-border-danger, #dc2626)`, so the dot draws on a page without blockr.ui's token sheet too ([R/plugin-block.R#L678-L680](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L678-L680)).
 
 Today's card renders a condition's message with `cli::ansi_html()`, which turns cli's ANSI styling into HTML ([R/plugin-block.R#L518-L538](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L518-L538)).
 Whether a message still reaches the client with that styling is to be checked on `js-state`, and the card removes any escapes before it shows the text.
+
+A block whose UI draws nothing keeps its padlock, though opening it gives readers no control, since no input shows for it, while a plugin's command could then change its state on a locked board.
+
+The padlock reads the block's `locked` rather than `store.locked()`, which says `false` for every block without the board lock, since the padlock shows what the board lock will do.
+
+The design system has locked mode hide the gear button and nothing else, so that reader controls, such as the patient profile's view toggles, stay on a block's face ([design-system.Rmd#L396-L400](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L396-L400)).
+Under the board lock, the card mounts no locked block's UI at all ([UI modules in JS](Rewrite-1.1.7#the-contract)), so those controls go with it, and an author who wants readers to use them opens the block's padlock.
+The design system is to follow ([UI kit and design system for the client](Rewrite-1.7)).
 
 Today's locked card already offers no toggle and no rename, and its menu holds Copy block ID alone ([R/plugin-block.R#L191-L247](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L191-L247)).
 On a locked board the card mounts no locked block's UI, so no block's gear stays on screen there wired to nothing, which [blockr.dock#423](https://github.com/BristolMyersSquibb/blockr.dock/issues/423) reports today.
