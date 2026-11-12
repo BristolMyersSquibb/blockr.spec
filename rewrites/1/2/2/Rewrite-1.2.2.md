@@ -168,7 +168,6 @@ Its arguments are these:
 
 The function leaves a stack without a colour where the script gives it none, so such a stack holds `null`, which the dock draws in a default of its own ([Board objects](Rewrite-1.1.1#stacks)).
 Today's `new_dock_board()` picks a colour for such a stack through `suggest_new_colors()` and the blockr option `stack_color` ([R/dock-stack.R#L90-L103](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-stack.R#L90-L103)), and both go.
-The dock's stack editor keeps suggesting a colour for a stack that the user adds ([Client-drawn dock](Rewrite-1.2#today)).
 The function drops `ctor`, `pkg`, `class` and `...`, as `new_board()` does ([Defining a board in R](Rewrite-1.1.3#the-script)).
 
 The rest of what scripts call goes as follows:
