@@ -262,7 +262,7 @@ It holds the state of each plugin whose class has `state`, and nothing for any o
 An app runs at most one plugin of each class, among them one frontend ([The frontend](#the-frontend)) and at most one storage plugin ([Storage](#storage)).
 
 The app's plugins are those of the rows that `serve()` takes in `plugins`, which R sends in its reply to `hello`, and they run on every board that the app opens, the opening board among them, whatever state a board holds.
-The rows are a data frame that gives each plugin's class in `package` and `id`, as the rows of `block_classes` give block classes ([Block classes in R](Rewrite-1.1.5#registration)).
+The rows are a data frame that gives each plugin's class in `package` and `id`, as the rows of `blocks` give block classes ([Block classes in R](Rewrite-1.1.5#registration)).
 They default to `available_plugins()`, a row for each plugin class that an available package lists, so that an app runs every plugin that its packages offer unless its script narrows them, as it offers every available block class.
 A script narrows them with plain R, or gives the path of a YAML file that lists packages and, for each, the plugin classes to run, all of them where it lists none.
 Core's basic frontend runs only where no other row is a frontend, and core's storage plugin only where no other row is a storage plugin, so that an app with blockr.dock installed draws with the dock, and one with blockr.session saves to Connect, without its script naming either.

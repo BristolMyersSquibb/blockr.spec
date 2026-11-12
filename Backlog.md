@@ -21,13 +21,13 @@ What would settle it: whether, once drill-down runs as a plugin in State in JS, 
 
 ## Block classes registered on demand
 
-An app's block registry fills once, as `serve()` builds the app, from the block classes that it takes in `block_classes`, every class of the available packages by default, and the reply to `hello` sends each of them in full: its metadata, its schema, its default state, its arg specs and its requests ([Block classes in R](Rewrite-1.1.5#registration), [Wire protocol](Rewrite-1.1.9#handshake)).
+An app's block registry fills once, as `serve()` builds the app, from the block classes that it takes in `blocks`, every class of the available packages by default, and the reply to `hello` sends each of them in full: its metadata, its schema, its default state, its arg specs and its requests ([Block classes in R](Rewrite-1.1.5#registration), [Wire protocol](Rewrite-1.1.9#handshake)).
 The first draw needs that only for the classes of the blocks on the opening board, while every other class needs only its id and the metadata that the picker shows, until a user adds a block of it, a board that holds one opens, or the assistant reads its arg specs.
 So the reply could send each offered class's id and picker metadata, and the rest of its entry the first time something needs it.
 The same would let an app take in a package installed while it runs.
 R loads a package that it has not loaded yet as it loads any other, so discovery could run again and add the package's classes, modules and version to the app for the sessions that start afterwards, where [blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562) builds each app's block registry once, as `serve()` runs, so that a class registered later reaches no app built before.
 Upgrading a package that the app has loaded still takes a restart, since R cannot swap a namespace in place, and a reconnecting page reloads where R names a package at another version than before ([Wire protocol](Rewrite-1.1.9#handshake)).
-Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/blockr.core/pull/454), when loading a package registered all of its classes, which `block_classes` and the object `._BLOCKR_MODULES_` that each package exports have since replaced ([Block classes in R](Rewrite-1.1.5#registration)).
+Raised in the review of [blockr.core#454](https://github.com/BristolMyersSquibb/blockr.core/pull/454), when loading a package registered all of its classes, which `blocks` and the object `._BLOCKR_MODULES_` that each package exports have since replaced ([Block classes in R](Rewrite-1.1.5#registration)).
 
 What it would remove: the full entries of the block classes that no block on the opening board uses, from every reply to `hello`, and the restart that a package installed while the app runs needs.
 
