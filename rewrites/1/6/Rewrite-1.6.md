@@ -31,7 +31,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - The rack layer becomes a TypeScript interface in the plugin, with a backend for pins on Connect, whose API the browser reaches on the content's own origin, and one for the browser's own storage when there is no Connect.
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser.
   The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
-- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the plugin load that record and open it in place of the opening board from blockr.session's startup module, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page)), so `rack_loader()` goes.
+- The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the plugin load that record and open it in place of the opening board through its class's `storage.load()`, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)), so `rack_loader()` goes.
 - A record that blockr.session stored today, or a file of today's stack that a visitor uploads, converts as the plugin opens it, through a request that R answers with blockr.convert ([The conversion and the migration notes](Rewrite-1.9#who-converts)).
 - Its controls take the place of core's Save and Open, which save a download and open an upload.
 
@@ -44,6 +44,8 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - Whether the workflows menu shows the record's key read-only, or lets the user change it where the backend can rename a key, as today's dialog lets the user choose it at the first save ([R/server.R#L1439-L1457](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L1439-L1457)).
   A dock app leaves the board's name out of its bar, while core's basic frontend still shows it at the head of its toolbar, beside the workflows menu, and today the plugin sets the board's name from the record as it opens one ([R/server.R#L71-L81](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L71-L81)).
   It blocks rebuilding the workflows menu as well.
+- How session management exchanges the visitor's session token for the key that reads the record a URL names, since its storage plugin's `storage.load()` runs before any board is open, where `core.request()` refuses a request of its plugin ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+  It blocks opening a record from a URL.
 
 ## Work
 

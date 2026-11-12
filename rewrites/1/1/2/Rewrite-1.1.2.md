@@ -65,9 +65,8 @@ interface Store {
   canUndo(origin?: Origin): boolean;
   canRedo(origin?: Origin): boolean;
 
-  registerMigration(registryId: RegistryId, fn: Migration): () => void;   // a block class's one migration of its state (below)
-  readonly plugins: Plugins;                                 // the plugin classes that packages register through CoreApi.plugins.register() (Plugins)
-  readonly options: Options;                                 // the board options that packages register (Board options and blockr options)
+  readonly plugins: Plugins;                                 // the plugin classes that core registers from the modules that the reply names (Plugins)
+  readonly options: Options;                                 // the board options that core registers from the modules that the reply names (Board options and blockr options)
   blockRegistry(): BlockRegistry;                            // the block registry's entries of the reply to hello that it opened its board with
   packages(): Record<string, string>;                        // the versions of the packages in that reply, which jsonBoard() records
   editId(of: { block: BlockId } | { plugin: PluginClassId }): number | undefined;   // the edit id of a block or a plugin, which the command registry fills into the deltas of a command (below)
@@ -77,7 +76,7 @@ interface Store {
 Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, what is registered, and the edit id of each block and of each plugin: the number of the step that last changed it, from one count of the steps, the opening of a board, an undo and a redo included, so that no number names two versions of one object.
 It holds no board until it opens one and refuses every delta until then, so that nothing builds on a board that no opening made.
 Core creates a store for each board it opens, with `createStore({ hello, loaded, signal })`, given the reply to `hello` and a signal that ends the store as another board opens, and the store sends R nothing, since it opens its board with what the reply to `hello` holds, while a board that another replaces goes with its store, as core starts again ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
-The `loaded(reply)` callback is what the store awaits before it opens its board, given the reply to `hello`, while core initializes the startup modules, which register their plugin classes, before it calls `open()` ([blockr.core#499](https://github.com/BristolMyersSquibb/blockr.core/pull/499)), so that the store opens the board with every plugin class that the app's packages register ([Plugins](Rewrite-1.1.12#a-plugin)).
+The `loaded(reply)` callback is what the store awaits before it opens its board, given the reply to `hello`, while core registers the plugin classes and board options whose modules the reply names before it calls `open()` ([blockr.core#499](https://github.com/BristolMyersSquibb/blockr.core/pull/499), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)), so that the store opens the board with the class of every plugin of the app registered ([Plugins](Rewrite-1.1.12#a-plugin)).
 Core imports the app's frontend once the store has opened the board, since which of the app's plugins run, its frontend among them, is settled only once the store has opened the board with those whose classes the app's packages register ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 Under the load lock it refuses every `store.open()` of a file's text, and under the board lock every delta but one that changes the state of a block that the board lock leaves open, a board option's value or what sits inside a plugin's state, which the plugin locks itself ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)), and `locked()` says which blocks it fixes, since a block whose `locked` is `null` follows the board lock.
 So it refuses a delta that adds a block or changes a locked block's state, which R backs by refusing an evaluation that rebinds a block's data inputs or gives a locked block another state ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-r-refuses)).
@@ -108,7 +107,7 @@ Board option values are set and removed as a collection entry's properties are, 
 
 Besides core's objects, a board holds the state of its plugins in `plugins`, each under its class's id, for each plugin whose class has state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), such as the dock's views and which view is active, the DAG's positions, blockr.md's document or the assistant's threads, which today's dock board writes in properties of its own and, by each extension's id, in its `extensions` ([blockr.dock R/utils-serdes.R#L46-L96](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/utils-serdes.R#L46-L96)).
 
-A package registers each plugin class it ships from its startup module, under the class's id ([Plugins](Rewrite-1.1.12#a-plugin)).
+Core registers the class of each of the app's plugins under the class's id, from the module that the class's package lists for it ([Plugins](Rewrite-1.1.12#a-plugin), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 Of the class's members, the store reads the schema and the default of its plugins' state, one function that keeps that state consistent with the rest of the board, and one that migrates it (below), while what sits inside a plugin's state is the class's own design.
 Registering a class checks that no registered class has its id already and that its state's default fits its schema.
 The store registers nothing inside a plugin's state: it checks the state's whole value against its class's schema after every change, keeps what a change replaced for undo, and saves the state with the board.
@@ -117,18 +116,18 @@ With illustrative names:
 ```ts
 type Patch = { op: "add" | "remove" | "replace"; path: string; value?: Json; edit?: number };   // JSON Patch's, at a path from the board's root, as "/plugins/blockr.dock-dock_plugin/views/main/grid/children/0/panels/1", with the edit id of the plugin it changes
 
-core.plugins.register({                                // the dock's, from its startup module
-  id: "blockr.dock-dock_plugin",
+export default {                                       // the dock's, from dock.js, the module that blockr.dock lists for blockr.dock-dock_plugin
   state: { schema: dockState, default: defaultLayout },
   update: (delta, board, plugin) => dropPanels(delta.blocks?.rm ?? [], board, plugin),   // a removed block's panels go with it
-  frontend: "blockr.dock-dock",
-});
+  frontend: dockFrontend,
+  commands: [addView],                                 // blockr.dock-add_view, among others
+};
 ```
 
 A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/blockr.dock-dock_plugin/views/main/grid/children/0/panels/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
 A patch changes the state of the board's plugins and never one of core's objects: a patch at or below `/plugins/{id}` changes a plugin's state, while the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.dag-dag_plugin` would, since the app sets which plugins run and their classes name them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 The store checks the patched state against its class's schema, keeps the inverse patches for undo, and tells followers of the patches, so the DAG's paste adds blocks, their links and their positions in one delta, which one undo takes back.
-The package of a plugin class registers the commands for the operations on its plugins' state, such as `blockr.dock-add_view` and `blockr.dag-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+A plugin class holds the commands for the operations on its plugins' state, which core registers with the class, such as `blockr.dock-add_view` and `blockr.dag-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Everything else, menus, shortcuts and the assistant, changes a plugin's state through those commands, which is external control (below).
 No part of a plugin's state is closed to others, as `external_ctrl` closes an extension's other variables today: the class's commands are open to anyone, and so is core's command on a board that is not locked, and the class's schema keeps the state valid whoever runs them.
 
@@ -141,18 +140,18 @@ It mints an id only into the step it is part of, while one that repairs a board 
 Its patches belong to the step that caused them, which is what is undone, saved and, one day, sent to a peer.
 ProseMirror's `appendTransaction` lets a plugin add to another's transaction in the same way ([ProseMirror](https://prosemirror.net/docs/ref/#state.PluginSpec.appendTransaction)), and tldraw's side effects run inside the change that triggered them ([StoreSideEffects](https://tldraw.dev/reference/store/StoreSideEffects)).
 
-The schema of a plugin class's state describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today, and its package ships it as JSON beside its startup module too, so that R writes the state by it ([UI modules in JS](Rewrite-1.1.7#packaging), [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
+The schema of a plugin class's state describes it, in the `description` and `examples` keywords, as `new_ext_meta()` describes an extension's state today, and its package ships it as JSON beside the class's module, so that R writes the state by it ([UI modules in JS](Rewrite-1.1.7#packaging), [Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
 What a JSON board holds migrates by the version of each shape that it records, never by a package's version ([Serialization](Rewrite-1.1.4#migrations)), so that a class can rename, split and merge the parts of its plugins' state or its blocks' state between versions and still read every shape it ever wrote, as [Board objects](Rewrite-1.1.1#extending-cores-objects) has it.
 A plugin class migrates its plugins' state in its `migrate`, given the state of one plugin as the JSON board holds it and the version of the class that the board records, and returns it in today's shape.
-A package registers the migration of each of its block classes' states under the class's registry id, from its startup module, since the class's UI module owns the state's shape but loads only once core mounts a block, and no migration runs in R any more.
+A block class's UI module exports the migration of the class's state as `migrate`, since the module owns the state's shape, and core imports it before the store opens or checks a board that holds an older state of the class, though the module loads for its UI only once core mounts a block, while no migration runs in R any more ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 A board option migrates its value in its definition's `migrate`, given the value and the version of its shape that the JSON board records ([Serialization](Rewrite-1.1.4#board-options)).
 
 ```ts
 type Migration = (state: Record<string, Json>, version: number) => Record<string, Json>;   // version: the class's, as the block records it
 
-store.registerMigration("blockr.dplyr-filter_block", (state, version) =>   // from blockr.dplyr's startup module
-  version < 2 ? { ...state, conditions: [state.condition] } : state);
+export const migrate: Migration = (state, version) =>   // from the UI module of blockr.dplyr-filter_block
+  version < 2 ? { ...state, conditions: [state.condition] } : state;
 ```
 
 When a board opens, the store first drops the state of each plugin of a class that the app does not run, or that no package that the app uses registers, such as the dock's on a board opened in a core app ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
@@ -163,9 +162,9 @@ A plugin's state that the store dropped refuses nothing, whatever version of its
 So a board saved with the dock at version 2 opens without the dock in an app without blockr.dock, where the dock's class has no method of `plugin_version()` and so is at version 1 ([Plugins](Rewrite-1.1.12#a-plugin)).
 What a board reads where nothing set a value comes from what packages define, the `default` of a plugin class's state and a board option's `default`, rather than from a migration, which only a JSON board's opening runs.
 Only then does the store drop every block whose class the block registry lacks, since dropping a block calls the `update` of each plugin's class, which reads the plugin's state in today's shape.
-It also drops then every board option value that no package that the app uses registers, such as those of a package whose startup module failed ([UI modules in JS](Rewrite-1.1.7#startup-modules)), naming each by its id, so a board saved afterwards is written without them ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
+It also drops then every board option value that no package that the app uses registers, such as that of a board option whose module failed to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)), naming each by its id, so a board saved afterwards is written without them ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
 Then it gives each of the app's plugins whose class has state, and whose state the board does not hold, its class's default state ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
-Every package therefore registers its plugin classes, its board options and its migrations before the store opens a board, from its startup module, which core initializes before the store opens any board ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
+Core therefore registers every plugin class and board option, and imports the migrations of the block classes whose older states the board holds, before the store opens a board, from the modules that the reply names ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 
 ### Applying a delta
 
@@ -231,8 +230,8 @@ await store.open(hello);   // the opening board in R's reply to hello
 
 Opening a board replaces the board rather than changing it, so it is no delta.
 A store opens one board, which core has it open as core starts, and a later `store.open()` starts core again with the board given, in a new store ([Drawing the board](Rewrite-1.1.8#opening-a-board)), so that the undo history and everything else of the board before goes with the store that held it.
-The store tells its followers of the board it opens without a delta, through `store.subscribe()`, so a session package saving drafts, which subscribes as its startup module initializes, sees each board open.
-A board may come from another app or from older versions of its classes ([Board objects](Rewrite-1.1.1)), and the store opens it itself, as a JSON board, as it opens the board R sends at startup ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), needing nothing of R but what the reply to `hello` holds: the block registry's entries, the versions of the plugin classes and of the board options, the app's plugins, the opening board, the locks and the versions of the packages that the app uses ([Wire protocol](Rewrite-1.1.9#opening-a-board)).
+The store tells its followers of the board it opens without a delta, through `store.subscribe()`, while a session package saving drafts subscribes from its plugin's `start()`, which runs once each board has opened, and reads that board there ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+A board may come from another app or from older versions of its classes ([Board objects](Rewrite-1.1.1)), and the store opens it itself, as a JSON board, as it opens the board R sends at startup ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), needing nothing of R but what the reply to `hello` holds: the block registry's entries, the app's plugins, each with its class's version and module, the board options, each with its version and module, the opening board, the locks and the versions of the packages that the app uses ([Wire protocol](Rewrite-1.1.9#opening-a-board)).
 The `store.open()` call parses a JSON board's text and opens it with what the last reply to `hello` held, sending R nothing.
 Given that reply, it opens the reply's `board`: the JSON board that an app script built, which R wrote with every id ([Board objects](Rewrite-1.1.1#ids)), or the one that `serve()` was given, which R passed on as it is.
 So every board goes the same way and ends as the same board, whether an app script defined it, R passed on the file `serve()` was given, the client opened a file or a user built it up with deltas.

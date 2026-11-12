@@ -52,27 +52,26 @@ A board option is no substitute for a plugin's state, where a setting of the plu
 A board option is an instance of one type, `Option`, rather than a type of its own ([State in JS](Rewrite-1#principles)).
 What R's methods for a board option's class do today becomes data or a function on the instance, so nothing in the client dispatches on a board option's type.
 The package defines it in the client because what a new value does on the page, such as switching the theme for `dark_mode`, is code that the board option's Shiny `server` runs in R today ([R/board-option.R#L572-L582](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L572-L582)), which R could not describe to the client.
-The package that ships a board option registers it from its startup module, through `core.options.register()`, with the UI module that the startup module imports, before the store opens a board ([UI modules in JS](Rewrite-1.1.7#startup-modules)).
-Core registers its own three, `n_rows`, `show_conditions` and `dark_mode`, which `coreOptions(core)` makes, as it starts the page and again as each board opens, since an opening ends the board options registered before it ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
+The package that ships a board option lists it in R with one module, whose default export is the board option's `Option` without its id, and core registers it from there before the store opens a board ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+Core lists its own three, `n_rows`, `show_conditions` and `dark_mode`, as any package lists its board options, each with a module of its own, which core registers as it starts the page and again as each board opens, since an opening ends the board options registered before it ([Drawing the board](Rewrite-1.1.8#opening-a-board), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 
 ```ts
-interface Option {                                 // as the package that ships it registers it in the client
+interface Option {                                 // as core registers it in the client, from its module's default export, which leaves out the id
   id: OptionId;                                    // "n_rows", stable, which the board holds its value under
   label: string;                                   // "Preview rows", what the user sees
   category: string;                                // "Table options"
   schema: JsonSchema;                              // the values it takes, with a description for a model
-  default: Json | (() => Promise<Json>);           // what readers get where the board holds no value, or a function core calls for it
+  default: Json | ((core: CoreApi) => Promise<Json>);   // what readers get where the board holds no value, or a function core calls for it with CoreApi
   ui: OptionModule;                                // its UI module, which gets an OptionHost
   onChange?(value: Json, core: CoreApi): void;     // what a new value does on the page, such as switching the theme
   migrate?(value: Json, version: number): Json;    // converts a value that a JSON board records at an older version of its shape
 }
 ```
 
-The `n_rows` board option is the instance that `nRows()` makes, which takes its default from the blockr option `n_rows`, as today's R constructor does:
+The `n_rows` board option is the default export of the module that core lists for it, which takes its default from the blockr option `n_rows`, as today's R constructor does, through the `CoreApi` that core passes its `default` ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)):
 
 ```ts
-const nRows = (core: CoreApi): Option => ({
-  id: "n_rows",
+export default {                                   // the module of n_rows, which core lists under that id
   label: "Preview rows",
   category: "Table options",
   schema: {
@@ -80,18 +79,18 @@ const nRows = (core: CoreApi): Option => ({
     minimum: 1,                                    // a page of a table holds a row at least
     description: "How many rows of a table a block's output shows",
   },
-  default: () => core.blockrOption("n_rows", 10),  // the blockr option n_rows where it is set, else 10
-  ui: nRowsInput,                                  // the module blockr.core ships for it
-});
+  default: (core) => core.blockrOption("n_rows", 10),   // the blockr option n_rows where it is set, else 10, through the CoreApi that core passes
+  ui: nRowsInput,                                  // its UI, which the module holds
+} satisfies Omit<Option, "id">;
 
 // and in the board only once someone sets it, as options: { n_rows: 25 }, while every reader gets 10 until then
 ```
 
 The id says which board option it is and never changes, while the label is only what the user sees.
 The user does not rename a board option, so its label takes the place of a name.
-The client holds one definition per id, and a second registration of an id fails.
+The client holds one definition per id, which R makes sure of first: two packages that list one id stop the app as `serve()` is called, naming both, since the reply holds one entry for each id ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 The store checks every value that a delta sets against the board option's schema, and refuses a value for a board option that no loaded package defines ([Board objects](Rewrite-1.1.1#what-the-store-checks)), while it refuses a JSON board that holds a value the schema refuses once migrated, naming the board option, and the page stays as it was ([Board updates](Rewrite-1.1.2#opening-a-board)).
-R writes a value that a script gives by the copy of the schema that the board option's package ships beside its startup module, and core beside its runtime for its own three ([UI modules in JS](Rewrite-1.1.7#packaging)).
+R writes a value that a script gives by the schema that the board option's package ships beside its module, as core does for its own three ([UI modules in JS](Rewrite-1.1.7#packaging)).
 
 A definition's `default` is a value, or a function that core calls the first time the board option is required after a board opens, or as the board opens where the board option has an `onChange` (below).
 Core keeps the function's result until the next board opens, so nothing is read for a board option that nothing requires and that has no `onChange`.

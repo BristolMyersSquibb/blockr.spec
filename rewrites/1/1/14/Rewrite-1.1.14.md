@@ -15,7 +15,7 @@ How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evalua
 3. Core withdraws each notification once its cause has gone, so that a frontend can take down one that has gone stale.
    A block's conditions go when the block's next reply replaces them or the block leaves the board, and the rest when whoever raised them withdraws them or the next board opens.
 4. A frontend reads those that hold as it draws, and hears each one that comes or goes.
-   So one raised before it draws, such as a startup module's failure, still reaches the user.
+   So one raised before it draws, such as the failure of a module that the reply names, still reaches the user.
 5. The frontend alone decides how each shows and for how long, such as until core withdraws it, until the user dismisses it, or as a toast that fades after a few seconds.
    Core draws only what no frontend can: the error in the element of a module that cannot draw ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the error of a page that cannot start or whose frontend cannot draw.
 6. Core holds them outside the board, as it holds which block has focus, so that no file saves them and no undo brings one back ([Board objects](Rewrite-1.1.1#what-lives-where)).
@@ -87,7 +87,7 @@ interface Notification {
   block?: BlockId;                   // what it concerns, none of these for the board
   option?: OptionId;
   plugin?: PluginClassId;
-  package?: string;                  // the package whose code failed, such as a module's or a startup module's
+  package?: string;                  // the package whose code failed, such as a module's
 }
 
 notifications: {
@@ -121,17 +121,16 @@ Each names what failed and what needed it, and its class starts with the class t
 | A module that cannot draw: a block's UI, a renderer, a board option's UI or a plugin's UI ([UI modules in JS](Rewrite-1.1.7#the-contract)) | Error, `module_failed` | The block, board option or plugin, with the module's package | The next board opens, or the block leaves the board |
 | A board option that does not go onto the board, since no loaded package defines it or its default fails or does not fit its schema ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)) | Error, `board_option_failed` | The board option | The next board opens |
 | An `onChange` that throws ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) | Error, `on_change_failed` | The board option, with its package | Its next call returns |
-| A startup module that fails to load or throws in `initialize()` ([UI modules in JS](Rewrite-1.1.7#startup-modules)) | Error, `startup_module_failed` | Its package | The next board opens |
+| A module that the reply names for a plugin class or a board option, and that fails to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Error, `module_failed` | The plugin class or the board option, with the module's package | The next board opens |
 | A plugin's `start` that throws ([Plugins](Rewrite-1.1.12#running-a-plugin)) | Error, `plugin_start_failed` | The plugin, with its class's package | The next board opens |
-| A board that a startup module named, which the load lock keeps core from opening ([Drawing the board](Rewrite-1.1.8#starting-the-page)) | Warning, `board_open_locked` | The package that named it | The next board opens |
-| A board that core could not open: one that a startup module named but that holds no JSON or fails to open, the boards that two startup modules named, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The package that named it, or else the board | The next board opens |
-| A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#startup-modules)) | Warning, `page_reload_needed` | The board, naming the packages | The next board opens, which raises it again while the versions differ |
+| A board that core could not open: one that the app's storage plugin named but that holds no JSON or fails to open, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The package that named it, or else the board | The next board opens |
+| A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Warning, `page_reload_needed` | The board, naming the packages | The next board opens, which raises it again while the versions differ |
 | What the store dropped as the board opened ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)) | Warning, `board_objects_dropped` | The board, naming each object with its package | The next board opens |
 
 So what the store dropped as the board opened reaches every frontend with no code of its own, where each frontend's package would otherwise subscribe to the store before the board opens to learn of it.
 One notification covers the whole opening, so that a board that loses twenty blocks shows one message.
 The store still announces what it dropped with the opening, for code that acts on it ([Board updates](Rewrite-1.1.2#following-the-board)).
-Where `serve()` serves a block alone, core keeps the board R sent whatever a startup module names, and raises no notification for it, since no frontend draws that page ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+Where `serve()` serves a block alone, core keeps the board R sent, since it runs no plugin there, and so no storage plugin that could name another, and no frontend draws that page ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 Core logs every failure that it raises a notification for as well, with its stack, which a notification does not carry ([Logging](#logging)).
 A module that cannot draw also shows its error in its element, so that the user sees which spot failed.
@@ -162,7 +161,7 @@ So `show_conditions` filters what a card shows, as it filters blocks' conditions
 
 The toasts stack in the page's bottom right corner, as Shiny's do on main (Today), and each names what it concerns, such as the block, the board option, the plugin or the package.
 A message's toast fades after five seconds, as a toast of `notify()` does by default, though not while the pointer rests on it.
-A warning's or an error's stays until the user closes it, as the toasts of a block's conditions do on main, since one that fades is easy to miss, such as a startup module's failure while the page still loads.
+A warning's or an error's stays until the user closes it, as the toasts of a block's conditions do on main, since one that fades is easy to miss, such as the failure of a module while the page still loads.
 A toast goes as soon as core withdraws its notification, and one that faded or that the user closed does not come back while its notification holds, since the basic frontend keeps the ids of those it has shown, for the opening.
 The toasts take the place of the list above the board, which moves the board each time an item comes or goes.
 
@@ -183,7 +182,7 @@ The evaluator and the transport log what they fail at, at error, naming the requ
 R also logs every condition that it sends in a reply, of an evaluation, an output or a request, at the level of its severity: a message at info, a warning at warn and an error at error.
 Each line names the block and its revision, so that R logs every condition that a block raises, as main does (Today).
 
-In the client, plugins and startup modules write log lines through `CoreApi`, and every other module through its host, whose `log` names the module's package already ([UI modules in JS](Rewrite-1.1.7#the-contract)):
+In the client, plugins write log lines through `CoreApi`, and every other module through its host, whose `log` names the module's package already ([UI modules in JS](Rewrite-1.1.7#the-contract)):
 
 ```ts
 log(pkg: string): Log;               // in CoreApi: log lines that name the package, as core.log("blockr.dock").warn("...")
@@ -218,7 +217,7 @@ In the client, core records a span for:
 1. Each command, from `run()` until the store commits its delta, with the command's id and the delta's origin ([Board updates](Rewrite-1.1.2#commands)).
 2. Each evaluation, output and request, from sending it to its reply, with the block's id, registry id and revision.
    An evaluation's span links to the span of the command whose delta changed the block's recipe, where one did, so that a trace leads from an edit to every evaluation that it caused.
-3. Starting the page and each opening of a board, with a span for each step inside it: `hello`, each startup module's `initialize()`, the store's `open()` and the frontend's `render()` ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
+3. Starting the page and each opening of a board, with a span for each step inside it: `hello`, importing the modules that the reply names, the storage plugin's `storage.load()`, the store's `open()` and the frontend's `render()` ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 In R, core records a span for each `evaluate`, `request` and `output` message that it handles, with the block's id, registry id and revision, and a span inside it for each phase of an evaluation: `expr`, `inputs`, `block_eval` and `result_summary` ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 Each request carries the context of the client's span in `traceparent`, in the format that W3C's [Trace Context](https://www.w3.org/TR/trace-context/) gives its header of that name ([Wire protocol](Rewrite-1.1.9#messages)).
