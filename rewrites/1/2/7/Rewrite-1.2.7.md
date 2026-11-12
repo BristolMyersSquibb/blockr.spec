@@ -178,7 +178,7 @@ A block whose card is not on screen keeps its notifications in `CoreApi` until i
 
 ### The menu
 
-The "…" button opens the block's menu, drawn as the design system's menus are, with these rows ([design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
+The "…" button opens the block's menu on a click, or on ArrowDown while it has the keyboard's focus, as today ([inst/assets/js/block-menu.js#L93-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-menu.js#L93-L99)), drawn as the design system's menus are, with these rows ([design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
 
 1. Rename, which starts renaming the block in place ([The header](#the-header)).
 2. Append block, which opens the dock's "+" menu from the button.
