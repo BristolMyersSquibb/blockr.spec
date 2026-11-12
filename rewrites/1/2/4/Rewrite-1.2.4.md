@@ -5,7 +5,7 @@ One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.
 The dock draws what a plugin's class gives every frontend: it mounts a `ui` in a panel and draws in its navbar the controls that a storage plugin's `storage` gives, while the dock is itself the plugin whose `frontend` draws the page ([Plugins](Rewrite-1.1.12#plugin-classes)).
 This page covers the panel, how a plugin shows a panel in the active view and where a plugin's settings show, and says why the dock offers plugins no other place, so that it declares no member of its own on core's `PluginClass`.
 It builds on [Plugins](Rewrite-1.1.12) and [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins).
-It shapes two items of the Work list of [Client-drawn dock](Rewrite-1.2#work): placing every plugin, and writing how a plugin uses the places that the dock offers.
+It shapes placing every plugin that has a UI in a panel ([blockr.dock#584](https://github.com/BristolMyersSquibb/blockr.dock/issues/584)), the options sidebar ([blockr.dock#583](https://github.com/BristolMyersSquibb/blockr.dock/issues/583)) and the vignette on how a plugin uses the dock's panels ([blockr.dock#586](https://github.com/BristolMyersSquibb/blockr.dock/issues/586)).
 The navbar is [The dock's navbar](Rewrite-1.2.5)'s, the card's own design is [Block cards in the dock](Rewrite-1.2.7)'s, and the commands that change the dock's views are [The dock's state](Rewrite-1.2.1)'s.
 
 ## What must hold

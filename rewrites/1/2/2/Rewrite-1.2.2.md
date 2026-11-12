@@ -7,6 +7,7 @@ It also covers the app scripts that call blockr.dock's constructors, through `ne
 It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), whose `migrate` takes the dock plugin's state from version 1 and whose R functions write a view and its grid.
 Each of today's extensions becomes a plugin, whose state the extension's own package takes from the extension's, as [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) has it.
 This page maps the extension's panels to that plugin's.
+It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/BristolMyersSquibb/blockr.dock/issues/568)), the `migrate` of the dock plugin's state ([blockr.dock#570](https://github.com/BristolMyersSquibb/blockr.dock/issues/570)), the dock's board options ([blockr.dock#571](https://github.com/BristolMyersSquibb/blockr.dock/issues/571)), the R functions of app scripts ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the dock's conversion methods ([blockr.dock#575](https://github.com/BristolMyersSquibb/blockr.dock/issues/575)), the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)) and the port of blockr.dock's examples ([blockr.dock#587](https://github.com/BristolMyersSquibb/blockr.dock/issues/587)).
 
 ## What must hold
 
