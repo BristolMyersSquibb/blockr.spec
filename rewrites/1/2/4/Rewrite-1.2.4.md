@@ -1,5 +1,5 @@
 # Places the dock offers plugins
-Status: review. Design for [Client-drawn dock](Rewrite-1.2).
+Status: settled on 2026-11-12. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the places where the dock puts plugins.
 The dock draws what a plugin's class gives every frontend: it mounts a `ui` in a panel and draws in its navbar the controls that a storage plugin's `storage` gives, while the dock is itself the plugin whose `frontend` draws the page ([Plugins](Rewrite-1.1.12#plugin-classes)).
