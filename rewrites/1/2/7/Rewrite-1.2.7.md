@@ -14,7 +14,7 @@ Condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this pag
 1. The dock draws everything of a card but the block's UI and output, which core mounts in it, so that every block class draws in the dock with no code for the dock ([Drawing the board](Rewrite-1.1.8#what-must-hold)).
 2. The header has a one-click toggle for the block's inputs and one for its output, drawn alike, and a block whose UI draws nothing gets no toggle for its inputs, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) asks.
 3. A card's sections show as the dock's state says, and the card changes them only through a command, so that saving, undo and other plugins see each change ([The dock's state](Rewrite-1.2.1#commands)).
-4. The card's status dot follows the design system's spec of block status, and draws from the block's status and its notifications alone, so that the DAG's badge can show the same status for the same block.
+4. The card's status dot shows each of the block's statuses, drawn as the design system specs block status, and draws from the block's status and its notifications alone, so that the DAG's badge can show the same status for the same block.
 5. A block's notifications show on its card, each once, of the severities that the board option `show_conditions` names, from when core raises them until core withdraws them.
 6. Under the board lock, the card draws no control for what a lock fixes, and it mounts the UI only of a block that the board lock leaves open ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 7. The dock demands the blocks whose cards are on screen, and no other block.
@@ -31,7 +31,7 @@ Core clears the output of a block that is not `ready` ([R/block-server.R#L64-L66
 |---|---|
 | The card's frame: `block_ui()`, `insert_block_ui()` and `remove_block_ui()` for the dock board, the offcanvas that parks each card, and `show-block.js`, which moves a card into its panel | Replaced by the card that the dock draws in React in each block's panel, so that nothing parks or moves a card ([The card](#the-card)) |
 | The mark, `block_card_mark()`, which draws blockr.ui's `block_mark()` at 32px with the block's type and package as its tooltip | Carried over, from the block registry's entry ([The header](#the-header)) |
-| The status dot, `block_status_dot()`, drawn by the spec that `block_status_badge()` gives the card and blockr.dag's node badge, and the notes of a `waiting` and an `unset` block | Carried over into the dock's client, from `scheduler.status()`, with `invalid` in place of `unset` ([The status dot](#the-status-dot), [The output](#the-output)) |
+| The status dot, `block_status_dot()`, drawn by the spec that `block_status_badge()` gives the card and blockr.dag's node badge, and the notes of a `waiting` and an `unset` block | Carried over into the dock's client, from `scheduler.status()`, with `invalid` in place of `unset`, and with a dot for `ready` and `unevaluated` too ([The status dot](#the-status-dot), [The output](#the-output)) |
 | The name, `block_card_title()`, which `block-rename.js` renames in place | Carried over, renaming through `blockr.core-rename_block` ([The header](#the-header)) |
 | The toggles, `block_card_toggles()` and `section-toggle.js`: the preview's eye, and the control that a `ctrl_block` plugin adds | The eye carried over, with the Controls toggle beside it, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), while the control goes with `ctrl_block` ([Plugins](Rewrite-1.1.12#today)) |
 | The "…" menu, `block_card_dropdown()` and `block-menu.js`: Controls, Rename, Append block, Copy block ID and Remove block | Carried over without Controls, which moves to the header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), and with core's commands in place of the dock's actions ([The menu](#the-menu)) |
@@ -105,9 +105,13 @@ It reads `scheduler.status()` for the block and follows `scheduler.subscribe()` 
 | `waiting` | A ring of `border-warning` | Waiting for a data input |
 | `invalid` | Filled with `border-warning` | Set this block's inputs |
 | `failed` | Filled with `border-danger` | Evaluation failed |
-| `ready` and `unevaluated` | None | None |
+| `ready` | Filled with `border-success` | Up to date |
+| `unevaluated` | A ring of `text-muted` | Not evaluated yet |
 
-The rows are today's, with `invalid` in place of `unset` ([R/plugin-block.R#L582-L659](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L582-L659)).
+The rows of `stale`, `waiting`, `invalid` and `failed` are today's, with `invalid` in place of `unset` ([R/plugin-block.R#L582-L659](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L582-L659)).
+Today's card shows no dot for a block that is `ready` or `unevaluated`, so a card without one leaves open whether the block has run, which the two dots settle.
+The two grey dots differ by shape, as the two amber ones do: `stale` is solid, for a block whose result is out of date, and `unevaluated` a ring, for one that has no result yet.
+The design system's spec of block status lacks the two rows, and is to follow ([UI kit and design system for the client](Rewrite-1.7)).
 Today a block that raises an error reads `failed` even where its status is `ready`, which catches an output that R could not make.
 That carries over: the dot reads `failed` while a notification of the severity error and the phase `output` concerns the block ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 A `stale` block is the exception, as today, since its errors were raised for inputs it no longer has.
@@ -135,12 +139,13 @@ Core keeps drawing a block's last output whatever the block's status, and the ca
 |---|---|
 | `ready` | As the renderer draws it |
 | `stale` | Faded, as Shiny fades a recalculating output today |
-| `failed` | Hidden, with the errors above the sections |
+| `failed` | Takes no room, and the errors above the sections say why |
 | `waiting` and `invalid` | Hidden, with the status note in its place |
 | `unevaluated` | Empty, since no output has come yet |
 
 A block whose card is on screen is demanded, so a `stale` block is about to run, and its output fades until the new one comes, as today ([Demand](#demand)).
 The card hides the output of a block that cannot run, as core clears it today, so that no output stands for inputs that the block no longer has.
+A failed block's output takes no room, as the `inputs` section of a block whose UI draws nothing takes none, so that the card leaves no blank where the output was, while the status note of a `waiting` or `invalid` block takes the output's place.
 
 The status note says what the block lacks, in one line of italic `text-muted` text at 13px where the output would be, with no icon, as the design system has a block with nothing to draw say what is missing ([design-system.Rmd#L1348-L1356](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1348-L1356)):
 
@@ -240,8 +245,8 @@ Today's code, at `655e323`: the frame of the card, the offcanvas and the ledger 
 The card reads whether the block's UI drew anything with a `MutationObserver` on the element it gave `mountBlock()`, since a module written in React draws after `render()` returns.
 The `inputs` section takes no room while that element is empty, so a block whose UI draws nothing shows no empty section either.
 
-The status dot's fills are the design system's meaning tokens, with these light values, as `block_status_style()` gives them today: `text-muted` `#6b7280`, `border-warning` `#d97706`, `border-danger` `#dc2626`, and the ring `bg-surface` `#ffffff`.
-The waiting ring is 1.5px wide, inside an 8px dot.
+The status dot's fills are the design system's meaning tokens, with these light values, as `block_status_style()` gives them today: `text-muted` `#6b7280`, `border-warning` `#d97706`, `border-danger` `#dc2626`, and the ring `bg-surface` `#ffffff`, with `border-success` `#16a34a` for `ready` from the design system's palette ([design-system.Rmd#L78](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L78), [#L137](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L137)).
+The rings of `waiting` and `unevaluated` are 1.5px wide, inside an 8px dot.
 Today's card reads each token with its light value as the fallback, as `var(--blockr-color-border-danger, #dc2626)`, so the dot draws on a page without blockr.ui's token sheet too ([R/plugin-block.R#L678-L680](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L678-L680)).
 
 Today's card renders a condition's message with `cli::ansi_html()`, which turns cli's ANSI styling into HTML ([R/plugin-block.R#L518-L538](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L518-L538)).
