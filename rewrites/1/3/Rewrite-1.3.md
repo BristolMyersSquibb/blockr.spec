@@ -13,7 +13,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 1. The DAG draws the board's blocks, links and stacks in the browser, without g6R, and follows every delta.
 2. Its gestures, such as drawing a link, moving a block into a stack or removing one, run core's commands, so undo and save cover them.
-3. Positions and layout settings are the DAG's extension state, which a dock board keeps in its `extensions` ([Board updates](Rewrite-1.1.2#plugins)), and boards saved today open with theirs.
+3. Positions and layout settings are the DAG's extension state, which a dock board keeps in its `extensions` ([Board updates](Rewrite-1.1.2#plugins)), and boards saved today open with theirs, through the conversion in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
 4. What blockr.dag offers today carries over: zoom and pan, dragging blocks, click and brush selection, drawing a link by dragging, highlighting on hover, the context menu, the toolbar, tooltips, and stacks that collapse and expand.
 
 ## Proposal
@@ -37,7 +37,6 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 - Lay out and collapse the stacks of a real board with React Flow and elkjs, to decide between React Flow and G6, in blockr.dag
 - Rebuild the DAG as a client extension on the dock's extension API, in blockr.dag
-- Convert the DAG extension of boards saved today into the state of the DAG's plugin, with a method of blockr.convert's `blockr_deser()`, in blockr.dag
 - Write the migration notes for app scripts that use the DAG as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.dag
 
 <details><summary>Notes for implementers</summary>
