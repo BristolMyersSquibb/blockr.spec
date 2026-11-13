@@ -1,5 +1,5 @@
 # The assistant's benchmark: questions, answer keys and runs
-Status: draft. Design for [Benchmarks of the new stack](Rewrite-1.8).
+Status: review. Design for [Benchmarks of the new stack](Rewrite-1.8).
 
 One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
 It shapes the Work items of that part that build the benchmark and take its baseline, and those of [Assistant as a plugin](Rewrite-1.4#work) whose changes merge by its comparisons, such as the one that writes the template ([The system prompt](Rewrite-1.4.5#what-must-hold)).

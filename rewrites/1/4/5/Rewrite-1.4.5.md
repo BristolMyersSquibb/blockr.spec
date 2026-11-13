@@ -1,5 +1,5 @@
 # The system prompt
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, and where a deployment adds instructions of its own.
 It shapes the Work items that run the agent loop and write the template, and the rewrite of the `layout` skill.
