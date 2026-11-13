@@ -374,7 +374,9 @@ await core.commands.run("blockr.core-set_plugin_state", {    // the assistant, m
 }, "assistant");
 ```
 
-So no part of a plugin's state is closed to other plugins, whether or not its class registers a command for it, and the assistant's tool for it is typed, for each plugin, by the schema of its class's state and described by that schema's `description` keywords, as its tool for a block's state is by the block class's schema.
+So no part of a plugin's state is closed to other plugins, whether or not its class registers a command for it.
+The assistant changes a plugin's state through `blockr.core-set_plugin_state`, as above.
+It reads the schema of the plugin's class, with its `description` keywords, through its tool `get_plugin_state`, as it reads a block class's schema through `describe_block_type` ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 A class's own commands stay for changes that need more than its schema keeps valid, as the dock adds a view with its layout.
 Core's command is not enabled on a locked board, since there only a class's own commands know what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 

@@ -117,4 +117,12 @@ Typedjson's readers on its main, at `b9d920a`, are `json_read(path, code = TRUE)
 The tests can open the JSON boards in core's `CoreApi` for tests, where a test registers the block classes and plugin classes that it needs ([Plugins](Rewrite-1.1.12#testing)).
 A request's body reaches R's function as a file, in `file`, which the request of blockr.session's plugin hands to `convert_file()` with `out = NULL` ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
+A deployment's skills change at the switch too, so blockr.assistant's migration notes list what a skill changes, beside what an app script changes ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)):
+
+- The tools that its text names, where today's go, such as `commit`, `modify_block` and `list_views` ([The assistant's tools](Rewrite-1.4.2#today)).
+- The block classes that it names in `blocks:`, by registry id in full, such as `blockr.dplyr-filter_block` in place of today's `filter_block`.
+- The plugin classes that it names in `plugins:`, by their ids, in place of today's `extensions:`.
+
+The clinical data explorer's skills are the case: seven of their files name today's tools, and two of its skills name block classes in `blocks:`.
+
 </details>
