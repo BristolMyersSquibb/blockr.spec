@@ -2,7 +2,7 @@
 Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
-It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads with their branches, attachments, the focus, the commands, the meter, the pick of the model and what fails.
+It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads with their branches, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.
 It shapes the Work item that draws the chat.
 What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
@@ -28,7 +28,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 | Editing a sent message, which forks the thread, with `‹ 1 / 2 ›` controls to switch between the versions | Carried over ([Branches](#branches)) |
 | Attachments of images, PDFs and text files, about 30 MB together | Carried over, with their bytes in the page's memory ([Attachments](#attachments)) |
 | The footer: the tags of the focus, the @ button with blockr.ui's multi-select of the blocks in view, the token meter, and the button that opens the drawer ([R/focus.R#L202-L274](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R#L202-L274), [R/ext-server.R#L845-L864](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L845-L864)) | Carried over ([The focus](#the-focus), [The meter](#the-meter)) |
-| The pick of the model where the blockr option `chat_function` offers several, outside the chat, through core's board option `llm_model`, which the dock's options sidebar shows ([blockr.core R/board-option.R#L709-L722](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L709-L722)), after which the thread goes on with the model picked ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)) | In the chat's footer, where the deployment lets the visitor pick ([The model](#the-model)) |
+| The pick of the model where the blockr option `chat_function` offers several, outside the chat, through core's board option `llm_model`, which the dock's options sidebar shows ([blockr.core R/board-option.R#L709-L722](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L709-L722)), after which the thread goes on with the model picked ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)) | In the chat's footer, where the deployment offers more than one model or names none ([The model](#the-model)) |
 | The commands `/compact` and `/clear`, and `/name` for each skill that the user may call ([R/ext-commands.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-commands.R), [R/skills-invoke.R#L80-L114](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-invoke.R#L80-L114)) | Carried over ([Commands](#commands)) |
 | Blanking the chat in a panel 140 px wide or narrower, as a collapsed rail is ([R/ext-server.R#L365-L376](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L365-L376)) | Dropped, since a collapsed rail hides its panels ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)) |
 | Setting the height of the dock's wrapper through `:has(> .asst-panel)` ([R/ext-server.R#L213-L218](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L213-L218)) | Dropped, since the element that a frontend gives fills the panel ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)) |
@@ -130,10 +130,18 @@ Neither `/compact` nor `/clear` enters the transcript, as neither does today.
 The footer shows the tokens that the thread has spent, input and output, from its `usage` ([The assistant's state](Rewrite-1.4.3#the-state)), as today's meter shows them, without the cached input.
 ### The model
 
-Where the deployment lets the visitor pick the model, the footer shows the model that the next turn talks to, beside the meter, and lists the deployment's models in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
-A pick for the board runs `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)), and a pick that the visitor keeps goes to the browser's local storage.
+Where the deployment offers more than one model, or names none, the footer shows the model that the next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where it names none, the chat asks for a pick before the first turn, from the models that the place lists for the key.
+A pick that the board keeps, as with the deployment's key, runs `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)), and one that the visitor's browser keeps, as with their own key or a login, goes to its local storage.
 Where the board's pick is a model that the deployment does not offer, the footer names it beside the default that the calls go to.
 A pick applies from the next turn, so that a turn that runs keeps its model to its end, and the thread goes on with the new model, as today's goes on after a pick ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)).
+
+### The credential
+
+Where the deployment sets no key, the chat asks the visitor for their own before the first turn, in a field whose value the plugin keeps in its memory, and offers a login beside it where the place offers one ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
+The login opens in a window of its own, which hands its code back to the page, since leaving the page for the service's login would reload the app, and drop with it what the board holds unsaved.
+A reload asks again, since neither a typed key nor the key that a login gives outlives the page.
+A key that the place refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
 
 ### What fails
 

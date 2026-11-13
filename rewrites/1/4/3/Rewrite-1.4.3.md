@@ -130,7 +130,7 @@ The method reads the threads that the file's `history` holds, as today's method 
 4. The record's `focus` and `spent` become the thread's `focus` and `usage`.
 
 A saved `system_prompt` is left out, since the argument goes ([Assistant as a client extension](Rewrite-1.4#today)).
-The conversion leaves out the value of today's board option `llm_model` too, the name of an entry in the deployment's `chat_function`, which need not name a model, so that a converted board talks to the deployment's default until someone picks ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+The conversion leaves out the value of today's board option `llm_model` too, the name of an entry in the deployment's `chat_function`, which need not name a model, so that a converted board takes its model as a board without a pick does ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A file that holds the assistant in a shape that today's method cannot read opens without its threads, as it does today.
 
 ## Open questions
