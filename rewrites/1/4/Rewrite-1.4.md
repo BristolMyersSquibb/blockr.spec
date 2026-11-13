@@ -94,7 +94,6 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 - Port compaction, as [The assistant's state](Rewrite-1.4.3#compaction) has it, in blockr.assistant
 - Let a visitor use their own key, held in the page's memory, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
 - Let a visitor log in with a service that offers it, such as OpenRouter, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
-- Convert the assistant extension of boards saved today into the state of the assistant's plugin, with blockr.assistant's method of blockr.convert's `blockr_deser()`, as [The assistant's state](Rewrite-1.4.3#todays-threads-across-the-switch) has it, in blockr.assistant
 - Write the migration notes for app scripts that use the assistant as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.assistant
 - Write the guide to the assistant's plugin as a vignette, in place of `intro.Rmd`, for apps that offer models, credentials and skills to it, in blockr.assistant
 
