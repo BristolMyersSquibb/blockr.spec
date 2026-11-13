@@ -4,6 +4,7 @@ Status: review. Part of [State in JS](Rewrite-1).
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.
 It builds on the plugins, commands, scheduler and requests of [Client-owned board state](Rewrite-1.1), on the dock's commands for the views it arranges today ([Client-drawn dock](Rewrite-1.2)), and on blockr.ui's design system for its look ([UI kit and design system for the client](Rewrite-1.7)).
 Its agent loop builds on pi, which the Proposal chooses.
+Its spans go into core's traces ([Notifications, logging and tracing](Rewrite-1.1.14#tracing)).
 Where its calls to a model go is [Model access](Rewrite-1.4.1)'s, its tools are [The assistant's tools](Rewrite-1.4.2)'s, its threads are [The assistant's state](Rewrite-1.4.3)'s, its chat is [The assistant's chat](Rewrite-1.4.4)'s, and what its model is told is [The system prompt](Rewrite-1.4.5)'s.
 
 ## Problem
@@ -50,6 +51,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 | The tools' plumbing: the conversion of tool results to text, the parsing of tools' JSON args and the package's imports ([R/tools-util.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-util.R)) | 127 | Dropped with ellmer, since pi calls the tools and parses their args |
 | The caps on what tools return and on how many blocks a commit reviews, thirteen blockr options such as `assistant_summary_max_chars`, and `assistant_commit_timeout_secs` ([R/utils-bounds.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/utils-bounds.R)) | 123 | Each kept where the code that reads it carries over, through `CoreApi.blockrOption()` in the plugin and `blockr_option()` in its requests ([Board options and blockr options](Rewrite-1.1.13#blockr-options)). The timeout goes with the commit, since no request times out and the user stops a turn ([Wire protocol](Rewrite-1.1.9#requests)), and `assistant_block_tool_pool` goes with the typed tools |
 | The model: the board option `llm_model`, which blockr.core defines, with its choices from the blockr option `chat_function`, one of ellmer's chat functions or a named list of them, `chat_openai()` by default, and the credential that the chosen function reads, such as `OPENAI_API_KEY` ([blockr.core R/board-option.R#L666-L751](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L666-L751), [#L753-L770](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L753-L770)) | In blockr.core | Replaced by pi's providers (Proposal), while the board option goes with `chat_function` (Proposal), and where the calls go, how they are authenticated and which models a deployment offers are [Model access](Rewrite-1.4.1)'s, through four blockr options of the assistant's, while the board keeps the pick of a model where the deployment pays, and the visitor's browser where the visitor does ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
+| The spans that ellmer records of today's turns, which `stream_async()` runs ([R/ext-server.R#L1119](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1119)), wherever the otel package is installed and a tracer is active: from ellmer 0.4.1, `invoke_agent` for each turn, around `chat <model>` for each call to the model and `execute_tool <tool>` for each tool call, named and given the provider, the model and the tokens by OpenTelemetry's conventions for generative AI, and from 0.5.1 metrics by the same conventions, where otel records metrics ([NEWS.md#L114-L118](https://github.com/tidyverse/ellmer/blob/4e3e6c0e28f960a9cafa23eccdc2d037bd537e0b/NEWS.md#L114-L118), [#L16](https://github.com/tidyverse/ellmer/blob/4e3e6c0e28f960a9cafa23eccdc2d037bd537e0b/NEWS.md#L16)) | In ellmer | The spans carried over under ellmer's names, into core's traces, while the metrics go, since core records none in the client (Proposal) |
 
 ## Proposal
 
@@ -65,6 +67,8 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 - The agent loop builds on pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai`, which is built for a page: it calls OpenAI's and Anthropic's APIs from the browser, sending Anthropic's opt-in header itself, takes tools as plain JSON Schema, and runs hooks before each call and around each tool call (notes).
   In checks in a headless browser, against a mock of the three APIs of [Model access](Rewrite-1.4.1#the-blockr-options) and against Anthropic's and OpenAI's own, pi, the AI SDK and LangChain.js each streamed a tool loop and stopped on an abort, and pi weighed least, 179 KB gzipped, against the AI SDK's 271 KB and LangChain.js's 450 to 585 KB (notes).
   Since pi is young, its 1.0 out in October 2026, the plugin pins its version and reaches it through one module of its own, which streams a turn with the tools and the hooks, so that a move to the AI SDK, which passed the same checks, rewrites that module alone.
+  Its license is MIT, and what it brings into the bundle is under MIT, Apache-2.0 or the Unlicense, so blockr.assistant may ship all of it under its own GPL (>= 3) (notes).
+  The bundle keeps no license text, so the plugin's build writes the texts beside it, and DESCRIPTION names each holder as `cph`, as blockr.core's names Meta for React.
   Which library the chat builds on, assistant-ui or components of the plugin's own, is for the issue that draws the chat to settle ([The assistant's chat](Rewrite-1.4.4#the-panel)).
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
   The AI SDK reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id (notes).
@@ -79,6 +83,10 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 - The plugin loads its loop and its provider code with a dynamic import as the first turn starts, since pi and its providers weigh 179 KB gzipped (notes), which a page where nobody asks the assistant anything never needs.
   A panel that shows is no sign of that, since a board's default view in the dock holds every plugin's panel on its left rail ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
 - The loop takes its credential through one function that the library calls for each request, a `fetch` of its own in an AI SDK provider and `getApiKey` in pi, so that every way to authenticate that [Model access](Rewrite-1.4.1) gives feeds it, and the loop knows none of them.
+- The assistant records a span for each turn and each tool call, and pi records one for each call to the model, under its turn, named as ellmer names them, so that a deployment that sends the client's spans to a collector follows a turn as it does today (Today).
+  The spans go through the `@opentelemetry/api` that core maps on the page, so that core's spans of the commands and requests that a tool runs sit under the tool's span, and lead on to the evaluations and into R ([Notifications, logging and tracing](Rewrite-1.1.14#tracing)).
+  So a tool runs its commands and sends its requests before its first `await`: core puts their spans under the span that is active as `run()` or `request()` is called, and its `StackContextManager` keeps a span active only through synchronous calls (notes).
+  The module through which the plugin reaches pi gives pi the turn's span, renames what pi records to ellmer's names, and offers pi no metrics, since core records none in the client, while each call's span keeps its tokens and its cost (notes).
 
 ## Open questions
 
@@ -90,7 +98,8 @@ None.
 - Register the assistant's plugin class, with its state, its commands and its `update`, and give `new_assistant_plugin()` in R, as [The assistant's state](Rewrite-1.4.3) has it, in blockr.assistant
 - Send the assistant's calls where its blockr options say, to the models that they name or that the place lists, authenticated with the deployment's key, as [Model access](Rewrite-1.4.1#the-blockr-options) has it, in blockr.assistant
 - Build the tools, the edit tool among them, and the requests that the plugin gives in R, as [The assistant's tools](Rewrite-1.4.2) has it, in blockr.assistant
-- Run the agent loop from the plugin's `start`, on pi, through the module of the plugin's own that the Proposal names, with the system prompt that [The system prompt](Rewrite-1.4.5) gives, holding a Web Lock while a turn runs, in blockr.assistant
+- Run the agent loop from the plugin's `start`, on pi, through the module of the plugin's own that the Proposal names, with the system prompt that [The system prompt](Rewrite-1.4.5) gives, holding a Web Lock while a turn runs, and ship the license texts of what its bundle holds, in blockr.assistant
+- Record a span for each turn and each tool call, and hand pi the turn's span for its calls to the model, under ellmer's names, as the Proposal has it, on the tracing of [blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552), in blockr.assistant
 - Write the template of the system prompt for the new tools, and the `layout` skill for the dock's commands, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The system prompt](Rewrite-1.4.5) has it, in blockr.assistant
 - Draw the chat in the plugin's `ui`, as [The assistant's chat](Rewrite-1.4.4) has it, in blockr.assistant
 - Port compaction, as [The assistant's state](Rewrite-1.4.3#compaction) has it, in blockr.assistant
@@ -131,6 +140,18 @@ The root entry point of pi breaks such a bundle, which fails with "ModelsImpl is
 The package pi-ai sets `dangerouslyAllowBrowser: true` on its OpenAI, Azure and Anthropic clients and sends `anthropic-dangerous-direct-browser-access: true` itself, while the AI SDK's Anthropic provider leaves that header to its caller.
 The license of pi is MIT, three maintainers publish it on npm, and it released 64 versions between 2026-05-07 and 2026-11-10, against the 50 to 88 stable releases a month of `ai`.
 
+Bundled on 2026-11-13 by esbuild 0.28.2 for the browser, a minimal agent on pi 1.5.2 with OpenAI's and Anthropic's providers holds these packages, under these licenses and holders:
+
+- The four packages of pi, `pi-ai`, `pi-agent-core`, `pi-schema` and `pi-telemetry` 1.5.2: MIT, by Mario Zechner ([LICENSE](https://github.com/earendil-works/pi/blob/071c1e0082b0a2df0b0dbad71e6e55db5289a285/LICENSE)).
+- OpenAI's SDK, `openai` 7.19.0: Apache-2.0, by OpenAI, with no NOTICE file, so that its license text and copyright line are all that Apache-2.0 asks to ship.
+- Anthropic's SDK, `@anthropic-ai/sdk` 0.129.0: MIT, by Anthropic, PBC.
+- The helpers `partial-json` 0.1.7, `standardwebhooks` 1.1.1 and `@stablelib/base64` 1.0.1: MIT, by the Promplate Dev Team, Svix ([libraries/LICENSE](https://github.com/standard-webhooks/standard-webhooks/blob/c7cd8a9eadf9879d6dca345e168dc8d15d19e487/libraries/LICENSE)) and Dmitry Chestnykh.
+- The helper `fast-sha256` 1.3.0: the Unlicense, which puts it in the public domain.
+
+The rest of pi's dependencies, Google's and Amazon's SDKs among them, stay out of a bundle with only those two providers, and are under MIT, Apache-2.0, BSD-3-Clause or 0BSD.
+Core's build keeps React's license comments through `legalComments: "inline"`, but none of the 429 files that this bundle is built from holds one, and the npm packages of pi and `standardwebhooks` ship no LICENSE file, so their texts come from their repositories.
+The AI SDK, `ai` 7.0.172 with `@ai-sdk/openai` and `@ai-sdk/anthropic`, is under Apache-2.0.
+
 Probed on 2026-11-13 with a dummy key and a page's `Origin`: Anthropic refuses the preflight of a request without `anthropic-dangerous-direct-browser-access`, and with it allows the preflight and puts `Access-Control-Allow-Origin` on its 401, as OpenRouter and Vercel's AI Gateway put it on their errors.
 OpenAI allows the preflight, but its 401s for `/v1/responses` and `/v1/chat/completions` carry no `Access-Control-Allow-Origin`, so a page cannot read them ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
 
@@ -141,6 +162,22 @@ Run on 2026-11-13 from a page in headless Chromium against the real APIs, with `
 - The AI SDK and LangChain.js's model classes streamed the same tool loop on Anthropic's API, and the AI SDK stopped on an abort.
 - On OpenAI's Responses and Chat Completions APIs, pi and the AI SDK each streamed the tool loop, and pi read the board on the Responses API, while a refused key reached the page only as "Failed to fetch".
 - The fake provider of pi, `fauxProvider()`, ran a scripted tool call and reply through an agent in Node, which serves tests under Vitest.
+
+Checked on 2026-11-13 in Node, with pi 1.5.2 and `@opentelemetry/sdk-trace` 3.1.1 with its `StackContextManager`, as [blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552) sets them up:
+
+1. In about 40 lines, a function implemented pi-telemetry's `TelemetryContext` over `@opentelemetry/api`, starting each span from its parent's context and making it active while its callback ran.
+2. The turn's span reached pi through `streamFn`, as `{ ...options, telemetry: turn }`, and each of pi's two calls to `fauxProvider()` recorded a `pi.ai.request` span under it.
+3. Two commands that the edit tool ran before its first `await`, each with a span started from the active context, as core's are, sat under the tool's span, while one that it ran after an `await` started a trace of its own.
+
+The contract of pi-telemetry takes each parent as an argument, keeps no current span of its own, and comes with a conformance suite for its implementations, in `@earendil-works/pi-telemetry/testing` ([README](https://github.com/earendil-works/pi/blob/071c1e0082b0a2df0b0dbad71e6e55db5289a285/packages/telemetry/README.md#adapter-conformance)).
+The agent loop of pi records no span.
+For each call, pi-ai records `pi.ai.request` with `provider`, `api`, `model`, `stop`, `usage.input`, `usage.output`, `usage.cache_read`, `usage.cache_write`, `cost.total` and `response.id`, an event `pi.ai.first_chunk`, and an event `pi.ai.block` for each finished block with its `type`, `index`, `chars` and, for a tool call, `tool`, but never the prompt, the reply or a tool's args ([README](https://github.com/earendil-works/pi/blob/071c1e0082b0a2df0b0dbad71e6e55db5289a285/packages/ai/README.md#telemetry)).
+A failed call puts up to 500 characters of the provider's error message in the span's status.
+That asks no more care of the collector than R's logs already ask ([Where the records go](Rewrite-1.1.14#where-the-records-go)).
+Metrics come from pi-ai only where the span that it is given offers `metrics`.
+The spans of ellmer are `invoke_agent`, `chat <model>` and `execute_tool <tool>`, with `gen_ai.operation.name`, `gen_ai.provider.name` and `gen_ai.request.model`, on a call `gen_ai.response.model`, `gen_ai.response.id`, `gen_ai.usage.input_tokens`, to which ellmer adds cached input, and `gen_ai.usage.output_tokens`, and on a tool call `gen_ai.tool.name`, `gen_ai.tool.description` and `gen_ai.tool.call.id` ([R/otel.R#L230](https://github.com/tidyverse/ellmer/blob/4e3e6c0e28f960a9cafa23eccdc2d037bd537e0b/R/otel.R#L230), [#L314](https://github.com/tidyverse/ellmer/blob/4e3e6c0e28f960a9cafa23eccdc2d037bd537e0b/R/otel.R#L314), [#L357](https://github.com/tidyverse/ellmer/blob/4e3e6c0e28f960a9cafa23eccdc2d037bd537e0b/R/otel.R#L357)).
+So the module renames `pi.ai.request` to `chat <model>`, and `provider`, `model`, `response.id` and `usage.output` to `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.id` and `gen_ai.usage.output_tokens`, gives `gen_ai.usage.input_tokens` the sum of `usage.input`, `usage.cache_read` and `usage.cache_write`, adds `gen_ai.operation.name`, as ellmer does on each span, and keeps pi's other attributes as they are.
+The AI SDK "uses OpenTelemetry to collect telemetry data" itself ([telemetry](https://ai-sdk.dev/docs/ai-sdk-core/telemetry)).
 
 The pi project moved from `badlogic/pi-mono` to [earendil-works/pi](https://github.com/earendil-works/pi) in spring 2026, and its npm packages from the now deprecated `@mariozechner/*` to `@earendil-works/*`.
 Its `pi-ai` "supports browser environments", except for Amazon Bedrock and the OAuth login flows ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#browser-usage)), and reaches a proxy that speaks a provider's API as a provider made with `createProvider()`, whose models name the proxy as their `baseUrl` ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)).
