@@ -56,7 +56,7 @@ No block holds data in its state (below).
 In R, these objects become a definition language that R translates to JSON: constructors that build and check them, `blockr_ser()` that writes them and the accessors it uses.
 R opens no board given as JSON, which the client opens, so it builds them only for the board a script defines, and, where both locks are on, for the JSON board that `serve()` is given ([Locked boards and the properties of blocks](Rewrite-1.1.11#serving-a-json-board-locked), [Board objects](Rewrite-1.1.1#the-board)).
 Nothing changes a board in R, since every change is a delta in the client ([Board updates](Rewrite-1.1.2)), so core's setters and modifiers go (notes).
-Every caller of them in the workspace is server code that moves to the client, except one script: CEDX derives its board from another with `rm_blocks()` and `board_links<-` ([R/cedx_board.R#L1072-L1092](https://github.com/BristolMyersSquibb/blockr.cdex/blob/7792b7e0fd9eda417995dd7e460f086f671df73c/R/cedx_board.R#L1072-L1092)), and builds it from that board's parts instead.
+Every caller of them in the workspace is server code that moves to the client, except one script: the clinical data explorer's, which is private, derives its board from another with `rm_blocks()` and `board_links<-`, and builds it from that board's parts instead.
 The containers that hold blocks, links and stacks need only be built and checked once, by the board's constructor, so of today's vctrs vectors and records they keep what a script builds with, such as `c()` on blocks, and lose the methods that keep them valid under modification, such as `names<-` ([R/blocks-class.R#L80-L94](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/blocks-class.R#L80-L94)), `[<-` and `[[<-` ([#L156-L202](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/blocks-class.R#L156-L202)).
 
 ### The opening board
@@ -146,7 +146,7 @@ The static block class's one state arg holds the expression as a string, which i
 A script that still passes a data frame gets an error that asks for an expression.
 
 The setters that go are `board_blocks<-`, `board_links<-`, `board_stacks<-`, `board_options<-`, `block_name<-`, `stack_blocks<-` and `stack_name<-`, and the modifiers `modify_board_links()`, `modify_board_stacks()`, `rm_blocks()`, `update_link()`, `update_stack()`, `add_block_to_stack()`, `remove_block_from_stack()`, `clear_board()` and `set_board_option_value()`, all exported by core at `da3fcb4`.
-Their callers outside core are blockr.dock's actions, sidebars, board options and edit extension, blockr.assistant's staging and board option tools, blockr.session's loader and CEDX's script.
+Their callers outside core are blockr.dock's actions, sidebars, board options and edit extension, blockr.assistant's staging and board option tools, blockr.session's loader and the clinical data explorer's script.
 Opening a board needs none of them: the client drops a block it cannot rebuild with that block's links and stack places, as `drop_block_refs()` prunes the parts R read today ([R/utils-serdes.R#L433-L457](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serdes.R#L433-L457)).
 
 </details>

@@ -30,7 +30,7 @@ Weeks are ISO weeks.
 
 The fully functional POC is every part implemented on `js-state`, with blockr.dplyr, blockr.io and blockr.ggplot ported, so that a board of their blocks runs in the dock with the DAG, the assistant, code export and session management.
 It is due on 2027-02-05.
-How long the tail of problems after it runs is the largest unknown, so the goal of light BMS deployments on the new stack by the end of Q1 2027 is tentative, and they may not cover all of the CEDX board.
+How long the tail of problems after it runs is the largest unknown, so the goal of light BMS deployments on the new stack by the end of Q1 2027 is tentative, and they may not cover all of the clinical data explorer's board.
 
 The switch is not scheduled yet.
 It waits for CRAN as well as for the code: eight of the packages are on CRAN and blockr.ui is not, while blockr.dock, blockr.dplyr, blockr.ggplot, blockr.dag and blockr.session import it on main already, so blockr.ui's first submission comes before their releases.
@@ -41,7 +41,7 @@ The block packages port to block classes beside the parts from week 46, once cor
 Their UIs follow from week 48, once blockr.ui's spec has settled what it offers block UIs beside core's React SDK, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#open-questions)).
 Each ports after the packages it builds on.
 The first are blockr.dplyr, blockr.io and blockr.ggplot, by week 5, for the fully functional POC, and blockr.dplyr starts in week 46 with its hardest blocks, which test core's block classes before the dock is built on them.
-The rest follow for the CEDX board, which lives in blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot.
+The rest follow for the board of the clinical data explorer, which lives in the private blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot.
 Beside them, blockr.ops, which reads and writes boards, follows the new format ([Serialization of the client-owned board](Rewrite-1.1.4)), and in Q1 2027 a package for authoring reports becomes available for the new stack, whether blockr.md or another.
 Who ports each package, and how the ports are reviewed, AI review included, is settled by week 46, when the ports start.
 

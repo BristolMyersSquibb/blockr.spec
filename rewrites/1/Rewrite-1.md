@@ -113,7 +113,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
 | blockr.convert | New: turns each file of today's stack into a JSON board once, and checks the migration notes of every package against the files that its examples saved | [The conversion and the migration notes](Rewrite-1.9) | Every package that wrote today's files or whose functions app scripts call |
 | blockr | Kept, attaching the packages of the new stack | None | The packages it attaches |
-| blockr.cdex, blockr.sandbox and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |
+| blockr.cdex, the clinical data explorer, blockr.sandbox, where its boards are developed, both private, and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |
 | dockViewR | No longer used, since blockr.dock draws dockview in the browser | [Client-drawn dock](Rewrite-1.2) | |
 | g6R | No longer used, since blockr.dag draws the DAG in the browser | [Client-drawn DAG](Rewrite-1.3) | |
 | typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.9#the-package) | |

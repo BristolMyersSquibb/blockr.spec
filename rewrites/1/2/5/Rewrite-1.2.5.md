@@ -51,7 +51,7 @@ The function that `custom_navbar(items)` returns appends `items` to the default 
 An app's own function can also reorder or drop items by id with `[`.
 Two packages add items, and both append them.
 The avatar of blockr.session, `avatar_navbar_item()`, shows the initials of `session$user`, and draws nothing for a visitor who is not signed in ([R/avatar.R#L23-L53](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/avatar.R#L23-L53)).
-The help menu of blockr.sandbox comes from blockr.bms through `use_help_nav()` ([R/navbar-help.R#L18-L22](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/R/navbar-help.R#L18-L22)), and its links come from the blockr options `docs_url` and `issues_url` ([dev/cedx/_boot.R#L147-L155](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/_boot.R#L147-L155)).
+The help menu of the clinical data explorer comes from blockr.bms, an internal package, through `use_help_nav()`, and its links come from the blockr options `docs_url` and `issues_url`.
 Today's dock has no undo.
 No code in blockr.session or blockr.sandbox, and no example of blockr.dock, drops or reorders a default item.
 The code of blockr.bms is not in blockr.sandbox's repo, so it was not checked.
@@ -122,7 +122,7 @@ serve(
 The dock's `frontend_args()` refuses an item that the dock cannot draw as the app starts, naming it: one whose id another item shares, a part or a kind that the dock does not know, or a module that no available package offers (condition 8).
 A navbar item with nothing to show draws nothing and takes no room, as the read-only pill does without the board lock, `storage` in an app without a storage plugin, and `navbar_storage("avatar")` for a visitor who is not signed in (condition 6).
 
-The deck composer of blockr.topline, for which [blockr.dock#128](https://github.com/BristolMyersSquibb/blockr.dock/issues/128) asks a slot on the navbar, gets one as a module that blockr.topline offers and that an app's `navbar` places, so that no other plugin has to draw it.
+The slide-deck builder of blockr.topline, a private package, for which [blockr.dock#128](https://github.com/BristolMyersSquibb/blockr.dock/issues/128) asks a slot on the navbar, gets one as a module that blockr.topline offers and that an app's `navbar` places, so that no other plugin has to draw it.
 A plugin's `ui` never goes on the bar, since the dock places it in a panel ([Places the dock offers plugins](Rewrite-1.2.4)).
 
 ### A module on the bar

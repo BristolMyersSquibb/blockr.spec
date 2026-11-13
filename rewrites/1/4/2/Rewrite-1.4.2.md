@@ -128,7 +128,7 @@ const answer = await core.request("blockr.assistant-assistant_plugin", "inspect_
 
 Core evaluates the blocks that a request reads first, even off screen, and sends the request only where each reads `ready`, rejecting it otherwise with their statuses ([Evaluation in the client](Rewrite-1.1.10#demand)).
 The tool then hands the model those statuses, as it hands it a request that R loses to a new session (notes).
-So `describe_result()` stays a generic of blockr.assistant's in R, and a package that teaches the model about a class of results gives a method of it, as blockr.sandbox does for its composer tables.
+So `describe_result()` stays a generic of blockr.assistant's in R, and a package that teaches the model about a class of results gives a method of it, as the clinical data explorer does for its summary tables for clinical study reports.
 
 ### On a locked board
 
