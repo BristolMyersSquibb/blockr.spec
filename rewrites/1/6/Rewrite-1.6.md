@@ -1,4 +1,4 @@
-# Session management as a client extension
+# Session management as a storage plugin
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.session, whose session management becomes a storage plugin that makes its storage calls from the browser.

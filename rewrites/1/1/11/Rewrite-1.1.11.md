@@ -77,7 +77,7 @@ A plugin reads the board and its results as on any board, and draws no control f
 What sits inside a plugin's state stays the plugin's own to lock, so the store applies a patch inside a plugin's state under the board lock, and the plugin's commands refuse what the plugin locks.
 A locked dock, for example, still lets a reader switch views, though the active view is part of the dock's state, while it offers no view to add, rename or remove, as today ([blockr.dock R/dock-view.R#L32-L35](https://github.com/BristolMyersSquibb/blockr.dock/blob/fd806ec45fd7158c32ae13b59cdca9386f34a985/R/dock-view.R#L32-L35), [Client-drawn dock](Rewrite-1.2)).
 R reads no plugin's state, so a plugin's own lock is the client's alone, and R runs a plugin's request under the board lock as on any board ([Plugins](Rewrite-1.1.12#a-plugins-requests), [Wire protocol](Rewrite-1.1.9#requests)).
-A request that should not run on a locked board, such as the assistant's trial of proposed args, which evaluates what the client sends, is its package's to refuse, by reading the blockr option `locked`.
+A request that should not run on a locked board, such as the assistant's request that runs R code its model writes, and so evaluates what the client sends ([Assistant as a plugin](Rewrite-1.4)), is its package's to refuse, by reading the blockr option `locked`.
 
 ### What R refuses
 

@@ -1,4 +1,4 @@
-# Code export as a client extension
+# Code export as a plugin
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.code, whose code export becomes a dock extension with generation as a request to R.

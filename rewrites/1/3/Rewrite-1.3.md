@@ -1,4 +1,4 @@
-# Client-drawn DAG extension
+# Client-drawn DAG
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.dag, which becomes a dock extension drawn in the browser.

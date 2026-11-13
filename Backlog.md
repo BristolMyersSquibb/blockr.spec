@@ -15,7 +15,7 @@ What it would remove: a plugin's own record of where each block's selections go,
 Every such dependency would show on the board and in the DAG, as a link does.
 A control link could point upstream, as a drill into a cohort filter does, since it carries an edit rather than data, so it closes no cycle, and it would add nothing to evaluation, so lazy evaluation never drags the sending block's upstream into its target, which is why blockr.viz kept such claims off links.
 
-What it would cost: a new object in the board ([Board objects](Rewrite-1.1.1)), with commands to add, change and remove it and checks in the store ([Board updates](Rewrite-1.1.2)), a place in the JSON board ([Serialization](Rewrite-1.1.4)), a second kind of edge for the DAG to draw and edit and for frontends to offer ([Client-drawn dock](Rewrite-1.2), [Client-drawn DAG extension](Rewrite-1.3)), and a rule for how a target turns a selection into its state, which for blockr.dm's drill filter needs the dm to say which table a column belongs to.
+What it would cost: a new object in the board ([Board objects](Rewrite-1.1.1)), with commands to add, change and remove it and checks in the store ([Board updates](Rewrite-1.1.2)), a place in the JSON board ([Serialization](Rewrite-1.1.4)), a second kind of edge for the DAG to draw and edit and for frontends to offer ([Client-drawn dock](Rewrite-1.2), [Client-drawn DAG](Rewrite-1.3)), and a rule for how a target turns a selection into its state, which for blockr.dm's drill filter needs the dm to say which table a column belongs to.
 
 What would settle it: whether, once drill-down runs as a plugin in State in JS, other packages route selections between blocks too, or blockr.viz's drill stays the only one.
 
@@ -43,7 +43,7 @@ Today core, the dock and the DAG each keep a list of their own.
 Core's `edit_block` plugin offers a field for the block's name and buttons to remove the block and to add one before or after it ([R/plugin-block.R#L252-L294](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plugin-block.R#L252-L294)).
 The dock gives that plugin its own UI, its card, whose "…" menu has items that the dock fixes ([R/plugin-block.R#L191-L247](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L191-L247)).
 The DAG's context menu offers on a block's node to create a link, remove the block, append one and edit its inputs, through its own method of `context_menu_items()`, a generic that any extension may extend and no other does ([R/ext.R#L118-L419](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L118-L419)).
-In State in JS core's basic frontend, the dock and the DAG still draw a menu of a block each ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Client-drawn DAG extension](Rewrite-1.3)), and the dock's cards offer plugins no entry ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+In State in JS core's basic frontend, the dock and the DAG still draw a menu of a block each ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Client-drawn DAG](Rewrite-1.3)), and the dock's cards offer plugins no entry ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
 
 What it would remove: the three lists of a block's entries that core, the dock and the DAG keep today, which share entries such as removing a block.
 

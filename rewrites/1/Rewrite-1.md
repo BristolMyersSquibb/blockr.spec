@@ -102,10 +102,10 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 |---|---|---|---|
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
-| blockr.dag | A plugin drawn in the browser | [Client-drawn DAG extension](Rewrite-1.3) | blockr.dock |
-| blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a client extension](Rewrite-1.4) | blockr.core, blockr.dock |
-| blockr.code | A plugin whose code export is a request to R | [Code export as a client extension](Rewrite-1.5) | blockr.core, blockr.dock |
-| blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a client extension](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
+| blockr.dag | A plugin drawn in the browser | [Client-drawn DAG](Rewrite-1.3) | blockr.dock |
+| blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
+| blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
+| blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
 | blockr.ui | Carried to the client: the design system that the dock and the plugins follow, what block UIs draw with in place of today's widgets, and a table preview as a renderer of core's table outputs | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time | [Block classes in R](Rewrite-1.1.5) | blockr.core, blockr.ui |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
@@ -114,7 +114,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr | Kept, attaching the packages of the new stack | None | The packages it attaches |
 | blockr.cdex, blockr.sandbox and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |
 | dockViewR | No longer used, since blockr.dock draws dockview in the browser | [Client-drawn dock](Rewrite-1.2) | |
-| g6R | No longer used, since blockr.dag draws the DAG in the browser | [Client-drawn DAG extension](Rewrite-1.3) | |
+| g6R | No longer used, since blockr.dag draws the DAG in the browser | [Client-drawn DAG](Rewrite-1.3) | |
 | typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.9#the-package) | |
 
 ## Conventions

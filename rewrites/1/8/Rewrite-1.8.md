@@ -12,7 +12,7 @@ On today's dock, a board of two blocks takes about 5.8 s and 13 busy periods to 
 On one R process, a classic Shiny app answered none of one user's updates within 120 s once four other sessions streamed, where the same updates sent as data took a few milliseconds ([blockr#493](https://github.com/BristolMyersSquibb/blockr/discussions/493#discussioncomment-18775537)).
 The bar is a new stack that is faster than today's, rather than no slower, which takes measurements on boards of the size users run, such as the CEDX board.
 
-The assistant is rebuilt too ([Assistant as a client extension](Rewrite-1.4)).
+The assistant is rebuilt too ([Assistant as a plugin](Rewrite-1.4)).
 Today five clinical questions with answer keys computed from the data, which someone runs by hand on the CEDX board, are all that check its answers ([dev/cedx/assistant-intent](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/0e3e074647a257c1e828e49b92c81ea9d4669570/dev/cedx/assistant-intent/README.md)).
 Nothing compares two versions of its tools, or of how it frames its context, by how well it does what users ask.
 

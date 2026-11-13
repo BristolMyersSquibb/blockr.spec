@@ -20,11 +20,11 @@ Weeks are ISO weeks.
 | 47 | 2026-11-16 | Spec blockr.dock and blockr.ui | [Client-drawn dock](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
 | 48 | 2026-11-23 | Implement blockr.ui and blockr.dock | [Client-drawn dock](Rewrite-1.2), [UI kit and design system for the client](Rewrite-1.7) |
 | 49 | 2026-11-30 | Buffer | |
-| 50–51 | 2026-12-07 | Spec and implement blockr.assistant | [Assistant as a client extension](Rewrite-1.4) |
+| 50–51 | 2026-12-07 | Spec and implement blockr.assistant | [Assistant as a plugin](Rewrite-1.4) |
 | 52–53 | 2026-12-21 | Holidays | |
-| 1–2 | 2027-01-04 | Spec and implement blockr.session | [Session management as a client extension](Rewrite-1.6) |
-| 3 | 2027-01-18 | Spec and implement blockr.dag | [Client-drawn DAG extension](Rewrite-1.3) |
-| 4 | 2027-01-25 | Spec and implement blockr.code | [Code export as a client extension](Rewrite-1.5) |
+| 1–2 | 2027-01-04 | Spec and implement blockr.session | [Session management as a storage plugin](Rewrite-1.6) |
+| 3 | 2027-01-18 | Spec and implement blockr.dag | [Client-drawn DAG](Rewrite-1.3) |
+| 4 | 2027-01-25 | Spec and implement blockr.code | [Code export as a plugin](Rewrite-1.5) |
 | 5 | 2027-02-01 | Buffer, the parity list the switch waits for, and the fully functional POC at the week's end | [Migration](Rewrite-1#migration) |
 | 6–13 | 2027-02-08 | Run down the tail of problems against the parity list, aiming at light BMS deployments by the end of Q1 | |
 
@@ -77,7 +77,7 @@ What a block class looks like in Python comes first, and with it whether one boa
 
 A server-side component of our own would sit between the client and the processes that evaluate, shaped as a proxy in Go or as a scheduler in Node, which is still open.
 Above all it would let a board use several R and Python processes, and backends other than a process, such as a database, where data locality decides where a block is evaluated, so that data moves as little as possible.
-It would also open the way to collaboration, whose relay State in JS keeps open ([State in JS](Rewrite-1#proposal)), to an MCP endpoint, and to what the client cannot do alone, such as holding the provider credentials of the assistant's proxy ([Assistant as a client extension](Rewrite-1.4)) and making the calls on an app's own Connect key ([Session management as a client extension](Rewrite-1.6)).
+It would also open the way to collaboration, whose relay State in JS keeps open ([State in JS](Rewrite-1#proposal)), to an MCP endpoint, and to what the client cannot do alone, such as holding the provider credentials of the assistant's proxy ([Assistant as a plugin](Rewrite-1.4)) and making the calls on an app's own Connect key ([Session management as a storage plugin](Rewrite-1.6)).
 
 Some of it needs no server: R may already run a request in a worker rather than the session's process ([Wire protocol between the client and R](Rewrite-1.1.9#what-must-hold)), and a block whose result is a lazy table, as dbplyr makes, would leave its work to the database.
 What needs a server is what is shared across sessions or outlives a page: collaboration, headless use such as the MCP endpoint, and placing work across evaluators.

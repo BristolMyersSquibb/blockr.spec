@@ -11,7 +11,7 @@ So each file needs one conversion, in R, by the `blockr_deser()` methods of the 
 
 What the conversion does is settled in pieces, by [Serialization](Rewrite-1.1.4#files) for core's objects, [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) for extensions and [Saved boards and app scripts across the switch](Rewrite-1.2.2) for the dock.
 The package that runs it has four sentences in the Migration of [State in JS](Rewrite-1#migration) and no page, so none says what a user calls, how a package's methods reach blockr.convert, or what its tests hold.
-Nor does any page say how the records that blockr.session stores today cross, while [Session management as a client extension](Rewrite-1.6) has the browser read the pin bundles of records saved today, which hold files that only R converts.
+Nor does any page say how the records that blockr.session stores today cross, while [Session management as a storage plugin](Rewrite-1.6) has the browser read the pin bundles of records saved today, which hold files that only R converts.
 
 Every app script changes at the switch too, and 89 R scripts and 8 documents in 15 of the workspace's repos call `serve()`, in examples, vignettes, READMEs and dev scripts.
 Each package's migration notes, a vignette, say what a script changes ([State in JS](Rewrite-1#migration)), but only blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)) and blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)) are planned.
@@ -36,7 +36,7 @@ The method for a constructor stops with `blockr_deser_missing_pkg` where the con
 A block that cannot be rebuilt stops the whole read, unless the blockr option `deser_on_error` is `"drop"`, which drops the block and logs a warning ([#L363-L398](https://github.com/BristolMyersSquibb/blockr.core/blob/5abaa52bc04bf202dab9c6e17772f2a170b10a38/R/utils-serdes.R#L363-L398)).
 On `js-state`, blockr.core has no `blockr_deser()` any more.
 
-Today's files come from core's Export, the dock's Import and Export, and blockr.session, which stores each board as a pin, under the visitor's own account on Connect ([Session management as a client extension](Rewrite-1.6)).
+Today's files come from core's Export, the dock's Import and Export, and blockr.session, which stores each board as a pin, under the visitor's own account on Connect ([Session management as a storage plugin](Rewrite-1.6)).
 Today's files are read with typedjson's `json_read()` and `json_read_str()`, whose `code` is `TRUE` by default, while `code = FALSE` came after its release 0.1.2 ([nbenn/typedjson#122](https://github.com/nbenn/typedjson/pull/122)).
 
 ## Proposal
@@ -72,7 +72,7 @@ It names every object that it leaves out in one warning, with its class and its 
 A user converts a file that they downloaded from an app of today's stack once, with `convert_file()`, and opens the JSON board in an app of the new stack, and so does a deployer with the file that `serve()` is given.
 The client and `serve()` refuse a file without a `format` with an error that names `convert_file()`, since they tell such a file apart ([Serialization](Rewrite-1.1.4#files)), while core converts nothing (condition 3).
 
-The storage plugin of blockr.session converts each record that blockr.session stored today as it opens the record, and each file of today's stack that a user uploads (condition 4), since the records sit under each visitor's own account on Connect, where no pass of a deployer's reaches them all ([Session management as a client extension](Rewrite-1.6)).
+The storage plugin of blockr.session converts each record that blockr.session stored today as it opens the record, and each file of today's stack that a user uploads (condition 4), since the records sit under each visitor's own account on Connect, where no pass of a deployer's reaches them all ([Session management as a storage plugin](Rewrite-1.6)).
 Where a record's board has no `format`, the plugin sends it to R in a request of its class, which R answers with `convert_file()` on the request's body ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and opens the JSON board that comes back, while the record gains a version in the new format only when the user saves the board.
 The warning of a conversion that leaves objects out reaches the user as a notification, as every warning that R raises does ([Notifications, logging and tracing](Rewrite-1.1.14)).
 So blockr.session imports blockr.convert, and every app that may open a record saved today can convert it.
@@ -80,7 +80,7 @@ So blockr.session imports blockr.convert, and every app that may open a record s
 ### The migration notes
 
 Each package whose functions app scripts call, and which the switch changes, writes migration notes, a vignette, which list each change of a script, with what takes the place of each function that goes, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
-They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.dag's ([Client-drawn DAG extension](Rewrite-1.3#work)), blockr.assistant's ([Assistant as a client extension](Rewrite-1.4#work)), blockr.code's ([Code export as a client extension](Rewrite-1.5#work)) and blockr.session's ([Session management as a client extension](Rewrite-1.6#work)), and each block package's as it is ported.
+They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.dag's ([Client-drawn DAG](Rewrite-1.3#work)), blockr.assistant's ([Assistant as a plugin](Rewrite-1.4#work)), blockr.code's ([Code export as a plugin](Rewrite-1.5#work)) and blockr.session's ([Session management as a storage plugin](Rewrite-1.6#work)), and each block package's as it is ported.
 The package blockr.md has no part yet, so its notes wait for one, and the notes of blockr.outline and blockr.viz, outside the workspace, are their maintainers' to write.
 
 ### Testing
