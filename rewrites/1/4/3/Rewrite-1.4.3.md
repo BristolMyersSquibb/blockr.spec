@@ -64,7 +64,7 @@ type Part =
 
 The shape is the plugin's own, and the plugin turns it into the messages of its library for each call, and the library's messages back into it.
 A state in the library's shape would need a migration whenever the library changed its messages, as the AI SDK may with each major, of which it released three in a year ([Assistant as a plugin](Rewrite-1.4)).
-The spike checks that the turn from one shape to the other loses nothing that a call needs.
+The issue that runs the loop checks that the turn from one shape to the other loses nothing that a call needs.
 
 A thread keeps every branch, as today's record does: each message names its parent, and `head` names the last message of the branch that shows.
 Editing a sent message adds a message under the same parent and makes it the head, and the chat's controls switch between the branches by setting the head.
@@ -119,7 +119,7 @@ Nothing else in the state names one of core's objects, since a message that name
 
 ### Compaction
 
-The plugin compacts the branch that shows once the tokens of its last call pass a rule of its own, which the spike settles, and whenever the user types `/compact` ([Assistant as a plugin](Rewrite-1.4#today)).
+The plugin compacts the branch that shows once the tokens of its last call pass a rule of its own, which the issue that ports compaction settles, and whenever the user types `/compact` ([Assistant as a plugin](Rewrite-1.4#today)).
 It has a model call with no tools write a summary of the older messages, as today's compaction does ([R/ext-compact.R#L327-L375](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-compact.R#L327-L375)), and `blockr.assistant-compact_thread` puts that summary in place of them, as a message of the role `summary`, which becomes the parent of the first message that it keeps.
 A branch that forks from the messages that compaction replaces goes with them, as today's trimming of a thread drops such branches ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)).
 Neither library summarizes a thread itself, so the plugin ports today's (notes).

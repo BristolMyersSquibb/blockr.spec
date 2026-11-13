@@ -1,9 +1,9 @@
 # The assistant's tools
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, the requests that some of them send to R, and what the model is told before each call.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
 It shapes the Work items that build the tools and the loop, and the one in blockr.core that lets the command registry plan a list of commands.
-Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, and the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s.
+Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
 ## What must hold
 
@@ -60,7 +60,7 @@ Each tool runs in the browser, and the three that need R send a request of the a
 | `undo_edit` | Takes back the assistant's last edit, as the chat's Undo does ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)) | `store.undo("assistant")` |
 
 The read tools keep today's names, and the two pairs that are new follow today's `list_block_types` and `describe_block_type`.
-They carry over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmarks to show ([Benchmarks of the new stack](Rewrite-1.8)).
+They carry over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmark to show ([The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares)).
 A read tool reads the board as it is now, and says of a block that reads `stale` or `unevaluated` that it does, without evaluating it.
 Only a request evaluates the blocks it reads, as every request does ([Evaluation in the client](Rewrite-1.1.10#demand)).
 
@@ -130,22 +130,32 @@ Core evaluates the blocks that a request reads first, even off screen, and sends
 The tool then hands the model those statuses, as it hands it a request that R loses to a new session (notes).
 So `describe_result()` stays a generic of blockr.assistant's in R, and a package that teaches the model about a class of results gives a method of it, as blockr.sandbox does for its composer tables.
 
-### What the model is told before each call
-
-The plugin builds the system prompt as `default_system_prompt()` builds it today ([R/system-prompt.R#L57-L103](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/system-prompt.R#L57-L103)), from the template in its bundle and three sections:
-
-- The skills that no block or plugin scopes, from the reply to `list_skills`.
-- The board: each block with its status and conditions, the links, the stacks and the app's plugins, each section cut at `assistant_board_section_max_chars`.
-- The focus: the block that has focus in `CoreApi.focus`, the blocks that the user added with @, and, where the dock is the frontend, the blocks in its active view.
-
-It builds the prompt again before each call to the model, from the board, the statuses and the focus as they are then, rather than on every change to them, as today's server does.
-The template keeps today's rules, with the edit tool in place of staging and committing.
-
 ### On a locked board
 
 The read tools and `read_skill` work on a locked board as on any other.
 The store refuses an edit that a lock fixes, and the edit tool returns why, as it returns any refusal ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 R refuses `inspect_results`, since it evaluates what the client sends.
+
+### How failures reach the model
+
+A failure reaches the model as the result of the tool that met it, marked as an error, as today's tools return one ([R/tools-util.R#L1-L10](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-util.R#L1-L10)).
+Its text names what failed, why, and where the model can read more, as today's tools answer a block id that the board lacks with the hint "Call list_blocks first" ([R/tools-read.R#L86-L87](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-read.R#L86-L87)):
+
+| What fails | What the model gets |
+|---|---|
+| A tool's args that its schema refuses | The schema's failures, from the library's check, so that the model calls the tool again with args that fit |
+| A block, a command, a plugin or a skill that a tool names and the board or the app lacks | That it is not there, with the tool that lists those that are, such as `list_blocks` |
+| A command of an edit that refuses | The command's id and each failure that the command registry names, while the board stays as it was (The edit tool) |
+| A block that an edit changed, or one downstream of it, that reads `failed`, `invalid` or `waiting` once evaluated | Its status and conditions in the edit's review: the error of a `failed` block, the unset arg or the message of `blockr_invalid()` of an `invalid` one, and what a `waiting` one waits for ([Evaluation in the client](Rewrite-1.1.10#statuses)) |
+| A request whose blocks do not read `ready` | The statuses of those blocks, with which core rejects it (The requests in R) |
+| A request that R loses to a new session | That it was lost, since core sends it no more (notes) |
+| An error in the model's own R code | The error's message, as R gives it |
+| What a lock refuses | Why the lock refuses it, as the store or R says (On a locked board) |
+| A value past its cap | That it is left out, as today's Board section marks an arg too long to show, with the tool that reads it in full, such as `get_block_state` |
+| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a thread only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)) |
+
+How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, with questions whose turns meet it.
+A failure that the user should know of reaches them as a notification as well, as a call to the model that fails does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
 ## Open questions
 
@@ -156,7 +166,7 @@ None.
 The 40 tool definitions at `fcbdb27`, as at `fd58655`, by file: `tools-read.R` 11, `tools-view.R` 11, `tools-mutation.R` 9, `tools-extension.R` 3, `tools-commit.R` 2, `tools-options.R` 2, `skills-invoke.R` 1, `tools-typed.R` 1, the factory of the typed tools.
 
 Tool schemas come from the `args` of the registered commands, the schemas of plugin classes' state and the schemas that block classes' UIs ship, which the arg specs describe ([Board updates](Rewrite-1.1.2#commands)), and the arg specs are a JSON Schema subset that blockr.ai already binds through `ellmer::type_from_schema()`.
-The AI SDK's `jsonSchema()` takes such a schema as it is, while pi types its tools with TypeBox, so the spike checks that such a schema passes pi's validation unchanged.
+The loop's library, pi, takes such a schema as it is, since a tool's `parameters` is a plain JSON Schema object, as a run in a browser confirmed ([Assistant as a plugin](Rewrite-1.4)).
 On `js-state`, core's `blockr.core-add_block` and `blockr.core-set_block` check the state they set against the schema of the block's class, which the block's entry in the block registry carries, and refuse with each failure ([srcts/commands/core.ts#L101-L118](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L101-L118)), which is what the typed tools give the model today through ellmer's types.
 
 Each command of an edit is planned on the board that the commands before it leave, since a command checks its args against the board it gets, as `blockr.core-add_link` is enabled only where both of its blocks are on the board ([srcts/commands/core.ts#L337-L358](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L337-L358)), while `commands.plan()` gives each command the current board ([srcts/commands/commands.ts#L191-L194](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/commands.ts#L191-L194)).
@@ -168,7 +178,5 @@ A request that R loses to a new session is rejected rather than sent again ([Wir
 
 The caps carry over as today's blockr options, at `fcbdb27`: `assistant_summary_max_chars` 2000, `assistant_state_max_chars` 20000, `assistant_state_value_max_chars` 128, `assistant_eval_max_chars` 16000, `assistant_board_section_max_chars` 1500, `assistant_description_max_chars` 1000, `assistant_skill_description_max_chars` 1024, `assistant_skill_catalogue_max_chars` 4000, `assistant_plot_render_px` 768, `assistant_plot_render_range` 200 to 2000 and `assistant_plot_render_max` 4 ([R/utils-bounds.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/utils-bounds.R)), and `assistant_review_max_blocks` 50 ([R/stage-review.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/stage-review.R)).
 A cap in the browser is read through `CoreApi.blockrOption()`, and one in a request through `blockr_option()`.
-
-A prompt that changes with every call defeats a provider's prompt cache, which keys on the start of a prompt, so moving the board and the focus to the end of each request, out of the system prompt, is a change for the benchmarks to weigh.
 
 </details>

@@ -55,6 +55,9 @@ Where the deployment sets a key, every call uses it, and the chat asks for nothi
 Otherwise the chat asks the visitor for their own key, and offers a login beside it where the place offers one, as OpenRouter does.
 So no blockr option lists the ways, and the hosting platform's integration, once it comes, will follow from the platform that the app runs on.
 
+A page calls each of the places that the assistant reaches directly: OpenAI's and Anthropic's APIs, the latter with the header by which a page opts in, OpenRouter and Vercel's AI Gateway, as calls from a page with real keys showed ([Assistant as a plugin](Rewrite-1.4)).
+OpenAI alone puts no CORS header on the 401 with which it refuses a key, so a page sees that refusal as a failed connection ([The assistant's chat](Rewrite-1.4.4#the-credential)).
+
 - The deployment's key is the easiest way and the least safe.
   Any visitor who can use the assistant can take it, today as after the switch, since a visitor runs R through a block that takes their code, as core's subset block takes its `subset` and `select` ([R/transform-subset.R#L29-L31](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-subset.R#L29-L31)), and through the assistant's request that runs the R its model writes ([Assistant as a plugin](Rewrite-1.4#proposal)).
   A key in the browser only makes that visible.

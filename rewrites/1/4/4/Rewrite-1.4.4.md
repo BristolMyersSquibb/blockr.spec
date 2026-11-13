@@ -50,7 +50,7 @@ The dock may mount the chat again, as when it redraws a view, so what has to out
 
 The chat is built on assistant-ui's primitives over its `ExternalStoreRuntime`, which displays messages that a store of the app's own holds, here the assistant's state (notes).
 That runtime takes branches as messages that name their parent, as the state's do, and gives editing, stopping, attachments and a list of threads through handlers that the plugin writes.
-Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle, with the library that the spike chooses.
+Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
 ### The composer and a turn
 
@@ -70,7 +70,7 @@ While a turn runs, the stop button shows, and pressing it aborts the turn's sign
 1. The library stops the model's stream.
 2. A one-time evaluation that the edit tool awaits stops waiting ([Evaluation in the client](Rewrite-1.1.10#demand)).
 3. A request that a tool sent is cancelled, through the signal that `core.request()` takes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
-4. What the reply streamed until then enters the thread as its message.
+4. What the reply streamed until then enters the thread as its message, and each tool call left without a result gets one that says the user stopped the turn ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 
 An edit that the store applied before the stop stays applied, and none is half applied, since each edit applies all or none (condition 3).
 
@@ -113,7 +113,7 @@ The footer shows a tag for the block that has focus in `CoreApi.focus`, which th
 It shows a tag too for each block that the user added with @, which stays until the user removes it.
 The @ button opens blockr.ui's multi-select of the blocks, those of the active view first where the dock is the frontend, and its picks become the thread's `focus` through `blockr.assistant-set_focus` ([The assistant's state](Rewrite-1.4.3#commands)).
 Where a frontend sets no focus, the footer shows no tag for it.
-The model reads the focus before each call ([The assistant's tools](Rewrite-1.4.2#what-the-model-is-told-before-each-call)).
+The model reads the focus before each call ([The system prompt](Rewrite-1.4.5#the-sections)).
 
 ### Commands
 
@@ -142,6 +142,7 @@ Where the deployment sets no key, the chat asks the visitor for their own before
 The login opens in a window of its own, which hands its code back to the page, since leaving the page for the service's login would reload the app, and drop with it what the board holds unsaved.
 A reload asks again, since neither a typed key nor the key that a login gives outlives the page.
 A key that the place refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
+OpenAI's refusal reaches a page only as a failed connection, since its 401 carries no CORS header ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)), so where a call to OpenAI fails that way, the chat says that the key may be wrong as well as the connection lost.
 
 ### What fails
 
