@@ -1,5 +1,5 @@
 # The assistant's chat
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
 It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads with their branches, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.

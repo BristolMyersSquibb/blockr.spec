@@ -1,5 +1,5 @@
 # The assistant's state: threads and compaction
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items that register the assistant's plugin class, port compaction and convert today's threads.

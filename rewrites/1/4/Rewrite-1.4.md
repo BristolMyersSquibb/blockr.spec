@@ -1,5 +1,5 @@
 # Assistant as a plugin
-Status: draft. Part of [State in JS](Rewrite-1).
+Status: review. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.
 It builds on the plugins, commands, scheduler and requests of [Client-owned board state](Rewrite-1.1), on the dock's commands for the views it arranges today ([Client-drawn dock](Rewrite-1.2)), and on blockr.ui's design system for its look ([UI kit and design system for the client](Rewrite-1.7)).
@@ -53,7 +53,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 ## Proposal
 
 - The assistant is a plugin of one class, `blockr.assistant-assistant_plugin`, named Assistant, which blockr.assistant's startup module registers ([Plugins](Rewrite-1.1.12#a-plugin)).
-  Its state holds the threads ([The assistant's state](Rewrite-1.4.3)), its `ui` draws the chat in whatever place the frontend gives it, and its `start` runs each turn, so that a turn goes on once the panel closes ([Plugins](Rewrite-1.1.12#running-a-plugin)).
+  Its state holds the threads and the board's pick of the model ([The assistant's state](Rewrite-1.4.3)), its `ui` draws the chat in whatever place the frontend gives it, and its `start` runs each turn, so that a turn goes on once the panel closes ([Plugins](Rewrite-1.1.12#running-a-plugin)).
   Its method of `plugin_requests()` gives what needs R or the server's files: the summary of a block's result through `describe_result()`, the evaluation of R code that the model writes, and the list of skills and the text of each ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
   An app script makes it with `new_assistant_plugin()`, which takes the threads of a board that the script builds and the board's pick of the model.
 - The agent loop runs in the browser, where the board it edits is, with the commands that core and the packages of other plugins register, and requests to R, as its tools, so that it changes another plugin's state, such as blockr.md's document or the DAG's positions, through that plugin's commands or core's `blockr.core-set_plugin_state`, as it changes core's objects through core's commands ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -62,7 +62,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
   So a package that teaches the model about a class of results keeps giving a method of that generic in R, as blockr.sandbox does for its composer tables.
 - The model may run R outside blocks, as `inspect_results` lets it today, on the results of the blocks that it names, so that a number it reports from there is in no exported script, as today, while R refuses that request on a locked board ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)).
 - Two libraries run such a loop in a browser, and a spike chooses between them (Work): the AI SDK, `ai` with a provider package such as `@ai-sdk/anthropic`, and pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai`, while a provider's own SDK would leave the loop to us.
-  The spike builds the edit tool, one request to R and compaction on each, with OpenAI's provider, which both apps that use the assistant today chat through (Today), and with Anthropic's.
+  The spike builds the edit tool, one request to R and compaction on each, with OpenAI's provider, which both apps that use the assistant today chat through (Today), through both of the APIs of OpenAI's that [Model access](Rewrite-1.4.1#the-blockr-options) names, and with Anthropic's.
   It keeps the library that does the following with less code of our own, the smaller bundle breaking a tie: it meets What must hold 1 to 4, streams a turn and stops it when the user does, takes the JSON Schemas that core and other packages register as tool schemas unchanged, goes on with a thread once its board is saved and opened again, and runs under Vitest on happy-dom with the model faked.
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
   The AI SDK reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id (notes).
@@ -100,10 +100,10 @@ None.
 
 ## Design pages
 
-- [Model access: providers, gateways and credentials](Rewrite-1.4.1): where the assistant's calls to a model go, how they are authenticated, and who picks the model
+- [Model access: providers, gateways and credentials](Rewrite-1.4.1): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options
 - [The assistant's tools](Rewrite-1.4.2): the tools that the model calls, the edit tool among them, the requests that they send to R, and what the model is told before each call
-- [The assistant's state: threads and compaction](Rewrite-1.4.3): the threads and their branches, the commands that change them, compaction, and how today's threads cross the switch
-- [The assistant's chat](Rewrite-1.4.4): the chat in the assistant's panel, with its turns, tool calls, threads, branches, attachments, focus, commands and meter, the undo of the assistant's edits, and what fails
+- [The assistant's state: threads and compaction](Rewrite-1.4.3): the threads and their branches, how much of a thread the state keeps, the board's pick of the model, the commands that change them, compaction, and how today's threads cross the switch
+- [The assistant's chat](Rewrite-1.4.4): the chat in the assistant's panel, with its turns, tool calls, threads, branches, attachments, focus, commands and meter, the pick of the model, the visitor's credential, the undo of the assistant's edits, and what fails
 
 <details><summary>Notes for implementers</summary>
 

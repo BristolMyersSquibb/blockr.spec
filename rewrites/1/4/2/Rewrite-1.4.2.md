@@ -1,5 +1,5 @@
 # The assistant's tools
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, the requests that some of them send to R, and what the model is told before each call.
 It shapes the Work items that build the tools and the loop, and the one in blockr.core that lets the command registry plan a list of commands.
@@ -95,6 +95,7 @@ A list that changes only the state of plugins, such as the dock's views, evaluat
 
 The model learns which commands it can run, and what their args take, from `list_commands` and `describe_command`.
 So a package that registers a command opens it to the assistant with no code of the assistant's, as today's `new_ext_meta()` opens an extension ([Board updates](Rewrite-1.1.2#what-must-hold)).
+The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves them out, since only the assistant's chat and loop change its threads and its pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L100](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L100)).
 
 ### The requests in R
 

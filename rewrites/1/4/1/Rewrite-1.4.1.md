@@ -1,7 +1,7 @@
 # Model access: providers, gateways and credentials
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, and who picks the model.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, who picks the model, and the blockr options through which a deployment sets all three.
 It shapes the Work items of that part that send the calls and authenticate them, while the loop, its tools and its state stay with the part.
 
 ## What must hold
