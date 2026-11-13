@@ -54,6 +54,7 @@ interface BlockHost<S extends State = State> {
   evaluate(params: Record<string, Json>): Promise<BlockStatus>;   // a one-time evaluation of the block with parameters, which its block_eval() method reads
   module<T = unknown>(id: string): Promise<T>;       // a module another package offers, by id, such as "blockr.dplyr-filter"
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
+  notify(n: Raised): () => void;                     // a notification of the module's, which concerns the block unless it names another, until the mount ends at the latest
 }
 
 interface BlockContext {
@@ -122,6 +123,7 @@ interface OptionHost<V extends Json = Json> {
   submit(value: V): Promise<void>;                   // runs core's command that sets a board option
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
+  notify(n: Raised): () => void;                     // a notification of the module's, which concerns the board option unless it names another, until the mount ends at the latest
 }
 
 interface OutputHost {
@@ -137,6 +139,7 @@ interface OutputHost {
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts & { scope?: "class" | "renderer" }): Promise<T | Blob>;   // a request of its output class, or with scope "renderer" of the renderer, run with the result the output was made from
   emit(name: string, payload: Json): void;           // reports what the user did on the output, such as a selection, for a plugin to act on
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
+  notify(n: Raised): () => void;                     // a notification of the renderer's, which concerns the block unless it names another, until it is unmounted at the latest
 }
 ```
 

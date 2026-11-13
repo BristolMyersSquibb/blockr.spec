@@ -48,7 +48,7 @@ interface CoreApi {
   };
   lock: { board: boolean; load: boolean };   // whether the app sets the board lock and the load lock, from the reply to hello
   outputEvents: OutputEvents;      // what renderers report the user did, such as a selection, for plugins to act on
-  notifications: { notify(n: Omit<Notification, "id">): () => void; get(): readonly Notification[]; subscribe(fn: (all: readonly Notification[]) => void): () => void };   // every notification of the open board, which the frontend draws, from Notifications, logging and tracing
+  notifications: { notify(plugin: PluginClassId, n: Raised): () => void; get(): readonly Notification[]; subscribe(fn: (all: readonly Notification[]) => void): () => void };   // every notification of the open board, which the frontend draws, from Notifications, logging and tracing
   log(pkg: string): Log;           // log lines that name the package, from Notifications, logging and tracing
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
   request<T = Json>(plugin: PluginClassId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by its class's id, as Plugins has it

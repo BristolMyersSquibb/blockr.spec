@@ -2,18 +2,19 @@
 Status: settled on 2026-11-10. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the user learns of a message, warning or error, and what R and the client log and trace.
-Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a plugin sent it.
+Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whether R raised it as a condition, core failed at something, or a package's module raised it.
 Log lines go to the console by default, and log lines and spans go to an OpenTelemetry collector wherever the deployment names one, from R and from the browser alike.
 It shapes the notifications of `CoreApi` ([blockr.core#539](https://github.com/BristolMyersSquibb/blockr.core/issues/539)) and their toasts in core's basic frontend ([blockr.core#549](https://github.com/BristolMyersSquibb/blockr.core/issues/549)), logging in R ([blockr.core#550](https://github.com/BristolMyersSquibb/blockr.core/issues/550)) and in the client ([blockr.core#551](https://github.com/BristolMyersSquibb/blockr.core/issues/551)), tracing ([blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552)) and the guide for deployments ([blockr.core#553](https://github.com/BristolMyersSquibb/blockr.core/issues/553)), and the dock's notifications build on it ([Client-drawn dock](Rewrite-1.2)).
 How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evaluating-a-block)'s, how a block's status holds them [Evaluation in the client](Rewrite-1.1.10#statuses)'s, and how a frontend draws the board [Drawing the board](Rewrite-1.1.8)'s.
 
 ## What must hold
 
-1. Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whoever raised it: R, core or a plugin.
+1. Every message, warning and error that the user should see reaches the frontend through one member of `CoreApi`, whoever raised it: R, core or a package's module.
    So a frontend draws them all from one place, where today's `board$conditions` holds only those of blocks.
-2. Each holds what a frontend needs to choose how to show it without reading its message: its severity, its class, who raised it, and what it concerns, a block, a board option, a plugin, a package or the board.
+2. Each holds what a frontend needs to choose how and where to show it without reading its message: its severity, who raised it, and the board object that it concerns or the board, each apart from the other.
+   So a frontend places a notification by either, such as on the card of the block that it concerns or next to the plugin that raised it.
 3. Core withdraws each notification once its cause has gone, so that a frontend can take down one that has gone stale.
-   A block's conditions go when the block's next reply replaces them or the block leaves the board, and the rest when whoever raised them withdraws them or the next board opens.
+   A block's conditions go when the block's next reply replaces them, the conditions of R's reply to a request when R next replies to a request of the same name, and the rest when whoever raised them withdraws them, and every one as the block, link or stack that it concerns leaves the board or the next board opens.
 4. A frontend reads those that hold as it draws, and hears each one that comes or goes.
    So one raised before it draws, such as the failure of a module that the reply names, still reaches the user.
 5. The frontend alone decides how each shows and for how long, such as until core withdraws it, until the user dismisses it, or as a toast that fades after a few seconds.
@@ -68,10 +69,10 @@ Its documentation describes no address to which a browser, or content, can send 
 ### Notifications
 
 A notification is a message, warning or error that the user should see, whoever raised it.
-R raises one as a condition while it evaluates a block or makes its output, core where it fails at something that the user asked for or that the board needs, and a plugin through `CoreApi`, the frontend among them.
+R raises one as a condition while it evaluates a block, makes its output or answers a request, core where it fails at something that the user asked for or that the board needs, and a package's module: a plugin, the frontend among them, through `CoreApi`, and a module that core mounts through its host.
 The term names what reaches the user rather than how it arose.
 R raises conditions and the client throws exceptions, and only some of either reach the user, so "condition" keeps R's sense ([Glossary](Glossary)).
-A notification's `origin` names who raised it, as a delta's origin names who made it ([Board updates](Rewrite-1.1.2#the-store)).
+A notification's `source` says who raised it, and its `about` names the board object that it concerns ([Board objects](Rewrite-1.1.1)), apart, so that a frontend places a notification by either.
 
 The `notifications` member of `CoreApi` holds every notification of the open board.
 A frontend follows them as it follows focus, through a getter and a subscription ([UI modules in JS](Rewrite-1.1.7#the-contract)):
@@ -80,18 +81,46 @@ A frontend follows them as it follows focus, through a getter and a subscription
 interface Notification {
   id: string;                        // the same while it holds, so that a frontend knows which it has shown
   severity: "message" | "warning" | "error";
-  class: string[];                   // a condition's class, or core's own, such as ["module_failed", "blockr_error", "error", "condition"]
   message: string;
-  origin: Origin;                    // who raised it: "r", "core" or a plugin's class's id
-  phase?: Phase;                     // what raised a block's condition, as on the protocol's Condition
-  block?: BlockId;                   // what it concerns, none of these for the board
-  option?: OptionId;
-  plugin?: PluginClassId;
-  package?: string;                  // the package whose code failed, such as a module's
+  source: RSource | CoreSource | ModuleSource;  // who raised it
+  about?: BoardObject;               // the board object that it concerns, none for the board
+}
+
+type BoardObject =                   // a board object by its id, a plugin by its class's
+  | { block: BlockId } | { link: LinkId } | { stack: StackId } | { option: OptionId } | { plugin: PluginClassId };
+
+interface RSource {                  // R, in a condition of its reply to what core asked of it for `about`
+  kind: "r";
+  class: string[];                   // the condition's class vector, as ["simpleWarning", "warning", "condition"]
+  request:
+    | { type: "evaluate"; phase?: "expr" | "inputs" | "block_eval" | "result_summary" }
+    | { type: "output" }
+    | { type: "block_class" | "output_class" | "option" | "plugin"; name: string }
+    | { type: "renderer"; renderer: string; name: string };
+}
+
+interface CoreSource {               // core, where it fails at something
+  kind: "core";
+  code: string;                      // what it is of: a code of the table below, "block_waiting", "evaluation_unsent" or "output_unanswered"
+  package?: string;                  // the package whose module failed, where core knows it
+}
+
+interface ModuleSource {             // a package's module in the client
+  kind: "module";
+  object: { plugin: PluginClassId } | { block: BlockId } | { option: OptionId };  // the board object whose module raised it
+  code: string;                      // the package's own, such as "edit_refused"
+  package?: string;                  // the package whose module raised it, where core knows it
+}
+
+interface Raised {                   // what a package's module gives notify()
+  severity: "message" | "warning" | "error";
+  message: string;
+  code: string;
+  about?: BoardObject | null;        // the board object whose module raises it unless given, null for the board
 }
 
 notifications: {
-  notify(n: Omit<Notification, "id">): () => void;                   // raises one, and returns what withdraws it
+  notify(plugin: PluginClassId, n: Raised): () => void;              // raises a plugin's, and returns what withdraws it
   get(): readonly Notification[];                                    // those that hold, the same array until one comes or goes
   subscribe(fn: (all: readonly Notification[]) => void): () => void;
 };
@@ -100,31 +129,39 @@ notifications: {
 A frontend reads `get()` as it draws and follows `subscribe()` from then on, the pair that React's `useSyncExternalStore` takes.
 The type takes the term's name, `Notification`.
 The browser has a global of that name too, for desktop notifications, and it stays usable: core's type hides only the browser's type, and only in a module that imports core's, where the browser's constructor still works.
-Whoever raises a notification gives its origin and its class, since `CoreApi` is one object for every plugin and cannot tell who calls it.
-The class lets a frontend choose how to draw a notification, such as a button that reloads the page for `page_reload_needed`.
-The origin lets a frontend say who raised one, and lets a plugin find its own.
+A plugin names itself as the first argument of `notify()`, as it does for `request()`, since `CoreApi` is one object for every plugin and cannot tell who calls it, and core makes the source from it, with the package from the class's id.
+A module that core mounts raises one through its host's `notify()`, which takes what a plugin gives and fills in the block or the board option that the module belongs to, with the module's package ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A board option's `onChange()` raises one through the `notify` that it gets beside the value ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+A notification of a module concerns the module's own board object unless it names another, or the board with `null`.
+What a mounted module raises holds until its mount ends at the latest, and what an `onChange()` raises until its next call returns.
+The code lets a frontend choose how to draw a notification, such as a button that reloads the page for core's `page_reload_needed`, while a class vector stays R's, on R's conditions alone.
+The source lets a frontend say who raised one, and lets a plugin find its own.
 
 Core makes a block's notifications from the conditions of its status, one for each, and derives them from the scheduler rather than copying them.
 So `scheduler.status()` keeps a block's conditions for the frontends and hosts that read them ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the two never differ.
-Their origin is `"r"`, since R raised them.
-The scheduler writes two conditions itself, the message of a block that waits and the error of an evaluation that the transport could not send, and those have the origin `"core"` ([Evaluation in the client](Rewrite-1.1.10#statuses)).
-A block's notification takes its id from the block, the severity, the class and the message.
+Their source is R's, with the evaluation and the phase that raised each condition.
+The scheduler writes two conditions itself, the message of a block that waits and the error of an evaluation that the transport could not send, and those are core's, of the codes `block_waiting` and `evaluation_unsent` ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+A block's notification takes its id from the block, the severity, the source and the message.
 So the same condition in the block's next reply keeps its id, and a frontend can tell that it has shown it already, as a toast that the user closed stays closed today while its condition holds.
 Two conditions of one reply that share all four are one notification, as today's toasts show such a condition once.
 Where R cannot make a block's output, core raises a notification with the condition that the output's host gives through `error()`, concerning the block, until the block's next output arrives ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+It is R's, of the request `output`, or core's, of the code `output_unanswered`, where the ask got no reply or R's error held no condition.
+Where R replies error to a request, core raises a notification for each condition of the reply, R's, with the request's type and name, which concerns what the request was made for: the block of a block class's, an output class's or a renderer's request, the board option, or the plugin.
+It holds until R next replies to a request of the same name for that board object, so that a request that fails again keeps its notifications, and one that succeeds withdraws them.
+The request still rejects to its caller with the conditions, and a frontend leaves out, by the request's type, what the caller shows already.
 
 Core raises its own notifications where it fails at something that the user asked for or that the board needs.
-Each names what failed and what needed it, and its class starts with the class that the table gives, followed by `blockr_error`, `error` and `condition` for an error, or by `blockr_warning`, `warning` and `condition` for a warning, as R's classes run:
+Each names what failed and what needed it, and its source is core's, with the code that the table gives:
 
-| What | Severity and class | Concerns | Withdrawn when |
+| What | Severity and code | Concerns | Withdrawn when |
 |---|---|---|---|
 | A module that cannot draw: a block's UI, a renderer, a board option's UI or a plugin's UI ([UI modules in JS](Rewrite-1.1.7#the-contract)) | Error, `module_failed` | The block, board option or plugin, with the module's package | The next board opens, or the block leaves the board |
 | A board option that does not go onto the board, since no loaded package defines it or its default fails or does not fit its schema ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)) | Error, `board_option_failed` | The board option | The next board opens |
 | An `onChange` that throws ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) | Error, `on_change_failed` | The board option, with its package | Its next call returns |
 | A module that the reply names for a plugin class or a board option, and that fails to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Error, `module_failed` | The plugin class or the board option, with the module's package | The next board opens |
 | A plugin's `start` that throws ([Plugins](Rewrite-1.1.12#running-a-plugin)) | Error, `plugin_start_failed` | The plugin, with its class's package | The next board opens |
-| A board that core could not open: one that the app's storage plugin named but that holds no JSON or fails to open, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The package that named it, or else the board | The next board opens |
-| A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Warning, `page_reload_needed` | The board, naming the packages | The next board opens, which raises it again while the versions differ |
+| A board that core could not open: one that the app's storage plugin named but that holds no JSON or fails to open, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The storage plugin that named it, with its package, or else the board | The next board opens |
+| A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Warning, `page_reload_needed` | The board, naming the packages | A later reply to `hello` that names the versions that the page loaded, or one that names other versions again, which raises it anew with them, and the next board opens, which raises it again while the versions differ |
 | What the store dropped as the board opened ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)) | Warning, `board_objects_dropped` | The board, naming each object with its package | The next board opens |
 
 So what the store dropped as the board opened reaches every frontend with no code of its own, where each frontend's package would otherwise subscribe to the store before the board opens to learn of it.
@@ -137,25 +174,28 @@ A module that cannot draw also shows its error in its element, so that the user 
 The frontend's own module is the exception: where it cannot draw, no frontend runs to draw a notification, so core shows the error in the page's element alone, as it does for a page that cannot start.
 
 A failure that a call returns goes to the caller, which tells the user where it should.
-The store throws what refuses an edit, a command rejects with it, and a request that fails rejects with the reply's conditions ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-So core's basic frontend raises a notification of its own for each of its edits that the store or the command registry refuses, in place of the list it keeps today.
-It is an error of the class `edit_refused`, with the origin `"core"`, and concerns no block, whatever block the edit names, so that it shows as a toast rather than on a card, which the dialog that made the edit may cover ([Core's basic frontend](#cores-basic-frontend)).
+The store throws what refuses an edit, a command rejects with it, and a request that fails rejects with the reply's conditions besides its notifications ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+So core's basic frontend raises a notification of its own for each of its edits that the store or the command registry refuses, in place of the list it keeps today, and so does the Edit board plugin for its own edits ([The Edit board plugin](Rewrite-1.1.15)).
+It is an error of the code `edit_refused`, which concerns the plugin that made the edit, whatever block the edit names, so that it shows as a toast rather than on a card, which the dialog that made the edit may cover ([Core's basic frontend](#cores-basic-frontend)).
 A board that fails to open after core's check is an exception.
 Its `store.open()` rejects, but the opening has ended the code that called it, so core raises the notification itself.
 A failure inside core's own machinery, such as a subscriber that throws or a demand whose function throws, reaches no user, since no user can act on it, and is only logged.
 
 Core withdraws every notification as the next board opens, since an opening ends everything core runs for the board ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
-It withdraws every notification that concerns a block as the block leaves the board, and a plugin's own as the plugin withdraws it.
+It withdraws every notification that concerns a block, a link or a stack as that leaves the board, with those of a block's modules, and a module's own as the module withdraws it.
+A notification raised about a block, a link or a stack that the board no longer holds holds nothing, since the work that raises one, such as a plugin's request, can outlive what it concerns, and core logs it at debug ([Logging](#logging)).
+Core logs one about a board object that the board has never held, and one from a plugin that the app does not run, at error, since only a mistake in the module names one, and `notify()` refuses one whose members are of the wrong kind, as a module in plain JS may give.
+Core's own notifications and those of R's replies to requests take their ids from what they hold, so that a failure raised twice, as by two mounts of one module, is one notification, which holds until each raise of it is withdrawn, while those of modules take a count within the opening.
 
 ### Core's basic frontend
 
-A frontend draws notifications as it chooses, by their class, origin and what they concern, and the dock draws them as [Client-drawn dock](Rewrite-1.2) has it.
+A frontend draws notifications as it chooses, by their source and the board object that they concern, and the dock draws them as [Client-drawn dock](Rewrite-1.2) has it.
 A frontend may one day also show some as desktop notifications, such as an error while the page's tab is hidden, which needs nothing from core.
 Core's basic frontend shows each notification once, on a block's card or as a toast:
 
 - A block's card shows the notifications that R and core raise about the block, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
-  It leaves out what core or the renderer already shows in an element of the card: a module that cannot draw, and an output that R could not make.
-- Every other notification shows as a toast, whatever its severity: those that concern no block, and those that plugins raise.
+  It leaves out what core, the renderer or a module already shows in an element of the card: a module that cannot draw, an output that R could not make, and a request that failed, whose module shows why.
+- Every other notification shows as a toast, whatever its severity: those that concern no block, and those that the modules of packages raise.
 
 So `show_conditions` filters what a card shows, as it filters blocks' conditions today, and keeps its name, since a card shows the block's conditions.
 
@@ -250,7 +290,7 @@ Those that become notifications: `srcts/core/start.ts` at lines 399, 485, 499, 5
 Those that core shows in the page's element: `srcts/core/frontends.ts` at 96 and 129, the frontend's module, and `srcts/page/page.ts` at 57, a page that cannot start.
 Those for the log alone: `srcts/core/start.ts` at 189, 246, 411 and 475; `srcts/core/plugins.ts` at 203, a plugin left out for a board option whose failure is reported already; `srcts/protocol/client.ts` at 297 and 453; `srcts/scheduler/scheduler.ts` at 582 and 630; `srcts/mount/answers.ts` at 135; `srcts/mount/shared.ts` at 54; `srcts/mount/load.ts` at 103, a stylesheet; `srcts/mount/block.ts` at 461; `srcts/core/core.ts` at 106; `srcts/store/store.ts` at 226; and `srcts/react/module.tsx` at 123, the error boundary of a renderer written with the React SDK, which shows what it caught in the renderer's element.
 Board options' failures are reported once per board and message already (`srcts/mount/block.ts` at 142), and a renderer's `ModuleError` once per object (`srcts/mount/output.ts` at 483).
-The two conditions that the scheduler writes itself are in `srcts/scheduler/status.ts`: `waitingFor()`, of the phase `status`, and `unsent()`, which has no phase.
+The two conditions that the scheduler writes itself are in `srcts/scheduler/status.ts`: `waitingFor()`, of the phase `status`, and `unsent()`, which has no phase, and each marks its condition with the code of core's notification of it.
 Tests capture what core reports with `reports()` from `srcts/testing/reports.ts`, which holds what `report()` queues.
 
 A module that imports core's `Notification` and also shows desktop notifications still calls the browser's constructor as `new Notification()`, since core's type has no value, as TypeScript 5.9 compiles it.

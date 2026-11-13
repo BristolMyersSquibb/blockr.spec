@@ -148,9 +148,9 @@ OpenAI's refusal reaches a page only as a failed connection, since its 401 carri
 
 ### What fails
 
-A failure that the user should know of becomes a notification of the assistant's, with its class's id as its origin, which the frontend draws as it draws any ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)):
+A failure that the user should know of becomes a notification that the assistant raises through `notify()`, naming its class's id, which the frontend draws as it draws any ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)):
 
-| What | Severity and class |
+| What | Severity and code |
 |---|---|
 | A call to the model that fails, as for a missing or refused credential | Error, `assistant_call_failed` |
 | A file that the provider refuses | Error, `assistant_attachment_refused` |
