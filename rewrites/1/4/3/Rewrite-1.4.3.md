@@ -1,7 +1,7 @@
 # The assistant's state: threads and compaction
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads, each with its pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items of [Assistant as a plugin](Rewrite-1.4#work) that register the assistant's plugin class and port compaction, and the one of [The conversion and the migration notes](Rewrite-1.9#work) that carries today's method for the assistant into blockr.convert.
 What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and who picks the model, and where the pick is kept, is [Model access](Rewrite-1.4.1#who-picks-the-model)'s.
 
@@ -43,7 +43,6 @@ The board holds the assistant's state under its class's id, `blockr.assistant-as
 ```ts
 interface AssistantState {
   threads: Record<ThreadId, Thread>;
-  model: string | null;                        // the board's pick of the model, such as "gpt-5.4", or null until someone picks one
 }
 
 interface Thread {
@@ -52,6 +51,7 @@ interface Thread {
   messages: Message[];                         // in the order in which they entered the thread
   focus: BlockId[];                            // the blocks that the user added with @
   usage: { input: number; output: number };    // the tokens spent so far, which the chat's meter shows
+  model: string | null;                        // the thread's pick of the model, such as "gpt-5.4", or null for the default
 }
 
 interface Message {
@@ -81,7 +81,7 @@ A thread's messages are one list, in the order in which they entered the thread.
 A sent message never changes, since the chat offers no way to edit one, so a thread has no branches, unlike today's (Today).
 Editing a sent message, and the branches that it makes, are later work ([The assistant's chat](Rewrite-1.4.4#today)), which nothing here rules out: a later version of the class could give each message its parent, and its `migrate` would give each message the one before it.
 
-Which thread is open stays outside the board: the plugin keeps its id in the browser's local storage, as today's chat does (Today), and as [Model access](Rewrite-1.4.1#who-picks-the-model) keeps the visitor's pick of the model.
+Which thread is open stays outside the board: the plugin keeps its id in the browser's local storage, as today's chat does (Today).
 A board opens on that thread where it holds it.
 Otherwise it opens on no thread, and the chat shows the greeting, as a board opened in another browser does today.
 
@@ -110,18 +110,18 @@ What the plugin keeps follows the state: it goes with a thread that a command re
 
 ### Commands
 
-The assistant's class registers a command for each change to its state, which its UI and its loop run, each with `undo: false`, so that no undo takes back a message or the board's pick of the model, and neither takes an undo step ([Board updates](Rewrite-1.1.2#undo)):
+The assistant's class registers a command for each change to its state, which its UI and its loop run, each with `undo: false`, so that no undo takes back a message or a thread's pick of the model, and neither takes an undo step ([Board updates](Rewrite-1.1.2#undo)):
 
 | Command | Args | What it does |
 |---|---|---|
-| `blockr.assistant-add_thread` | `id`, `title` | Adds an empty thread, under an id that the command mints where it is left out |
+| `blockr.assistant-add_thread` | `id`, `title`, `model` | Adds an empty thread, under an id that the command mints where it is left out, and with `model` as its pick of the model, null where that is left out ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
 | `blockr.assistant-rename_thread` | `thread`, `title` | Gives a thread a new title |
 | `blockr.assistant-remove_thread` | `thread` | Removes a thread |
 | `blockr.assistant-add_message` | `thread`, `message`, `keep` | Adds a finished message at the end of the thread, and drops the oldest messages past `keep`, which the plugin passes from `chat_save_turns` (How much of a thread the state keeps) |
 | `blockr.assistant-compact_thread` | `thread`, `summary`, `from` | Puts a summary in place of the messages before `from`, the first message that it keeps, and is enabled only where the thread still holds `from` (Compaction) |
 | `blockr.assistant-set_focus` | `thread`, `blocks` | Sets the blocks that the user added with @ |
 | `blockr.assistant-add_usage` | `thread`, `input`, `output` | Adds the tokens of a call to the thread's count |
-| `blockr.assistant-set_model` | `model` | Sets the board's pick of the model, or removes it with `null` ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
+| `blockr.assistant-set_model` | `thread`, `model` | Sets the thread's pick of the model, or removes it with `null`, after which the thread talks to the default ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
 
 A reply streams in the plugin's memory and enters its thread as one finished message, through `blockr.assistant-add_message`, since a delta for each token would reach every follower of the store ([Board updates](Rewrite-1.1.2#undo)).
 The commands stay enabled on a locked board, since they change the assistant's own state alone, so that a reader of a locked board still chats, while core's `blockr.core-set_plugin_state` is not enabled there ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -147,8 +147,8 @@ Where the thread no longer holds that message, the command is not enabled, and t
 ### The schema, the default and the version
 
 The package ships the JSON Schema of the state beside the module that it lists for the class, under the module's name, as `assistant_plugin.schema.json` beside `assistant_plugin.js` ([UI modules in JS](Rewrite-1.1.7#packaging)).
-The default is `{ "threads": {}, "model": null }`, and the class is at version 1, with no `migrate` until a version 2 needs one.
-In R, `new_assistant_plugin(threads = list(), model = NULL)` gives the state of a board that an app script builds, as every plugin's constructor gives its state ([Plugins](Rewrite-1.1.12#a-plugin)).
+The default is `{ "threads": {} }`, and the class is at version 1, with no `migrate` until a version 2 needs one.
+In R, `new_assistant_plugin(threads = list())` gives the state of a board that an app script builds, as every plugin's constructor gives its state ([Plugins](Rewrite-1.1.12#a-plugin)).
 A script calls it mostly to place the assistant's panel in a grid of the dock under a name, as `plugins = list(assistant = new_assistant_plugin())` with `plg("assistant")` ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)).
 
 ### Today's threads across the switch
@@ -163,7 +163,7 @@ The method reads the threads that the file's `history` holds, as today's method 
 
 A saved `system_prompt` is left out, since the argument goes ([Assistant as a plugin](Rewrite-1.4#today)).
 The conversion leaves out the values of today's board options `llm_model`, `chat_compact_tokens` and `chat_compact_keep` too, since all three go ([Assistant as a plugin](Rewrite-1.4#proposal)), so that the store names none of them as a board opens ([Serialization](Rewrite-1.1.4#board-options)).
-It does not take `llm_model` for the state's `model`, since its value is the name of an entry in the deployment's `chat_function`, which need not name a model, so a converted board takes its model as a board without a pick does ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+It does not take `llm_model` for the threads' `model`, since its value is the name of an entry in the deployment's `chat_function`, which need not name a model, so each converted thread talks to the default, as a thread without a pick does ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A file that holds the assistant in a shape that today's method cannot read opens without its threads, as it does today.
 
 ## Open questions

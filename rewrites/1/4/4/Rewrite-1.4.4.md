@@ -163,11 +163,11 @@ The footer shows the tokens that the thread has spent, input and output, from it
 
 ### The model
 
-Where the deployment offers more than one model, or names none, the footer shows the model that the next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
-Where it names none, the chat asks for a pick before the first turn, from the models that the base URL lists for the key.
-A pick that the board keeps, as with the deployment's key, runs `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)), and one that the visitor's browser keeps, as with their own key or a login, goes to its local storage.
-Where the board's pick is a model that the deployment does not offer, the footer names it beside the default that the calls go to.
-Where the deployment names no models and the base URL does not list the board's pick, the chat asks for a pick instead ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where the deployment offers more than one model, or names none, the footer shows the model that the open thread's next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+A pick sets the model of the open thread alone, through `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)).
+A new thread starts on the open thread's pick, which the chat passes to `blockr.assistant-add_thread`.
+On the greeting, where no thread is open, the footer shows the default, and a pick made there goes to the thread that the first message adds ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where the thread's pick is a model that the deployment does not offer, the footer names it beside the default that the calls go to.
 A pick applies from the next turn, so that a turn that runs keeps its model to its end, and the thread goes on with the new model, as today's goes on after a pick ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)).
 
 ### The credential
@@ -200,7 +200,7 @@ What a tool's request returns as a failure, such as `inspect_results` on a locke
 The chat works on a locked board as on any other: the user asks, and the model reads and answers.
 The edit tool returns why a lock refuses an edit ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
 An edit that the locks leave open applies as on any board, such as one to the state of a block whose `locked` is `FALSE`, and Undo and Redo take it back ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-board-lock)).
-The assistant's commands stay enabled, so that threads, the focus and the board's pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
+The assistant's commands stay enabled, so that threads, the focus and the pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ## Open questions
 
