@@ -219,6 +219,8 @@ In the client, core records a span for:
    An evaluation's span links to the span of the command whose delta changed the block's recipe, where one did, so that a trace leads from an edit to every evaluation that it caused.
 3. Starting the page and each opening of a board, with a span for each step inside it: `hello`, importing the modules that the reply names, the storage plugin's `storage.load()`, the store's `open()` and the frontend's `render()` ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
+Core puts the span of a command, and of a request, under the span that is active as `run()` or `request()` is called, as OpenTelemetry does by default, so that a plugin that calls them inside a span of its own holds them in its trace, as the assistant's tools do ([Assistant as a plugin](Rewrite-1.4#proposal)).
+
 In R, core records a span for each `evaluate`, `request` and `output` message that it handles, with the block's id, registry id and revision, and a span inside it for each phase of an evaluation: `expr`, `inputs`, `block_eval` and `result_summary` ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 Each request carries the context of the client's span in `traceparent`, in the format that W3C's [Trace Context](https://www.w3.org/TR/trace-context/) gives its header of that name ([Wire protocol](Rewrite-1.1.9#messages)).
 So R's span is a child of the client's, and one trace runs from the edit, through R, to the reply.

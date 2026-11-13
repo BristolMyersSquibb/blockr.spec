@@ -51,6 +51,8 @@ The dock may mount the chat again, as when it redraws a view, so what has to out
 The chat is built on assistant-ui's primitives over its `ExternalStoreRuntime`, which displays messages that a store of the app's own holds, here the assistant's state (notes).
 That runtime takes branches as messages that name their parent, as the state's do, and gives editing, stopping, attachments and a list of threads through handlers that the plugin writes.
 Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle ([Assistant as a plugin](Rewrite-1.4#proposal)).
+It serves only where it meets conditions 1 and 6, draws on core's React in blockr.ui's design system, as above, and has a license that lets blockr.assistant ship it in the plugin's bundle, as MIT does (notes).
+Where both serve, the issue keeps the one that needs fewer lines of the plugin's own TypeScript for the transcript with its branches, the composer and the stop button, and the smaller bundle breaks a tie.
 
 ### The composer and a turn
 
@@ -173,6 +175,7 @@ Read on 2026-11-12, assistant-ui's `ExternalStoreRuntime` "bridges your existing
 It takes branches through `messageRepository`, made with `ExportedMessageRepository.fromBranchableArray()`, where every message has an `id` and a `parentId` and "messages with the same `parentId` create branches", and a parent comes before its children in the array.
 It needs `onNew` for a new message, `setMessages`, "required for branch switching", `onEdit`, "required for edit feature", and `onCancel` to stop, while `convertMessage` maps the plugin's messages to its own, attachments come through its `adapters`, and threads through `ExternalStoreThreadListAdapter`.
 Its `onReload` regenerates a reply, which today's chat does not offer, so the chat leaves it out for now.
+Its package, `@assistant-ui/react`, is under MIT, read on npm on 2026-11-13 for 0.15.36, so its text joins those that the plugin's build writes beside the bundle ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
 Today's code, at `fcbdb27`: the footer's button for the drawer clicks shinychat's hidden trigger ([R/ext-server.R#L318-L364](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L318-L364)), the @ button sends every ticked id as `focus_set` from `inst/assets/focus.js`, the × of the focus's tag sends `focus_dismiss`, and removing a tag added with @ sends `focus_drop` ([R/focus.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R)), the meter counts each turn's input and output tokens ([R/ext-server.R#L1281-L1309](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1281-L1309)), and the skin over shinychat's classes is scoped under `.asst-panel` ([R/ext-skin.R#L84-L344](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-skin.R#L84-L344)).
 Today's `/clear` starts a new chat through shinychat's `new_chat()` and drops what is staged ([R/ext-server.R#L1055-L1067](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1055-L1067)).
