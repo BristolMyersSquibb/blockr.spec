@@ -110,7 +110,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.ui | Carried to the client: the design system that the dock and the plugins follow, what block UIs draw with in place of today's widgets, and a table preview as a renderer of core's table outputs | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time | [Block classes in R](Rewrite-1.1.5) | blockr.core, blockr.ui |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
-| Benchmarks | The speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
+| blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
 | blockr.convert | New: turns each file of today's stack into a JSON board once, and checks the migration notes of every package against the files that its examples saved | [The conversion and the migration notes](Rewrite-1.9) | Every package that wrote today's files or whose functions app scripts call |
 | blockr | Kept, attaching the packages of the new stack | None | The packages it attaches |
 | blockr.cdex, blockr.sandbox and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |

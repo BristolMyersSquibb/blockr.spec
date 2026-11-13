@@ -23,20 +23,20 @@ To agree once the proof of concept runs.
 
 ## Proposal
 
-Not drafted yet.
+Not drafted yet, but for where the benchmarks live: in blockr.bench, a repo of their own, which installs the packages that a run measures at the refs that it names, so that no package of the stack depends on the benchmarks ([The assistant's benchmark](Rewrite-1.8.1#where-it-lives)).
 
 ## Open questions
 
 - Which kinds of benchmark come first: the speed of first paint, a view switch and an edit's round trip, several sessions sharing one R process, or the assistant's work on a set of questions ([The assistant's benchmark](Rewrite-1.8.1)).
 - Which boards they run on: the CEDX board once its packages have ported, and boards of its size before then.
 - Whether the benchmarks run in CI, so that a regression shows on the pull request that causes it, and on what machine.
-- Which repo they live in.
 
 ## Work
 
 The Work of the speed benchmarks is not drafted yet.
 
-- Build the assistant's benchmark, with its harness and CEDX's five questions, as [The assistant's benchmark](Rewrite-1.8.1) has it, in the repo that its open question settles
+- Create blockr.bench, and build the assistant's benchmark in it, with its harness and CEDX's five questions, as [The assistant's benchmark](Rewrite-1.8.1) has it, in blockr.bench
+- Start a run of the assistant's benchmark from each pull request that changes what the model sees or may do, and show its comparison on that pull request, as [The assistant's benchmark](Rewrite-1.8.1#where-it-lives) has it, in blockr.assistant
 - Take the baseline of today's assistant on those questions by hand, as [The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline) has it, in blockr.sandbox
 
 ## Design pages

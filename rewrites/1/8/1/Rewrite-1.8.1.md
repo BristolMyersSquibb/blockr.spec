@@ -111,9 +111,16 @@ The first comparisons, once they show how much runs vary, set the numbers that d
 
 The models are OpenAI's and Anthropic's, whose APIs the plugin speaks ([Model access](Rewrite-1.4.1#the-blockr-options)), and any model that a change is meant for.
 
+### Where it lives
+
+The questions, their answer keys and the harness live in blockr.bench, a repo of their own, as the part's other benchmarks do ([Benchmarks of the new stack](Rewrite-1.8#proposal)).
+Neither blockr.assistant nor blockr.sandbox holds them, so that neither depends on the other for the benchmark.
+A run installs blockr.assistant at the refs that its comparison names, with the packages of each question's board, such as blockr.sandbox's for CEDX's, and blockr.bench holds the providers' keys as its secrets.
+A pull request of blockr.assistant that changes what the model sees or may do starts a run in blockr.bench, which shows its comparison on that pull request (What must hold 1).
+
 ### When it runs
 
-The benchmark runs on demand, and on each pull request that changes what the model sees or may do (What must hold 1), with a key that the repo holds as a secret.
+The benchmark runs on demand, and on each pull request that changes what the model sees or may do (What must hold 1), with the keys that blockr.bench holds.
 It never runs on every pull request, since at CEDX's cost of about $0.30 a question, five questions run five times on two versions and two models cost about $30.
 
 ### Today's assistant as the baseline
@@ -124,8 +131,6 @@ The harness drives only the new assistant, since today's chat is shinychat's and
 
 ## Open questions
 
-- Which repo holds the questions, their answer keys and the harness: blockr.assistant, beside the template whose changes run them, or blockr.sandbox, beside the CEDX board, whose packages its first questions need.
-  It blocks the Work item that builds the benchmark, and the part's question of which repo the benchmarks live in settles it ([Benchmarks of the new stack](Rewrite-1.8#open-questions)).
 - Which questions run before the packages of the CEDX board have moved to the new stack: questions in CEDX's manner on boards of the packages that have.
   It blocks the benchmark's first runs, and the order in which the block packages move settles it ([State in JS](Rewrite-1#parts)).
 
