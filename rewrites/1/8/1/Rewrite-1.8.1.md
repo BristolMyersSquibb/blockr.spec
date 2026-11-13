@@ -109,7 +109,7 @@ The tokens, calls and seconds are medians over the runs, beside their spread.
 A change passes where no question passes fewer runs than before, beyond what the spread of its runs allows, and where its tokens do not rise without a question passing more.
 The first comparisons, once they show how much runs vary, set the numbers that decide, and the pull request that sets them names them.
 
-The models are those that the spike tries, OpenAI's and Anthropic's ([Assistant as a plugin](Rewrite-1.4#proposal)), and any model that a change is meant for.
+The models are OpenAI's and Anthropic's, whose APIs the plugin speaks ([Model access](Rewrite-1.4.1#the-blockr-options)), and any model that a change is meant for.
 
 ### When it runs
 

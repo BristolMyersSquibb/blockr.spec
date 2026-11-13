@@ -1,5 +1,5 @@
 # Choosing the libraries: the agent loop, the chat and the spike
-Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: dropped on 2026-11-13, because the libraries were chosen on [Assistant as a plugin](Rewrite-1.4#proposal) without a spike, by checks that ran each candidate in a browser. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the libraries that the agent loop and the chat build on, the candidates with why each that the spike does not try is ruled out, the criteria, and the spike that chooses by them.
 The spike runs before the part's other design pages settle, since each of them builds on what it chooses, and each follows its result before it settles.

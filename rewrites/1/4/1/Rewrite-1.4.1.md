@@ -116,6 +116,8 @@ The plugin reads them through `CoreApi.blockrOption()`, which asks R for them, a
 
 ## Open questions
 
+- Whether OpenAI's API lets a page read its responses: it allows a page's preflight, but its 401s carry no `Access-Control-Allow-Origin` ([Assistant as a plugin](Rewrite-1.4)).
+  It blocks no Work item, since a deployment whose visitors cannot call OpenAI from a page reaches its models through a gateway, and a call from a page with a real key settles it.
 - Whether a company's network lets visitors' browsers reach the place the calls go, as BMS's network may not let them reach api.openai.com.
   It blocks no Work item, since a company's own proxy is a place like any other, and each such deployment settles it as it is set up.
 
