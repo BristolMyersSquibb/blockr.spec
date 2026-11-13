@@ -63,7 +63,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
   So a package that teaches the model about a class of results keeps giving a method of that generic in R, as blockr.sandbox does for its composer tables.
 - The model may run R outside blocks, as `inspect_results` lets it today, on the results of the blocks that it names, so that a number it reports from there is in no exported script, as today, while R refuses that request on a locked board ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)).
 - The agent loop builds on pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai`, which is built for a page: it calls OpenAI's and Anthropic's APIs from the browser, sending Anthropic's opt-in header itself, takes tools as plain JSON Schema, and runs hooks before each call and around each tool call (notes).
-  In checks in a headless browser, against a mock of the three APIs of [Model access](Rewrite-1.4.1#the-blockr-options), pi, the AI SDK and LangChain.js each streamed a tool loop and stopped on an abort, and pi weighed least, 179 KB gzipped, against the AI SDK's 271 KB and LangChain.js's 450 to 585 KB (notes).
+  In checks in a headless browser, against a mock of the three APIs of [Model access](Rewrite-1.4.1#the-blockr-options) and against Anthropic's and OpenAI's own, pi, the AI SDK and LangChain.js each streamed a tool loop and stopped on an abort, and pi weighed least, 179 KB gzipped, against the AI SDK's 271 KB and LangChain.js's 450 to 585 KB (notes).
   Since pi is young, its 1.0 out in October 2026, the plugin pins its version and reaches it through one module of its own, which streams a turn with the tools and the hooks, so that a move to the AI SDK, which passed the same checks, rewrites that module alone.
   Which library the chat builds on, assistant-ui or components of the plugin's own, is for the issue that draws the chat to settle ([The assistant's chat](Rewrite-1.4.4#the-panel)).
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
@@ -132,7 +132,15 @@ The package pi-ai sets `dangerouslyAllowBrowser: true` on its OpenAI, Azure and 
 The license of pi is MIT, three maintainers publish it on npm, and it released 64 versions between 2026-05-07 and 2026-11-10, against the 50 to 88 stable releases a month of `ai`.
 
 Probed on 2026-11-13 with a dummy key and a page's `Origin`: Anthropic refuses the preflight of a request without `anthropic-dangerous-direct-browser-access`, and with it allows the preflight and puts `Access-Control-Allow-Origin` on its 401, as OpenRouter and Vercel's AI Gateway put it on their errors.
-OpenAI allows the preflight, but its 401s for `/v1/responses` and `/v1/chat/completions` carry no `Access-Control-Allow-Origin`, so a page cannot read them ([Model access](Rewrite-1.4.1#open-questions)).
+OpenAI allows the preflight, but its 401s for `/v1/responses` and `/v1/chat/completions` carry no `Access-Control-Allow-Origin`, so a page cannot read them ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
+
+Run on 2026-11-13 from a page in headless Chromium against the real APIs, with `claude-haiku-5-5` and `gpt-5.4-nano`:
+
+- On Anthropic's Messages API, pi streamed a tool loop in 2.2 s and stopped 1 ms after an abort, filled the args of a tool shaped as the edit tool, a list of commands, as asked, and read a board that `transformContext` added after the last message of each of its two calls, while the agent's messages kept no copy of it.
+  A thread that it wrote as 698 bytes of JSON went on in a new agent, which remembered what the first had been told, and a refused key reached the page as a readable 401, `authentication_error`.
+- The AI SDK and LangChain.js's model classes streamed the same tool loop on Anthropic's API, and the AI SDK stopped on an abort.
+- On OpenAI's Responses and Chat Completions APIs, pi and the AI SDK each streamed the tool loop, and pi read the board on the Responses API, while a refused key reached the page only as "Failed to fetch".
+- The fake provider of pi, `fauxProvider()`, ran a scripted tool call and reply through an agent in Node, which serves tests under Vitest.
 
 The pi project moved from `badlogic/pi-mono` to [earendil-works/pi](https://github.com/earendil-works/pi) in spring 2026, and its npm packages from the now deprecated `@mariozechner/*` to `@earendil-works/*`.
 Its `pi-ai` "supports browser environments", except for Amazon Bedrock and the OAuth login flows ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#browser-usage)), and reaches a proxy that speaks a provider's API as a provider made with `createProvider()`, whose models name the proxy as their `baseUrl` ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)).

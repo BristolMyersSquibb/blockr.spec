@@ -142,6 +142,7 @@ Where the deployment sets no key, the chat asks the visitor for their own before
 The login opens in a window of its own, which hands its code back to the page, since leaving the page for the service's login would reload the app, and drop with it what the board holds unsaved.
 A reload asks again, since neither a typed key nor the key that a login gives outlives the page.
 A key that the place refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
+OpenAI's refusal reaches a page only as a failed connection, since its 401 carries no CORS header ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)), so where a call to OpenAI fails that way, the chat says that the key may be wrong as well as the connection lost.
 
 ### What fails
 
