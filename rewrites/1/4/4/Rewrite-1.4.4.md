@@ -13,7 +13,7 @@ What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools 
 3. The user can stop a turn at any point, and a stopped turn leaves applied every edit that it finished, and none half applied.
 4. The user takes back the assistant's edits apart from their own.
 5. What fails and the user should know of, such as a call to the model, reaches the user as a notification, which the frontend draws ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-6. The chat shows a thread as the assistant's state holds it, whatever changes that state.
+6. The chat shows a thread as the assistant's state holds it, whatever changes that state, after the older messages that the plugin keeps in its memory.
 
 ## Today
 

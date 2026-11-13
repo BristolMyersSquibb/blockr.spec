@@ -1,7 +1,7 @@
 # The assistant's state: threads and compaction
 Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, the commands that change it, compaction, and how today's threads cross the switch.
+One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items that register the assistant's plugin class, port compaction and convert today's threads.
 What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and who picks the model, and where the pick is kept, is [Model access](Rewrite-1.4.1#who-picks-the-model)'s.
 
@@ -10,7 +10,7 @@ What the tools' calls and results in a thread hold is [The assistant's tools](Re
 1. A board's threads are the assistant's plugin state, which a JSON board saves with the rest of the board, and which its class's `migrate` brings to today's shape ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 2. No undo takes a message back, and no message takes an undo step.
 3. A reply enters its thread as one finished message, never token by token.
-4. A thread goes on once its board is saved and opened again, with every message that the model needs.
+4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds as today.
 5. Editing a sent message forks its thread, and the user switches between the versions, as today's chat lets them.
 6. Boards saved today open with their threads, as condition 6 of [Assistant as a client extension](Rewrite-1.4#what-must-hold) asks.
 
@@ -81,6 +81,18 @@ After a reload, the model reads from a thread that a turn had them, but not what
 
 Raw responses from the provider stay out of the state, as a saved board leaves them out today.
 
+### How much of a thread the state keeps
+
+The state keeps the last `chat_save_turns` messages of each thread, a blockr option that carries over with its default of 50, `0` for none and `Inf` for every one, since it "governs whether a conversation may land in a shared file, which is the deployment's call" ([R/ext-compact.R#L7-L10](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-compact.R#L7-L10)).
+Today it bounds only a save, and after the switch a save writes the state, so it bounds the state itself.
+A message counts as one of today's turns does, since a message of the role `tool` holds the results of one reply's calls, as one of ellmer's turns holds them.
+The cut falls between whole exchanges of the branch that shows, so that what the state keeps starts on a message of the user's, and the branches that it leaves unreachable go with it, as today's trimming for a save has it ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)).
+With `0`, the plugin runs none of the commands that write a thread, so that the state holds none, as today's save writes none ([R/ext-serdes.R#L70-L74](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-serdes.R#L70-L74)).
+
+The plugin keeps what the cap leaves out of the state in its memory while the page lives, as it keeps the bytes of files (Files and images), so that the chat shows the whole session and the model gets it, as today's chat does.
+After a reload, a thread starts from what the board saved, as a board saved today opens.
+What the plugin keeps follows the state: it goes with a thread that a command removes, and with the messages that compaction replaces (Compaction).
+
 ### Commands
 
 The assistant's class registers a command for each change to its state, which its UI and its loop run, each with `undo: false`, so that no undo takes back a message or the board's pick of the model, and neither takes an undo step ([Board updates](Rewrite-1.1.2#undo)):
@@ -90,7 +102,7 @@ The assistant's class registers a command for each change to its state, which it
 | `blockr.assistant-add_thread` | `id`, `title` | Adds an empty thread, under an id that the command mints where it is left out |
 | `blockr.assistant-rename_thread` | `thread`, `title` | Gives a thread a new title |
 | `blockr.assistant-remove_thread` | `thread` | Removes a thread |
-| `blockr.assistant-add_message` | `thread`, `message`, `id`, `parent` | Adds a finished message under its parent, the head where none is given, and makes it the head |
+| `blockr.assistant-add_message` | `thread`, `message`, `id`, `parent`, `keep` | Adds a finished message under its parent, the head where none is given, makes it the head, and drops the oldest messages past `keep`, which the plugin passes from `chat_save_turns` (How much of a thread the state keeps) |
 | `blockr.assistant-set_head` | `thread`, `message` | Shows another branch, as the chat's controls do |
 | `blockr.assistant-compact_thread` | `thread`, `summary`, `keep` | Puts a summary in place of the messages of the branch that shows before its last `keep` (Compaction) |
 | `blockr.assistant-set_focus` | `thread`, `blocks` | Sets the blocks that the user added with @ |
@@ -135,9 +147,7 @@ A file that holds the assistant in a shape that today's method cannot read opens
 
 ## Open questions
 
-- How many messages of a thread the state keeps: every one, or the last `chat_save_turns`, 50 by default, which today bounds only what a saved board keeps.
-  Compaction bounds the branch that shows by its tokens once it runs, but not the branches beside it, nor a thread whose calls never reach the rule.
-  It blocks the schema of the state and the command that adds a message, and weighing the size of a saved board against a chat that drops its oldest messages settles it.
+None.
 
 <details><summary>Notes for implementers</summary>
 
