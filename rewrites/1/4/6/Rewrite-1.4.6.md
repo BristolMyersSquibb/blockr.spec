@@ -18,7 +18,7 @@ The criteria come from the conditions of the part and of its other design pages,
 
 Today's assistant builds on two R packages: ellmer runs its agent loop in the session's R process, and shinychat draws its chat ([Assistant as a plugin](Rewrite-1.4#today)).
 Neither runs in a browser, so both go.
-Two libraries have been found that run an agent loop in a page, the AI SDK and pi, whose bundles were measured on 2026-10-31 (notes).
+Of the libraries surveyed on 2026-11-13, only the AI SDK and pi document an agent loop that runs in a page (The candidates), and their bundles were measured on 2026-10-31 (notes).
 
 ## Proposal
 
@@ -36,8 +36,19 @@ What stays the plugin's own, whichever library it builds on: the state's shape (
 | The AI SDK, `ai` with `@ai-sdk/openai` and `@ai-sdk/anthropic` | The loop | Tries it |
 | pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai` | The loop | Tries it |
 | The providers' own SDKs, `openai` and `@anthropic-ai/sdk` | The loop | Rules it out, since each leaves the loop to the plugin, and the plugin would hold one of them per API of [Model access](Rewrite-1.4.1#the-blockr-options) |
+| OpenAI's Agents SDK, `@openai/agents` | The loop | Rules it out: its README lists Node.js, Deno and Bun, and browsers only for realtime voice agents, and it reaches other providers' models through its integration with the AI SDK, so for Anthropic's API it would run its loop over the AI SDK rather than in its place (notes) |
+| LangChain.js, `langchain` with LangGraph.js | The loop | Rules it out: LangChain.js lists "Browser" among its environments, but its agents run on LangGraph.js, whose README and docs name no environment, and its docs type every tool with zod (notes) |
+| Mastra, `@mastra/core` | The loop | Rules it out: it documents its agents in a Node.js project or deployed "as a standalone server", and none in a page, while the plugin has no server (notes) |
+| TanStack AI, `@tanstack/ai` | The loop | Rules it out: its setups have a server call the provider, even with the visitor's own key, as "your server calls OpenAI with the key of the user" (notes) |
+| LlamaIndex.TS, `llamaindex` | The loop | Rules it out: "This project is deprecated and no longer maintained" (notes) |
+| Genkit, `genkit` | The loop | Rules it out: it is "designed for server-side deployment" (notes) |
 | assistant-ui, `@assistant-ui/react`, over its `ExternalStoreRuntime` | The chat | Tries it ([The assistant's chat](Rewrite-1.4.4#the-panel)) |
 | Components of the plugin's own, on blockr.ui's design system | The chat | Tries it, as the measure for assistant-ui |
+| Vercel's AI Elements | The chat | Rules it out: it "will be deprecated at the end of November 2026", and needs shadcn/ui and Tailwind CSS, while the chat draws in blockr.ui's design system (notes) |
+| CopilotKit, `@copilotkit/react-core` | The chat | Rules it out: its frontend reaches the model "through CopilotKit's frontend SDKs and Copilot Runtime", which runs in a server (notes) |
+| Deep Chat, `deep-chat-react` | The chat | Rules it out: it documents no branches, stop button or tool calls, which the chat carries over (notes) |
+| NLUX, `@nlux/react` | The chat | Rules it out: it documents no branches, attachments, stop button or tool calls, and its license adds terms to MPL-2.0 (notes) |
+| chatscope's Chat UI Kit, `@chatscope/chat-ui-kit-react` | The chat | Rules it out: its components are for chats between people, with nothing for streaming, tool calls, branches or attachments (notes) |
 
 ### The criteria
 
@@ -107,5 +118,19 @@ Nothing has measured either library with OpenAI's provider yet, which the spike 
 
 Versions on npm on 2026-10-31: `ai` 7.0.159 with `@ai-sdk/anthropic` 4.0.94, `@earendil-works/pi-agent-core` and `@earendil-works/pi-ai` 1.4.0, `@anthropic-ai/sdk` 1.3.0, `openai` 7.47.0, `@assistant-ui/react` 0.15.32.
 The AI SDK released 5.0, 6.0 and 7.0 on 2025-07-31, 2025-12-22 and 2026-06-25, and pi-agent-core 1.0 on 2026-10-01.
+
+Read on 2026-11-13, for the candidates that the spike does not try:
+
+- OpenAI's Agents SDK supports "Node.js 22 or later", "Deno" and "Bun", with "Cloudflare Workers with `nodejs_compat` enabled" as experimental, and names browsers only for realtime agents, "For browser-based realtime agents" ([README](https://github.com/openai/openai-agents-js)), while `@openai/agents-core` 0.22.0 declares browser shims under `./_shims` in its exports ([package.json](https://github.com/openai/openai-agents-js/blob/main/packages/agents-core/package.json)), and its docs list an AI SDK integration among its extensions ([Configuration](https://openai.github.io/openai-agents-js/guides/config/)).
+- LangChain.js "can be used in", among others, "Browser" ([README](https://github.com/langchain-ai/langchainjs)), while its agents' docs import from `@langchain/langgraph` and type every tool with zod ([Agents](https://docs.langchain.com/oss/javascript/langchain/agents)), and LangGraph.js names no environment ([README](https://github.com/langchain-ai/langgraphjs), [overview](https://docs.langchain.com/oss/javascript/langgraph/overview)).
+- Mastra "integrates with frontend and backend frameworks like React, Next.js, and Node", and "deploy it anywhere as a standalone server", under Apache-2.0 but for its `ee/` directories, under "the Mastra Enterprise License" ([README](https://github.com/mastra-ai/mastra)).
+- TanStack AI: "Your server talks to the provider through an adapter" ([overview](https://tanstack.com/ai/latest/docs/getting-started/overview)), and with a user's own key "your server calls OpenAI with the key of the user" ([Bring your own key](https://tanstack.com/ai/latest/docs/advanced/byok)).
+- LlamaIndex.TS: "This project is deprecated and no longer maintained", and "browser support is limited due to the lack of support for AsyncLocalStorage-like APIs" ([README](https://github.com/run-llama/LlamaIndexTS)).
+- Genkit is "designed for server-side deployment in multiple language environments" ([README](https://github.com/firebase/genkit)).
+- AI Elements: "This project will be deprecated at the end of November 2026", and its prerequisites are "shadcn/ui initialized in your project" and "Tailwind CSS configured (AI Elements supports CSS Variables mode only)" ([README](https://github.com/vercel/ai-elements)).
+- CopilotKit: users connect "through CopilotKit's frontend SDKs and Copilot Runtime, over AG-UI", and its quick start runs that runtime in a server route ([README](https://github.com/CopilotKit/CopilotKit)).
+- Deep Chat connects to "more than 20 popular AI APIs such as OpenAI or Claude directly from the browser", which "should be used for local/prototyping/demo purposes ONLY", and its README names files among its features, and no branches, stop button or tool calls ([README](https://github.com/OvidijusParsiunas/deep-chat)).
+- NLUX is under the "Mozilla Public License Version 2.0" "with restriction to use as part of a training dataset", and its README names no branches, attachments, stop button or tool calls ([README](https://github.com/nlkitai/nlux)).
+- The Chat UI Kit of chatscope is "an open source UI toolkit for developing web chat applications", and its README names no streaming, tool calls, branches or attachments ([README](https://github.com/chatscope/chat-ui-kit-react)).
 
 </details>
