@@ -104,7 +104,7 @@ None.
 - Write the template of the system prompt for the new tools, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The system prompt](Rewrite-1.4.5) has it, in blockr.assistant
 - Write the `layout` skill for the dock's commands and grids, in place of blockr.assistant's, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The system prompt](Rewrite-1.4.5#what-a-package-adds) has it, in blockr.dock
 - Draw the chat in the plugin's `ui`, as [The assistant's chat](Rewrite-1.4.4) has it, in blockr.assistant
-- Compare the edit tool with a tool per command and with tools for each block class, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), and keep the version that passes, as [The assistant's tools](Rewrite-1.4.2#the-edit-tool) has it, in blockr.assistant
+- Compare the edit tool with a tool per command and with tools for each block class, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), and keep the version that passes, as [The assistant's tools](Rewrite-1.4.2#the-edit-tool) has it, settling which version stays where one does only as well as the edit tool, or where both other versions pass, in blockr.assistant
 - Port compaction, as [The assistant's state](Rewrite-1.4.3#compaction) has it, in blockr.assistant
 - Let a visitor use their own key, held in the page's memory, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
 - Let a visitor log in with a service that offers it, such as OpenRouter, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
