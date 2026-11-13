@@ -1,5 +1,5 @@
 # Model access: providers, gateways and credentials
-Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: settled on 2026-11-13. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options, and the model's settings.
 It shapes the Work items of that part that send the calls, let a visitor use their own key and let a visitor log in.
@@ -22,7 +22,7 @@ Both apps that use it chat with OpenAI, with a key in `OPENAI_API_KEY`.
 
 ### Where the calls go
 
-From the browser, these three look alike, since each is a base URL that speaks a provider's API and takes a credential:
+From the browser, these three look alike, since each is a base URL that speaks a provider's API and takes a credential where it needs one:
 
 - A provider, such as OpenAI or Anthropic.
 - A gateway, such as OpenRouter or Vercel's AI Gateway, which reaches the models of many providers through one API and one account.
@@ -56,7 +56,7 @@ The agent of pi names pi to OpenRouter unless it is told otherwise, so the plugi
 
 No call goes through the session's R process (condition 3).
 R runs one request at a time ([Wire protocol](Rewrite-1.1.9#one-request-at-a-time)), so a model call there would hold up evaluation for its whole length, and httpuv cannot stream a response (notes).
-A key held in R would be no safer either, since a visitor can read it through a block that takes code (How a call is authenticated).
+A key held in R would be no safer either, since a visitor can read it through a block that takes code, except on a board where no visitor runs R (How a call is authenticated).
 
 ### How a call is authenticated
 
@@ -78,9 +78,11 @@ Otherwise the chat asks the visitor for their own key, and offers a login beside
 So no blockr option lists the ways, and the hosting platform's integration, once it comes, will follow from the platform that the app runs on.
 
 - The deployment's key is the easiest way and the least safe.
-  Any visitor who can use the assistant can take it, today as after the switch.
-  A visitor runs R through a block that takes their code, as core's subset block takes its `subset` and `select` ([R/transform-subset.R#L29-L31](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-subset.R#L29-L31)), and through the assistant's request that runs the R its model writes ([Assistant as a plugin](Rewrite-1.4#proposal)).
-  A key in the browser only makes that visible.
+  Any visitor who can use the assistant can take it from the page.
+  Where a visitor can run R, they can take it from R as well, today as after the switch: through a block that takes their code, as core's subset block takes its `subset` and `select` ([R/transform-subset.R#L29-L31](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-subset.R#L29-L31)), and through the assistant's request that runs the R its model writes ([Assistant as a plugin](Rewrite-1.4#proposal)).
+  There a key in the browser only makes that visible.
+  Where the load lock and the board lock are both on and every block is locked, no visitor runs R, since R evaluates only the opening board, whatever a client sends ([Locked boards and the properties of blocks](Rewrite-1.1.11#what-must-hold)), and refuses the assistant's request ([Assistant as a plugin](Rewrite-1.4#proposal)).
+  There the key in the page is exposed as the key in R is not, so a deployment that must keep its key from such visitors holds it in its own proxy instead, which the page calls with no key and which decides who may call.
   Short-lived tokens would not change who can take one: OpenAI's and Gemini's serve only their realtime and live APIs, and a visitor who runs R can mint Anthropic's as R would (notes).
   Limiting the key stays the deployment's job ([State in JS](Rewrite-1#proposal)), which matters most for an app on the public internet, whose visitors are anyone.
   It suits a demo, whose visitors need no account (condition 2).
@@ -94,6 +96,8 @@ So no blockr option lists the ways, and the hosting platform's integration, once
   It stays out of a board option, whose value the board saves once someone sets it ([Board options and blockr options](Rewrite-1.1.13#the-two-kinds)), and out of browser storage that outlives the page, which every page served from the same origin can read (condition 4).
   So the visitor types the key again after each reload.
 - A login works only with a service that offers one to a web page: OpenRouter does, OpenAI offers its own to selected partners for now, and Anthropic forbids one (notes).
+  So the plugin offers it where the base URL is OpenRouter's, `https://openrouter.ai/api/v1`.
+  It opens the login in a window of its own, whose callback hands the code back to the page, since sending the page itself to OpenRouter would reload the app.
   Every visitor then needs an account with that service, which a demo cannot ask of its visitors.
   The key that a login gives is the visitor's own, so it stays in the page's memory, as a typed key does, and a reload asks for the login again.
   OpenRouter's login can also make its key in a workspace of the hoster's, through `required_workspace_id`, and OpenRouter bills an organization's keys to the organization's credits (notes), which would let a company pay for the calls of its members, each logging in with an account in its organization.
@@ -102,7 +106,7 @@ So no blockr option lists the ways, and the hosting platform's integration, once
   The platform vouches for the visitor or for the deployment, so that the app holds no key of the hoster's, as Connect's AI Gateway takes a short-lived credential of Connect's own for Anthropic's API and puts the real key on the call (notes).
   Only R gets such a credential, since Connect hands it and the visitor's session token to the app's server alone, so R would pass it on to the page, while the calls still leave from the page (condition 3).
 
-OpenAI alone puts no CORS header on the 401 with which it refuses a key, so a page sees that refusal as a failed connection ([The assistant's chat](Rewrite-1.4.4#the-credential)).
+Of the base URLs that a page reached in the probes, OpenAI alone puts no CORS header on the 401 with which it refuses a key, so a page sees that refusal as a failed connection ([Assistant as a plugin](Rewrite-1.4)), and the chat says that the key may be wrong ([The assistant's chat](Rewrite-1.4.4#the-credential)).
 
 ### Who picks the model
 
@@ -120,6 +124,7 @@ The models that a deployment offers are those it names in `assistant_models`, an
 OpenAI's list says nothing of what a model takes, so the issue that sends the calls settles how the plugin keeps the models that take tools from it, such as by their ids (notes).
 Anthropic's and OpenRouter's lists put the newest model first, while OpenAI's and Vercel's follow no documented order (notes), so a deployment names its models where the default matters.
 A call to a model that the visitor's account cannot reach fails as any call does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
+Where the base URL gives no list, as a company's own proxy may not, or one in which no model takes tools, the chat says so and offers no model, so a deployment on such a base URL names its models, while a list refused for its key goes as any refused key does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
 Each thread keeps its own pick of the model, in the assistant's state, so that it talks to the same model after a reload and in a saved board ([The assistant's state](Rewrite-1.4.3#the-state)).
 A new thread takes the pick of the thread that is open as it is added, so that it goes on with the last pick, as threads do under today's board option.
@@ -136,10 +141,11 @@ A default of the visitor's own for new threads, such as one kept in the browser'
 Today no app sets the model's settings, such as its reasoning effort, so every call gets the provider's defaults.
 Today's assistant builds its chat with `ctor(system_prompt = "")` ([R/ext-server.R#L483](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L483)), which passes no `params`.
 The chat function that blockr.uat takes, core's default, sets none of its own ([blockr.core R/board-option.R#L660-L662](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L660-L662)), and neither do those of the clinical data explorer's script.
-After the switch, the plugin's code fixes the settings, such as the `thinkingLevel` of pi's agent (notes), and starts from what today's calls send.
-A change to them changes what the model does, so it merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
+After the switch, the plugin's code fixes the settings, such as the `thinkingLevel` of pi's agent, which starts at `medium`.
+Today's calls send no reasoning effort, so each model reasons at its own default, which OpenAI gives as `medium` for its current models, while pi sends an effort on every call to a model that reasons, `none` for its level `off`, which GPT-6 Astra refuses (notes).
+A change to the settings changes what the model does, so it merges only once [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) has compared it with the version before it.
 
-Letting someone change the settings is later work, which nothing here rules out.
+Letting someone change the settings is later work, which nothing here rules out, such as a pick of the thinking level for each thread beside its pick of the model.
 A setting for a thread would go in the assistant's state, as its pick of the model does, since a setting of a plugin's own goes there first ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
 A setting for a deployment would be a blockr option, as the models that it offers are.
 
@@ -168,6 +174,7 @@ A deployment of today's assistant moves to the blockr options above at the switc
 - A deployment that gives today's assistant its key in `OPENAI_API_KEY` sets the key in `BLOCKR_ASSISTANT_API_KEY` too, since the plugin reads no variable of a provider's own clients (How a call is authenticated).
   Without it, the chat asks each visitor for a key of their own.
 - A script that sets `chat_function` drops it and names the models of its entries in `assistant_models`, as `BLOCKR_ASSISTANT_MODELS=gpt-5.4,gpt-5.4-nano` names two of OpenAI's.
+- A deployment that leaves `chat_function` unset, as blockr.uat's does, names the model that it chats with in `assistant_models`, since OpenAI's list follows no documented order (Who picks the model).
 - A chat function of another provider becomes that provider's base URL in `assistant_base_url`, with `assistant_api` where that base URL does not speak the Responses API.
   Where a page cannot call the provider, the base URL is a gateway's or a proxy's instead (Where the calls go).
 
@@ -219,7 +226,13 @@ Read on 2026-11-13 in pi's READMEs at `e3da248`:
   So the plugin builds one for a model that the catalog lacks, as behind a company's own proxy, with defaults that the issue that sends the calls sets.
 - "Every provider declares auth; keyless local servers resolve as configured with no key", through an `auth` whose `resolve()` gives `{ auth: {} }` ([createProvider()](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)).
 - The agent of pi takes a `thinkingLevel` in its initial state, one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max` ([Agent Options](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/agent/README.md#agent-options)), and pi-ai turns a level into each provider's own control, such as OpenAI's `reasoningEffort` ([Thinking/Reasoning](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#thinkingreasoning)).
+  For a model that reasons, pi sends an effort on every call to the Responses API, `none` for the level `off` unless the model maps `off` to another ([openai-responses.ts#L408-L410](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/src/api/openai-responses.ts#L408-L410)), as the built package of pi-ai 1.5.2 does too.
+  It leaves the effort out only for a model whose `reasoning` is false, and then leaves out the encrypted reasoning that it otherwise asks back for the next call (same file).
 - The agent of pi names pi to OpenRouter, through `HTTP-Referer: https://pi.dev` and `X-OpenRouter-Title: pi`, unless it is given an `identity` of the app's own, or `null` to send none ([Client Identity](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#client-identity), [Agent Options](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/agent/README.md#agent-options)).
+
+OpenAI's guide to reasoning, read on 2026-11-13, says that "Defaults are also model-dependent rather than universal", and that its gpt-5.5 "defaults to medium reasoning effort".
+It says too that "GPT-6 Astra does not support none reasoning effort", and that setting the effort "to none returns HTTP 400".
+It also says that "Chat Completions does not support function calling with GPT-6 Astra or GPT-6.1 Sol" ([Reasoning](https://developers.openai.com/api/docs/guides/reasoning)).
 
 Ollama's cloud takes Chat Completions at `https://ollama.com/v1` and Anthropic's Messages API at `https://ollama.com/v1/messages` ([OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility), [Anthropic compatibility](https://docs.ollama.com/api/anthropic-compatibility)).
 Probed on 2026-11-13 with a page's `Origin`, it answered the preflight of both with a 405 and no CORS header, and a call with a dummy key with a 401 that carried none either.

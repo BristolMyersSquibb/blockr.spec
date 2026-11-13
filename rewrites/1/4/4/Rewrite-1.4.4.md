@@ -189,7 +189,10 @@ A failure that the user should know of becomes a notification of the assistant's
 | A file that the provider refuses | Error, `assistant_attachment_refused` |
 | Compaction that fails, which leaves the thread as it was | Warning, `assistant_compaction_failed` |
 | The skills that R cannot list, as for a directory in `assistant_skills` that does not exist | Error, `assistant_skills_failed` |
+| A list of models that leaves none to offer, where the deployment names none, as at a company's own proxy that lists none, or where no model in the list takes tools | Error, `assistant_models_failed` |
 
+Where the deployment names no models and the base URL's list leaves none to offer, the composer sends nothing, and the plugin asks for the list again as the next board opens or a new key comes ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+A list that the base URL refuses for its key goes as any refused key does, and where the key is the visitor's, the chat asks for it again (The credential).
 Where R cannot list the skills, the chat goes on without any, until the plugin asks again as the next board opens ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)).
 A failure that ends a turn shows at that turn in the transcript too, so that the user sees why the reply stopped.
 The thread keeps what the turn finished, and what its reply streamed until the failure, as after a stop (Stopping a turn).
