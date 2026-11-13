@@ -101,7 +101,7 @@ interface RSource {                  // R, in a condition of its reply to what c
 
 interface CoreSource {               // core, where it fails at something
   kind: "core";
-  code: string;                      // what it is of: a code of the table below, "block_waiting", "evaluation_unsent" or "output_unanswered"
+  code: string;                      // what it is of: a code of the table below, "evaluation_unsent" or "output_unanswered"
   package?: string;                  // the package whose module failed, where core knows it
 }
 
@@ -140,7 +140,8 @@ The source lets a frontend say who raised one, and lets a plugin find its own.
 Core makes a block's notifications from the conditions of its status, one for each, and derives them from the scheduler rather than copying them.
 So `scheduler.status()` keeps a block's conditions for the frontends and hosts that read them ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the two never differ.
 Their source is R's, with the evaluation and the phase that raised each condition.
-The scheduler writes two conditions itself, the message of a block that waits and the error of an evaluation that the transport could not send, and those are core's, of the codes `block_waiting` and `evaluation_unsent` ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+The scheduler writes one condition itself, the error of an evaluation that the transport could not send, and that is core's, of the code `evaluation_unsent` ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+Why a block is invalid or waiting is no condition but the reason that its status holds beside its summary, and raises no notification.
 A block's notification takes its id from the block, the severity, the source and the message.
 So the same condition in the block's next reply keeps its id, and a frontend can tell that it has shown it already, as a toast that the user closed stays closed today while its condition holds.
 Two conditions of one reply that share all four are one notification, as today's toasts show such a condition once.
@@ -290,7 +291,7 @@ Those that become notifications: `srcts/core/start.ts` at lines 399, 485, 499, 5
 Those that core shows in the page's element: `srcts/core/frontends.ts` at 96 and 129, the frontend's module, and `srcts/page/page.ts` at 57, a page that cannot start.
 Those for the log alone: `srcts/core/start.ts` at 189, 246, 411 and 475; `srcts/core/plugins.ts` at 203, a plugin left out for a board option whose failure is reported already; `srcts/protocol/client.ts` at 297 and 453; `srcts/scheduler/scheduler.ts` at 582 and 630; `srcts/mount/answers.ts` at 135; `srcts/mount/shared.ts` at 54; `srcts/mount/load.ts` at 103, a stylesheet; `srcts/mount/block.ts` at 461; `srcts/core/core.ts` at 106; `srcts/store/store.ts` at 226; and `srcts/react/module.tsx` at 123, the error boundary of a renderer written with the React SDK, which shows what it caught in the renderer's element.
 Board options' failures are reported once per board and message already (`srcts/mount/block.ts` at 142), and a renderer's `ModuleError` once per object (`srcts/mount/output.ts` at 483).
-The two conditions that the scheduler writes itself are in `srcts/scheduler/status.ts`: `waitingFor()`, of the phase `status`, and `unsent()`, which has no phase, and each marks its condition with the code of core's notification of it.
+The one condition that the scheduler writes itself is the error of `unsent()` in `srcts/scheduler/status.ts`, which has no phase, and which `isUnsentError()` tells from R's.
 Tests capture what core reports with `reports()` from `srcts/testing/reports.ts`, which holds what `report()` queues.
 
 A module that imports core's `Notification` and also shows desktop notifications still calls the browser's constructor as `new Notification()`, since core's type has no value, as TypeScript 5.9 compiles it.
