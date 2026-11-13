@@ -3,6 +3,7 @@ Status: review. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.
 It builds on the plugins, commands, scheduler and requests of [Client-owned board state](Rewrite-1.1), on the dock's commands for the views it arranges today ([Client-drawn dock](Rewrite-1.2)), and on blockr.ui's design system for its look ([UI kit and design system for the client](Rewrite-1.7)).
+The libraries that it builds on are [Choosing the libraries](Rewrite-1.4.6)'s, whose spike runs before the part's other design pages settle.
 Where its calls to a model go is [Model access](Rewrite-1.4.1)'s, its tools are [The assistant's tools](Rewrite-1.4.2)'s, its threads are [The assistant's state](Rewrite-1.4.3)'s, its chat is [The assistant's chat](Rewrite-1.4.4)'s, and what its model is told is [The system prompt](Rewrite-1.4.5)'s.
 
 ## Problem
@@ -61,9 +62,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 - The tools read the board, the block registry and each block's status in the browser, and send R a request only for what needs R: a block's result, which R describes through `describe_result()`, the model's own R code, and the skills ([The assistant's tools](Rewrite-1.4.2)).
   So a package that teaches the model about a class of results keeps giving a method of that generic in R, as blockr.sandbox does for its composer tables.
 - The model may run R outside blocks, as `inspect_results` lets it today, on the results of the blocks that it names, so that a number it reports from there is in no exported script, as today, while R refuses that request on a locked board ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)).
-- Two libraries run such a loop in a browser, and a spike chooses between them (Work): the AI SDK, `ai` with a provider package such as `@ai-sdk/anthropic`, and pi, `@earendil-works/pi-agent-core` with `@earendil-works/pi-ai`, while a provider's own SDK would leave the loop to us.
-  The spike builds the edit tool, one request to R and compaction on each, with OpenAI's provider, which both apps that use the assistant today chat through (Today), through both of the APIs of OpenAI's that [Model access](Rewrite-1.4.1#the-blockr-options) names, and with Anthropic's.
-  It keeps the library that does the following with less code of our own, the smaller bundle breaking a tie: it meets What must hold 1 to 4, streams a turn and stops it when the user does, takes the JSON Schemas that core and other packages register as tool schemas unchanged, goes on with a thread once its board is saved and opened again, and runs under Vitest on happy-dom with the model faked.
+- The agent loop and the chat build on libraries that a spike chooses, the AI SDK or pi for the loop and assistant-ui or components of the plugin's own for the chat, by criteria written down before it runs, and the spike runs before the part's other design pages settle, since each of them builds on what it chooses ([Choosing the libraries](Rewrite-1.4.6)).
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
   The AI SDK reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id (notes).
 - The board options `llm_model`, which core defines today, and `chat_compact_tokens` and `chat_compact_keep` go, with the blockr option `chat_function`, since all four were shaped for ellmer's chat functions (Today), while the blockr option `chat_save_turns` carries over, bounding the state rather than a save ([The assistant's state](Rewrite-1.4.3#how-much-of-a-thread-the-state-keeps)).
@@ -74,17 +73,17 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
 - A reply streams in the plugin's memory and enters its thread as one finished message, through the assistant's own commands, which take no undo step, so that no undo takes a message back ([The assistant's state](Rewrite-1.4.3#commands)).
 - While a turn runs, the assistant holds a Web Lock named for its tab, since Chrome freezes a background tab, which stops its tasks and fails its WebSockets, unless it holds one ([workadventure#6740](https://github.com/workadventure/workadventure/pull/6740)).
   Nothing on a turn's path waits on chained timers, which a tab hidden for five minutes runs once a minute, or on animation frames, which a hidden tab never runs ([timer throttling](https://developer.chrome.com/blog/timer-throttling-in-chrome-88)).
-- The plugin loads its loop and its provider code with a dynamic import as the first turn starts, since they weigh 116 to 205 KB gzipped (notes), which a page where nobody asks the assistant anything never needs.
+- The plugin loads its loop and its provider code with a dynamic import as the first turn starts, since they weigh 116 to 205 KB gzipped ([Choosing the libraries](Rewrite-1.4.6)), which a page where nobody asks the assistant anything never needs.
   A panel that shows is no sign of that, since a board's default view in the dock holds every plugin's panel on its left rail ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
 - The loop takes its credential through one function that the library calls for each request, a `fetch` of its own in an AI SDK provider and `getApiKey` in pi, so that every way to authenticate that [Model access](Rewrite-1.4.1) gives feeds it, and the loop knows none of them.
 
 ## Open questions
 
-None.
+- Which libraries the agent loop and the chat build on, which changes what the issues that run the loop, draw the chat and port compaction ask.
+  It blocks this part and its other design pages, and the spike of [Choosing the libraries](Rewrite-1.4.6) settles it.
 
 ## Work
 
-- Spike the agent loop on the AI SDK and on pi, and choose between them by the conditions in the Proposal, in blockr.assistant
 - Let the command registry run and plan a list of commands as one step, each planned on the board that the commands before it leave, in blockr.core
 - Register the assistant's plugin class, with its state, its commands and its `update`, and give `new_assistant_plugin()` in R, as [The assistant's state](Rewrite-1.4.3) has it, in blockr.assistant
 - Send the assistant's calls where its blockr options say, to the models that they name or that the place lists, authenticated with the deployment's key, as [Model access](Rewrite-1.4.1#the-blockr-options) has it, in blockr.assistant
@@ -101,6 +100,7 @@ None.
 
 ## Design pages
 
+- [Choosing the libraries: the agent loop, the chat and the spike](Rewrite-1.4.6): the libraries that the loop and the chat build on, the candidates, the criteria, and the spike that chooses, which runs before the other design pages settle
 - [Model access: providers, gateways and credentials](Rewrite-1.4.1): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options
 - [The assistant's tools](Rewrite-1.4.2): the tools that the model calls, the edit tool among them, the requests that they send to R, and what the model is told before each call
 - [The assistant's state: threads and compaction](Rewrite-1.4.3): the threads and their branches, how much of a thread the state keeps, the board's pick of the model, the commands that change them, compaction, and how today's threads cross the switch
@@ -111,18 +111,9 @@ None.
 
 The Lines of Today split `tools-read.R` between the reads of the board and those of results, and `stage-pending.R` between staging core's objects, the views at `#L481-L659` and the extensions at `#L660-L681`.
 
-The pi project moved from `badlogic/pi-mono` to [earendil-works/pi](https://github.com/earendil-works/pi) in spring 2026, and its npm packages from the now deprecated `@mariozechner/*` to `@earendil-works/*`.
-Its `pi-ai` "supports browser environments", except for Amazon Bedrock and the OAuth login flows ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#browser-usage)), and reaches a proxy that speaks a provider's API as a provider made with `createProvider()`, whose models name the proxy as their `baseUrl` ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)).
-Its `pi-agent-core` adds the loop, with steering and follow-up queues, `beforeToolCall` and `afterToolCall`, `transformContext` "for pruning, compaction" and a replaceable `streamFn`, for which `streamProxy()` serves "browser apps that proxy through a backend" ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/agent/README.md#proxy-usage)), posting to a server of pi's own at `/api/stream` that answers in pi's events ([proxy.ts#L146-L150](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/agent/src/proxy.ts#L146-L150)), which a proxy that passes a provider's API through is not ([Model access](Rewrite-1.4.1)).
-Sitegeist, a Chrome side-panel agent by pi's author, was built on both and on `pi-web-ui` ([badlogic/sitegeist](https://github.com/badlogic/sitegeist)), whose web components left the repo after 0.75.3 in May 2026, so pi brings no UI.
-The AI SDK runs a `ToolLoopAgent` in the page behind `useChat` through `DirectChatTransport` ([reference](https://ai-sdk.dev/docs/reference/ai-sdk-ui/direct-chat-transport)), and its providers take `baseURL`, `headers` and `fetch` ([Anthropic provider](https://ai-sdk.dev/providers/ai-sdk-providers/anthropic)), while a model named by a bare id goes to Vercel's AI Gateway, since "By default, the global provider is set to the Vercel AI Gateway" ([provider management](https://ai-sdk.dev/docs/ai-sdk-core/provider-management)).
-The chat UI of `@assistant-ui/react` runs on either loop through its custom runtimes ([LocalRuntime](https://www.assistant-ui.com/docs/runtimes/custom/local-runtime)).
+A model named by a bare id goes to Vercel's AI Gateway, since "By default, the global provider is set to the Vercel AI Gateway" ([provider management](https://ai-sdk.dev/docs/ai-sdk-core/provider-management)).
 
 Today's assistant does its compaction, its threads and its skills itself, in [`ext-compact.R`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-compact.R), [`ext-history.R`](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-history.R) and the `skills-*.R` files, which are ported whichever library runs the loop.
-
-Measured on 2026-10-31, a minimal agent with one tool and the Anthropic provider, bundled with esbuild 0.25.12 as minified ESM for the browser and gzipped at level 9, weighs 205 KB with the AI SDK (912 KB minified, of which zod 4.6.7 takes 443 KB and the unused AI Gateway client 71 KB) and 116 KB with pi (435 KB minified, of which `@anthropic-ai/sdk` takes 181 KB and TypeBox 142 KB).
-The Anthropic SDK alone weighs 76 KB, and a client that ships zod anyway shares it with the AI SDK.
-Nothing has measured either library with OpenAI's provider yet, which the spike does.
 
 A hidden page runs timers once a second, a chain of five or more once a minute after five minutes hidden, and animation frames not at all ([timer throttling](https://developer.chrome.com/blog/timer-throttling-in-chrome-88)).
 Chrome freezes CPU-intensive background tabs on Energy Saver since Chrome 133 ([freezing](https://developer.chrome.com/blog/freezing-on-energy-saver)).
@@ -130,8 +121,5 @@ In a field trial, reproduced with Chrome 153, it freezes every background tab bu
 The lock is named for the tab, since a tab waiting for another tab's lock is not protected (same PR).
 From Chrome 155 the enterprise policy `BackgroundTabFreezingEnabled` governs that freezing, which is on unless the policy or the user turns it off, and exempts a page holding a Web Lock ([policy](https://github.com/chromium/chromium/blob/7a3c8d1b05ccf31dc16b9ad3f88720485e0cddf6/components/policy/resources/templates/policy_definitions/Miscellaneous/BackgroundTabFreezingEnabled.yaml)).
 Memory Saver discards an inactive tab, which reloads without its state, unless its URL matches the enterprise policy `TabDiscardingExceptions`, which exempts it from freezing too ([policy](https://github.com/chromium/chromium/blob/7a3c8d1b05ccf31dc16b9ad3f88720485e0cddf6/components/policy/resources/templates/policy_definitions/Miscellaneous/TabDiscardingExceptions.yaml)).
-
-Versions on npm on 2026-10-31: `ai` 7.0.159 with `@ai-sdk/anthropic` 4.0.94, `@earendil-works/pi-agent-core` and `@earendil-works/pi-ai` 1.4.0, `@anthropic-ai/sdk` 1.3.0, `openai` 7.47.0, `@assistant-ui/react` 0.15.32.
-The AI SDK released 5.0, 6.0 and 7.0 on 2025-07-31, 2025-12-22 and 2026-06-25, and pi-agent-core 1.0 on 2026-10-01.
 
 </details>

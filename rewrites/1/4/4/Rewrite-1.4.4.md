@@ -50,7 +50,7 @@ The dock may mount the chat again, as when it redraws a view, so what has to out
 
 The chat is built on assistant-ui's primitives over its `ExternalStoreRuntime`, which displays messages that a store of the app's own holds, here the assistant's state (notes).
 That runtime takes branches as messages that name their parent, as the state's do, and gives editing, stopping, attachments and a list of threads through handlers that the plugin writes.
-Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle, with the library that the spike chooses.
+Whether it serves, against components of the plugin's own, is the spike's to settle ([Choosing the libraries](Rewrite-1.4.6)).
 
 ### The composer and a turn
 
