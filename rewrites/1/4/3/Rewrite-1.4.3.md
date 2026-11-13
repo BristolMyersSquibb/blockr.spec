@@ -65,13 +65,17 @@ type Part =
   | { type: "text"; text: string }
   | { type: "tool_call"; id: string; tool: string; args: Json }
   | { type: "tool_result"; id: string; text: string; error?: boolean; images?: number }   // how many images it carried, which the state leaves out
-  | { type: "attachment"; name: string; media_type: string };                             // a file that the user attached, which the state leaves out
+  | { type: "attachment"; name: string; media_type: string }                              // a file that the user attached, which the state leaves out
+  | { type: "changes"; text: string }                                                     // the note of what others changed in the board since the thread's previous call, which the model read and the chat leaves out
+  | { type: "skill"; name: string; text: string };                                        // the text of a skill that the user called with /name, which the model gets with the request and the chat leaves out
 ```
 
 The shape is the plugin's own, and the plugin turns it into pi's messages for each call, and pi's messages back into it.
 A state in pi's shape would need a migration whenever pi changed its messages, which a library whose 1.0 came out in October 2026 may do often ([Assistant as a plugin](Rewrite-1.4#proposal)).
 A move to the AI SDK, which that page keeps open, would need a migration of every saved board as well.
 The issue that runs the loop checks that a thread loses nothing that a call needs on its way into pi's messages and back.
+The note of what others changed in the board, which the plugin adds before a call, is a message of the role `user` that holds one part of the type `changes` ([The system prompt](Rewrite-1.4.5#what-changed-under-the-model)).
+The plugin marks it as the app's in pi's messages, and the chat leaves it out, so that the thread says what the model was told without showing the note as the user's.
 
 A thread's messages are one list, in the order in which they entered the thread.
 A sent message never changes, since the chat offers no way to edit one, so a thread has no branches, unlike today's (Today).
@@ -96,7 +100,8 @@ Raw responses from the provider stay out of the state, as a saved board leaves t
 The state keeps the last `chat_save_turns` messages of each thread, a blockr option that carries over with its default of 50, `0` for none and `Inf` for every one, since it "governs whether a conversation may land in a shared file, which is the deployment's call" ([R/ext-compact.R#L7-L10](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-compact.R#L7-L10)).
 Today it bounds only a save, and after the switch a save writes the state, so it bounds the state itself.
 A message counts as one of today's turns does, since a message of the role `tool` holds the results of one reply's calls, as one of ellmer's turns holds them.
-The cut falls between whole exchanges, so that what the state keeps starts on a message of the user's, as today's trimming for a save has it ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)).
+A note of what others changed in the board counts as none, since it is none of today's turns, and a call adds at most one, so the state stays bounded.
+The cut falls between whole exchanges, so that what the state keeps starts on a message that the user sent, as today's trimming for a save has it ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)).
 With `0`, the plugin runs none of the commands that write a thread, so that the state holds none, as today's save writes none ([R/ext-serdes.R#L70-L74](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-serdes.R#L70-L74)).
 
 The plugin keeps what the cap leaves out of the state in its memory while the page lives, as it keeps the bytes of files (Files and images), so that the chat shows the whole session and the model gets it, as today's chat does.
@@ -124,12 +129,13 @@ The commands stay enabled on a locked board, since they change the assistant's o
 ### The `update`
 
 A thread names blocks in its `focus`, so the class's `update` drops a block that a change removes from the focus of every thread, as the DAG's drops a removed block's position ([Plugins](Rewrite-1.1.12#a-plugin)).
-Nothing else in the state names one of core's objects, since a message that names a block keeps its text as the model wrote it.
+Nothing else in the state names one of core's objects, since a message that names a block keeps its text as it was written.
 
 ### Compaction
 
 The plugin compacts a thread once the tokens of its last call pass a rule of its own, and whenever the user types `/compact` ([Assistant as a plugin](Rewrite-1.4#today)).
 When it runs, and how many of the newest messages it keeps, are for the issue that ports compaction to settle, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares).
+What it keeps starts on a message that the user sent, as what the state keeps does (How much of a thread the state keeps).
 It has a model call with no tools write a summary of the older messages, as today's compaction does ([R/ext-compact.R#L327-L375](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-compact.R#L327-L375)), and `blockr.assistant-compact_thread` puts that summary in place of them, as a message of the role `summary`, which goes before the first message that it keeps.
 The plugin sends a summary to the model as an exchange, as today's compaction stores it: the request that asked for it is the user's message, and the summary is the model's reply (Today).
 Neither pi nor the AI SDK summarizes a thread itself, so the plugin ports today's compaction (notes).

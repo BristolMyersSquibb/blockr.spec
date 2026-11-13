@@ -85,8 +85,11 @@ It applies them in these steps:
 4. It brings those blocks up to date with one one-time evaluation, `core.scheduler.evaluate(blocks, { signal })`, given the signal of the turn, so that stopping the turn stops the wait ([Evaluation in the client](Rewrite-1.1.10#demand)).
 5. It returns each block's status, conditions and summary, as `scheduler.status()` gives them, for at most `assistant_review_max_blocks` blocks, 50 by default.
 
-A block that the user edits meanwhile reports its newer revision, and a block that leaves the board meanwhile is left out, as a one-time evaluation leaves it out.
+A block that the user edits meanwhile reports its status at its newer revision.
+A block that leaves the board meanwhile is named as removed, rather than left out as the one-time evaluation leaves it, so that the model does not report it as built ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
 A list that changes only the state of plugins, such as the dock's views, evaluates nothing, and the tool returns at once.
+A stop while the tool waits leaves its commands applied.
+So the tool still returns that they applied, with as much of the review as it has, and that the user stopped the turn, so that the model does not run them again ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)).
 
 ```json
 { "applied": true, "blocks": { "adults": { "status": "ready", "summary": "<data.frame> [306 × 49]", "conditions": [] } } }
@@ -152,7 +155,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | An error in the model's own R code | The error's message, as R gives it |
 | What a lock refuses | Why the lock refuses it, as the store or R says (On a locked board) |
 | A value past its cap | That it is left out, as today's Board section marks an arg too long to show, with the tool that reads it in full, such as `get_block_state` |
-| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a thread only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)) |
+| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a thread only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)). An edit stopped while it waits says too that its commands applied (The edit tool) |
 
 How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, with questions whose turns meet it.
 A failure that the user should know of reaches them as a notification as well, as a call to the model that fails does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
