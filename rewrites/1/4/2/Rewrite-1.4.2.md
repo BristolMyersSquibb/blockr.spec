@@ -84,6 +84,7 @@ It applies them in these steps:
 1. The edit tool runs the commands with `core.commands.run(list, "assistant")`, passing each command's `command` as its `id`.
    The command registry plans each command on the board that the commands before it leave, and the store applies them all as one step of the origin `assistant`, or applies none ([Board updates](Rewrite-1.1.2#commands)).
 2. Where a command refuses, the tool returns the command's id and each failure that the command registry names, such as a state that the schema of the block's class refuses, and the board stays as it was.
+   The store then tells no subscriber of a change, so the scheduler sends R no block to evaluate, and nothing needs undoing (notes).
    Where the command refuses its args on the board as it is, as `blockr.core-add_link` refuses a block that the board lacks, the tool adds a hint that says what to check, so that the model can correct its args and edit again (notes).
 3. From the changes that the store announces for the step, one for each of its deltas, the tool takes the blocks that the step added or whose state or links it changed, every block downstream of them, and the blocks that feed the changed blocks directly ([Board updates](Rewrite-1.1.2#following-the-board)).
 4. It brings those blocks up to date with one one-time evaluation, `core.scheduler.evaluate(blocks, undefined, { signal })`, given the signal of the turn, so that stopping the turn stops the wait ([Evaluation in the client](Rewrite-1.1.10#demand)).
@@ -110,7 +111,9 @@ So the tool still returns that they applied, with as much of the review as it ha
   "hint": "Check that each block, link, stack, board option and plugin that the args name is on the board, with list_blocks, list_links, list_stacks, list_board_options or list_plugins, and that a block that a new link goes to has a free input, with describe_block." }
 ```
 
-The model learns which commands it can run, and what their args take, from `list_commands` and `describe_command`.
+The model learns which commands it can run from `list_commands`, which gives each command's `description`: what the command does and when to use it, as its package writes it for the model ([Board updates](Rewrite-1.1.2#commands)).
+It learns what a command's args take from `describe_command`, which gives their JSON Schema, with a `description` of each arg.
+Guidance on using several commands together, such as how to arrange the dock's views, goes in a skill of the package, as the dock's `layout` skill does ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
 So a package that registers a command opens it to the assistant with no code of the assistant's, as today's `new_ext_meta()` opens an extension ([Board updates](Rewrite-1.1.2#what-must-hold)).
 The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves them out, since only the assistant's chat and loop change its threads and each thread's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L100](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L100)).
 
@@ -212,6 +215,15 @@ So the hint says what to check, and the model finds the wrong id in its args, ag
 
 Each command of an edit is planned on the board that the commands before it leave, since a command checks its args against the board it gets, as `blockr.core-add_link` is enabled only where both of its blocks are on the board ([srcts/commands/core.ts#L337-L358](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L337-L358)), while `commands.plan()` gives each command the current board ([srcts/commands/commands.ts#L191-L194](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/commands.ts#L191-L194)).
 The store's `run()` works out the board after each delta of a step before it commits any ([srcts/store/store.ts#L248-L293](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/store/store.ts#L248-L293)), which gives the command registry the board for each command after the first.
+
+Applying a delta in the browser costs little.
+Evaluating a block in R costs more.
+The store sets the board and announces a step only once every delta of the step has passed its checks ([srcts/store/store.ts#L348-L377](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/store/store.ts#L348-L377)).
+The scheduler hears of a change only through `store.subscribe()` ([srcts/scheduler/scheduler.ts#L639-L642](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/scheduler/scheduler.ts#L639-L642)).
+So a refused list starts no evaluation in R.
+The edit tool therefore does not plan a list before it runs it, since `commands.plan()` would only repeat the checks of `commands.run()`.
+Only a failure that R finds costs an evaluation, such as a filter on a column that the data lacks.
+The edit then stays applied, and its review gives the error.
 
 Today's `inspect_results` evaluates the code in an environment whose parent is `baseenv()`, with every result that R holds bound to its block's id and a PNG device open that writes a file per page ([R/tools-read.R#L514-L690](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-read.R#L514-L690)).
 A reply carries at most one binary body ([Wire protocol](Rewrite-1.1.9#outputs)), so the request returns its plots as base64 PNGs in its JSON value, within the blockr option `max_message_size`, 4 MiB by default ([Wire protocol](Rewrite-1.1.9#the-shiny-transport)).
