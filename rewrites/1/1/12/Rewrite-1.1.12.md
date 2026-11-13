@@ -37,11 +37,11 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 | Today | Where it goes |
 |---|---|
 | `preserve_board`, with core's Import and Export | Core's storage plugin, which saves a board as a download and opens an upload, and which an app runs unless another available package gives a storage plugin ([Storage](#storage)) |
-| `manage_project()` of blockr.session | Its storage plugin ([Session management as a client extension](Rewrite-1.6)) |
-| `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a client extension](Rewrite-1.5)) |
+| `manage_project()` of blockr.session | Its storage plugin ([Session management as a storage plugin](Rewrite-1.6)) |
+| `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a plugin](Rewrite-1.5)) |
 | `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack`, with the dock's Edit board extension | Core's Edit board plugin, which runs core's commands under every frontend and which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15)) |
 | `edit_block`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock](Rewrite-1.2) put them: core's commands, with the menus, cards and notifications of the frontend and the DAG |
-| The `ctrl_block` of blockr.ai, `ai_ctrl_block()`, a chat on every block ([blockr.ai R/ai-ctrl-block.R#L51-L56](https://github.com/BristolMyersSquibb/blockr.ai/blob/7441767266cd982858bef0c633bcad5597698a0a/R/ai-ctrl-block.R#L51-L56)) | Dropped, since the assistant, a plugin, replaces it ([Assistant as a client extension](Rewrite-1.4)) |
+| The `ctrl_block` of blockr.ai, `ai_ctrl_block()`, a chat on every block ([blockr.ai R/ai-ctrl-block.R#L51-L56](https://github.com/BristolMyersSquibb/blockr.ai/blob/7441767266cd982858bef0c633bcad5597698a0a/R/ai-ctrl-block.R#L51-L56)) | Dropped, since the assistant, a plugin, replaces it ([Assistant as a plugin](Rewrite-1.4)) |
 | The dock's other extensions: the DAG, blockr.md's document, the assistant, blockr.viz's control bridge, and the outline, slides, report and minidag of blockr.outline | A plugin each, whose state is the extension's state |
 | Board classes, the dock board among them | A frontend each, the dock plugin among them, whose state holds what the class's properties held, while core's own gives way to core's basic frontend, which `serve()` gives an app by default ([The frontend](#the-frontend)) |
 
@@ -237,7 +237,7 @@ storage: {                                          // core's storage plugin's
 
 Core lists its class with a module of its own, as it lists its basic frontend's, and it keeps no state, so the board holds nothing for it, while an app runs it unless its rows hold another storage plugin ([Which plugins a board has](#which-plugins-a-board-has)).
 A frontend draws the controls of `core.plugins.storage()`, the `storage` of the app's storage plugin, and draws none where the app holds none ([What a frontend offers other plugins](#what-a-frontend-offers-other-plugins)).
-The storage plugin of blockr.session saves to Connect and opens from it, and its controls show the workflow's name, its save status and its versions ([Session management as a client extension](Rewrite-1.6)).
+The storage plugin of blockr.session saves to Connect and opens from it, and its controls show the workflow's name, its save status and its versions ([Session management as a storage plugin](Rewrite-1.6)).
 
 An app holds its storage plugin as it holds any other, among the rows of `plugins`, so that an app with blockr.session installed saves to Connect by default, and one that keeps core's storage leaves blockr.session's plugin out:
 
@@ -253,9 +253,9 @@ So a deployment alone chooses where its pages save, through the packages it inst
 The three kinds are core's, so a frontend draws the controls of every storage plugin, of a package it does not know too.
 What a storage plugin cannot build from them, such as the sharing settings of session management or every version of a workflow, it draws in a dialog of its own, which one of its controls opens and which takes its look from blockr.ui's design system, as every plugin's UI does ([Plugin classes](#plugin-classes)).
 A kind that core adds later needs a rule for a frontend built before it, such as skipping its controls, which the version of core that adds it settles.
-A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a client extension](Rewrite-1.6) has it.
+A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a storage plugin](Rewrite-1.6) has it.
 Nor does it key a record on the board's name, which a rename changes at any time while some backends cannot rename a key, so a frontend's field for the name renames the board alone ([The dock's navbar](Rewrite-1.2.5#the-docks-own-parts)).
-This settles the open question of [Session management as a client extension](Rewrite-1.6#open-questions) on whether storage becomes an interface of core.
+This settles the open question of [Session management as a storage plugin](Rewrite-1.6#open-questions) on whether storage becomes an interface of core.
 
 ### Which plugins a board has
 
@@ -414,7 +414,7 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
 Part of what [The dock's services](Rewrite-1.2.6) gives the dock's extensions, every frontend gives every plugin through `CoreApi`, so a plugin that uses it works under any frontend:
 
 - Notifications, which the frontend draws, core's own among them, such as what the store dropped when a board opened ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-- Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a client extension](Rewrite-1.4)).
+- Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a plugin](Rewrite-1.4)).
   Core holds it for the page, outside the board, since only one person's screen needs it ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
 
 They are the `notifications` and `focus` of `CoreApi`, which [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) gives in full, with the members that the sections above give plugins, `plugins`, `mountPlugin()` and `request()`.

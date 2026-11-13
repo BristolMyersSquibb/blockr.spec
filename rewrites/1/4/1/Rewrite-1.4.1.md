@@ -1,7 +1,7 @@
 # Model access: providers, gateways and credentials
-Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
+Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, and who picks the model.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, and who picks the model.
 It shapes the Work items of that part that send the calls and authenticate them, while the loop, its tools and its state stay with the part.
 
 ## What must hold
@@ -13,7 +13,7 @@ It shapes the Work items of that part that send the calls and authenticate them,
 
 ## Today
 
-Today's assistant calls its model from the session's R process, through the ellmer chat that the blockr option `chat_function` gives, with whatever credential that function reads in R's environment ([Assistant as a client extension](Rewrite-1.4#today)).
+Today's assistant calls its model from the session's R process, through the ellmer chat that the blockr option `chat_function` gives, with whatever credential that function reads in R's environment ([Assistant as a plugin](Rewrite-1.4#today)).
 Both apps that use it chat with OpenAI, with a key in `OPENAI_API_KEY`.
 
 ## Proposal
@@ -41,7 +41,7 @@ A key held in R is also safe from no visitor who runs R through a block that tak
 
 ### How a call is authenticated
 
-The loop takes its credential through one function that the library calls for each request, a `fetch` of its own in an AI SDK provider and `getApiKey` in pi, so that each way below feeds it and the loop knows none of them ([Assistant as a client extension](Rewrite-1.4#proposal)).
+The loop takes its credential through one function that the library calls for each request, a `fetch` of its own in an AI SDK provider and `getApiKey` in pi, so that each way below feeds it and the loop knows none of them ([Assistant as a plugin](Rewrite-1.4#proposal)).
 None of these ways suits every deployment, and which one a call takes follows from the blockr options (The blockr options):
 
 | Way | The hoster provides | A visitor needs | Who pays | What a visitor can copy |
@@ -56,7 +56,7 @@ Otherwise the chat asks the visitor for their own key, and offers a login beside
 So no blockr option lists the ways, and the hosting platform's integration, once it comes, will follow from the platform that the app runs on.
 
 - The deployment's key is the easiest way and the least safe.
-  Any visitor who can use the assistant can take it, today as after the switch, since a visitor runs R through a block that takes their code, as core's subset block takes its `subset` and `select` ([R/transform-subset.R#L29-L31](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-subset.R#L29-L31)), and through the assistant's request that runs the R its model writes ([Assistant as a client extension](Rewrite-1.4#proposal)).
+  Any visitor who can use the assistant can take it, today as after the switch, since a visitor runs R through a block that takes their code, as core's subset block takes its `subset` and `select` ([R/transform-subset.R#L29-L31](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-subset.R#L29-L31)), and through the assistant's request that runs the R its model writes ([Assistant as a plugin](Rewrite-1.4#proposal)).
   A key in the browser only makes that visible.
   Limiting it stays the deployment's job ([State in JS](Rewrite-1#proposal)), which matters most for an app on the public internet, whose visitors are anyone.
   It suits a demo, whose visitors need no account (condition 2).
@@ -74,10 +74,10 @@ So no blockr option lists the ways, and the hosting platform's integration, once
 
 ### Who picks the model
 
-Today the blockr option `chat_function` gives one of ellmer's chat functions, which fixes the model, or a named list of them ([Assistant as a client extension](Rewrite-1.4#today)).
+Today the blockr option `chat_function` gives one of ellmer's chat functions, which fixes the model, or a named list of them ([Assistant as a plugin](Rewrite-1.4#today)).
 From a list, the user picks one through core's board option `llm_model`, which the dock's options sidebar shows, and the board saves the pick by its name.
 CEDX's script offers three of OpenAI's models that way, named by their ids, while blockr.uat's chats with ellmer's default.
-Both options go, since they were shaped for ellmer's chat functions ([Assistant as a client extension](Rewrite-1.4#proposal)), while what they let a deployment choose carries over.
+Both options go, since they were shaped for ellmer's chat functions ([Assistant as a plugin](Rewrite-1.4#proposal)), while what they let a deployment choose carries over.
 
 The models that a deployment offers are those it names in `assistant_models`, the first being the default (The blockr options):
 

@@ -500,7 +500,7 @@ The client keeps an answer as it keeps the output, unless the class wraps the re
 | `block_inputs(x)` | the class's `inputs` |
 | `external_ctrl_vars(x)` | gone |
 | `block_metadata(x, fields)` | the class's entry in the block registry, read by registry id |
-| `str_value(x)` | kept for printing R objects, without the `*` that flags the args `external_ctrl_vars()` names, while blockr.assistant, which describes a board to a model with it, runs its agent loop in the browser ([Assistant as a client extension](Rewrite-1.4)) |
+| `str_value(x)` | kept for printing R objects, without the `*` that flags the args `external_ctrl_vars()` names, while blockr.assistant, which describes a board to a model with it, runs its agent loop in the browser ([Assistant as a plugin](Rewrite-1.4)) |
 
 ### JS-driven blocks
 

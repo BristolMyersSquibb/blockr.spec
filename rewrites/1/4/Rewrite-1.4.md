@@ -1,4 +1,4 @@
-# Assistant as a client extension
+# Assistant as a plugin
 Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.

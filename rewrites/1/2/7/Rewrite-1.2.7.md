@@ -119,7 +119,7 @@ A `stale` block is the exception, as today, since its errors were raised for inp
 The dot shows no evaluation that is running, as today's shows none, while the card fades the output ([The output](#the-output)).
 
 The dock's client holds this spec as one function, which takes a block's status and its notifications and gives the dot's fill, ring and tooltip, with the light value of each colour for a renderer that cannot read CSS, as today's `block_status_badge()` gives them to the card and to blockr.dag's node badge.
-The function uses nothing else of the dock's, so that blockr.dag can draw the same badge, whether it re-implements the function or both take it from another package, which [Client-drawn DAG extension](Rewrite-1.3#open-questions) leaves open.
+The function uses nothing else of the dock's, so that blockr.dag can draw the same badge, whether it re-implements the function or both take it from another package, which [Client-drawn DAG](Rewrite-1.3#open-questions) leaves open.
 
 ### Sections
 

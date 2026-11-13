@@ -42,7 +42,7 @@ Today no extension adds to the card's "…" menu, whose items the dock fixes: Co
 
 The DAG offers places of its own.
 Every extension may add entries to the DAG's context menu and toolbar through methods of the S3 generics `context_menu_items()` and `toolbar_items()`, but only the DAG's own extension has such methods ([R/ctx.R#L230-L253](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ctx.R#L230-L253), [R/tool.R#L187-L217](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/tool.R#L187-L217)).
-Carrying those places over is [Client-drawn DAG extension](Rewrite-1.3)'s.
+Carrying those places over is [Client-drawn DAG](Rewrite-1.3)'s.
 
 ## Proposal
 
@@ -114,7 +114,7 @@ A place that the dock comes to offer later is a member of its own, which TypeScr
 
 The dock takes no part in what a plugin draws, and offers plugins none of its own pickers, editors or sidebars.
 A plugin draws the UI that gathers the args of the commands it runs, in its panel or in the top layer, and runs core's commands with what the user picks.
-So the DAG draws its own block picker and its own editors of links, inputs and stacks for its menus ([Client-drawn DAG extension](Rewrite-1.3)), where today it opens the dock's through the dock's actions.
+So the DAG draws its own block picker and its own editors of links, inputs and stacks for its menus ([Client-drawn DAG](Rewrite-1.3)), where today it opens the dock's through the dock's actions.
 It edits in the same way under every frontend, and keeps a pinned editor on the selection by itself, without `sidebar_owned_by()`.
 The dock keeps its "+" menu for the "Append block" of a card's menu, and its sidebar for its options ([Client-drawn dock](Rewrite-1.2#proposal)).
 

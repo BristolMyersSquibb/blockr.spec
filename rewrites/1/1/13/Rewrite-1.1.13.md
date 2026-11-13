@@ -208,7 +208,7 @@ Core asks for the blockr options that its synchronous code reads as soon as R ha
 A constructor argument that configures rather than holds state is lost to the JSON, which keeps what the board holds and nothing else.
 Such an argument becomes a blockr option where it is a value, and it moves to the code that calls it where it is a function.
 The assistant's system prompt is a function of this kind: `new_assistant_extension()` takes it as `system_prompt` ([vignettes/intro.Rmd#L124-L153](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/vignettes/intro.Rmd#L124-L153)), and a board restored from a file loses it already ([R/ext-server.R#L1229-L1231](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/ext-server.R#L1229-L1231)).
-It is R code only because ellmer runs the agent loop in R, and it becomes JS logic of the assistant's plugin once that loop runs in the browser ([Assistant as a client extension](Rewrite-1.4)).
+It is R code only because ellmer runs the agent loop in R, and it becomes JS logic of the assistant's plugin once that loop runs in the browser ([Assistant as a plugin](Rewrite-1.4)).
 
 ### Where the two meet
 

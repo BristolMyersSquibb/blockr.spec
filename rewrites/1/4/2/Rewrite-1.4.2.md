@@ -1,13 +1,13 @@
 # The assistant's tools
-Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
+Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, the requests that some of them send to R, and what the model is told before each call.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, the requests that some of them send to R, and what the model is told before each call.
 It shapes the Work items that build the tools and the loop, and the one in blockr.core that lets the command registry plan a list of commands.
 Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, and the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s.
 
 ## What must hold
 
-1. The model edits the board through one tool alone, the edit tool, whose commands apply as one undo step of the assistant, all or none, through core's command registry, and takes such an edit back through `undo_edit` alone ([Assistant as a client extension](Rewrite-1.4#what-must-hold)).
+1. The model edits the board through one tool alone, the edit tool, whose commands apply as one undo step of the assistant, all or none, through core's command registry, and takes such an edit back through `undo_edit` alone ([Assistant as a plugin](Rewrite-1.4#what-must-hold)).
 2. The edit tool returns only once the blocks it changed, and those downstream of them, are current, with each block's status, conditions and summary.
 3. The tools read the board, the block registry, the registered commands and each block's status in the browser, and send R a request only for what needs R: a block's result, the model's own R code, or the skills on the server.
 4. What each tool returns is bounded by today's blockr options, so that no call fills the model's context.

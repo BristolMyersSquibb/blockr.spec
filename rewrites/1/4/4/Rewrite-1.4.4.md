@@ -1,7 +1,7 @@
 # The assistant's chat
-Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
+Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
 It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads with their branches, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.
 It shapes the Work item that draws the chat.
 What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
@@ -57,7 +57,7 @@ Whether it serves, against components of the plugin's own, is for the issue that
 A turn starts from the composer:
 
 1. The user types into the composer, "Ask about your board", and sends.
-2. The plugin adds the user's message to the thread through `blockr.assistant-add_message` ([The assistant's state](Rewrite-1.4.3#commands)), and its `start` runs the turn ([Assistant as a client extension](Rewrite-1.4#proposal)).
+2. The plugin adds the user's message to the thread through `blockr.assistant-add_message` ([The assistant's state](Rewrite-1.4.3#commands)), and its `start` runs the turn ([Assistant as a plugin](Rewrite-1.4#proposal)).
 3. The reply streams into the transcript from the plugin's memory, and enters the thread as one finished message as it ends.
 4. Each tool call shows as a row as it starts, which shows its result once it returns (Tool calls).
 

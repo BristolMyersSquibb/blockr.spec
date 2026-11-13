@@ -82,7 +82,7 @@ A one-time evaluation's parameters, such as the write block's `save`, travel in 
 ```
 
 R keeps the result under the block's id, with its revision, its block expression and the block's registry id, which an output request and a plugin's request that reads the block need (below), and the reply carries what the client shows about it: the result's summary ([Block classes in R](Rewrite-1.1.5#evaluation)), every condition raised, and the standard output and error, each whole, since only the size of a message is bounded ([The Shiny transport](#the-shiny-transport)).
-It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a client extension](Rewrite-1.5)).
+It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a plugin](Rewrite-1.5)).
 
 ```json
 { "id": "17", "status": "ok", "block": "c", "revision": 4, "summary": "<data.frame> [150 × 7]",
@@ -266,7 +266,7 @@ A later `hello` drops the bodies that the transport holds for the session too, t
 Leaving Shiny later replaces this module and nothing else.
 
 The transport calls `session$allowReconnect(TRUE)`, so that a page whose session the server ended while the page lived on, after a network drop longer than the server waits or a server restart, starts a new session with a `hello`, and keeps its board (above).
-An R process that exits ends the page instead: Shiny Server's proxy closes the page's connection with a code that forbids a new session, and its client covers the page until the user reloads it, so the board then survives as session management last saved it ([Session management as a client extension](Rewrite-1.6)).
+An R process that exits ends the page instead: Shiny Server's proxy closes the page's connection with a code that forbids a new session, and its client covers the page until the user reloads it, so the board then survives as session management last saved it ([Session management as a storage plugin](Rewrite-1.6)).
 Keeping a page alive through a crash, by hiding that cover or starting a new session when the user asks, goes against what the proxy signals and is left for later, which the protocol allows already, since a client that holds a board keeps it through a new session's `hello`.
 
 ## Open questions

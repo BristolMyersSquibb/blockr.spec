@@ -1,3 +1,3 @@
 **Top:** [Home](Home)
 
-**Up:** [Assistant as a client extension](Rewrite-1.4)
+**Up:** [Assistant as a plugin](Rewrite-1.4)

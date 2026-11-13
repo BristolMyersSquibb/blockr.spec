@@ -1,7 +1,7 @@
 # The assistant's state: threads and compaction
-Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
+Status: draft. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items that register the assistant's plugin class, port compaction and convert today's threads.
 What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and who picks the model, and where the pick is kept, is [Model access](Rewrite-1.4.1#who-picks-the-model)'s.
 
@@ -12,7 +12,7 @@ What the tools' calls and results in a thread hold is [The assistant's tools](Re
 3. A reply enters its thread as one finished message, never token by token.
 4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds as today.
 5. Editing a sent message forks its thread, and the user switches between the versions, as today's chat lets them.
-6. Boards saved today open with their threads, as condition 6 of [Assistant as a client extension](Rewrite-1.4#what-must-hold) asks.
+6. Boards saved today open with their threads, as condition 6 of [Assistant as a plugin](Rewrite-1.4#what-must-hold) asks.
 
 ## Today
 
@@ -63,7 +63,7 @@ type Part =
 ```
 
 The shape is the plugin's own, and the plugin turns it into the messages of its library for each call, and the library's messages back into it.
-A state in the library's shape would need a migration whenever the library changed its messages, as the AI SDK may with each major, of which it released three in a year ([Assistant as a client extension](Rewrite-1.4)).
+A state in the library's shape would need a migration whenever the library changed its messages, as the AI SDK may with each major, of which it released three in a year ([Assistant as a plugin](Rewrite-1.4)).
 The spike checks that the turn from one shape to the other loses nothing that a call needs.
 
 A thread keeps every branch, as today's record does: each message names its parent, and `head` names the last message of the branch that shows.
@@ -119,7 +119,7 @@ Nothing else in the state names one of core's objects, since a message that name
 
 ### Compaction
 
-The plugin compacts the branch that shows once the tokens of its last call pass a rule of its own, which the spike settles, and whenever the user types `/compact` ([Assistant as a client extension](Rewrite-1.4#today)).
+The plugin compacts the branch that shows once the tokens of its last call pass a rule of its own, which the spike settles, and whenever the user types `/compact` ([Assistant as a plugin](Rewrite-1.4#today)).
 It has a model call with no tools write a summary of the older messages, as today's compaction does ([R/ext-compact.R#L327-L375](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-compact.R#L327-L375)), and `blockr.assistant-compact_thread` puts that summary in place of them, as a message of the role `summary`, which becomes the parent of the first message that it keeps.
 A branch that forks from the messages that compaction replaces goes with them, as today's trimming of a thread drops such branches ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)).
 Neither library summarizes a thread itself, so the plugin ports today's (notes).
@@ -141,7 +141,7 @@ The method reads the threads that the file's `history` holds, as today's method 
 3. A tool result becomes text, as `normalize_tool_result()` makes it today ([R/tools-util.R#L32-L66](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-util.R#L32-L66)), while its images, the user's attachments and the raw responses stay out (Files and images).
 4. The record's `focus` and `spent` become the thread's `focus` and `usage`.
 
-A saved `system_prompt` is left out, since the argument goes ([Assistant as a client extension](Rewrite-1.4#today)).
+A saved `system_prompt` is left out, since the argument goes ([Assistant as a plugin](Rewrite-1.4#today)).
 The conversion leaves out the value of today's board option `llm_model` too, the name of an entry in the deployment's `chat_function`, which need not name a model, so that a converted board takes its model as a board without a pick does ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A file that holds the assistant in a shape that today's method cannot read opens without its threads, as it does today.
 

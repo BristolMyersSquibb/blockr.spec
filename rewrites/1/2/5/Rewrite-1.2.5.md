@@ -7,7 +7,7 @@ It also covers what becomes of the navbar's functions in R, which [blockr#494](h
 The bar is the dock's, and the app script composes it: by default it holds the dock's own parts and the controls of the app's storage plugin, and a script adds links, menus and modules that packages offer, while no plugin puts anything there by itself.
 It shapes taking the bar's navbar items in R ([blockr.dock#576](https://github.com/BristolMyersSquibb/blockr.dock/issues/576)), drawing the bar ([blockr.dock#581](https://github.com/BristolMyersSquibb/blockr.dock/issues/581)) and its views menu ([blockr.dock#582](https://github.com/BristolMyersSquibb/blockr.dock/issues/582)), and the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)).
 It builds on [Plugins](Rewrite-1.1.12#the-frontend), whose `frontend_args()` hands the dock what a script gives `serve()` and whose storage controls the bar draws, and on [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), whose `CoreApi` the bar works through.
-The views and folders that the views menu lists, with the commands that change them, are [The dock's state](Rewrite-1.2.1)'s, and which controls blockr.session's storage plugin gives is [Session management as a client extension](Rewrite-1.6)'s.
+The views and folders that the views menu lists, with the commands that change them, are [The dock's state](Rewrite-1.2.1)'s, and which controls blockr.session's storage plugin gives is [Session management as a storage plugin](Rewrite-1.6)'s.
 
 ## What must hold
 
@@ -60,7 +60,7 @@ The code of blockr.bms is not in blockr.sandbox's repo, so it was not checked.
 |---|---|
 | The logo | The dock's logo, which turns while R evaluates a block that the dock demands, and no longer while R makes the output of a block that reads `ready`, whose renderer shows that wait on its card (Proposal) |
 | The dock's Import and Export | The controls of core's storage plugin, Save and Open, which the dock draws in their place ([Plugins](Rewrite-1.1.12#storage)) |
-| The workflow name, save status and save menu of blockr.session | The controls of blockr.session's storage plugin, which the dock draws in the same place ([Session management as a client extension](Rewrite-1.6)) |
+| The workflow name, save status and save menu of blockr.session | The controls of blockr.session's storage plugin, which the dock draws in the same place ([Session management as a storage plugin](Rewrite-1.6)) |
 | The spacer and `fill` | The spacer, a navbar item that takes the free space, while `fill` goes, since only the spacer fills |
 | The views menu, with its rule and its tab line | The dock's views menu, which lists the folders of [The dock's state](Rewrite-1.2.1) too |
 | The read-only pill | The dock's read-only pill |
@@ -69,7 +69,7 @@ The code of blockr.bms is not in blockr.sandbox's repo, so it was not checked.
 | An item's `shrink` | Dropped as a setting, since the storage plugin's controls give way first, as the `preserve_board` plugin's piece does today |
 | An item whose output renders nothing takes no room | Carried over for every navbar item |
 | An item's `server`, which runs once per session | Dropped, since nothing on the bar runs in R, while a module that needs R calls the requests of a plugin class of its package (Proposal) |
-| The avatar of blockr.session | A status among the controls of blockr.session's storage plugin, with the visitor's initials, which the plugin gives only for a visitor who is signed in, and which `avatar_navbar_item()` places after the options button where a script appends that item, as today ([Session management as a client extension](Rewrite-1.6)) |
+| The avatar of blockr.session | A status among the controls of blockr.session's storage plugin, with the visitor's initials, which the plugin gives only for a visitor who is signed in, and which `avatar_navbar_item()` places after the options button where a script appends that item, as today ([Session management as a storage plugin](Rewrite-1.6)) |
 | The help menu of blockr.bms | A menu of links among the script's navbar items, which blockr.bms can give, with its links from the blockr options `docs_url` and `issues_url` |
 | The functions `navbar_item()`, `default_navbar_items()`, `blockr_app_navbar()`, `custom_navbar()` and `plugin_navbar_item()`, the `navbar_items` collection and the `navbar` of `serve()` | The collection, `navbar_item()` with a module in place of `ui` and `server`, `custom_navbar()`, which gains `drop`, and the `navbar` of `serve()`, which `serve()` hands the dock, while `default_navbar()` takes the place of `default_navbar_items()`, and `blockr_app_navbar()` and `plugin_navbar_item()` go (Proposal) |
 
@@ -156,7 +156,7 @@ The dock draws the controls the same way under every lock, since the storage plu
 
 So core's storage plugin shows two buttons, Save and Open, where Import and Export are today.
 Save saves a download and Open opens an upload, as Export and Import do, and Save stays on a locked board, as Export does today ([R/board-plugins.R#L10-L15](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-plugins.R#L10-L15)).
-The storage plugin of blockr.session shows its menu named after the workflow, its save status and its Save menu in the same place, as [Session management as a client extension](Rewrite-1.6) has them.
+The storage plugin of blockr.session shows its menu named after the workflow, its save status and its Save menu in the same place, as [Session management as a storage plugin](Rewrite-1.6) has them.
 For a visitor who is signed in, it gives a status with the visitor's initials, which `avatar_navbar_item()` places after the options button, where today's avatar sits, and which shows among its other controls where an app's `navbar` places it nowhere apart.
 What a storage plugin draws in a dialog of its own, such as blockr.session's sharing settings, the dock does not place.
 
@@ -185,7 +185,7 @@ A click on it turns it into a field, which runs core's command `blockr.core-rena
 Under the board lock it shows the name alone, as core's basic frontend leaves out Rename under that lock ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 The board's name takes the place of the `board_name` board option, so the options sidebar holds no field for it any more ([Defining a board in R](Rewrite-1.1.3#the-script)).
 Whether the name matters depends on the storage plugin, since none keys its records on the name, which a rename changes at any time ([Plugins](Rewrite-1.1.12#storage)).
-With core's storage plugin, it is the one name that a board has on the bar, while blockr.session's storage plugin names a workflow by a key of its own, which its workflows menu shows ([Session management as a client extension](Rewrite-1.6)).
+With core's storage plugin, it is the one name that a board has on the bar, while blockr.session's storage plugin names a workflow by a key of its own, which its workflows menu shows ([Session management as a storage plugin](Rewrite-1.6)).
 So the name is a navbar item that an app keeps or leaves out, and an app with blockr.session's storage plugin passes `drop = "name"` to `custom_navbar()`, so that its bar shows one name, the workflow's.
 
 Undo and Redo are two quiet icon buttons, right after the storage plugin's controls in the default bar, which run `core.store.undo()` and `core.store.redo()`, as the toolbar of core's basic frontend does ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
