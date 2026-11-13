@@ -34,10 +34,10 @@ Files have had this shape since blockr.dock 0.1.2, tagged on 2026-07-13.
 Until [b66459a](https://github.com/BristolMyersSquibb/blockr.dock/commit/b66459ad4520e9050968276fb985327c58023983) on 2026-08-14, the dock wrote every extension's state empty, so a file of 0.1.2 holds neither the DAG's positions nor the outline's annotations.
 A file of blockr.dock 0.1.0 holds one `layout` in place of `views` and `grids`, and today's blockr.dock does not open it: `blockr_deser()` stops with "no applicable method for 'blockr_deser' applied to an object of class "dock_layout"".
 
-Among the app scripts that build dock boards, the CEDX board's in blockr.sandbox runs to 1,227 lines.
+Among the app scripts that build dock boards, that of the clinical data explorer's board, in the private blockr.sandbox, runs to 1,227 lines.
 It builds ten views with `dock_grid()`, `group()`, `rail()`, `blk()` and `ext()`, and mounts four extensions of three packages, with the assistant as a fifth where its `assistant` argument is `TRUE`.
-It closes the output section of every card by setting each block's `visible` attribute ([dev/cedx/board.R#L1220-L1227](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1220-L1227)).
-A script beside it derives a board of one view from that board through `board_views()`, `board_grids()` and `dock_extensions()` ([dev/cedx/views.R#L70-L78](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L70-L78)).
+It closes the output section of every card by setting each block's `visible` attribute.
+A script beside it derives a board of one view from that board through `board_views()`, `board_grids()` and `dock_extensions()`.
 Six of blockr.dock's examples pass `new_edit_board_extension()`, and the `rails` example places its panel on a rail with `rail(ext("edit_board"))` ([inst/examples/rails/app.R#L18-L24](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/rails/app.R#L18-L24)).
 
 ## Proposal
@@ -163,12 +163,12 @@ Its arguments are these:
   A script may give a plugin a name there, as `list(analysis = new_dag_plugin())`, by which its views place the plugin's panel without the id of the plugin's class, as a script names an extension in its `extensions` today, and `new_dock_board()` hands the list to `new_board()` without its names, which `new_board()` refuses ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
 - Its `views`, `folders` and `active` are written as [The dock's state](Rewrite-1.2.1#defining-the-state-in-r) has them, each view with its grid, and it hands them to `new_dock_plugin()` with each name that the script gives a plugin turned into the id of the plugin's class, so that the dock plugin's state names each plugin by its class alone.
   A view takes its grid, or the panels of its default grid, in place of today's members beside a grid in a separate `grids`, since the dock plugin's state holds a view's grid alone, so that R reconciles no members with a grid, which only the conversion of a file does ([The dock board](#the-dock-board)).
-  So today's `views = list(main = dock_view(c("a", "b")))` with `grids = list(main = dock_grid("a", "b"))` becomes `views = list(main = dock_view(dock_grid("a", "b")))`, and CEDX's board, which writes its grids and derives each view's members from them with `layout_panel_ids()` ([dev/cedx/board.R#L1207-L1211](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1207-L1211)), gives each view its grid instead.
+  So today's `views = list(main = dock_view(c("a", "b")))` with `grids = list(main = dock_grid("a", "b"))` becomes `views = list(main = dock_view(dock_grid("a", "b")))`, and the clinical data explorer's board, which writes its grids and derives each view's members from them with `layout_panel_ids()`, gives each view its grid instead.
   A reference to a plugin's panel, written with `plg()`, names the plugin by the name that the script gives it or by the id of its class, so the `views` example's `ext("analysis")` ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)) becomes `plg("analysis")`, with `analysis = new_dag_plugin()` in the example's `plugins`.
   A plugin that a script leaves unnamed has no name, where today's dock names an extension after its class, as blockr.dm's `duckdb-remote-dm` example relies on with `ext("dag")` ([inst/examples/duckdb-remote-dm.R#L227-L247](https://github.com/BristolMyersSquibb/blockr.dm/blob/9a02bd76b2f39595aa656bf21257216ab345b4fb/inst/examples/duckdb-remote-dm.R#L227-L247)), so the migration notes have such a script name the plugin, as `list(dag = new_dag_plugin())`.
 - Its `visible` gives the sections that each card shows, by block id, as `list(a = "outputs")`, and it hands that to `new_dock_plugin()` too.
   The argument takes the place of a block's `visible` attribute, which no longer reaches the board, since a block holds nothing beside its state, its name and its `locked` now ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-properties-in-r)).
-  So the migration notes move what a script such as CEDX's sets on its blocks into this argument, and the test of condition 5 fails for a script that still sets the attribute.
+  So the migration notes move what a script such as the clinical data explorer's sets on its blocks into this argument, and the test of condition 5 fails for a script that still sets the attribute.
 - Its `id` and `name` are the board's, which it hands to `new_board()`.
   So a script that passes its board's id to `serve()`, as `serve(new_dock_board(...), "my_board")` does, passes it here instead ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
 
@@ -184,7 +184,7 @@ The rest of what scripts call goes as follows:
 | `dock_view()` | Kept, taking the view's grid, or the panels of its default grid, in place of its members (above) |
 | `ext()` | Dropped in favour of `plg()`, which places a plugin's panel by the name that the script gives the plugin or by the id of its class (above), since the new stack has no extensions |
 | `layout_panel_ids()` | Dropped, since a script gives each view its grid rather than deriving the view's members from one |
-| `board_views()`, `active_view()` and `view_name()` | Kept, reading the dock plugin's state of an R board, so that a script can derive one board from another, as CEDX's script of one view does |
+| `board_views()`, `active_view()` and `view_name()` | Kept, reading the dock plugin's state of an R board, so that a script can derive one board from another, as the clinical data explorer's script of one view does |
 | `board_grids()` and `view_members()` | Dropped, since a view holds its grid, which `board_views()` gives with the view, so a script that needs the panels that a view shows reads them from that grid |
 | `dock_extensions()` | Renamed `dock_plugins()`, which reads the plugins of an R board besides the dock's, as `new_dock_board()` takes them in `plugins` |
 | `board_views<-()`, `board_grids<-()`, `active_view<-()`, `view_name<-()`, `dock_extensions<-()` and `stack_color<-()` | Dropped, as core's setters are, since nothing changes a board in R ([Defining a board in R](Rewrite-1.1.3#the-script)) |
@@ -202,9 +202,9 @@ The vignette says how a board that today's dock saved converts through blockr.co
 ### Testing
 
 The conversion's tests hold files that today's packages wrote, each beside the JSON board that the conversion writes for it.
-They are a file of each of blockr.dock's examples, written by blockr.dock 0.1.2 and by main at the switch, and a file of the CEDX board, once the packages it uses have been ported.
+They are a file of each of blockr.dock's examples, written by blockr.dock 0.1.2 and by main at the switch, and a file of the clinical data explorer's board, once the packages it uses have been ported.
 The client's tests open each JSON board with the dock plugin's class, and check its views, their names and order, their grids, the active view, the sections of each card and the stacks' colours against what today's dock shows for the file.
-The script of each example that gives its views or grids and that of the CEDX board, changed as the migration notes say, then open into the same dock plugin's state as the conversion of the file that today's packages saved from the script before the change (condition 5).
+The script of each example that gives its views or grids and that of the clinical data explorer's board, changed as the migration notes say, then open into the same dock plugin's state as the conversion of the file that today's packages saved from the script before the change (condition 5).
 
 ## Open questions
 
@@ -221,11 +221,11 @@ A dock board with no grid for a view writes none, so the view takes a default gr
 Written with typedjson 0.1.2, as core's Export writes it, a view's members come out as an array of arrays of one id each, as `[["block_panel-a"], ["block_panel-b"]]`, a grid's `sizes` of one ratio as `1.0`, a leaf's one panel as a string, and a grid without rails as `"rails": []`.
 The methods read the members as one vector of ids, whichever form the file holds.
 
-The CEDX board sets its cards' sections in `cedx_outputs_hidden()` ([dev/cedx/board.R#L1220-L1227](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1220-L1227)), passes `c(dock_board_options(), new_board_options(...))` as its options ([#L1196-L1202](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1196-L1202)), and mounts the DAG, the outline and slides of blockr.outline, the control bridge of blockr.viz and, with `assistant = TRUE`, the assistant ([#L1167-L1177](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1167-L1177)).
-Its script of one view serves its board with `serve(plugins = custom_plugins(c(ai_ctrl_block(), manage_project())))` ([dev/cedx/views.R#L84-L91](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L84-L91)), which core's migration notes cover ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+The clinical data explorer's board sets its cards' sections in a function of its own, passes `c(dock_board_options(), new_board_options(...))` as its options, and mounts the DAG, the outline and slides of blockr.outline, the control bridge of blockr.viz and, where its script asks, the assistant.
+Its script of one view serves its board with `serve(plugins = custom_plugins(c(ai_ctrl_block(), manage_project())))`, which core's migration notes cover ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 Today's `panel_id_map()` and `resolve_panel_ids()` resolve the name that a script gives an extension ([R/dock-view.R#L465-L521](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L465-L521)), and the names of the plugins in `plugins` resolve the same way.
 Where today's `check_panel_refs()` refuses a reference that names neither a block nor an extension of the board, R refuses no reference to a plugin, since it may name the class of a plugin that `serve()` adds, and the dock removes a panel of a plugin that the app does not run as it starts ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
-A script that needs the panels that a view shows, as CEDX's script of one view does to find the view's blocks ([dev/cedx/views.R#L50-L56](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L50-L56)), walks the view's grid, and whether blockr.dock gives it a function for that, as today's `view_members()` is, stays open until the scripts are ported.
+A script that needs the panels that a view shows, as the clinical data explorer's script of one view does to find the view's blocks, walks the view's grid, and whether blockr.dock gives it a function for that, as today's `view_members()` is, stays open until the scripts are ported.
 
 </details>

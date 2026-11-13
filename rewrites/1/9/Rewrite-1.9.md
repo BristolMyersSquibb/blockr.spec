@@ -15,7 +15,7 @@ Nor does any page say how the records that blockr.session stores today cross, wh
 
 Every app script changes at the switch too, and 89 R scripts and 8 documents in 15 of the workspace's repos call `serve()`, in examples, vignettes, READMEs and dev scripts.
 Each package's migration notes, a vignette, say what a script changes ([State in JS](Rewrite-1#migration)), but only blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)) and blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)) are planned.
-Scripts also pass the extensions of blockr.dag, blockr.md and blockr.assistant, and of blockr.outline and blockr.viz outside the workspace, as CEDX's board does, and the plugins of blockr.session and blockr.code, whose packages plan no notes.
+Scripts also pass the extensions of blockr.dag, blockr.md and blockr.assistant, and of blockr.outline and blockr.viz outside the workspace, as the clinical data explorer's board does, and the plugins of blockr.session and blockr.code, whose packages plan no notes.
 Only the dock checks its notes, by opening each example's script, changed as they say, beside the conversion of the file that the script saved ([Saved boards and app scripts across the switch](Rewrite-1.2.2#testing)), so for every other package a change that no note lists shows only when a script fails after the switch.
 
 ## What must hold
@@ -26,7 +26,7 @@ Only the dock checks its notes, by opening each example's script, changed as the
 4. A record that blockr.session stored today opens in an app of the new stack for the user who stored it, and so does a file of today's stack that a user uploads to it.
 5. A conversion leaves the file it reads as it was, so that the file converts again once the converting session has what it lacked.
 6. Every package whose functions app scripts call, and which the switch changes, has migration notes, a vignette, that list each change a script needs, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
-7. The examples of each such package and CEDX's board, with their scripts changed by an AI that is given nothing but the migration notes, open into the same board as the conversion of the files that their scripts saved before the change, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#what-must-hold) asks of the dock's.
+7. The examples of each such package and the clinical data explorer's board, with their scripts changed by an AI that is given nothing but the migration notes, open into the same board as the conversion of the files that their scripts saved before the change, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#what-must-hold) asks of the dock's.
 
 ## Today
 
@@ -85,7 +85,7 @@ The package blockr.md has no part yet, so its notes wait for one, and the notes 
 
 ### Testing
 
-The tests of blockr.convert hold, for each package that wrote today's files, a file of each of its examples, written by main at the switch, and a file of CEDX's board, each beside the JSON board that the conversion writes for it, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#testing) has them for the dock.
+The tests of blockr.convert hold, for each package that wrote today's files, a file of each of its examples, written by main at the switch, and a file of the clinical data explorer's board, each beside the JSON board that the conversion writes for it, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#testing) has them for the dock.
 The script of each such example is changed for the new stack by an AI that is given nothing but the migration notes of the packages that it calls, and the tests open the board that the changed script builds and the conversion of the file that the unchanged script saved in the client, after the migrations of their classes, and check that they are the same board (condition 7).
 A difference names a change that the notes lack, so the notes gain it and the AI changes the script again, rather than someone fixing the script by hand.
 The tests also convert a crafted file whose tags would make a call under typedjson's default, which the conversion refuses (condition 2), and a file that names a package that the session lacks, whose objects the conversion leaves out and names (above).
@@ -106,7 +106,7 @@ None.
 - Convert a dock board, with the methods of blockr.dock's main for the dock board, its stacks and the Edit board extension, which write the dock plugin's state at version 1 ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)), in blockr.convert
 - Refuse a file without a `format`, in the client and in `serve()`, with an error that names blockr.convert's `convert_file()`, in blockr.core
 - Carry over the methods of `blockr_deser()` of blockr.dplyr's and blockr.assistant's main, and write those that make the plugins of the DAG and of blockr.md from today's extensions, in blockr.convert
-- Write the test files of every package that wrote today's files and of CEDX's board, from main at the switch, and the check that each example's script, changed by an AI from the migration notes alone, opens into the same board as the conversion of its file, in blockr.convert
+- Write the test files of every package that wrote today's files and of the clinical data explorer's board, from main at the switch, and the check that each example's script, changed by an AI from the migration notes alone, opens into the same board as the conversion of its file, in blockr.convert
 
 <details><summary>Notes for implementers</summary>
 

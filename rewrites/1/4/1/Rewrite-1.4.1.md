@@ -79,7 +79,7 @@ OpenAI alone puts no CORS header on the 401 with which it refuses a key, so a pa
 
 Today the blockr option `chat_function` gives one of ellmer's chat functions, which fixes the model, or a named list of them ([Assistant as a plugin](Rewrite-1.4#today)).
 From a list, the user picks one through core's board option `llm_model`, which the dock's options sidebar shows, and the board saves the pick by its name.
-CEDX's script offers three of OpenAI's models that way, named by their ids, while blockr.uat's chats with ellmer's default.
+The clinical data explorer's script offers three of OpenAI's models that way, named by their ids, while blockr.uat's chats with ellmer's default.
 Both options go, since they were shaped for ellmer's chat functions ([Assistant as a plugin](Rewrite-1.4#proposal)), while what they let a deployment choose carries over.
 
 The models that a deployment offers are those it names in `assistant_models`, the first being the default (The blockr options):
@@ -88,13 +88,13 @@ The models that a deployment offers are those it names in `assistant_models`, th
 - Several let the user pick one in the chat, and the first serves until someone does.
 - Where the deployment names none, the chat offers the models that the place lists for the key, keeping those that take tools where the list says which do, with no default, so that the chat asks for a pick before the first turn.
 
-No list says which model to start with, and CEDX's script warns that a `chat_function` left unset gives ellmer's default "silently" ([dev/cedx/app.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/app.R#L66-L71)), which a pick that the chat asks for avoids.
+No list says which model to start with, and a `chat_function` left unset gives ellmer's default model without saying so, which a pick that the chat asks for avoids.
 OpenAI's list says nothing of what a model takes, so the issue that sends the calls settles how the plugin keeps the models that take tools from it, such as by their ids (notes).
 A call to a model that the visitor's account cannot reach fails as any call does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
 Who pays for the calls decides where a pick is kept, so that no blockr option sets it:
 
-- With the deployment's key, the board keeps the pick, since every visitor reaches the same models at the hoster's cost, as each of CEDX's boards keeps its pick today.
+- With the deployment's key, the board keeps the pick, since every visitor reaches the same models at the hoster's cost, as each of the clinical data explorer's boards keeps its pick today.
   The pick is a setting of the assistant's own, so it goes in the assistant's state rather than in a board option, which is meant for how the board is shown ([Places the dock offers plugins](Rewrite-1.2.4#settings)), and a command of the assistant's sets it, which undo leaves alone, as it leaves a board option's value ([The assistant's state](Rewrite-1.4.3#commands)).
   Where the deployment does not offer the board's pick, the chat says so and talks to the default, or asks for a pick where the deployment names no models, while the state keeps the pick until someone picks another, so that the board talks to its model again where that model is offered.
 - With the visitor's own key or a login, the visitor's browser keeps the pick, since the next visitor of the board may have another account, which reaches other models.
@@ -119,7 +119,7 @@ The plugin reads them through `CoreApi.blockrOption()`, which asks R for them, a
 
 ## Open questions
 
-- Whether a company's network lets visitors' browsers reach the place the calls go, as BMS's network may not let them reach api.openai.com.
+- Whether a company's network lets visitors' browsers reach the place the calls go, as a company's network may not let them reach a provider's domain.
   It blocks no Work item, since a company's own proxy is a place like any other, and each such deployment settles it as it is set up.
 
 <details><summary>Notes for implementers</summary>
