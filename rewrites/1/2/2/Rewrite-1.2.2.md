@@ -4,10 +4,10 @@ Status: settled on 2026-11-12. Design for [Client-drawn dock](Rewrite-1.2).
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): how what users made with today's blockr.dock crosses the switch.
 It covers the boards that today's blockr.dock saved, which the conversion in blockr.convert turns into JSON boards that hold the dock plugin's state at version 1.
 It also covers the app scripts that call blockr.dock's constructors, through `new_dock_board()` and the rest of what blockr.dock exports for scripts today.
-It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), whose `migrate` takes the dock plugin's state from version 1 and whose R functions write a view and its grid.
-Each of today's extensions becomes a plugin, whose state the extension's own package takes from the extension's, as [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) has it.
+It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), which defines the state that the conversion writes, and whose R functions write a view and its grid.
+Each of today's extensions becomes a plugin, whose state the conversion takes from the extension's, as [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) has it.
 This page maps the extension's panels to that plugin's.
-It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/BristolMyersSquibb/blockr.dock/issues/568)), the `migrate` of the dock plugin's state ([blockr.dock#570](https://github.com/BristolMyersSquibb/blockr.dock/issues/570)), the dock's board options ([blockr.dock#571](https://github.com/BristolMyersSquibb/blockr.dock/issues/571)), the R functions of app scripts ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the dock's conversion methods ([blockr.dock#575](https://github.com/BristolMyersSquibb/blockr.dock/issues/575)), the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)) and the port of blockr.dock's examples ([blockr.dock#587](https://github.com/BristolMyersSquibb/blockr.dock/issues/587)).
+It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/BristolMyersSquibb/blockr.dock/issues/568)), the dock's board options ([blockr.dock#571](https://github.com/BristolMyersSquibb/blockr.dock/issues/571)), the R functions of app scripts ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the conversion of dock boards in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#work)), the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)) and the port of blockr.dock's examples ([blockr.dock#587](https://github.com/BristolMyersSquibb/blockr.dock/issues/587)).
 
 ## What must hold
 
@@ -16,7 +16,7 @@ It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/Brist
 2. A converted board names nothing of today's stack, neither an R class, a constructor nor an extension's key, so that only the conversion reads today's names.
 3. An app script that builds its board with `new_dock_board()`, with views and grids written by `dock_view()`, `dock_grid()`, `panels()`, `group()`, `rail()`, `blk()` and `ext()`, builds a board with the same views, grids, active view and card sections as today, once it makes the changes that the migration notes of blockr.core and blockr.dock list.
 4. The migration notes of blockr.dock, a vignette, list every change that a dock app script needs, written so that an AI can apply them, since a function that the new stack replaces goes without an alias ([State in JS](Rewrite-1#migration)).
-5. A script that gives views or grids today, once changed as the migration notes say, and a file that today's packages save from it before the change open into the same dock plugin's state, the script's board through `new_dock_board()` and the file through the conversion and the `migrate` of the dock plugin's class, while a script that gives neither gets the view that the dock adds to a board without views ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
+5. A script that gives views or grids today, once changed as the migration notes say, and a file that today's packages save from it before the change open into the same dock plugin's state, the script's board through `new_dock_board()` and the file through the conversion, while a script that gives neither gets the view that the dock adds to a board without views ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
 
 ## Today
 
@@ -44,31 +44,35 @@ Six of blockr.dock's examples pass `new_edit_board_extension()`, and the `rails`
 
 ### Which files cross
 
-The conversion reads what today's packages read, through the `blockr_deser()` methods they have ([Serialization](Rewrite-1.1.4#files)).
+The conversion reads what today's packages read, through the `blockr_deser()` methods that they have today, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.9#the-package)).
 So the files that cross are those that today's blockr.dock opens: the files of blockr.dock 0.1.2 and later, up to the last version on main before the switch.
 The conversion adds no reader that today's packages lack, so a file of blockr.dock 0.1.0 does not convert, as it does not open today.
 Main keeps shipping fixes until the switch ([State in JS](Rewrite-1#migration)).
-So a change on main to what the dock writes comes with the same change to the dock's methods for the conversion, and with a file that main wrote among the conversion's fixtures ([Testing](#testing)).
+So a change on main to what the dock writes comes with the same change to the dock's methods in blockr.convert, and with a file that main wrote among the conversion's fixtures ([Testing](#testing)).
 
 ### The dock board
 
-The methods of blockr.dock for the conversion, which it registers on the `blockr_deser()` of blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)), turn a dock board into a board without a class of its own ([Board objects](Rewrite-1.1.1#the-board)).
-That board holds the dock plugin's state under `blockr.dock-dock_plugin` at version 1, and the state of the plugin that takes the place of each extension that kept any ([Extensions](#extensions)).
-The dock plugin's state at version 1 holds what the dock board holds of its views, in today's shape, and nothing of today's stack:
+The methods that read a dock board for the conversion sit in blockr.convert, carried over from today's blockr.dock, as core's are, so that the new blockr.dock holds no code that reads today's files ([The conversion and the migration notes](Rewrite-1.9#the-package)).
+They turn a dock board into a board without a class of its own ([Board objects](Rewrite-1.1.1#the-board)).
+That board holds the dock plugin's state under `blockr.dock-dock_plugin` at version 1, in the shape that [The dock's state](Rewrite-1.2.1#the-state) defines, and the state of the plugin that takes the place of each extension that kept any ([Extensions](#extensions)).
+The methods write the dock plugin's state from what the dock board holds of its views, and from nothing of today's stack:
 
-- Its `views` hold each view under its id, with its `name` and its `members`, in the order that the view shows them.
-- Its `active` is the id of the active view.
-- Its `grids` hold the grid of each view that has one, under the view's id, as today's file holds it, without `focus`, since only one person's screen needs focus ([Client-drawn dock](Rewrite-1.2#proposal)).
-- Its `visible` holds the sections that each card shows, under the block's id, for each block whose payload holds the dock's `visible` ([Serialization](Rewrite-1.1.4#files)).
+1. They turn each view's members and grid into one grid, as today's dock reads a view: the grid restricted to the members, each member that the grid lacks in a tab group of its own at the end of the top split, and the default grid over the members where the view has no grid or no members ([R/dock-grid.R#L725-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L725-L775)).
+   A panel that a rail holds leaves the tree, as today's `canonicalize_grid()` has it.
+   A rail without panels goes, and so does `focus`, which only one person's screen needs ([Client-drawn dock](Rewrite-1.2#proposal)).
+2. They name each panel by an object, by the prefix of its id, as `block_panel-a` becomes `{ "block": "a" }`.
+   An extension's panel becomes the panel of the plugin that takes the extension's place, by the id of the plugin's class, as `{ "plugin": "blockr.dag-dag_plugin" }`, since no extension's key reaches the new stack (condition 2).
+   A rail drops its `position`, which the rail's edge gives.
+3. They put every view at the top, in the order of the views, with the keys in `index` that R writes for an app script's views ([The dock's state](Rewrite-1.2.1#defining-the-state-in-r)), and give the state no folders.
+4. They name a view without a name after its id, as today's views menu labels one ([R/dock-view.R#L355-L366](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L355-L366)), and keep the active view.
+5. They write the sections that each card shows into `visible`, for each block whose payload holds the dock's `visible` ([Serialization](Rewrite-1.1.4#files)).
+   They leave out today's section `ctrl`, which goes with its plugin ([The dock's state](Rewrite-1.2.1#card-sections)), and an entry that then lists both sections, since a card without an entry shows both.
 
-A panel id names a block's panel as today, as `block_panel-a`.
-It names an extension's panel by the id of the class of the plugin that takes the extension's place, as `ext_panel-blockr.dag-dag_plugin`, since no extension's key reaches the new stack (condition 2).
 Two extensions that become one plugin, as two documents of blockr.md become one plugin of blockr.md's ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)), leave that plugin one panel, where the first of the two stands in each view and grid.
 An extension that no plugin takes the place of leaves no panel ([Extensions](#extensions)).
 The conversion drops such panels from each view's members and each grid, as today's `new_dock_board()` drops a member that no block or extension backs and restricts each grid to its view's members ([R/dock-board.R#L117-L118](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L117-L118)).
 
-The conversion writes this state as typedjson read it, with each value of length one bare and an empty list as `[]`, as it writes the state of every plugin at version 1 ([Serialization](Rewrite-1.1.4#migrations)).
-So the dock plugin class's `migrate` takes either form there, and gives the state that [The dock's state](Rewrite-1.2.1) defines.
+The conversion writes the state by the schema of the dock plugin class's state, as R writes the state of every plugin ([Serialization](Rewrite-1.1.4#files)).
 
 The rest of the dock board is core's to convert ([Serialization](Rewrite-1.1.4#files)).
 A dock stack's colour becomes the stack's `color`, with three digits written as six.
@@ -99,20 +103,23 @@ A board with two views, the DAG on a rail of the first, a stack, and a card that
     "plugins": {
       "blockr.dock-dock_plugin": {
         "views": {
-          "main": { "name": "Main", "members": ["block_panel-a", "block_panel-b", "ext_panel-blockr.dag-dag_plugin"] },
-          "side": { "name": "Side", "members": "block_panel-b" }
-        },
-        "active": "side",
-        "grids": {
           "main": {
-            "orientation": "horizontal",
-            "children": [{ "children": [{ "panels": "block_panel-a", "active": "block_panel-a" }, { "panels": "block_panel-b", "active": "block_panel-b" }], "sizes": [0.5, 0.5] }],
-            "sizes": 1,
-            "rails": { "right": { "position": "right", "panels": "ext_panel-blockr.dag-dag_plugin", "active": "ext_panel-blockr.dag-dag_plugin", "collapsed": true, "size": 300, "collapsed_size": 35 } }
+            "name": "Main", "folder": null, "index": "a0",
+            "grid": {
+              "orientation": "horizontal",
+              "children": [{ "children": [{ "panels": [{ "block": "a" }], "active": { "block": "a" } }, { "panels": [{ "block": "b" }], "active": { "block": "b" } }], "sizes": [0.5, 0.5] }],
+              "sizes": [1],
+              "rails": { "right": { "panels": [{ "plugin": "blockr.dag-dag_plugin" }], "active": { "plugin": "blockr.dag-dag_plugin" }, "collapsed": true, "size": 300, "collapsed_size": 35 } }
+            }
           },
-          "side": { "orientation": "horizontal", "children": [{ "panels": "block_panel-b", "active": "block_panel-b" }], "sizes": 1, "rails": [] }
+          "side": {
+            "name": "Side", "folder": null, "index": "a1",
+            "grid": { "orientation": "horizontal", "children": [{ "panels": [{ "block": "b" }], "active": { "block": "b" } }], "sizes": [1] }
+          }
         },
-        "visible": { "b": "outputs" }
+        "folders": {},
+        "active": "side",
+        "visible": { "b": ["outputs"] }
       }
     }
   }
@@ -124,21 +131,20 @@ The DAG kept no state in this file, so the board holds none for its plugin, whic
 ### Extensions
 
 The state of each of today's extensions becomes the state of the plugin of the class that takes its place, at version 1 and taken from the args of the extension's constructor ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
-The extension's package gives it through a method for the extension's class, which it registers on the `blockr_deser()` of blockr.convert, as blockr.dock registers its own.
-That method returns the plugin, which it makes with `new_plugin()` from the extension's state as the file holds it.
+The conversion gives it through a method for the extension's class, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+That method returns the plugin, which it makes with the constructor of the plugin's class, as `new_dag_plugin()`, from the extension's state as the file holds it.
 So the conversion learns the class's id even where the state is empty, and the board holds nothing for a plugin whose extension kept no state.
 
-The Edit board extension is blockr.dock's own, so blockr.dock gives its method.
-It returns core's Edit board plugin, so that the extension's panels become the panels of that plugin, which keeps no state ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
+The method for the Edit board extension, blockr.dock's own, returns core's Edit board plugin, so that the extension's panels become the panels of that plugin, which keeps no state ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
 
 Where no method gives a plugin, the conversion drops the extension with its panels, and names each such extension in a warning with its class and its package.
-That happens where the extension's package gives no method, where the converting session lacks the package, and where an app script defined the extension with `new_dock_extension()`.
-A user who installs a package that gives a method converts the file again.
+That happens where blockr.convert has no method for the extension's class, where the converting session lacks the package of the plugin that takes its place, and where an app script defined the extension with `new_dock_extension()`.
+A user who installs what the warning names converts the file again.
 
 ### Opening a converted board
 
 The client opens a converted board as it opens any JSON board ([Board updates](Rewrite-1.1.2#opening-a-board)).
-The store runs the `migrate` of the dock plugin's class from version 1, which [The dock's state](Rewrite-1.2.1) gives, and that of every other plugin's class from version 1, which each plugin's package gives.
+The board holds each plugin's state at version 1, so the store runs a plugin class's `migrate` only where the class has moved past version 1 since ([Serialization](Rewrite-1.1.4#migrations)).
 
 ### App scripts
 
@@ -156,7 +162,7 @@ Its arguments are these:
 - Its `plugins` are those that `new_board()` takes too, the plugins whose state the board holds, each made by a plugin's constructor, as `new_dag_plugin()` makes the DAG's, in place of today's `extensions` ([Plugins](Rewrite-1.1.12#a-plugin)).
   A script may give a plugin a name there, as `list(analysis = new_dag_plugin())`, by which its views place the plugin's panel without the id of the plugin's class, as a script names an extension in its `extensions` today, and `new_dock_board()` hands the list to `new_board()` without its names, which `new_board()` refuses ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
 - Its `views`, `folders` and `active` are written as [The dock's state](Rewrite-1.2.1#defining-the-state-in-r) has them, each view with its grid, and it hands them to `new_dock_plugin()` with each name that the script gives a plugin turned into the id of the plugin's class, so that the dock plugin's state names each plugin by its class alone.
-  A view takes its grid, or the panels of its default grid, in place of today's members beside a grid in a separate `grids`, since the dock plugin's state holds a view's grid alone, so that R reconciles no members with a grid, which only the `migrate` of a file does ([The dock's state](Rewrite-1.2.1#the-migration-from-version-1)).
+  A view takes its grid, or the panels of its default grid, in place of today's members beside a grid in a separate `grids`, since the dock plugin's state holds a view's grid alone, so that R reconciles no members with a grid, which only the conversion of a file does ([The dock board](#the-dock-board)).
   So today's `views = list(main = dock_view(c("a", "b")))` with `grids = list(main = dock_grid("a", "b"))` becomes `views = list(main = dock_view(dock_grid("a", "b")))`, and CEDX's board, which writes its grids and derives each view's members from them with `layout_panel_ids()` ([dev/cedx/board.R#L1207-L1211](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1207-L1211)), gives each view its grid instead.
   A reference to a plugin's panel, written with `plg()`, names the plugin by the name that the script gives it or by the id of its class, so the `views` example's `ext("analysis")` ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)) becomes `plg("analysis")`, with `analysis = new_dag_plugin()` in the example's `plugins`.
   A plugin that a script leaves unnamed has no name, where today's dock names an extension after its class, as blockr.dm's `duckdb-remote-dm` example relies on with `ext("dag")` ([inst/examples/duckdb-remote-dm.R#L227-L247](https://github.com/BristolMyersSquibb/blockr.dm/blob/9a02bd76b2f39595aa656bf21257216ab345b4fb/inst/examples/duckdb-remote-dm.R#L227-L247)), so the migration notes have such a script name the plugin, as `list(dag = new_dag_plugin())`.
@@ -207,12 +213,13 @@ None.
 <details><summary>Notes for implementers</summary>
 
 Today's code, at `655e323`: the serializer and the `blockr_deser()` methods of the dock board, its views, grids and extensions are in `R/utils-serdes.R`, that of a dock stack in `R/dock-stack.R`, and the pruning of views and grids on construction is `initialise_views()` in `R/dock-board.R`, with `drop_unknown_members()` in `R/dock-view.R` and `restrict_grids_to_views()` in `R/dock-grid.R`.
-A package registers a method on blockr.convert's generic with roxygen's `@exportS3Method blockr.convert::blockr_deser`, which R registers once blockr.convert loads, so blockr.dock needs blockr.convert only in `Suggests`.
+The methods for a dock board can write the dock plugin's state through the new `new_dock_plugin()`, which writes each view's `index`, names a view without a name after its id and makes the first view active where none is ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)).
+R writes the state's grids by the schema only once core shapes a value under `anyOf` ([blockr.core#597](https://github.com/BristolMyersSquibb/blockr.core/issues/597)).
 The `blockr_deser()` method of the dock board passes the version of blockr.dock that the file records down as `producer_version`, but no method reads it there, since today's dock reads one shape.
 A dock board with no grid for a view writes none, so the view takes a default grid over its members, as `blockr_ser.dock_grids()` drops a grid that is `NULL` ([R/utils-serdes.R#L69-L75](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-serdes.R#L69-L75)).
 
 Written with typedjson 0.1.2, as core's Export writes it, a view's members come out as an array of arrays of one id each, as `[["block_panel-a"], ["block_panel-b"]]`, a grid's `sizes` of one ratio as `1.0`, a leaf's one panel as a string, and a grid without rails as `"rails": []`.
-The conversion writes the members as one array of ids.
+The methods read the members as one vector of ids, whichever form the file holds.
 
 The CEDX board sets its cards' sections in `cedx_outputs_hidden()` ([dev/cedx/board.R#L1220-L1227](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1220-L1227)), passes `c(dock_board_options(), new_board_options(...))` as its options ([#L1196-L1202](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1196-L1202)), and mounts the DAG, the outline and slides of blockr.outline, the control bridge of blockr.viz and, with `assistant = TRUE`, the assistant ([#L1167-L1177](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/board.R#L1167-L1177)).
 Its script of one view serves its board with `serve(plugins = custom_plugins(c(ai_ctrl_block(), manage_project())))` ([dev/cedx/views.R#L84-L91](https://github.com/BristolMyersSquibb/blockr.sandbox/blob/d4df2e479564d463d267776563929f27cd4bf9a4/dev/cedx/views.R#L84-L91)), which core's migration notes cover ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).

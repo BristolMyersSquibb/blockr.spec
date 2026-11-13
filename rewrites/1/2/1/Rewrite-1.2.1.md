@@ -2,10 +2,10 @@
 Status: settled on 2026-11-11. Design for [Client-drawn dock](Rewrite-1.2).
 
 One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.2)): the dock plugin's state, which holds the dock's views, the folders that group them in the navigation, each view's grid, which view is active and which sections of each block's card show.
-It covers the commands that change that state, the `update` and the `migrate` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
+It covers the commands that change that state, the `update` of the dock plugin's class, the R functions that write the state for an app script, and how the client turns a grid into dockview's layout and back.
 It builds on [Plugins](Rewrite-1.1.12#a-plugins-state) and [Board updates](Rewrite-1.1.2#plugins).
-It shapes the dock plugin's state ([blockr.dock#570](https://github.com/BristolMyersSquibb/blockr.dock/issues/570)), the dock's commands ([blockr.dock#573](https://github.com/BristolMyersSquibb/blockr.dock/issues/573)), the R functions that write the state for an app script ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the conversion of today's boards to its version 1 ([blockr.dock#575](https://github.com/BristolMyersSquibb/blockr.dock/issues/575)), drawing a view ([blockr.dock#577](https://github.com/BristolMyersSquibb/blockr.dock/issues/577)), the views menu ([blockr.dock#582](https://github.com/BristolMyersSquibb/blockr.dock/issues/582)) and the vignette "Views and grids" ([blockr.dock#586](https://github.com/BristolMyersSquibb/blockr.dock/issues/586)).
-How boards saved today reach the dock plugin's state at version 1, through the conversion in blockr.convert, and how today's app scripts cross the switch are [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s, while this page gives the `migrate` that brings that state to its own shape.
+It shapes the dock plugin's state ([blockr.dock#570](https://github.com/BristolMyersSquibb/blockr.dock/issues/570)), the dock's commands ([blockr.dock#573](https://github.com/BristolMyersSquibb/blockr.dock/issues/573)), the R functions that write the state for an app script ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the conversion of today's boards to its version 1 in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#work)), drawing a view ([blockr.dock#577](https://github.com/BristolMyersSquibb/blockr.dock/issues/577)), the views menu ([blockr.dock#582](https://github.com/BristolMyersSquibb/blockr.dock/issues/582)) and the vignette "Views and grids" ([blockr.dock#586](https://github.com/BristolMyersSquibb/blockr.dock/issues/586)).
+How boards saved today reach the dock plugin's state, through the conversion in blockr.convert, and how today's app scripts cross the switch are [Saved boards and app scripts across the switch](Rewrite-1.2.2)'s.
 How the navbar draws the views and folders is [The dock's navbar](Rewrite-1.2.5)'s, and how a card draws its sections is [Block cards in the dock](Rewrite-1.2.7)'s.
 
 ## What must hold
@@ -100,6 +100,9 @@ A board with two views, one of them in a folder:
 
 The view Overview shows a tab group of `a` and `b`, which shows `b`, in its left 30%, and in the rest `c` above blockr.md's document, with the DAG on a rail at its left edge.
 The folder Safety follows it at the top and holds the view Adverse events, and the card of `c` shows its output alone.
+
+This shape is version 1 of the dock plugin's state, the first in the new stack, so the class has no `migrate` until the shape changes ([Plugins](Rewrite-1.1.12#a-plugin)).
+A board that today's stack saved reaches it through the conversion in blockr.convert ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)).
 
 ### Views and folders
 
@@ -252,17 +255,6 @@ As the dock starts on a board, before it first draws, it applies one delta of it
 So undo never takes the user back to an empty page or to a panel that the app cannot draw.
 A fresh start of the same app takes the same step on the same board, so the page is what a fresh start would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 A panel of a block that the board lacks needs no such step, since the store drops such a block as a delta removes it, through the class's `update` (above).
-
-### The migration from version 1
-
-A board that the conversion wrote holds the dock plugin's state at version 1, in today's shape ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)): its views with their members, its `grids` beside them, its panels as the strings `block_panel-<id>` and `ext_panel-<id>`, the latter naming a plugin's class, and each value of length one bare, as typedjson read it.
-The `migrate` of the dock plugin's class takes that state to the shape of this page, which is version 2 ([Board updates](Rewrite-1.1.2#plugins)):
-
-1. It reads each value of length one as an array where this page's shape has one, as `"sizes": 1` and `"panels": "block_panel-a"`, and `"rails": []` as a grid without rails.
-2. It turns each view's members and grid into one grid, as today's dock reads a view: the grid restricted to the members, each member that the grid lacks in a tab group of its own at the end of the top split, and the default grid over the members where the view has no grid (Grids, above) ([R/dock-grid.R#L725-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L725-L775)).
-3. It names each panel by an object, by the prefix of its id, as `block_panel-a` becomes `{ "block": "a" }` and `ext_panel-blockr.dag-dag_plugin` becomes `{ "plugin": "blockr.dag-dag_plugin" }`, and drops a rail's `position`, which the rail's edge gives.
-4. It puts every view at the top, with an `index` in the order of the views, and gives the state no folders.
-5. It names a view without a name after its id, as today's views menu labels one ([R/dock-view.R#L355-L366](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L355-L366)), and keeps `active` and `visible`, with each value of `visible` as an array.
 
 ### Defining the state in R
 

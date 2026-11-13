@@ -179,7 +179,7 @@ Besides its block classes, a package declares in R the rest of its client that R
 With illustrative names:
 
 ```r
-plugin_version.dock_plugin <- function(x, ...) 2L                 # in blockr.dock, where its plugin's state changed shape once, as an exported S3 method
+plugin_version.dag_plugin <- function(x, ...) 2L                  # in blockr.dag, once its plugin's state has changed shape, as an exported S3 method
 output_schema.chart_output <- function(x, ...) read_json_schema("chart-output.schema.json")   # in blockr.viz, S3 methods for
 output_coercion.chart_output <- function(x, ...) as_chart_output                               # its schema, its coercion,
 output_renderer.chart_output <- function(x, ...) {                                             # its renderer

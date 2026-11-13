@@ -133,8 +133,8 @@ A script calls it mostly to place the assistant's panel in a grid of the dock un
 
 ### Today's threads across the switch
 
-The conversion of a board saved today makes the assistant's plugin through blockr.assistant's method of blockr.convert's `blockr_deser()`, for the class `assistant_extension` ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
-The method reads the threads that the file's `history` holds, as today's method does ([R/ext-serdes.R#L1-L42](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-serdes.R#L1-L42)), and makes the plugin with `new_plugin()` from them:
+The conversion of a board saved today makes the assistant's plugin through blockr.convert's method of `blockr_deser()` for the class `assistant_extension`, carried over from blockr.assistant ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+The method reads the threads that the file's `history` holds, as today's method does ([R/ext-serdes.R#L1-L42](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-serdes.R#L1-L42)), and makes the plugin with the constructor of the assistant's plugin class from them:
 
 1. Each saved record becomes a thread under its id, with its title and its timestamps.
 2. The turns of each node become messages, each naming the message before it, so that the tree and its branches carry over, and the message of `current_leaf` becomes the head.
