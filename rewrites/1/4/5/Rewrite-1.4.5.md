@@ -1,7 +1,7 @@
 # The system prompt
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, and where a deployment adds instructions of its own.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a deployment adds instructions of its own.
 It shapes the Work items that run the agent loop and write the template, and the rewrite of the `layout` skill.
 The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, and how a change to the prompt is judged is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
@@ -13,6 +13,7 @@ The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, 
 4. Each section that the plugin writes stays within today's caps, so that no call fills the model's context.
 5. A deployment adds instructions of its own through skills alone, and no app script writes the prompt.
 6. A change to the template, the preambles, the sections' format or a tool's description merges only once [The assistant's benchmark](Rewrite-1.8.1) has compared it with the version before it.
+7. Before each call, the model learns what the user or another plugin changed in the board's blocks, links and stacks since the thread's previous call, and the thread keeps what it learned.
 
 ## Today
 
@@ -52,9 +53,26 @@ Each call to the model sends, in this order:
 
 A provider's prompt cache serves the start of a call that matches an earlier one, and charges a fraction of the price of new input for it (notes).
 Today's board section sits at the end of the system prompt, so each change to the board or the focus changes the system prompt, and the cache serves none of the thread after it, which is read again in full at the price of new input.
+Today's assistant cannot send the board in a message instead, since shinychat's `chat_server()` sends what the user typed alone, and gives an app no way to add context to it ([shinychat#375](https://github.com/posit-dev/shinychat/issues/375)).
 In this order, the cache serves the tools, the system prompt and the thread so far, and only the board, the focus and the newest messages are read anew.
 During a turn, each call of the loop adds the board as that call finds it, after the edit tool's results, so that the model reads its newest state last.
 How each provider takes text after a tool's result is for the issue that runs the loop to settle, and [The assistant's benchmark](Rewrite-1.8.1) compares this order with today's, by the questions that pass and by cost, before the issue that writes the template closes.
+
+### What changed under the model
+
+The board stays open to the user while a turn runs, and between turns, so it can change under the model ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
+The board after the last message shows the board as it is, but neither what changed nor who changed it.
+So a model that said it added a block `adults` would later read a board without `adults`, and nothing to tell it why, which is what shinychat#375 describes for a context that a message does not keep.
+
+To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it: the user, the user through the chat's Undo or Redo, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
+Before each call, the plugin adds a note of the changes since the thread's previous call to the thread, as a message of its own, which it marks as the app's rather than the user's ([The assistant's state](Rewrite-1.4.3#the-state)).
+So the thread keeps the note, as shinychat#375 asks of a message's context, and a call with no such changes carries none.
+The note comes before the board, which the call adds after the thread's last message, so that the cache serves the thread up to the note on the calls after.
+The board itself stays out of the thread, since a board for every call would fill the model's context window.
+The note stays within `assistant_board_section_max_chars`, as each part of the Board section does.
+The plugin records the changes while the page lives, so the first call after a reload carries no note of what changed before it.
+
+What the note holds and how much, so that the model stays in step without reading updates that it does not need, is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, version against version.
 
 ### The rules
 
@@ -68,6 +86,7 @@ The template keeps the rules that carry over (Today), and states those of the ne
 - The commands come from `list_commands`, so the model looks up the frontend's own for views and panels, as the dock's are, and a plugin's own or `blockr.core-set_plugin_state` for that plugin's state, rather than assuming any.
 - The tool `undo_edit` takes back the model's last edit, for when the user asks for that in words.
 - On a locked board, the model tells the user what the lock refuses, as the edit tool returns it, rather than trying another way ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
+- A note of what the user changed says what the user wants, so the model builds on it, rather than putting back what the user removed or took back, unless the user asks for that (What changed under the model).
 
 The `layout` skill is written again for the dock's commands, since it teaches today's view tools ([Assistant as a plugin](Rewrite-1.4#today)).
 It stays a skill, which the model reads where the dock is the frontend, rather than joining the template, which the calls under every frontend send.
@@ -82,7 +101,7 @@ The plugin writes three sections from what `CoreApi` gives, in place of the gene
 | Board | Each block with its id, name, class, status and conditions, the links, the stacks, the app's plugins by their names, and, where the dock is the frontend, its views with the panels of each, from `store.board()`, `scheduler.status()` and `plugins.appPlugins()` | After the last message, each part within `assistant_board_section_max_chars`, 1500 |
 | Focus | The block that has focus in `CoreApi.focus`, the blocks in the dock's active view where the dock is the frontend, and the blocks that the user added with @, each kind under its preamble | After the last message, after the board |
 
-Each section keeps today's headings and markers, but for `invalid` in place of `unset` and the `*` that marked args, so that what the model reads of the board changes no more than the new tools ask, and the first comparison with today's baseline turns on the tools, the rules and the order ([The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline)).
+Each section keeps today's headings and markers, but for `invalid` in place of `unset` and the `*` that marked args, so that what the model reads of the board changes no more than the new tools ask, and the first comparison with today's baseline turns on the tools, the rules, the order and the note of what changed ([The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline)).
 
 ### What a deployment adds
 
