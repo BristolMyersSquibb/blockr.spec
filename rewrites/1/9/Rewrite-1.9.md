@@ -22,7 +22,7 @@ Only the dock checks its notes, by opening each example's script, changed as the
 
 1. Every file that today's packages open converts once, through blockr.convert, into a JSON board, which opens with the same blocks, links, stacks, board option values and plugins' state, for the block classes and plugin classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 2. Converting a file runs nothing that the file holds, so that a crafted file runs no code in the session that converts it ([Serialization](Rewrite-1.1.4#files)).
-3. The new blockr.core holds no code that reads today's files, which blockr.convert and the methods of the packages that wrote them alone read.
+3. Neither the new blockr.core nor the new blockr.dock holds code that reads today's files, which blockr.convert and the methods of the other packages that wrote them alone read.
 4. A record that blockr.session stored today opens in an app of the new stack for the user who stored it, and so does a file of today's stack that a user uploads to it.
 5. A conversion leaves the file it reads as it was, so that the file converts again once the converting session has what it lacked.
 6. Every package whose functions app scripts call, and which the switch changes, has migration notes, a vignette, that list each change a script needs, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
@@ -44,21 +44,22 @@ Today's files are read with typedjson's `json_read()` and `json_read_str()`, who
 ### The package
 
 The package blockr.convert depends on the new blockr.core, whose `blockr_ser()` writes a JSON board from the R board that `blockr_deser()` builds ([Serialization](Rewrite-1.1.4#files)), and on a release of typedjson after 0.1.2, whose readers take `code = FALSE`.
-It holds the generic `blockr_deser()` with core's methods, which leave blockr.core, so that the new core holds no code for today's files (condition 3), and one function:
+It holds the generic `blockr_deser()` with core's methods and the dock's, which leave blockr.core and blockr.dock, so that neither holds code for today's files (condition 3), and one function:
 
 ```r
 convert_file(path, out = NULL)   # converts the file of today's stack at `path` into a JSON board, which it writes to `out`, or returns as text where `out` is NULL
 ```
 
 The function reads the file with typedjson in the mode that refuses code (condition 2), and loads the namespace of each package that the file's constructors name, so that the methods that the package registers on the generic are there (below).
-Then `blockr_deser()` builds the R board, and `blockr_ser()` writes it as a JSON board, as [Serialization](Rewrite-1.1.4#files) has it: each block at the version of its class's state, and the state of each plugin at version 1, in today's shape, which the plugin's class migrates in the client.
+Then `blockr_deser()` builds the R board, and `blockr_ser()` writes it as a JSON board, as [Serialization](Rewrite-1.1.4#files) has it: each block at the version of its class's state, and the state of each plugin at version 1, in the shape that its class starts the new stack with.
 It refuses an `out` that names `path`, so that a file stays as it was (condition 5).
 Core's method for a constructor leaves a closure unread, rather than unserialize it, so that a block whose class a script defined keeps the name that the file records as its registry id ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 
 ### The methods of other packages
 
-Each package that wrote today's files keeps its methods of `blockr_deser()`, as methods of blockr.convert's generic, which it registers with roxygen's `@exportS3Method blockr.convert::blockr_deser`, so that it needs blockr.convert in `Suggests` alone ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)).
-On main, those are blockr.dplyr's 16 and blockr.assistant's one, beside blockr.dock's 7, which build the dock plugin's state and the plugins that take the place of today's extensions ([Saved boards and app scripts across the switch](Rewrite-1.2.2#extensions)).
+Each other package that wrote today's files keeps its methods of `blockr_deser()`, as methods of blockr.convert's generic, which it registers with roxygen's `@exportS3Method blockr.convert::blockr_deser`, so that it needs blockr.convert in `Suggests` alone ([Saved boards and app scripts across the switch](Rewrite-1.2.2#extensions)).
+On main, those are blockr.dplyr's 16 and blockr.assistant's one.
+The 7 of blockr.dock, which build the dock plugin's state and the plugins that take the place of today's extensions, move into blockr.convert, as core's do ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)).
 The package of each extension that a plugin takes the place of gives a method that makes the plugin with `new_plugin()` from the extension's state: blockr.dag for the DAG, blockr.assistant for the assistant and blockr.md for its documents ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### What a session cannot rebuild
@@ -103,6 +104,7 @@ None.
 ## Work
 
 - Create blockr.convert, with `blockr_deser()` and the methods of blockr.core's main, and `convert_file()`, which reads a file of today's stack with typedjson in the mode that refuses code and writes its JSON board with `blockr_ser()`, with a README on converting a file, in blockr.convert
+- Convert a dock board, with the methods of blockr.dock's main for the dock board, its stacks and the Edit board extension, which write the dock plugin's state at version 1 ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)), in blockr.convert
 - Refuse a file without a `format`, in the client and in `serve()`, with an error that names blockr.convert's `convert_file()`, in blockr.core
 - Register blockr.dplyr's methods of `blockr_deser()` on blockr.convert's generic, in blockr.dplyr
 - Write the test files of every package that wrote today's files and of CEDX's board, from main at the switch, and the check that each example's script, changed by an AI from the migration notes alone, opens into the same board as the conversion of its file, in blockr.convert

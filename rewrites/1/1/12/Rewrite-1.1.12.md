@@ -392,7 +392,7 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
   "packages": { "blockr.core": "0.2.0", "blockr.dock": "0.2.1", "blockr.dag": "0.2.0", "blockr.md": "0.2.0" },
   "board": {
     "id": "curious_otter",
-    "versions": { "blockr.dock-dock_plugin": 2, "blockr.dag-dag_plugin": 1, "blockr.md-md_plugin": 1 },
+    "versions": { "blockr.dock-dock_plugin": 1, "blockr.dag-dag_plugin": 1, "blockr.md-md_plugin": 1 },
     "name": "Sales review",
     "blocks": {
       "a": { "registry_id": "blockr.core-dataset_block", "version": 1, "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris", "locked": null }
