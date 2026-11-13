@@ -105,7 +105,7 @@ interface PluginClass {
   options?: OptionId[];                             // the board options it requires, resolved as a board opens with one of its plugins
   state?: { schema: JsonSchema; default: Json };    // what each of its plugins keeps in the board, which holds nothing for a class without it, and which the store reads, as it reads the next two
   update?(delta: Delta, board: Board, plugin: PluginClassId): Patch[];   // patches to the state of its plugin that follow from a change
-  migrate?(state: Json, version: number): Json;     // a plugin's state of an older version, in its latest shape
+  migrate?(state: Json, version: number): Json;     // a plugin's state of an older version, brought to the class's version
   ui?: PluginModule;                                // what every frontend places for the class's plugin, which the class holds itself
   frontend?: FrontendModule;                        // a frontend's: what draws the page, which core calls with the page's element
   storage?: Storage;                                // a storage plugin's: the controls that every frontend draws
@@ -277,7 +277,7 @@ Opening a board starts them again, the frontend among them, once they have stopp
 So the page is what opening that board in a fresh app would give ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 
 As a board opens, the store keeps the state that the board holds for each plugin of the app whose class has `state`, under the plugin's class's id, where a package that the app uses registers the class.
-Such a plugin starts with that state, which its class's `migrate` brings to the class's latest shape ([Board updates](Rewrite-1.1.2#plugins)).
+Such a plugin starts with that state, which its class's `migrate` brings to the class's version ([Board updates](Rewrite-1.1.2#plugins)).
 The store drops every other state that the board holds, as it drops a block whose class the block registry lacks, and names its plugin with the package of the plugin's class, which the class's id gives ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)), but for the state of one of the app's plugins whose class keeps none, which it drops unnamed, since that plugin still runs and nothing is lost ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
 It drops them before it checks or migrates any version, since it drops a plugin's state for its class, never for its version ([Board updates](Rewrite-1.1.2#plugins)).
 So no plugin starts from state that a board kept while it changed without the plugin's package, and a board saved afterwards is written without that state, as condition 4 of [Board objects](Rewrite-1.1.1#what-must-hold) has it for blocks.

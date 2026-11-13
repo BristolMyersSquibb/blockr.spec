@@ -7,7 +7,7 @@ What the tools' calls and results in a thread hold is [The assistant's tools](Re
 
 ## What must hold
 
-1. A board's threads are the assistant's plugin state, which a JSON board saves with the rest of the board, and which its class's `migrate` brings to the class's latest shape ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+1. A board's threads are the assistant's plugin state, which a JSON board saves with the rest of the board, and which its class's `migrate` brings to the class's version ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 2. No undo takes a message back, and no message takes an undo step.
 3. A reply enters its thread as one finished message, never token by token.
 4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds as today.
