@@ -155,7 +155,7 @@ The benchmark compares the two as versions of blockr.dock ([The assistant's benc
 
 ### What a deployment adds
 
-A deployment adds instructions of its own as skills, through the blockr option `assistant_skills`, as the script of the clinical data explorer, which is private, adds eight, two of them scoped to block classes.
+A deployment adds instructions of its own as skills, through the blockr option `assistant_skills`, as the script of the clinical data explorer adds eight, two of them scoped to block classes.
 A skill's description in the catalogue tells the model when to read it, as the explorer's test questions expect the first call to read its skill on working with an existing study board ([The assistant's benchmark](Rewrite-1.8.1#today)).
 A deployment's skill takes the place of a package's skill of the same name (What a package adds).
 No app script replaces the template, since the `system_prompt` argument goes ([Assistant as a plugin](Rewrite-1.4#today)).
