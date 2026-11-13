@@ -1,7 +1,7 @@
 # The assistant's state: threads and compaction
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads, each with its pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads and each thread's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items of [Assistant as a plugin](Rewrite-1.4#work) that register the assistant's plugin class and port compaction, and the one of [The conversion and the migration notes](Rewrite-1.9#work) that carries today's method for the assistant into blockr.convert.
 What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and who picks the model, and where the pick is kept, is [Model access](Rewrite-1.4.1#who-picks-the-model)'s.
 
