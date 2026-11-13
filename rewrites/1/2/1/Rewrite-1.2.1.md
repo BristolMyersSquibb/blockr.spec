@@ -115,6 +115,8 @@ Today's members and grid had two writers whose results had to be reconciled, whi
 Folders are a departure from today's flat list of views, so that related views can be grouped.
 A folder holds views and other folders, at any depth, and only groups and orders the navigation: a view shows its own grid whatever folder it sits in, and the active view is always a view.
 Each view and folder names the folder it sits in, or `null` at the top, and its `index` orders it among the views and folders of that folder, by comparing the strings, so that a folder can sit between two views.
+Two that have the same `index` follow the order of their ids.
+The navigation lists the views and folders of a folder where the folder sits, so the first view of the navigation is the first in that reading order, and it can sit in a folder.
 The dock makes a key between two neighbours with `generateKeyBetween()` of [fractional-indexing](https://github.com/rocicorp/fractional-indexing), as tldraw orders its pages and its nested shapes ([TLPage.ts#L34-L36](https://github.com/tldraw/tldraw/blob/1b1cd9f4029f66e8ba1fe53d8b5f4acec2df08a6/packages/tlschema/src/records/TLPage.ts#L34-L36), [TLBaseShape.ts#L61-L72](https://github.com/tldraw/tldraw/blob/1b1cd9f4029f66e8ba1fe53d8b5f4acec2df08a6/packages/tlschema/src/shapes/TLBaseShape.ts#L61-L72)) and as Figma describes ([Realtime editing of ordered sequences](https://www.figma.com/blog/realtime-editing-of-ordered-sequences/)).
 So moving a view or folder changes only its own `folder` and `index`, and undo sets exactly those back, while a list of ids would have undo change whatever the list holds at an index by then ([Board updates](Rewrite-1.1.2#undo)).
 A view's path also stays `/plugins/blockr.dock-dock_plugin/views/{id}` wherever it sits in the navigation.
@@ -132,7 +134,7 @@ A view's grid has the shape of today's `dock_grid`, without its `focus`, which o
 interface Grid {
   orientation: "horizontal" | "vertical";   // how the top split divides, while each split inside divides the other way
   children: Node[];                         // what the top split holds, in order
-  sizes: number[];                          // the share of each child, ratios that sum to 1
+  sizes: number[];                          // the share of each child, ratios above 0 that sum to 1
   rails?: { left?: Rail; right?: Rail };    // its rails, by the edge each sits on
 }
 
@@ -161,9 +163,14 @@ type Panel = { block: BlockId } | { plugin: PluginClassId };
 
 A split divides the other way from the split it sits in, as dockview's own grid does, so a grid stores the direction of its top split alone ([R/dock-grid.R#L12-L25](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L12-L25)).
 Its shares are ratios, so that a board opens the same in any window, while a rail's widths are pixels, since a rail is sized against the dock rather than as a share of a split ([R/dock-rail.R#L10-L15](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L10-L15)).
+The schema of the state refuses a share that is not above 0 and a rail's width below 0, as today's `dock_grid()` and `rail()` refuse them ([R/dock-grid.R#L973-L990](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L973-L990), [R/dock-rail.R#L129-L143](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L129-L143)).
+So a patch set with core's command, as a model may send one, fails with a message, rather than leaving a grid that the dock cannot draw as it asks.
 A view that a script or a converted file gives no grid of its own gets the default grid over its panels: the plugins' panels in one tab group, beside the blocks' panels in another, as today's `default_grid()` does ([R/dock-grid.R#L760-L775](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L760-L775)).
 A grid places each panel once, across its splits and its rails, since it says where each panel goes ([R/dock-grid.R#L217-L235](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L217-L235)).
-Every view offers a rail on its left and its right edge, which shows only while it holds panels, and a grid holds a rail where it holds panels or where its width or collapse differs from the default, as today ([R/dock-rail.R#L239-L244](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L239-L244)).
+Every view offers a rail on its left and its right edge, which shows only while it holds panels.
+A grid holds a rail only while the rail holds panels, since a rail's `active` names one of them.
+So a rail that loses its last panel forgets its width and whether it was collapsed, and opens at the default width when a panel goes onto it again.
+Today's dock keeps an empty rail where the user changed its width or collapsed it ([R/dock-rail.R#L239-L244](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L239-L244)).
 Top and bottom rails stay out, as today, since the top edge is where every tab group's tabs sit ([R/dock-rail.R#L24-L30](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L24-L30)), and so do dockview's floating groups and popout windows, which today's dock does not offer either.
 
 A panel shows the card of a block that the board holds, as `{ "block": "a" }`, or the `ui` of a plugin of the app, as `{ "plugin": "blockr.dag-dag_plugin" }`, which the dock mounts with `mountPlugin()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and its tab shows the block's name or the plugin's.
@@ -223,6 +230,7 @@ The dock plugin's class gives core an `update`, which the store calls with every
 2. For each block that the delta adds, it places the block's panel in the active view at the default place, unless one of the delta's own patches places it in a view already, as today's dock adds a new block to the active view ([R/dock-board.R#L345-L363](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-board.R#L345-L363)).
 3. Where a delta's own patches leave `active` naming no view, it makes the first view of the navigation active.
    Where they leave a view or folder naming a folder that the state lacks, it moves the view or folder up into the folder that held the removed one, which the board before the delta gives.
+   It gives each a new key in `index`, where the removed folder stood, in their order there, as `blockr.dock-remove_folder` does, since their old keys could equal those of the views and folders already in that folder.
 
 It reads only the delta and the board, never the screen, so that every peer that applies a change computes the same patches.
 Only patches that someone sets with core's command can leave what the third rule repairs, since the dock's own commands leave nothing for it.
