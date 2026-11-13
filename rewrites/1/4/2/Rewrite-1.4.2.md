@@ -146,7 +146,7 @@ plugin_requests.assistant_plugin <- function(x, ...) {                  # in blo
       env <- list2env(lapply(reads, `[[`, "result"), parent = baseenv())  # each block's result under its id
       run_inspection(parse(text = code), env, width, height)             # what it prints, and its plots as base64 PNGs
     },
-    list_skills = function() skill_catalogue(),                          # the package's skills and those of the directory that assistant_skills names
+    list_skills = function() skill_catalogue(),                          # the skills of the app's packages, then those of the directory that assistant_skills names
     read_skill = function(name, file = NULL) read_skill_file(name, file)  # a skill's text, or a file that it holds
   )
 }

@@ -37,6 +37,7 @@ The Work of the speed benchmarks is not drafted yet.
 
 - Create blockr.bench, and build the assistant's benchmark in it, with its harness and the clinical data explorer's five questions, as [The assistant's benchmark](Rewrite-1.8.1) has it, in blockr.bench
 - Start a run of the assistant's benchmark from each pull request that changes what the model sees or may do, and show its comparison on that pull request, as [The assistant's benchmark](Rewrite-1.8.1#where-it-lives) has it, in blockr.assistant
+- Start a run of the assistant's benchmark from each pull request that changes the `layout` skill, and show its comparison on that pull request, as [The assistant's benchmark](Rewrite-1.8.1#where-it-lives) has it, in blockr.dock
 - Take the baseline of today's assistant on those questions by hand, as [The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline) has it, in blockr.sandbox
 
 ## Design pages
