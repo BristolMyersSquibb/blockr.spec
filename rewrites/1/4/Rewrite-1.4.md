@@ -17,7 +17,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), the
 
 1. The assistant is a plugin, which works under every frontend ([Plugins](Rewrite-1.1.12#what-must-hold)), and whose edits go through core's command registry, each applied all or none and marked as its own, so that undo keeps its steps apart from the user's ([Board updates](Rewrite-1.1.2#what-must-hold)).
 2. An edit reports done only once the blocks it changed, and those downstream of them, are current, with each block's status and conditions.
-3. The loop works with every place that its calls can go and every way to authenticate them that [Model access](Rewrite-1.4.1) gives, and nothing in it changes to switch between them.
+3. The loop works with every base URL that its calls can go to and every way to authenticate them that [Model access](Rewrite-1.4.1) gives, and nothing in it changes to switch between them.
 4. A turn keeps going while the assistant's panel is closed or its tab is hidden, until the browser discards the page.
 5. What blockr.assistant offers today carries over, but for what Today drops with its reason.
 6. Boards saved with today's assistant open with its threads, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
@@ -95,7 +95,7 @@ None.
 
 - Let the command registry run and plan a list of commands as one step, each planned on the board that the commands before it leave, in blockr.core
 - Register the assistant's plugin class, with its state, its commands and its `update`, and give `new_assistant_plugin()` in R, as [The assistant's state](Rewrite-1.4.3) has it, in blockr.assistant
-- Send the assistant's calls where its blockr options say, to the models that they name or that the place lists, authenticated with the deployment's key, as [Model access](Rewrite-1.4.1#the-blockr-options) has it, in blockr.assistant
+- Send the assistant's calls where its blockr options say, to the models that they name or that the base URL lists, authenticated with the deployment's key or with none, as [Model access](Rewrite-1.4.1#the-blockr-options) has it, in blockr.assistant
 - Build the tools, the edit tool among them, and the requests that the plugin gives in R, as [The assistant's tools](Rewrite-1.4.2) has it, in blockr.assistant
 - Run the agent loop from the plugin's `start`, on pi, through the module of the plugin's own that the Proposal names, with the system prompt that [The system prompt](Rewrite-1.4.5) gives, holding a Web Lock while a turn runs, and ship the license texts of what its bundle holds, in blockr.assistant
 - Record a span for each turn and each tool call, and hand pi the turn's span for its calls to the model, under ellmer's names, as the Proposal has it, on the tracing of [blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552), in blockr.assistant
@@ -109,7 +109,7 @@ None.
 
 ## Design pages
 
-- [Model access: providers, gateways and credentials](Rewrite-1.4.1): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options
+- [Model access: providers, gateways and credentials](Rewrite-1.4.1): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options, and the model's settings
 - [The assistant's tools](Rewrite-1.4.2): the tools that the model calls, the edit tool among them, the requests that they send to R, and how failures reach the model
 - [The assistant's state: threads and compaction](Rewrite-1.4.3): the threads, how much of a thread the state keeps, the board's pick of the model, the commands that change them, compaction, and how today's threads cross the switch
 - [The assistant's chat](Rewrite-1.4.4): the chat in the assistant's panel, with its turns, tool calls, threads, attachments, focus, commands and meter, the pick of the model, the visitor's credential, the undo of the assistant's edits, and what fails
