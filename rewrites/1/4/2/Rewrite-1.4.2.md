@@ -136,6 +136,27 @@ The read tools and `read_skill` work on a locked board as on any other.
 The store refuses an edit that a lock fixes, and the edit tool returns why, as it returns any refusal ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 R refuses `inspect_results`, since it evaluates what the client sends.
 
+### How failures reach the model
+
+A failure reaches the model as the result of the tool that met it, marked as an error, as today's tools return one ([R/tools-util.R#L1-L10](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-util.R#L1-L10)).
+Its text names what failed, why, and where the model can read more, as today's tools answer a block id that the board lacks with the hint "Call list_blocks first" ([R/tools-read.R#L86-L87](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-read.R#L86-L87)):
+
+| What fails | What the model gets |
+|---|---|
+| A tool's args that its schema refuses | The schema's failures, from the library's check, so that the model calls the tool again with args that fit |
+| A block, a command, a plugin or a skill that a tool names and the board or the app lacks | That it is not there, with the tool that lists those that are, such as `list_blocks` |
+| A command of an edit that refuses | The command's id and each failure that the command registry names, while the board stays as it was (The edit tool) |
+| A block that an edit changed, or one downstream of it, that reads `failed`, `invalid` or `waiting` once evaluated | Its status and conditions in the edit's review: the error of a `failed` block, the unset arg or the message of `blockr_invalid()` of an `invalid` one, and what a `waiting` one waits for ([Evaluation in the client](Rewrite-1.1.10#statuses)) |
+| A request whose blocks do not read `ready` | The statuses of those blocks, with which core rejects it (The requests in R) |
+| A request that R loses to a new session | That it was lost, since core sends it no more (notes) |
+| An error in the model's own R code | The error's message, as R gives it |
+| What a lock refuses | Why the lock refuses it, as the store or R says (On a locked board) |
+| A value past its cap | That it is left out, as today's Board section marks an arg too long to show, with the tool that reads it in full, such as `get_block_state` |
+| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a thread only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)) |
+
+How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, with questions whose turns meet it.
+A failure that the user should know of reaches them as a notification as well, as a call to the model that fails does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
+
 ## Open questions
 
 None.

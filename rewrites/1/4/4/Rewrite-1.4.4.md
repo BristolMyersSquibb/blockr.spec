@@ -70,7 +70,7 @@ While a turn runs, the stop button shows, and pressing it aborts the turn's sign
 1. The library stops the model's stream.
 2. A one-time evaluation that the edit tool awaits stops waiting ([Evaluation in the client](Rewrite-1.1.10#demand)).
 3. A request that a tool sent is cancelled, through the signal that `core.request()` takes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
-4. What the reply streamed until then enters the thread as its message.
+4. What the reply streamed until then enters the thread as its message, and each tool call left without a result gets one that says the user stopped the turn ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 
 An edit that the store applied before the stop stays applied, and none is half applied, since each edit applies all or none (condition 3).
 
