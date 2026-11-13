@@ -2,7 +2,7 @@
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
-It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads with their branches, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.
+It covers the composer and a turn as it streams, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.
 It shapes the Work item that draws the chat.
 What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
@@ -25,7 +25,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 | A reply that streams, and shinychat's stop button, which cancels it ([NEWS.md#L16-L22](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/pkg-r/NEWS.md#L16-L22)) | Carried over, with the stop button aborting the turn's signal ([Stopping a turn](#stopping-a-turn)) |
 | Tool calls as rows titled from the tool's name, as `list_blocks` shows as "List blocks" ([R/ext-skin.R#L64-L82](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-skin.R#L64-L82)) | Carried over, with the edit tool's row naming its commands ([Tool calls](#tool-calls)) |
 | shinychat's drawer, which starts, switches, renames, deletes and searches threads, with the titles that a model call gives | Carried over ([Threads](#threads)) |
-| Editing a sent message, which forks the thread, with `‹ 1 / 2 ›` controls to switch between the versions | Carried over ([Branches](#branches)) |
+| Editing a sent message, which forks the thread, with `‹ 1 / 2 ›` controls to switch between the versions | Dropped for now, since an edit forks the thread but not the board: the blocks that the assistant added in the first version stay on the board, while the thread of the second never mentions them. So the user corrects the assistant with a new message, which the model reads after its own earlier edits. Editing and its branches are later work, which nothing here rules out ([The assistant's state](Rewrite-1.4.3#the-state)) |
 | Attachments of images, PDFs and text files, about 30 MB together | Carried over, with their bytes in the page's memory ([Attachments](#attachments)) |
 | The footer: the tags of the focus, the @ button with blockr.ui's multi-select of the blocks in view, the token meter, and the button that opens the drawer ([R/focus.R#L202-L274](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R#L202-L274), [R/ext-server.R#L845-L864](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L845-L864)) | Carried over ([The focus](#the-focus), [The meter](#the-meter)) |
 | The pick of the model where the blockr option `chat_function` offers several, outside the chat, through core's board option `llm_model`, which the dock's options sidebar shows ([blockr.core R/board-option.R#L709-L722](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L709-L722)), after which the thread goes on with the model picked ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)) | In the chat's footer, where the deployment offers more than one model or names none ([The model](#the-model)) |
@@ -49,10 +49,10 @@ The chat follows the assistant's state through `core.store.subscribe()`, so that
 The dock may mount the chat again, as when it redraws a view, so what has to outlive the mount, the turn above all, runs from the class's `start`, while the chat keeps only what is the screen's alone, such as the text typed and not sent ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
 
 The chat is built on assistant-ui's primitives over its `ExternalStoreRuntime`, which displays messages that a store of the app's own holds, here the assistant's state (notes).
-That runtime takes branches as messages that name their parent, as the state's do, and gives editing, stopping, attachments and a list of threads through handlers that the plugin writes.
+That runtime gives stopping, attachments and a list of threads through handlers that the plugin writes.
 Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle ([Assistant as a plugin](Rewrite-1.4#proposal)).
 It serves only where it meets conditions 1 and 6, draws on core's React in blockr.ui's design system, as above, and has a license that lets blockr.assistant ship it in the plugin's bundle, as MIT does (notes).
-Where both serve, the issue keeps the one that needs fewer lines of the plugin's own TypeScript for the transcript with its branches, the composer and the stop button, and the smaller bundle breaks a tie.
+Where both serve, the issue keeps the one that needs fewer lines of the plugin's own TypeScript for the transcript, the composer and the stop button, and the smaller bundle breaks a tie.
 
 ### The composer and a turn
 
@@ -96,12 +96,7 @@ Both take back the same steps, since the assistant's edits are the only steps of
 A button in the footer opens the drawer of threads in the top layer.
 The drawer lists the board's threads, the last updated first, and starts, switches, renames, deletes and searches them, through the assistant's commands ([The assistant's state](Rewrite-1.4.3#commands)).
 A thread takes its title from a model call after its first exchange, as shinychat's titles come today, until the user renames it.
-Which thread is open stays with the page ([The assistant's state](Rewrite-1.4.3#the-state)).
-
-### Branches
-
-The user edits a sent message of their own, and the chat adds the edited message under the same parent, makes it the head and runs a turn from there ([The assistant's state](Rewrite-1.4.3#the-state)).
-A message with siblings shows `‹ 1 / 2 ›` controls, which switch between them through `blockr.assistant-set_head`.
+Which thread is open stays in the browser's local storage, and a board that lacks that thread opens on the greeting ([The assistant's state](Rewrite-1.4.3#the-state)).
 
 ### Attachments
 
@@ -163,7 +158,7 @@ What a tool's request returns as a failure, such as `inspect_results` on a locke
 
 The chat works on a locked board as on any other: the user asks, and the model reads and answers.
 The edit tool returns why the lock refuses an edit, so Undo and Redo have nothing to take back ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
-The assistant's commands stay enabled, so that threads, branches, the focus and the board's pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
+The assistant's commands stay enabled, so that threads, the focus and the board's pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ## Open questions
 
@@ -172,8 +167,8 @@ None.
 <details><summary>Notes for implementers</summary>
 
 Read on 2026-11-12, assistant-ui's `ExternalStoreRuntime` "bridges your existing state management with assistant-ui", for messages that live in a store and should stay there ([docs](https://www.assistant-ui.com/docs/runtimes/custom/external-store)).
-It takes branches through `messageRepository`, made with `ExportedMessageRepository.fromBranchableArray()`, where every message has an `id` and a `parentId` and "messages with the same `parentId` create branches", and a parent comes before its children in the array.
-It needs `onNew` for a new message, `setMessages`, "required for branch switching", `onEdit`, "required for edit feature", and `onCancel` to stop, while `convertMessage` maps the plugin's messages to its own, attachments come through its `adapters`, and threads through `ExternalStoreThreadListAdapter`.
+It takes a thread's messages as an array in `messages`, and needs `onNew` for a new message and `onCancel` to stop, while `convertMessage` maps the plugin's messages to its own, attachments come through its `adapters`, and threads through `ExternalStoreThreadListAdapter`.
+Editing and its branches, once they come, go through `onEdit`, "required for edit feature", `setMessages`, "required for branch switching", and a `messageRepository` made with `ExportedMessageRepository.fromBranchableArray()`, where every message has an `id` and a `parentId` and "messages with the same `parentId` create branches".
 Its `onReload` regenerates a reply, which today's chat does not offer, so the chat leaves it out for now.
 Its package, `@assistant-ui/react`, is under MIT, read on npm on 2026-11-13 for 0.15.36, so its text joins those that the plugin's build writes beside the bundle ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
