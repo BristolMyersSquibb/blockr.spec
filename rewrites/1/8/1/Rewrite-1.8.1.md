@@ -1,18 +1,18 @@
 # The assistant's benchmark: questions, answer keys and runs
 Status: draft. Design for [Benchmarks of the new stack](Rewrite-1.8).
 
-One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how a change to what the assistant's model is told, its system prompt above all, is judged by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
-It shapes the Work items of that part that build the benchmark and take its baseline, and the one of [Assistant as a plugin](Rewrite-1.4#work) that writes the template, which merges by the benchmark's comparison ([The system prompt](Rewrite-1.4.5#what-must-hold)).
-What the prompt says is [The system prompt](Rewrite-1.4.5)'s, and how fast the new stack runs is the part's.
+One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
+It shapes the Work items of that part that build the benchmark and take its baseline, and those of [Assistant as a plugin](Rewrite-1.4#work) whose changes merge by its comparisons, such as the one that writes the template ([The system prompt](Rewrite-1.4.5#what-must-hold)).
+Each decision is designed on the page that The decisions it compares names, and how fast the new stack runs is the part's.
 
 ## What must hold
 
-1. A change to what the model is told, its template, its preambles, its sections' format or a tool's description, merges only with a comparison against the version before it, on every question of the benchmark, with the same models ([The system prompt](Rewrite-1.4.5#what-must-hold)).
+1. A change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model itself, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
 2. Each question's answer key judges a run without a person, by the values that the data gives, the board that the turn leaves, the page that it draws and the tools that it calls.
-3. A run starts each question from its own board and an empty thread, as CEDX's reload does, and names the model, its settings and the version of what the model is told.
+3. A run starts each question from its own board and an empty thread, as CEDX's reload does, and names the model, its settings and the version of blockr.assistant that it runs.
 4. Each question runs several times, since the misses "vary run to run", and a comparison reports each question's share of runs that pass, with the tokens, calls and seconds of the runs.
 5. A turn stops at a cap on its calls, which fails the run, so that what a run costs is bounded.
-6. CEDX's five questions are the benchmark's first, with their answer keys.
+6. The questions exercise each decision that the benchmark compares, since a question that a decision cannot change says nothing of it, starting from CEDX's five with their answer keys.
 
 ## Today
 
@@ -33,6 +33,22 @@ The tests of blockr.assistant chat with a fake model ([tests/testthat/helper-llm
 So they check what the prompt says, and nothing checks what a model does with it.
 
 ## Proposal
+
+### The decisions it compares
+
+The benchmark compares two versions of any decision that shapes what the model sees or does:
+
+| Decision | Where it is designed | The questions that exercise it |
+|---|---|---|
+| What the model is told: the template and its rules, the sections that the plugin writes, and their order | [The system prompt](Rewrite-1.4.5) | Every question |
+| The tools: how many, how they are cut, their names, descriptions and args, such as one edit tool over every command against a tool per command, or fewer read tools than today's | [The assistant's tools](Rewrite-1.4.2#the-tools) | Every question |
+| What the tools return: the summaries of results and states within their caps, the review of an edit with each block's status, conditions and summary, and plots as images | [The assistant's tools](Rewrite-1.4.2#the-edit-tool) | Those that read results or check an edit |
+| How failures reach the model: the failures that a refused edit names, a block that reads `failed`, `invalid` or `waiting` with its conditions, a request that core rejects or R loses, an error in the model's own R code, and what a lock refuses | [The assistant's tools](Rewrite-1.4.2#the-edit-tool), [The requests in R](Rewrite-1.4.2#the-requests-in-r), [On a locked board](Rewrite-1.4.2#on-a-locked-board) | Those whose turns fail on the way |
+| Compaction: when it runs and what its summary keeps | [The assistant's state](Rewrite-1.4.3#compaction) | Those long enough to compact |
+| The model and its settings, and the library that runs the loop | [Model access](Rewrite-1.4.1), [Assistant as a plugin](Rewrite-1.4#proposal) | Every question |
+
+A version is a ref of blockr.assistant, so that the harness compares a pull request's head with its base, or two branches that try one decision two ways, as whether fewer tools serve the model better ([The assistant's tools](Rewrite-1.4.2#the-tools)).
+A comparison names the decision that it tests.
 
 ### A question
 
@@ -56,6 +72,7 @@ A question is a board to start from, what the user writes, with any follow-ups, 
 ```
 
 The board is a JSON board, which the harness opens as the page starts ([Serialization](Rewrite-1.1.4#files)).
+Beside CEDX's five, the questions include turns that meet what each decision governs: a column that the data lacks, as the CEDX run that made 35 calls hunted, an edit that a command refuses, a block that fails or reads `invalid` once edited, an error in the model's own R code, a locked board, and a thread long enough to compact.
 An answer key holds four kinds of check, each a function in the benchmark's code but for the tools, which it names:
 
 - **The values** that the data gives, computed by the benchmark's code as CEDX's script computes its keys, which the reply or a named block's result must hold, such as the counts by arm.
@@ -96,7 +113,7 @@ The models are those that the spike tries, OpenAI's and Anthropic's ([Assistant 
 
 ### When it runs
 
-The benchmark runs on demand, and on each pull request that changes what the model is told, with a key that the repo holds as a secret.
+The benchmark runs on demand, and on each pull request that changes what the model sees or may do (What must hold 1), with a key that the repo holds as a secret.
 It never runs on every pull request, since at CEDX's cost of about $0.30 a question, five questions run five times on two versions and two models cost about $30.
 
 ### Today's assistant as the baseline

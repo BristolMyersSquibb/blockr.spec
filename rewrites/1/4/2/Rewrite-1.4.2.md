@@ -60,7 +60,7 @@ Each tool runs in the browser, and the three that need R send a request of the a
 | `undo_edit` | Takes back the assistant's last edit, as the chat's Undo does ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)) | `store.undo("assistant")` |
 
 The read tools keep today's names, and the two pairs that are new follow today's `list_block_types` and `describe_block_type`.
-They carry over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmarks to show ([Benchmarks of the new stack](Rewrite-1.8)).
+They carry over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmark to show ([The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares)).
 A read tool reads the board as it is now, and says of a block that reads `stale` or `unevaluated` that it does, without evaluating it.
 Only a request evaluates the blocks it reads, as every request does ([Evaluation in the client](Rewrite-1.1.10#demand)).
 

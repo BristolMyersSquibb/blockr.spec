@@ -41,4 +41,4 @@ The Work of the speed benchmarks is not drafted yet.
 
 ## Design pages
 
-- [The assistant's benchmark: questions, answer keys and runs](Rewrite-1.8.1): how a change to what the assistant's model is told is judged, through questions with answer keys that a harness runs, with today's assistant as the baseline
+- [The assistant's benchmark: questions, answer keys and runs](Rewrite-1.8.1): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, through questions with answer keys that a harness runs, with today's assistant as the baseline
