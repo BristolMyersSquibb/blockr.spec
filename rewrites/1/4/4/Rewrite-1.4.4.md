@@ -65,7 +65,7 @@ Where both serve, the issue keeps the one that needs fewer lines of the plugin's
 A turn starts from the composer:
 
 1. The user types into the composer, whose placeholder reads "Ask about your board", and sends.
-2. The plugin adds the user's message to the thread through `blockr.assistant-add_message` ([The assistant's state](Rewrite-1.4.3#commands)), and its `start` runs the turn ([Assistant as a plugin](Rewrite-1.4#proposal)).
+2. The plugin adds the user's message to the open thread through `blockr.assistant-add_message`, after adding a thread through `blockr.assistant-add_thread` where none is open ([The assistant's state](Rewrite-1.4.3#commands)), and its `start` runs the turn ([Assistant as a plugin](Rewrite-1.4#proposal)).
 3. The reply streams into the transcript from the plugin's memory, and enters the thread as one finished message as it ends.
 4. Each tool call shows as a row as it starts, which shows its result once it returns (Tool calls).
 
@@ -166,7 +166,7 @@ The footer shows the tokens that the thread has spent, input and output, from it
 Where the deployment offers more than one model, or names none, the footer shows the model that the open thread's next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A pick sets the model of the open thread alone, through `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)).
 A new thread starts on the open thread's pick, which the chat passes to `blockr.assistant-add_thread`.
-On the greeting, where no thread is open, the footer shows the default, and a pick made there goes to the thread that the first message adds ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where no thread is open, the footer shows the default, and a pick made then goes to the thread that the first message adds ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 Where the thread's pick is a model that the deployment does not offer, the footer names it beside the default that the calls go to.
 A pick applies from the next turn, so that a turn that runs keeps its model to its end, and the thread goes on with the new model, as today's goes on after a pick ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)).
 
