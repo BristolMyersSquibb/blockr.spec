@@ -3,6 +3,7 @@ Status: draft. Part of [State in JS](Rewrite-1).
 
 This part covers benchmarks of the new stack, run once a proof of concept of it is ready.
 It measures the speed of the client and R against today's stack, and how well the assistant does what users ask, so that two versions of its tools, or of how it frames its context, can be compared.
+How the assistant's work is judged is [The assistant's benchmark](Rewrite-1.8.1)'s.
 It builds on the parts it measures, and comes last among them.
 
 ## Problem
@@ -26,12 +27,18 @@ Not drafted yet.
 
 ## Open questions
 
-- Which kinds of benchmark come first: the speed of first paint, a view switch and an edit's round trip, several sessions sharing one R process, or the assistant's work on a set of user requests.
+- Which kinds of benchmark come first: the speed of first paint, a view switch and an edit's round trip, several sessions sharing one R process, or the assistant's work on a set of questions ([The assistant's benchmark](Rewrite-1.8.1)).
 - Which boards they run on: the CEDX board once its packages have ported, and boards of its size before then.
 - Whether the benchmarks run in CI, so that a regression shows on the pull request that causes it, and on what machine.
 - Which repo they live in.
-- What the assistant's work is judged against: answer keys computed from the data, as the CEDX questions have, the board a user would have built, or a model's judgement.
 
 ## Work
 
-Not drafted yet.
+The Work of the speed benchmarks is not drafted yet.
+
+- Build the assistant's benchmark, with its harness and CEDX's five questions, as [The assistant's benchmark](Rewrite-1.8.1) has it, in the repo that its open question settles
+- Take the baseline of today's assistant on those questions by hand, as [The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline) has it, in blockr.sandbox
+
+## Design pages
+
+- [The assistant's benchmark: questions, answer keys and runs](Rewrite-1.8.1): how a change to what the assistant's model is told is judged, through questions with answer keys that a harness runs, with today's assistant as the baseline

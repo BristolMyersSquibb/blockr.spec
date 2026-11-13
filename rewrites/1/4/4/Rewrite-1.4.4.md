@@ -113,7 +113,7 @@ The footer shows a tag for the block that has focus in `CoreApi.focus`, which th
 It shows a tag too for each block that the user added with @, which stays until the user removes it.
 The @ button opens blockr.ui's multi-select of the blocks, those of the active view first where the dock is the frontend, and its picks become the thread's `focus` through `blockr.assistant-set_focus` ([The assistant's state](Rewrite-1.4.3#commands)).
 Where a frontend sets no focus, the footer shows no tag for it.
-The model reads the focus before each call ([The assistant's tools](Rewrite-1.4.2#what-the-model-is-told-before-each-call)).
+The model reads the focus before each call ([The system prompt](Rewrite-1.4.5#the-sections)).
 
 ### Commands
 

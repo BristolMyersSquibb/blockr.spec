@@ -1,9 +1,9 @@
 # The assistant's tools
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, the requests that some of them send to R, and what the model is told before each call.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
 It shapes the Work items that build the tools and the loop, and the one in blockr.core that lets the command registry plan a list of commands.
-Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, and the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s.
+Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
 ## What must hold
 
@@ -130,17 +130,6 @@ Core evaluates the blocks that a request reads first, even off screen, and sends
 The tool then hands the model those statuses, as it hands it a request that R loses to a new session (notes).
 So `describe_result()` stays a generic of blockr.assistant's in R, and a package that teaches the model about a class of results gives a method of it, as blockr.sandbox does for its composer tables.
 
-### What the model is told before each call
-
-The plugin builds the system prompt as `default_system_prompt()` builds it today ([R/system-prompt.R#L57-L103](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/system-prompt.R#L57-L103)), from the template in its bundle and three sections:
-
-- The skills that no block or plugin scopes, from the reply to `list_skills`.
-- The board: each block with its status and conditions, the links, the stacks and the app's plugins, each section cut at `assistant_board_section_max_chars`.
-- The focus: the block that has focus in `CoreApi.focus`, the blocks that the user added with @, and, where the dock is the frontend, the blocks in its active view.
-
-It builds the prompt again before each call to the model, from the board, the statuses and the focus as they are then, rather than on every change to them, as today's server does.
-The template keeps today's rules, with the edit tool in place of staging and committing.
-
 ### On a locked board
 
 The read tools and `read_skill` work on a locked board as on any other.
@@ -168,7 +157,5 @@ A request that R loses to a new session is rejected rather than sent again ([Wir
 
 The caps carry over as today's blockr options, at `fcbdb27`: `assistant_summary_max_chars` 2000, `assistant_state_max_chars` 20000, `assistant_state_value_max_chars` 128, `assistant_eval_max_chars` 16000, `assistant_board_section_max_chars` 1500, `assistant_description_max_chars` 1000, `assistant_skill_description_max_chars` 1024, `assistant_skill_catalogue_max_chars` 4000, `assistant_plot_render_px` 768, `assistant_plot_render_range` 200 to 2000 and `assistant_plot_render_max` 4 ([R/utils-bounds.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/utils-bounds.R)), and `assistant_review_max_blocks` 50 ([R/stage-review.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/stage-review.R)).
 A cap in the browser is read through `CoreApi.blockrOption()`, and one in a request through `blockr_option()`.
-
-A prompt that changes with every call defeats a provider's prompt cache, which keys on the start of a prompt, so moving the board and the focus to the end of each request, out of the system prompt, is a change for the benchmarks to weigh.
 
 </details>
