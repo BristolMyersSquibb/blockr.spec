@@ -123,7 +123,7 @@ A call to a model that the visitor's account cannot reach fails as any call does
 
 Each thread keeps its own pick of the model, in the assistant's state, so that it talks to the same model after a reload and in a saved board ([The assistant's state](Rewrite-1.4.3#the-state)).
 A new thread takes the pick of the thread that is open as it is added, so that it goes on with the last pick, as threads do under today's board option.
-On the greeting, where no thread is open, a pick goes to the thread that the first message adds.
+Where no thread is open, a pick goes to the thread that the first message adds.
 A thread that nobody picked a model for talks to the default.
 A pick in the chat's footer sets the model of the open thread alone, through the command `blockr.assistant-set_model`.
 It is a command of the assistant's own, as every change to its state is, so that a pick takes no undo step and works on a locked board, which core's command for a plugin's state would not ([The assistant's state](Rewrite-1.4.3#commands)).
