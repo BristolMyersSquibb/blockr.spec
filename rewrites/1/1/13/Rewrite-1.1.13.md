@@ -104,7 +104,7 @@ The `migrate` function converts a value that a JSON board records at a version o
 A board option comes onto the page through the components that require it, and into the board only once someone sets its value.
 Each component names the board options it requires in its own definition:
 
-- A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)), as core's basic frontend names `show_conditions`, the severities of the conditions that its cards show, and `dark_mode`, the theme it draws in.
+- A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)), as core's basic frontend names `show_conditions`, the severities of the notifications that its cards show, and `dark_mode`, the theme it draws in.
 - A renderer of outputs, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
 - A block class, in the `options` of its UI module, those that its requests read included.
 

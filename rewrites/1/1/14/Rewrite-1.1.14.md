@@ -18,7 +18,8 @@ How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evalua
 4. A frontend reads those that hold as it draws, and hears each one that comes or goes.
    So one raised before it draws, such as the failure of a module that the reply names, still reaches the user.
 5. The frontend alone decides how each shows and for how long, such as until core withdraws it, until the user dismisses it, or as a toast that fades after a few seconds.
-   Core draws only what no frontend can: the error in the element of a module that cannot draw ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the error of a page that cannot start or whose frontend cannot draw.
+   Core draws only what no frontend can: the error of a page that cannot start or whose frontend cannot draw.
+   It leaves the element of a module that cannot draw empty, so that a frontend may show the failure on the block's card or as a toast alike ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 6. Core holds them outside the board, as it holds which block has focus, so that no file saves them and no undo brings one back ([Board objects](Rewrite-1.1.1#what-lives-where)).
 7. What fails in the client's code is logged with its stack, and what fails in R's own machinery is logged in R, whether or not the user is also told, so that whoever can fix it finds it.
 8. R logs every condition that it sends the client, as main logs every condition that a block raises.
@@ -103,6 +104,7 @@ interface CoreSource {               // core, where it fails at something
   kind: "core";
   code: string;                      // what it is of: a code of the table below, "evaluation_unsent" or "output_unanswered"
   package?: string;                  // the package whose module failed, where core knows it
+  renderer?: string;                 // the renderer of the block's output, by its id, where it is the module that failed
 }
 
 interface ModuleSource {             // a package's module in the client
@@ -110,6 +112,7 @@ interface ModuleSource {             // a package's module in the client
   object: { plugin: PluginClassId } | { block: BlockId } | { option: OptionId };  // the board object whose module raised it
   code: string;                      // the package's own, such as "edit_refused"
   package?: string;                  // the package whose module raised it, where core knows it
+  renderer?: string;                 // the renderer of the block's output, by its id, where it raised it
 }
 
 interface Raised {                   // what a package's module gives notify()
@@ -136,6 +139,8 @@ A notification of a module concerns the module's own board object unless it name
 What a mounted module raises holds until its mount ends at the latest, and what an `onChange()` raises until its next call returns.
 The code lets a frontend choose how to draw a notification, such as a button that reloads the page for core's `page_reload_needed`, while a class vector stays R's, on R's conditions alone.
 The source lets a frontend say who raised one, and lets a plugin find its own.
+A block has two modules, its class's UI module and the renderer of its output, so core's source and a module's name the renderer, by its id, where it is the module that failed or raised the notification, as R's names the renderer of a renderer's own request.
+One of a block's modules without it comes from the block's UI module.
 
 Core makes a block's notifications from the conditions of its status, one for each, and derives them from the scheduler rather than copying them.
 So `scheduler.status()` keeps a block's conditions for the frontends and hosts that read them ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the two never differ.
@@ -171,7 +176,8 @@ The store still announces what it dropped with the opening, for code that acts o
 Where `serve()` serves a block alone, core keeps the board R sent, since it runs no plugin there, and so no storage plugin that could name another, and no frontend draws that page ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 Core logs every failure that it raises a notification for as well, with its stack, which a notification does not carry ([Logging](#logging)).
-A module that cannot draw also shows its error in its element, so that the user sees which spot failed.
+Core draws nothing in the element of a module that cannot draw, which it leaves empty, so that the frontend alone says where the failure shows, as on the card of the block whose module it is.
+Where a board option that a block's UI module, a renderer or a plugin's UI requires does not go onto the board, core also raises that the module cannot draw, of the code `module_failed`, about the block or the plugin, since the notification about the board option says nothing of what it stops.
 The frontend's own module is the exception: where it cannot draw, no frontend runs to draw a notification, so core shows the error in the page's element alone, as it does for a page that cannot start.
 
 A failure that a call returns goes to the caller, which tells the user where it should.
@@ -194,11 +200,11 @@ A frontend draws notifications as it chooses, by their source and the board obje
 A frontend may one day also show some as desktop notifications, such as an error while the page's tab is hidden, which needs nothing from core.
 Core's basic frontend shows each notification once, on a block's card or as a toast:
 
-- A block's card shows the notifications that R and core raise about the block, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
-  It leaves out what core, the renderer or a module already shows in an element of the card: a module that cannot draw, an output that R could not make, and a request that failed, whose module shows why.
-- Every other notification shows as a toast, whatever its severity: those that concern no block, and those that the modules of packages raise.
+- A block's card shows the notifications about the block, whoever raised them, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
+  Those are the conditions of the block's status, a module of the block that cannot draw, an output that R could not make, a request of the block that failed, and what the block's modules and plugins raise about it, since core draws none of them in an element of the card.
+- Every other notification shows as a toast, whatever its severity: those that concern no block.
 
-So `show_conditions` filters what a card shows, as it filters blocks' conditions today, and keeps its name, since a card shows the block's conditions.
+So `show_conditions` filters what a card shows, as it filters blocks' conditions today, and keeps its name, since the block's conditions are most of what a card shows.
 
 The toasts stack in the page's bottom right corner, as Shiny's do on main (Today), and each names what it concerns, such as the block, the board option, the plugin or the package.
 A message's toast fades after five seconds, as a toast of `notify()` does by default, though not while the pointer rests on it.

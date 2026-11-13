@@ -38,7 +38,7 @@ export default {
 Core refuses a module whose major does not match its own.
 Beside `render()`, the default may hold `options`, the ids of the board options the module requires, whose values core resolves, the board's or else their defaults, before it calls `render()`, and for a renderer before it first asks R for an output that the renderer draws ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 Those include every board option that a request of the module's class reads, as the block registry entry names them, and core refuses a module that leaves one out, naming the board option and the request.
-A module that fails to load, declares another major, leaves out such a board option or throws in `render()` leaves an error in its element that names the module and its package, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on.
+Where a module fails to load, declares another major, leaves out such a board option or throws in `render()`, core leaves its element empty and raises a notification that names the module and its package, so that the frontend shows the failure where it chooses, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 A custom element meets the contract through `render()`, which puts one in `el` and hands it the host, so the contract has no second form for it, since that would tie the contract to the page's element registry, where a name is defined once and never removed.
 The host is everything the module may use:
 
@@ -139,13 +139,13 @@ interface OutputHost {
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts & { scope?: "class" | "renderer" }): Promise<T | Blob>;   // a request of its output class, or with scope "renderer" of the renderer, run with the result the output was made from
   emit(name: string, payload: Json): void;           // reports what the user did on the output, such as a selection, for a plugin to act on
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
-  notify(n: Raised): () => void;                     // a notification of the renderer's, which concerns the block unless it names another, until it is unmounted at the latest
+  notify(n: Raised): () => void;                     // a notification of the renderer's, from the block and naming the renderer, which concerns the block unless it names another, until it is unmounted at the latest
 }
 ```
 
 An output carries in its `renderer` the renderer that draws it, with its id and where R serves its module, as `{ "renderer": { "id": "blockr.core-table_output", "module": "blockr.core/js/basic-table.js?v=b7e2a915" }, ... }` does, and core loads that module before it asks R for a block's first output where the block registry entry names the renderer, and otherwise the first time an output names it, and draws the output with it ([Drawing the board](Rewrite-1.1.8#renderers)), so that an app changes how every table looks, as with a UI kit's renderer, without touching a block class.
 Core mounts a renderer once it has an output for it, keeps the last output drawn while the next loads, with `loading()` true, and hands the renderer an output that failed in R through `error()`, keeping it mounted with the output it holds, so that a renderer only ever draws an output it has and can ask again, as one whose parameters asked for a page that no longer exists must.
-Core shows the error in the element itself only where no output came before it.
+Core draws nothing of the error in the element, and raises it as a notification about the block, which the frontend places ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)), so a renderer need not show it either.
 It keeps the last output drawn whatever the block's status, which the frontend reads to decide what an output that is not current looks like ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 Core asks R for an output and draws it again when the block's revision, a board option that its renderer names, the output's `info` or its parameters change, while the block is `ready`, and otherwise keeps the last output as drawn until it is ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), [Evaluation in the client](Rewrite-1.1.10#scheduling)).
 The `info` is what core measures for the output's element, its size, pixel ratio, colours and font, so that a plot is drawn again at a new size or on a display of another density, and a switch between light and dark redraws every plot on screen ([Block classes in R](Rewrite-1.1.5#outputs)).
