@@ -164,7 +164,7 @@ The footer shows the tokens that the thread has spent, input and output, from it
 ### The model
 
 Where the deployment offers more than one model, or names none, the footer shows the model that the next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
-Where it names none, the chat asks for a pick before the first turn, from the models that the place lists for the key.
+Where it names none, the chat asks for a pick before the first turn, from the models that the base URL lists for the key.
 A pick that the board keeps, as with the deployment's key, runs `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)), and one that the visitor's browser keeps, as with their own key or a login, goes to its local storage.
 Where the board's pick is a model that the deployment does not offer, the footer names it beside the default that the calls go to.
 Where the deployment names no models and the base URL does not list the board's pick, the chat asks for a pick instead ([Model access](Rewrite-1.4.1#who-picks-the-model)).
@@ -172,11 +172,11 @@ A pick applies from the next turn, so that a turn that runs keeps its model to i
 
 ### The credential
 
-Where the deployment sets no key, the chat asks the visitor for their own before the first turn, in a field whose value the plugin keeps in its memory, and offers a login beside it where the place offers one ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
+Where the deployment leaves `assistant_api_key` unset, the chat asks the visitor for their own key before the first turn, in a field whose value the plugin keeps in its memory, and offers a login beside it where the base URL belongs to a service that offers one ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
 The login opens in a window of its own, which hands its code back to the page, since leaving the page for the service's login would reload the app, and drop with it what the board holds unsaved.
 When another board opens in the same page, the key stays, since it is the visitor's rather than the board's (notes).
 A reload asks again, since neither a typed key nor the key that a login gives outlives the page.
-A key that the place refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
+A key that the base URL refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
 OpenAI's refusal reaches a page only as a failed connection, since its 401 carries no CORS header ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)), so where a call to OpenAI fails that way, the chat says that the key may be wrong as well as the connection lost.
 
 ### What fails
