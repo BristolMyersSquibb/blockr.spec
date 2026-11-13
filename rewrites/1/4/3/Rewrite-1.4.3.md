@@ -1,9 +1,9 @@
 # The assistant's state: threads and compaction
 Status: draft. Design for [Assistant as a client extension](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the assistant's plugin state, which holds its threads, the commands that change it, compaction, and how today's threads cross the switch.
+One of the design pages of the assistant ([Assistant as a client extension](Rewrite-1.4)): the assistant's plugin state, which holds its threads and the board's pick of the model, the commands that change it, compaction, and how today's threads cross the switch.
 It shapes the Work items that register the assistant's plugin class, port compaction and convert today's threads.
-What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and which model a thread talks to is [Model access](Rewrite-1.4.1)'s.
+What the tools' calls and results in a thread hold is [The assistant's tools](Rewrite-1.4.2)'s, and who picks the model, and where the pick is kept, is [Model access](Rewrite-1.4.1#who-picks-the-model)'s.
 
 ## What must hold
 
@@ -35,6 +35,7 @@ The board holds the assistant's state under its class's id, `blockr.assistant-as
 ```ts
 interface AssistantState {
   threads: Record<ThreadId, Thread>;
+  model: string | null;                        // the board's pick of the model, such as "gpt-5.4", or null until someone picks one
 }
 
 interface Thread {
@@ -82,7 +83,7 @@ Raw responses from the provider stay out of the state, as a saved board leaves t
 
 ### Commands
 
-The assistant's class registers a command for each change to its state, which its UI and its loop run, each with `undo: false`, so that no undo takes a message back and no message takes an undo step ([Board updates](Rewrite-1.1.2#undo)):
+The assistant's class registers a command for each change to its state, which its UI and its loop run, each with `undo: false`, so that no undo takes back a message or the board's pick of the model, and neither takes an undo step ([Board updates](Rewrite-1.1.2#undo)):
 
 | Command | Args | What it does |
 |---|---|---|
@@ -94,6 +95,7 @@ The assistant's class registers a command for each change to its state, which it
 | `blockr.assistant-compact_thread` | `thread`, `summary`, `keep` | Puts a summary in place of the messages of the branch that shows before its last `keep` (Compaction) |
 | `blockr.assistant-set_focus` | `thread`, `blocks` | Sets the blocks that the user added with @ |
 | `blockr.assistant-add_usage` | `thread`, `input`, `output` | Adds the tokens of a call to the thread's count |
+| `blockr.assistant-set_model` | `model` | Sets the board's pick of the model, or removes it with `null` ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
 
 A reply streams in the plugin's memory and enters its thread as one finished message, through `blockr.assistant-add_message`, since a delta for each token would reach every follower of the store ([Board updates](Rewrite-1.1.2#undo)).
 The commands stay enabled on a locked board, since they change the assistant's own state alone, so that a reader of a locked board still chats, while core's `blockr.core-set_plugin_state` is not enabled there ([Plugins](Rewrite-1.1.12#a-plugins-state)).
@@ -113,8 +115,8 @@ Neither library summarizes a thread itself, so the plugin ports today's (notes).
 ### The schema, the default and the version
 
 The package ships the JSON Schema of the state beside its startup module, as `assistant_plugin.schema.json` ([UI modules in JS](Rewrite-1.1.7#packaging)).
-The default is `{ "threads": {} }`, and the class is at version 1, with no `migrate` until a version 2 needs one.
-In R, `new_assistant_plugin(threads = list())` gives the state of a board that an app script builds, as every plugin's constructor gives its state ([Plugins](Rewrite-1.1.12#a-plugin)).
+The default is `{ "threads": {}, "model": null }`, and the class is at version 1, with no `migrate` until a version 2 needs one.
+In R, `new_assistant_plugin(threads = list(), model = NULL)` gives the state of a board that an app script builds, as every plugin's constructor gives its state ([Plugins](Rewrite-1.1.12#a-plugin)).
 A script calls it mostly to place the assistant's panel in a grid of the dock under a name, as `plugins = list(assistant = new_assistant_plugin())` with `plg("assistant")` ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)).
 
 ### Today's threads across the switch
@@ -128,6 +130,7 @@ The method reads the threads that the file's `history` holds, as today's method 
 4. The record's `focus` and `spent` become the thread's `focus` and `usage`.
 
 A saved `system_prompt` is left out, since the argument goes ([Assistant as a client extension](Rewrite-1.4#today)).
+The conversion leaves out the value of today's board option `llm_model` too, the name of an entry in the deployment's `chat_function`, which need not name a model, so that a converted board talks to the deployment's default until someone picks ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A file that holds the assistant in a shape that today's method cannot read opens without its threads, as it does today.
 
 ## Open questions

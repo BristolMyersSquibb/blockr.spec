@@ -6,7 +6,7 @@ It shapes the Work items of that part that send the calls and authenticate them,
 
 ## What must hold
 
-1. A deployment chooses where the assistant's calls go and how they are authenticated through its configuration alone, without changing any code of the assistant.
+1. A deployment chooses where the assistant's calls go, how they are authenticated, which models it offers and who picks among them, through its configuration alone, without changing any code of the assistant.
 2. A demo works for visitors who have no account with any provider or gateway.
 3. No call to a model goes through the session's R process.
 4. A visitor's own key never reaches the board, a saved board or R.
@@ -62,15 +62,31 @@ A deployment offers one of these ways or several, since none suits every deploym
 
 ### Who picks the model
 
-Today's board option `llm_model` and blockr option `chat_function` go, since both were shaped for ellmer's chat functions ([Assistant as a client extension](Rewrite-1.4#proposal)).
-Whether the deployment alone picks the model, or the user picks it in the chat, is open (Open questions).
+Today the blockr option `chat_function` gives one of ellmer's chat functions, which fixes the model, or a named list of them ([Assistant as a client extension](Rewrite-1.4#today)).
+From a list, the user picks one through core's board option `llm_model`, which the dock's options sidebar shows, and the board saves the pick by its name.
+CEDX's script offers three of OpenAI's models that way, named by their ids, while blockr.uat's chats with ellmer's default.
+Both options go, since they were shaped for ellmer's chat functions ([Assistant as a client extension](Rewrite-1.4#proposal)), while what they let a deployment choose carries over.
+A deployment names the models that it offers, the first being its default, and where it offers more than one, it chooses who picks among them, since no one choice suits every deployment:
+
+| Who picks | Where the pick is kept | Suits |
+|---|---|---|
+| The deployment, which offers one model | Nowhere, since the chat offers no pick | A demo, or an app whose hoster pays for one model, as blockr.uat chats with one |
+| The visitor, for themselves | The visitor's browser, outside the board | An app whose visitors use their own key or log in |
+| The visitor, for the board | The assistant's state, which saves it with the board | An app whose boards are each made for one model, as CEDX's boards keep their pick today |
+
+- A model's name gives nothing away, unlike a key, so the visitor's own pick stays in the browser's local storage, under the plugin class's id, and outlives a reload.
+  A pick there that the deployment does not offer, such as one made in another app served from the same origin, gives way to the default.
+- The board's pick is a setting of the assistant's own, so it goes in the assistant's state rather than in a board option, which is meant for how the board is shown ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
+  A command of the assistant's sets it, which undo leaves alone, as it leaves a board option's value ([The assistant's state](Rewrite-1.4.3#commands)).
+  A board whose pick the deployment does not offer talks to the default, and the chat says so, while the state keeps the pick until someone picks another, so that the board talks to its model again where that model is offered.
+  A deployment that offers one model, or keeps the pick in the visitor's browser, leaves the board's pick in the state, unread.
+- The models that a deployment offers serve every way to authenticate, and a call to one that the visitor's account cannot reach fails as any call does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
+  Offering the models that the visitor's account reaches, in place of the deployment's, is later work, which nothing here rules out.
 
 ## Open questions
 
-- How a deployment sets where the calls go, which ways to authenticate it offers and which models: through which blockr options, under which names and in which shapes.
+- How a deployment sets where the calls go, which ways to authenticate it offers, which models it offers and who picks among them: through which blockr options, under which names and in which shapes.
   It blocks the Work items that send the calls and authenticate them, and agreeing the options settles it.
-- Who picks the model: the deployment alone, or the user in the chat from the models that the place offers, and whether the user's pick is saved with the board, in the assistant's state, or kept for the visitor's page alone.
-  It blocks the schema of the assistant's state, and weighing a board that opens with the model its author picked against a visitor whose own key reaches other models settles it.
 - Whether a key that OpenRouter's login makes in a workspace of the hoster's bills that workspace, and whether such a key can carry a limit or an expiry date.
   It blocks the login's row in the table, and OpenRouter's docs on workspaces settle it.
 - Whether a company's network lets visitors' browsers reach the place the calls go, as BMS's network may not let them reach api.openai.com.
