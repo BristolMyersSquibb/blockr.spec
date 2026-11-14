@@ -7,7 +7,7 @@ Each decision is designed on the page that The decisions it compares names, and 
 
 ## What must hold
 
-1. A change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model itself, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
+1. A change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model's settings, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
 2. Each question's answer key judges a run without a person, by the values that the data gives, the board that the turn leaves, the page that it draws and the tools that it calls.
 3. A run starts each question from its own board and an empty thread, as a reload does in today's checks by hand, and names the model, its settings and the ref of each package that it runs.
 4. Each question runs several times, since the misses vary from run to run, and a comparison reports each question's share of runs that pass, with the tokens, calls and seconds of the runs.
@@ -16,7 +16,7 @@ Each decision is designed on the page that The decisions it compares names, and 
 
 ## Today
 
-Today five questions check the assistant, which someone asks by hand of the clinical data explorer, blockr.cdex, an app for exploring the data of clinical studies, on a board that runs on the public pharmaverseadam data in development.
+Today five questions check the assistant, which someone asks by hand of the clinical data explorer, an app for exploring the data of clinical studies, on a board that runs on the public pharmaverseadam data in development.
 Each asks for a different thing, a table, a number, a view, the explanation of a number or a set of panels, such as a table of demographics by treatment arm, and some come with a follow-up.
 Each has an answer key, which a script computes from the data, so that a good answer can be told from a plausible one.
 
@@ -28,7 +28,7 @@ Whoever runs them reloads the page before each question, so that no question bui
 - The numbers, against the answer key.
 
 Runs are exact more often than not, the misses vary from run to run, and a question costs about $0.30, more where the data cannot answer it, as when one run called its tool for R code 35 times in a row, looking for a column that the data lacks.
-The questions and their keys live in the private blockr.sandbox.
+The questions and their keys live in blockr.sandbox.
 
 The tests of blockr.assistant chat with a fake model ([tests/testthat/helper-llm.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/tests/testthat/helper-llm.R)) and compare the prompt's text with a golden copy ([tests/testthat/_snaps/system-prompt.md](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/tests/testthat/_snaps/system-prompt.md)).
 So they check what the prompt says, and nothing checks what a model does with it.
@@ -48,7 +48,7 @@ The benchmark compares two versions of any decision that shapes what the model s
 | How failures reach the model: the failures that a refused edit names, a block that reads `failed`, `invalid` or `waiting` with its conditions, a request that core rejects or R loses, an error in the model's own R code, and what a lock refuses | [The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model) | Those whose turns fail on the way |
 | What the model learns of what others change in the board: what the note of the changes holds, and how much | [The system prompt](Rewrite-1.4.5#what-changed-under-the-model) | Those whose board the user changes between two turns or during one |
 | Compaction: when it runs and what its summary keeps | [The assistant's state](Rewrite-1.4.3#compaction) | Those long enough to compact |
-| The model and its settings, and the library that runs the loop | [Model access](Rewrite-1.4.1), [Assistant as a plugin](Rewrite-1.4#proposal) | Every question |
+| The model's settings, and the library that runs the loop | [Model access](Rewrite-1.4.1#the-models-settings), [Assistant as a plugin](Rewrite-1.4#proposal) | Every question |
 
 A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
 Besides blockr.assistant, whose tools and template the model reads, any package can change what the model reads: core or a plugin's package through the descriptions of its commands, a package of block classes through their guidance and arg specs, and any of them through its skills, as the dock's `layout` skill does.
