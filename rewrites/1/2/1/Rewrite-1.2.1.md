@@ -209,13 +209,15 @@ A command that changes a view's grid replaces the grid whole, so that undo puts 
 | `blockr.dock-move_panel` | `view`, `panel`, `near`, `side`, `rail` | Moves a panel within a view, placed as `blockr.dock-add_panel` places one |
 | `blockr.dock-resize_panel` | `view`, `panel`, `size` | Sets the size of the tab group that holds a panel: its share of the split that holds it, a ratio between 0 and 1, with the other children sharing the rest in proportion, or, for a rail, its width in pixels |
 | `blockr.dock-activate_panel` | `view`, `panel` | Makes a tab group or rail show the panel |
-| `blockr.dock-show_panel` | `panel` | Shows a panel in the active view: has its tab group show it where the view holds it, and adds it at the default place where the view does not, as blockr.dag and the slides of blockr.outline reveal a block today ([blockr.dag R/srv.R#L90-L112](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L90-L112)) |
+| `blockr.dock-show_panel` | `panel` | Shows a panel in the active view, as the dock carries out core's `show()` ([Places the dock offers plugins](Rewrite-1.2.4#showing-a-panel)): has its tab group or rail show it where the view holds it, opening the rail where it is collapsed, and adds it at the default place where the view does not, as blockr.dag and the slides of blockr.outline reveal a block today ([blockr.dag R/srv.R#L90-L112](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L90-L112)) |
 | `blockr.dock-set_grid` | `view`, `grid` | Sets a view's whole grid, as the dock does after a gesture (below) |
 | `blockr.dock-collapse_rail` | `view`, `edge`, `collapsed` | Collapses a view's rail on the edge that `edge` names, or opens it, on every view at once while the board option `sync_rails` is on ([R/board-options.R#L155-L201](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/board-options.R#L155-L201)) |
 | `blockr.dock-set_sections` | `block`, `sections` | Sets the sections of a block's card that show |
 
-Three of them take no undo step, since they change only what the user looks at, as a step that sets only board option values takes none ([Board updates](Rewrite-1.1.2#undo)).
-The commands `blockr.dock-activate_view`, `blockr.dock-activate_panel` and `blockr.dock-collapse_rail` have `undo: false`, so that a user who switches views and then undoes takes back the last edit rather than the switch, while their deltas are saved as any others.
+Four of them take no undo step, since they change only what the user looks at, as a step that sets only board option values takes none ([Board updates](Rewrite-1.1.2#undo)).
+The commands `blockr.dock-activate_view`, `blockr.dock-activate_panel`, `blockr.dock-collapse_rail` and `blockr.dock-show_panel` have `undo: false`, so that a user who switches views, or selects a node in the DAG, and then undoes takes back the last edit rather than the switch, while their deltas are saved as any others.
+So `blockr.dock-show_panel` takes no undo step where it adds the panel either, since showing takes none under any frontend ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
+An undo of an earlier change to the view's grid puts that grid back whole, so a panel that showing added since goes with it, as a tab that `blockr.dock-activate_panel` brought forward goes back.
 Every other command of the dock's is one undo step, an arrangement made with a gesture among them.
 
 The default place of a panel in a view is a new tab, which it shows, in the last tab group of the view's splits that holds no plugin's panel, in reading order, or a new tab group at the end of the top split where every tab group holds one, with the mean of its siblings' shares ([R/dock-grid.R#L478-L497](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L478-L497)).
@@ -327,5 +329,8 @@ The dock takes its step on starting within the `render()` of its frontend's modu
 
 The dock makes a new `index` with `generateKeyBetween()` of fractional-indexing 4.0.0, as `generateKeyBetween("a0", "a1")` gives `"a0V"`.
 R writes the keys that `generateNKeysBetween(null, null, n)` gives for `n` items in a row, `a0` to `a9`, `aA` to `aZ` and `aa` to `az`, then `b00`, which a short function of the dock's R code yields.
+
+On `js-state` at `0d98c8a`, the helper `showing()`, through which `blockr.dock-show_panel` and `blockr.dock-activate_panel` have a tab group or rail show a panel, leaves a collapsed rail collapsed ([srcts/state/grid.ts#L449-L455](https://github.com/BristolMyersSquibb/blockr.dock/blob/0d98c8a3d370f793d038562d86780b43d4e4915e/srcts/state/grid.ts#L449-L455)).
+So `blockr.dock-show_panel` opens the rail itself, which `blockr.dock-activate_panel` leaves to the user.
 
 </details>

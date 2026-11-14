@@ -3,7 +3,7 @@ Status: settled on 2026-11-08. Design for [Client-owned board state](Rewrite-1.1
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what a plugin is in R and in JS, the plugin classes core defines in R, the frontend and storage plugins, which plugins a board has, how a plugin runs, and a plugin's state.
 Plugins are core's second way to extend a board, beside block classes, and take the place of three mechanisms: core's plugins of today, the dock's extensions, and the board classes that [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) built on `js-state`.
-It changes what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and core's basic frontend as [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built it, and shapes the plugins that [blockr.core#504](https://github.com/BristolMyersSquibb/blockr.core/issues/504), [blockr.core#505](https://github.com/BristolMyersSquibb/blockr.core/issues/505), [blockr.core#506](https://github.com/BristolMyersSquibb/blockr.core/issues/506) and [blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507) build, serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), taking the app's plugins in `serve()` ([blockr.core#558](https://github.com/BristolMyersSquibb/blockr.core/issues/558)) and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
+It changes what [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) built of `CoreApi` and starting the page, and core's basic frontend as [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built it, and shapes the plugins that [blockr.core#504](https://github.com/BristolMyersSquibb/blockr.core/issues/504), [blockr.core#505](https://github.com/BristolMyersSquibb/blockr.core/issues/505), [blockr.core#506](https://github.com/BristolMyersSquibb/blockr.core/issues/506) and [blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507) build, serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), taking the app's plugins in `serve()` ([blockr.core#558](https://github.com/BristolMyersSquibb/blockr.core/issues/558)) the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)) and showing a block or a plugin under every frontend ([blockr.core#617](https://github.com/BristolMyersSquibb/blockr.core/issues/617)).
 What core gives plugins through `CoreApi`, starting the page, opening a board, core's basic frontend and renderers are [Drawing the board](Rewrite-1.1.8)'s, and what the dock plugin keeps in its state and where it places other plugins stay with [Client-drawn dock](Rewrite-1.2).
 
 ## What must hold
@@ -21,6 +21,7 @@ What core gives plugins through `CoreApi`, starting the page, opening a board, c
 8. An app runs at most one plugin of each class, one frontend and at most one storage plugin among them, and what a plugin keeps several of, such as blockr.md's documents or what a user adds more of while the app runs, lives in that plugin's state, as the dock's views do.
 9. On a board that is not locked, every plugin, the assistant among them, can change another plugin's state as it can change a block's, whether or not the other's class registers a command for it, and the other plugin's UI shows the change at once, as a block's UI does.
 10. Every frontend draws the controls of the app's storage plugin with its own components, whichever package gives that plugin, so that every storage plugin works under every frontend and looks like the rest of it.
+11. A plugin shows a block or a plugin through `CoreApi` alone, in the same way under every frontend, and showing never takes an undo step.
 
 ## Today
 
@@ -107,7 +108,7 @@ interface PluginClass {
   update?(delta: Delta, board: Board, plugin: PluginClassId): Patch[];   // patches to the state of its plugin that follow from a change
   migrate?(state: Json, version: number): Json;     // a plugin's state of an older version, in its latest shape
   ui?: PluginModule;                                // what every frontend places for the class's plugin, which the class holds itself
-  frontend?: FrontendModule;                        // a frontend's: what draws the page, which core calls with the page's element
+  frontend?: FrontendModule;                        // a frontend's: what draws the page, which core calls with the page's element, and what shows a block or a plugin that a plugin asks to show
   storage?: Storage;                                // a storage plugin's: the controls that every frontend draws
   commands?: Command[];                             // the commands that change its plugins' state, which core registers with the class
   start?({ core, plugin, signal }: { core: CoreApi; plugin: PluginClassId; signal: AbortSignal }): void | (() => void);   // runs from the opening of each board to the next
@@ -180,6 +181,15 @@ It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugi
 
 A frontend is a plugin whose class has `frontend`, the module that draws the page, and whose class in R extends `frontend_plugin`.
 The module meets the contract of a UI module above, and core calls it with the page's element and with what the method of `frontend_args()` of its class returned.
+Beside `render()`, the module may give `show()`, which core calls as a plugin asks to show a block or a plugin ([Showing a block or a plugin](#showing-a-block-or-a-plugin)):
+
+```ts
+interface FrontendModule {                           // the `frontend` of a frontend's class
+  render(args: { el: HTMLElement; core: CoreApi; plugin: PluginClassId; signal: AbortSignal; args: Record<string, Json> }): () => void;
+  show?(args: { object: { block: BlockId } | { plugin: PluginClassId }; el: HTMLElement; core: CoreApi }): void | Promise<void>;   // brings what a plugin asks to show into view, as the frontend can
+}
+```
+
 Core defines that generic in R, and R calls the method as the app starts, with the arguments of `serve()` that core does not take itself ([Defining a board in R](Rewrite-1.1.3#the-serve-generic)).
 A method takes the arguments that its frontend knows, refuses the rest, naming the frontend, and returns what the frontend reads of them as JSON, as the dock's returns the items of its bar from `navbar` ([The dock's navbar](Rewrite-1.2.5)).
 The reply to `hello` carries the result in `frontend`, beside the app's plugins and outside the board, so that no file sets it and every board that the app opens gets the same ([Wire protocol](Rewrite-1.1.9#handshake)).
@@ -418,8 +428,44 @@ Part of what [The dock's services](Rewrite-1.2.6) gives the dock's extensions, e
 - Notifications, which the frontend draws, core's own among them, such as what the store dropped when a board opened ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 - Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a plugin](Rewrite-1.4)).
   Core holds it for the page, outside the board, since only one person's screen needs it ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
+  The lists of blockr.outline mark it as their current block, where today they read the block from an event of dockview's ([inst/assets/js/outline.js#L156-L171](https://github.com/cynkra/blockr.outline/blob/d3499f4623f956f6691235f90fa84b46b925852c/inst/assets/js/outline.js#L156-L171)).
+- Showing a block or a plugin, which a plugin asks for and each frontend carries out in its own way ([Showing a block or a plugin](#showing-a-block-or-a-plugin)).
 
-They are the `notifications` and `focus` of `CoreApi`, which [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) gives in full, with the members that the sections above give plugins, `plugins`, `mountPlugin()` and `request()`.
+They are the `notifications`, `focus` and `show()` of `CoreApi`, which [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins) gives in full, with the members that the sections above give plugins, `plugins`, `mountPlugin()` and `request()`.
+
+### Showing a block or a plugin
+
+A plugin asks the frontend to show a block or a plugin through `core.show()`, which takes the board object as a notification names it, `{ block: "a" }` or `{ plugin: "blockr.md-md_plugin" }` ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+So the DAG shows a block as the user selects its node, under every frontend, where today it sends the dock a `views$mod` of its own ([blockr.dag R/srv.R#L90-L112](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L90-L112)).
+The rows of blockr.outline do the same: those of its outline, slides and report show a block, and the outline's rows of extensions show a plugin ([blockr.outline R/outline-ext.R#L581-L614](https://github.com/cynkra/blockr.outline/blob/d3499f4623f956f6691235f90fa84b46b925852c/R/outline-ext.R#L581-L614)).
+
+Core takes four steps:
+
+1. It checks the board object, a block that the board holds or one of the app's plugins whose class has a `ui`, and throws otherwise, as `focus.set()` throws for a block that the board lacks.
+2. For a block, it gives the block focus, so that focus follows what a plugin shows under every frontend, as the dock's cards have it ([Block cards in the dock](Rewrite-1.2.7#focus)).
+3. It calls the `show` of the frontend's module, where the module has one ([The frontend](#the-frontend)).
+4. Its promise resolves once that `show` has, since a frontend may take time to bring the block or the plugin into view.
+
+A frontend carries out `show` in its own way, and leaves it out where it has nothing to do, as one that keeps every block and plugin in view would.
+Core's basic frontend opens the group of the block's stack, or the plugin's section, where the user collapsed it, and scrolls the card or the section into view ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+The dock shows the panel in the active view, adding it where the view lacks it ([Places the dock offers plugins](Rewrite-1.2.4#showing-a-panel)).
+A frontend that has no place for a block, as a locked dock has none in a view that lacks the block's panel, shows nothing, while the block still takes focus.
+
+Under every frontend, showing keeps four rules:
+
+- It takes no undo step, even where the frontend adds a place for what it shows, so that Undo after the user selects a node takes back the user's last edit, and the redo steps stay as they were ([Board updates](Rewrite-1.1.2#undo)).
+- It leaves the keyboard's focus where it is, so that the keys of the plugin that asked, such as the arrow keys of blockr.outline's lists, keep working, as VS Code's `reveal()` moves the keyboard's focus only where its caller asks ([vscode.d.ts#L12205-L12230](https://github.com/microsoft/vscode/blob/d53b9e1def17b1919021ee08c87a5b9453207fe2/src/vscode-dts/vscode.d.ts#L12205-L12230)).
+- It stays within what the frontend shows now, so that the dock shows the panel in the active view and never switches views, as the DAG and blockr.outline do today.
+- It changes nothing that a lock fixes, so that a locked dock brings a panel forward but adds none.
+
+Showing is no command, since a command returns deltas, while showing under core's basic frontend changes no state at all.
+What only one frontend has, such as the dock's views, stays that frontend's commands, which a plugin runs where `core.commands.registered()` holds them ([Places the dock offers plugins](Rewrite-1.2.4#showing-a-panel)).
+
+JupyterLab gives its extensions the same kind of contract.
+Its `IShell` is "a minimal shell type for Jupyter front-end applications", which JupyterLab and Notebook 7 each implement ([frontend.ts#L250-L310](https://github.com/jupyterlab/jupyterlab/blob/a54eb172248db98dc7105cf944a1ac99bd400f43/packages/application/src/frontend.ts#L250-L310)).
+Notebook 7's `activateById()` opens the side panel that holds a widget, while its `add()` adds nothing to a main area that holds a widget already ([shell.ts#L302-L394](https://github.com/jupyter/notebook/blob/5662506ad194d2c69725fd76c18a080bb277c682/packages/application/src/shell.ts#L302-L394)).
+
+A later version may let a plugin show a stack or a board option, which `show()` would take as `BoardObject` names them, and nothing here rules that out.
 
 ### What goes
 

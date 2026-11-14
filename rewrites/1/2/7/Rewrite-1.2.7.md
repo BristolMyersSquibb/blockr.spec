@@ -200,7 +200,7 @@ The card reads the option's value through `core.options`, and the dock plugin's 
 
 The dock sets which block has focus in `CoreApi.focus`, which the assistant reads to tell which block the user is looking at ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)):
 
-- A block takes focus when the user clicks into its card or onto its tab, or when a command shows its panel, such as `blockr.dock-show_panel` ([The dock's state](Rewrite-1.2.1#commands)).
+- A block takes focus when the user clicks into its card or onto its tab, when a command shows its panel, such as `blockr.dock-show_panel` ([The dock's state](Rewrite-1.2.1#commands)), or when a plugin shows it through core's `show()`, which gives it focus under every frontend ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
 - A block takes focus when the keyboard's focus moves into its card.
 - Hovering over a card gives no focus.
 - Focus stays where it is when the user clicks into a plugin's panel, so that the block the user clicked before moving to the assistant's panel keeps focus, as today's assistant reads only block panels ([blockr.assistant R/focus.R#L10-L17](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/focus.R#L10-L17)).
