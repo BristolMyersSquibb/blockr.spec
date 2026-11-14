@@ -6,7 +6,7 @@
 
 - [Model access: providers, gateways and credentials](Rewrite-1.4.1), settled
 - [The assistant's tools](Rewrite-1.4.2), settled
-- [The assistant's state: threads and compaction](Rewrite-1.4.3), review
+- [The assistant's state: threads and compaction](Rewrite-1.4.3), settled
 - [The assistant's chat](Rewrite-1.4.4), review
 - [The system prompt](Rewrite-1.4.5), review
 

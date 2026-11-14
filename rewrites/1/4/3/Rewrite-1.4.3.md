@@ -1,5 +1,5 @@
 # The assistant's state: threads and compaction
-Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the assistant's plugin state, which holds its threads and each thread's pick of the model, how much of a thread it keeps, the commands that change it, compaction, and how a board saved today opens.
 It shapes the Work items of [Assistant as a plugin](Rewrite-1.4#work) that register the assistant's plugin class and port compaction, and the one of [The conversion and the migration notes](Rewrite-1.9#work) that writes blockr.convert's method for the assistant.
