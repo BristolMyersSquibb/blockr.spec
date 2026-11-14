@@ -84,7 +84,7 @@ A thread's messages are one list, in the order in which they entered the thread.
 A sent message never changes, since the chat offers no way to edit one, so a thread has no branches, unlike today's (Today).
 Editing a sent message, and the branches that it makes, are later work ([The assistant's chat](Rewrite-1.4.4#today)), which nothing here rules out: a later version of the class could give each message its parent, and its `migrate` would give each message the one before it.
 
-A thread holds no focus, unlike today's (Today), since the plugin tells the model which block has focus and which panels show, as each call goes out ([The system prompt](Rewrite-1.4.5#the-sections)).
+A thread holds no focus, unlike today's (Today), since the plugin tells the model which block has focus and what is on screen, as each call goes out ([The system prompt](Rewrite-1.4.5#the-sections)).
 
 Which thread is open stays outside the board: the plugin keeps its id in the browser's local storage, as today's chat does (Today).
 A board opens on that thread where it holds it.
