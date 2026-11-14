@@ -91,7 +91,7 @@ The plugin keeps nothing in its state, and nothing staged in its module.
 That is this plugin's choice, not the API's: another plugin may stage edits and apply them later as one delta, which holds any number of blocks, links and stacks, through `core.store.apply()` or a command of its own, as one step that one undo takes back ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 
 The plugin raises a notification for each of its edits that the store or the command registry refuses, as core's basic frontend does for its own edits ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-It is an error of the class `edit_refused` that concerns no block, with the plugin's class's id as its origin.
+It is an error of the code `edit_refused`, which the plugin raises through `notify()`, naming its class's id, and which concerns the plugin, whatever block the edit names.
 
 ### Where it shows
 

@@ -63,7 +63,7 @@ interface Option {                                 // as core registers it in th
   schema: JsonSchema;                              // the values it takes, with a description for a model
   default: Json | ((core: CoreApi) => Promise<Json>);   // what readers get where the board holds no value, or a function core calls for it with CoreApi
   ui: OptionModule;                                // its UI module, which gets an OptionHost
-  onChange?(value: Json, core: CoreApi): void;     // what a new value does on the page, such as switching the theme
+  onChange?(value: Json, core: CoreApi, notify: (n: Raised) => () => void): void;   // what a new value does on the page, such as switching the theme
   migrate?(value: Json, version: number): Json;    // converts a value that a JSON board records at an older version of its shape
 }
 ```
@@ -96,6 +96,7 @@ A definition's `default` is a value, or a function that core calls the first tim
 Core keeps the function's result until the next board opens, so nothing is read for a board option that nothing requires and that has no `onChange`.
 A default that reads a blockr option whose value does not convert to the fallback's type, such as an `n_rows` of `"many"`, reports the value and takes the fallback ([Blockr options](#blockr-options)).
 Core calls `onChange` as each board opens, for every board option that has one, with the board's value or else the board option's default, which it resolves then whether or not anything on the page requires the board option, and again as a delta sets or removes the board's value, so that what `onChange` does on the page follows the board that is open, as the theme that `dark_mode` switches does ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+Its `notify` raises a notification of the board option's, such as a value that the page cannot follow, which concerns the board option unless it names another board object, and holds until the function that it returns runs or the next call of `onChange` returns ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 The `migrate` function converts a value that a JSON board records at a version of its shape below the one that the package's method of `board_option_version()` gives in R ([Serialization](Rewrite-1.1.4#board-options)).
 
 ### Which board options a board holds
@@ -103,7 +104,7 @@ The `migrate` function converts a value that a JSON board records at a version o
 A board option comes onto the page through the components that require it, and into the board only once someone sets its value.
 Each component names the board options it requires in its own definition:
 
-- A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)), as core's basic frontend names `show_conditions`, the severities of the conditions that its cards show, and `dark_mode`, the theme it draws in.
+- A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)), as core's basic frontend names `show_conditions`, the severities of the notifications that its cards show, and `dark_mode`, the theme it draws in.
 - A renderer of outputs, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
 - A block class, in the `options` of its UI module, those that its requests read included.
 
