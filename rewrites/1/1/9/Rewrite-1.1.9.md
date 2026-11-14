@@ -218,7 +218,8 @@ Where both locks are on, R holds every block to the opening board, from what it 
 With illustrative names:
 
 ```r
-lock <- if (isTRUE(blockr_option("locked", FALSE)) && isTRUE(blockr_option("lock_load", FALSE))) {   # as serve() starts the app
+lock <- if (isTRUE(as.logical(blockr_option("locked", FALSE))) &&   # as serve() starts the app, where an environment variable gives a string
+            isTRUE(as.logical(blockr_option("lock_load", FALSE)))) {
   lock_board(opening_board, open = blocks_left_open(opening_board))   # those whose locked is FALSE
 }
 

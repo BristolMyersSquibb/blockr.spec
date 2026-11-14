@@ -324,6 +324,9 @@ interface RegistryEntry {
 }
 ```
 
+The entry leaves out the worked examples that `register_block()` takes as `examples`, each a complete state of a block of the class.
+R keeps taking them, and checks them as it checks the examples of the arg specs, but no tool gives them to the model until the assistant's benchmark shows that they help ([The assistant's tools](Rewrite-1.4.2#today)).
+
 ### Evaluation
 
 R calls a constructor only where an app script builds a board ([Board objects](Rewrite-1.1.1#the-board)), and keeps no block while the app runs.

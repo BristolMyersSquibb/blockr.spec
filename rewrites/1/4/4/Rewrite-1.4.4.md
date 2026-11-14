@@ -97,7 +97,8 @@ While a turn runs, the stop button shows, and pressing it aborts the turn's sign
 1. The library stops the model's stream.
 2. A one-time evaluation that the edit tool awaits stops waiting ([Evaluation in the client](Rewrite-1.1.10#demand)).
    The edit tool then returns that its commands applied, with as much of its review as it has, and that the user stopped the turn ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
-3. A request that a tool sent is cancelled, through the signal that `core.request()` takes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+3. A request that a tool sent is cancelled, through the signal that `core.request()` takes, where R has not started it ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+   Once R has started it, it runs to its end, and every request sent after it waits, unless the app runs its requests in a worker that can stop one ([Wire protocol](Rewrite-1.1.9#cancelling)).
 4. What the reply streamed until then enters the thread as its message, and each tool call left without a result gets one that says the user stopped the turn ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 
 An edit that the store applied before the stop stays applied, and none is half applied, since each edit applies all or none (condition 3).
@@ -113,12 +114,12 @@ A refused edit shows the command that refused and why, as the model gets it ([Th
 
 ### Undoing the assistant's edits
 
-The chat offers Undo and Redo for the assistant's edits, which take back the assistant's last edit or apply it again, through `store.undo("assistant")` and `store.redo("assistant")`, and which show where `store.canUndo("assistant")` and `store.canRedo("assistant")` say ([Board updates](Rewrite-1.1.2#undo)).
+The chat offers Undo and Redo for the assistant's edits, which take back the assistant's last undo step or apply it again, through `store.undo("assistant")` and `store.redo("assistant")`, and which show where `store.canUndo("assistant")` and `store.canRedo("assistant")` say ([Board updates](Rewrite-1.1.2#undo)).
 So the user takes back the assistant's edits apart from their own edits, which the frontend's undo takes back (condition 4).
 An undo is a new edit on the board as it is, as every undo is ([Board updates](Rewrite-1.1.2#undo)).
 So it keeps a change that the user made since, but where the user changed the same thing as the assistant's edit, the undo sets it back to its value before that edit, since the last writer wins.
 
-The model can take back its last edit too, through the tool `undo_edit`, when the user asks for that in words ([The assistant's tools](Rewrite-1.4.2#the-tools)).
+The model can take back the assistant's last undo step too, through the tool `undo_edit`, when the user asks for that in words ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 Both take back the same steps, since the assistant's edits are the only steps of the origin `assistant`, while the changes to its threads take no undo step ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ### Threads

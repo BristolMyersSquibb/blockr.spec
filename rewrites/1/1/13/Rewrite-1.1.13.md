@@ -11,6 +11,8 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it, beside what its package gives in R for the board option's class `{id}_option`: the version of the value's shape and the board option's own requests.
 2. Each component that reads a board option's value names the board option in its own definition: a plugin class, a renderer of outputs, or a block class in its UI module, which also names every board option that the class's requests read, while a board option's UI reads its own value alone.
    Core gives that component the board's value, or else the board option's default, before it first reads it, on a locked board too, unless no loaded package defines the board option or its default fails or does not fit its schema, which core reports.
+   A plugin may also read a board option that it does not name, where something on the page requires the board option or the board holds a value for it, since each such board option has the board's value or a default that core has resolved.
+   The assistant does so, to tell its model the value of each board option in use ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 3. A board holds a value only for a board option that a script, a file or a command has set, so that it saves what someone chose and no default.
 4. A change to a board option's value evaluates no block, since no board option reaches `expr`, and neither undo nor redo changes a board option's value.
 5. A blockr option is fixed when the app starts or is deployed, by an R option or an environment variable, and neither a board nor a file holds one.
@@ -181,6 +183,7 @@ Every reader gets the board's value, or else the default that core resolved for 
   A frontend mounts it with `mountOption()` where it shows the board options that `core.options.inUse()` lists, those that something on the page requires or that the board holds a value for, as core's basic frontend does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
   An app replaces it with a renderer that it names in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)).
 - A plugin reads the values of the board options that its class names through `core.options.value()`, and follows a change of the board's through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
+  It may read any other board option that `core.options.inUse()` lists in the same way, as the assistant does to tell its model the value of each board option in use ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 
 ### Locked boards
 
