@@ -113,7 +113,7 @@ An edit that the store applied before the stop stays applied, and none is half a
 Each tool call shows as a row titled from the tool's name, as today's `list_blocks` shows as "List blocks", folded to its title, and opening to its args and its result.
 Where the model calls tools with no text between the calls, the calls to each tool share one row, which opens to each call, as today's chat groups them.
 A call whose result is marked as an error shows as failed, as today's rows show it ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
-The plots that `inspect_results` returns show in its result while the page lives, since the plugin keeps their bytes in its memory ([The assistant's state](Rewrite-1.4.3#files-and-images)).
+The plots that `inspect_results` returns show in its result while the board stays open, since the plugin keeps their bytes in its memory ([The assistant's state](Rewrite-1.4.3#files-and-images)).
 The edit tool's row names the commands that it ran by their labels, which `core.commands.registered()` gives, such as "Add block" and "Add link", and each block that it changed with its status, drawn as the design system draws a block's status ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
 A refused edit shows the command that refused and why, as the model gets it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 

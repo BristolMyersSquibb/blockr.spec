@@ -83,7 +83,7 @@ So the thread keeps the note, as shinychat#375 asks of a message's context, and 
 The note comes before the board, which the call adds after the thread's last message, so that the cache serves the thread up to the note on the calls after.
 The board itself stays out of the thread, since a board for every call would fill the model's context window.
 The note stays within `assistant_board_section_max_chars`, as each part of the Board section does.
-The plugin records the changes while the page lives, so the first call after a reload carries no note of what changed before it.
+The plugin records the changes while the board stays open, so the first call after the board opens again, as after a reload, carries no note of what changed before it.
 
 What the note holds and how much, so that the model stays in step without reading updates that it does not need, is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, version against version.
 
