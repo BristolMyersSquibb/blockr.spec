@@ -7,7 +7,7 @@ Each decision is designed on the page that The decisions it compares names, and 
 
 ## What must hold
 
-1. A change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model's settings, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
+1. After `js-state` has merged into main ([State in JS](Rewrite-1#migration)), a change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model's settings, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
 2. Each question's answer key judges a run without a person, by the values that the data gives, the board that the turn leaves, the page that it draws and the tools that it calls.
 3. A run starts each question from its own board and an empty thread, as a reload does in today's checks by hand, and names the model, its settings and the ref of each package that it runs.
 4. Each question runs several times, since the misses vary from run to run, and a comparison reports each question's share of runs that pass, with the tokens, calls and seconds of the runs.
@@ -124,12 +124,13 @@ The models are OpenAI's and Anthropic's, whose APIs the plugin speaks ([Model ac
 The questions, their answer keys and the harness live in blockr.bench, a repo of their own, as the part's other benchmarks do ([Benchmarks of the new stack](Rewrite-1.8#proposal)).
 Neither blockr.assistant nor blockr.sandbox holds them, so that neither depends on the other for the benchmark.
 A run installs each package at the ref that its comparison names, with the packages of each question's board, such as blockr.sandbox's for the clinical data explorer's, and blockr.bench holds the providers' keys as its secrets.
-A pull request of blockr.assistant that changes what the model sees or may do starts a run in blockr.bench, which shows its comparison on that pull request (What must hold 1).
+After `js-state` has merged into main, a pull request of blockr.assistant that changes what the model sees or may do starts a run in blockr.bench, which shows its comparison on that pull request (What must hold 1).
 So does a pull request of another package that changes what the model reads, such as one of core that changes a command's description, or one of blockr.dock that changes its `layout` skill ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
 
 ### When it runs
 
-The benchmark runs on demand, and on each pull request that changes what the model sees or may do (What must hold 1), with the keys that blockr.bench holds.
+The benchmark runs on demand, with the keys that blockr.bench holds, and after `js-state` has merged into main, on each pull request that changes what the model sees or may do (What must hold 1).
+Until then, a comparison informs a decision on `js-state`, such as one on the template or the tools, but holds up no merge and no issue, so that the benchmark does not slow the new stack while it is built.
 It never runs on every pull request, since at today's cost of about $0.30 a question, five questions run five times on two versions and two models cost about $30.
 
 ### Today's assistant as the baseline

@@ -11,7 +11,7 @@ What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools 
 1. The chat draws only in the element that a frontend gives it and in the browser's top layer, and works at any size down to a rail's, under every frontend ([Places the dock offers plugins](Rewrite-1.2.4#what-must-hold)).
 2. What today's chat offers carries over, but for what Today drops with its reason.
 3. The user can stop a turn at any point, and a stopped turn leaves applied every edit that it finished, and none half applied.
-4. The user takes back the assistant's edits with the frontend's Undo, in one history with their own.
+4. The user takes back the assistant's edits with the frontend's Undo, in one history with their own, or the assistant's last undo step with `/undo`.
 5. What fails and the user should know of, such as a call to the model, reaches the user as a notification, which the frontend draws ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 6. The chat shows a thread as the assistant's state holds it, whatever changes that state, after the older messages that the plugin keeps in its memory, or from that memory alone where `chat_save_turns` is `0`.
 7. The user can edit the board while a turn runs, and take back the assistant's edits, as at any other time.
@@ -36,7 +36,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 | Attachments of images, PDFs and text files, about 30 MB together, which open large when clicked ([ChatMessage.tsx#L135-L139](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/js/src/chat/ChatMessage.tsx#L135-L139)) | Carried over, with their bytes in the plugin's memory, and the bound set by the plugin, since no app sets the variable that sets it today ([Attachments](#attachments)) |
 | The footer: the tags of the focus, the @ button with blockr.ui's multi-select of the blocks in view, the token meter, and the button that opens the drawer ([R/focus.R#L202-L274](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R#L202-L274), [R/ext-server.R#L845-L864](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L845-L864)) | Carried over for the meter and the drawer's button ([The meter](#the-meter), [Threads](#threads)), while the tags of the focus and the @ button are dropped, since the plugin tells the model which block has focus and which panels show, so that the user sets nothing ([The system prompt](Rewrite-1.4.5#the-sections)) |
 | The pick of the model where the blockr option `chat_function` offers several, outside the chat, through core's board option `llm_model`, which the dock's options sidebar shows ([blockr.core R/board-option.R#L709-L722](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L709-L722)), after which the thread goes on with the model picked ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)) | In the chat's footer, where the deployment offers more than one model or names none ([The model](#the-model)) |
-| The slash commands `/compact` and `/clear`, and `/name` for each skill that the user may call ([R/ext-commands.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-commands.R), [R/skills-invoke.R#L80-L114](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-invoke.R#L80-L114)) | Carried over ([Slash commands](#slash-commands)) |
+| The slash commands `/compact` and `/clear`, and `/name` for each skill that the user may call ([R/ext-commands.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-commands.R), [R/skills-invoke.R#L80-L114](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-invoke.R#L80-L114)) | Carried over, with `/undo` and `/redo` added ([Slash commands](#slash-commands)) |
 | The transcript after compaction, which today's chat clears and draws again with the request for the summary as the user's message, the summary as the assistant's, and the text of the turns kept, without their tool calls ([R/ext-server.R#L712-L716](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L712-L716), [#L1247-L1256](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1247-L1256)) | Carried over, with the summary as one folded row in place of the older messages, and the tool calls of the later ones kept ([Slash commands](#slash-commands)) |
 | Blanking the chat in a panel 140 px wide or narrower, as a collapsed rail is ([R/ext-server.R#L365-L376](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L365-L376)) | Dropped, since a collapsed rail hides its panels ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)) |
 | Setting the height of the dock's wrapper through `:has(> .asst-panel)` ([R/ext-server.R#L213-L218](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L213-L218)) | Dropped, since the element that a frontend gives fills the panel ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)) |
@@ -129,14 +129,14 @@ A refused edit shows the command that refused and why, as the model gets it ([Th
 
 ### Undoing the assistant's edits
 
-The chat offers no Undo or Redo of its own.
+The chat has no Undo or Redo button of its own, while its slash commands `/undo` and `/redo` take back the assistant's last undo step and apply again what the last undo took back (Slash commands).
 The frontend's Undo and Redo take back the assistant's edits as they take back the user's, in the order the board took them, since the store keeps one history of every origin's steps ([Board updates](Rewrite-1.1.2#undo)).
 So one Undo serves the user, whoever made the last edit (condition 4).
 
 The model can take back the assistant's last undo step through the tool `undo_edit`, when the user asks for that in words ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 It takes back that step even where the user edited the board after it, since an undo is a new edit on the board as it is ([Board updates](Rewrite-1.1.2#undo)).
 So it keeps a change that the user made since, but where the user changed the same thing as the assistant's edit, the undo sets it back to its value before that edit, since the last writer wins.
-Changes to the threads take no undo step, so neither the frontend's Undo nor `undo_edit` takes back a message ([The assistant's state](Rewrite-1.4.3#commands)).
+Changes to the threads take no undo step, so none of the frontend's Undo, `/undo` and `undo_edit` takes back a message ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ### Threads
 
@@ -160,15 +160,19 @@ The plugin then drops the file's bytes, so that the thread's later calls go with
 
 ### Slash commands
 
-The message field takes three kinds of slash command, which typing `/` lists:
+The message field takes five kinds of slash command, which typing `/` lists:
 
 - The slash command `/compact` compacts the thread ([The assistant's state](Rewrite-1.4.3#compaction)).
 - The slash command `/clear` starts a new thread, as today's starts a new chat.
+- The slash command `/undo` takes back the assistant's last undo step, through `core.store.undo("assistant")`, as the tool `undo_edit` does, with no call to the model (Undoing the assistant's edits).
+- The slash command `/redo` applies again what the last undo took back, through `core.store.redo()`, as the frontend's Redo does, so after `/undo` it applies the assistant's step again, and after the frontend's Undo the step that it took back, whoever took it ([Board updates](Rewrite-1.1.2#undo)).
 - For each skill that the user may call, the slash command `/name` sends the skill with its text, which the chat reads through the request `read_skill` ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)), as today ([R/skills-invoke.R#L80-L114](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-invoke.R#L80-L114)).
 
 A line that starts with `/` but names no slash command goes to the model as typed.
 Where R cannot read the skill of a `/name`, the chat sends nothing and keeps the line in the message field (What fails).
-Neither `/compact` nor `/clear` enters the transcript, as neither does today.
+Neither `/compact` nor `/clear` enters the transcript, as neither does today, and neither do `/undo` and `/redo`, since the board shows what they did.
+Where there is no step for `/undo` to take back, or for `/redo` to apply again, the chat says so.
+The note that tells the model what others changed counts the undo that `/undo` asks for as the user's, though the store gives it the origin `assistant` ([The system prompt](Rewrite-1.4.5#what-changed-under-the-model)).
 Once a summary replaces a thread's older messages, whether `/compact` or the plugin's own rule compacted the thread, the transcript shows the summary in their place, as today's chat draws it again ([R/ext-server.R#L712-L716](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L712-L716), [The assistant's state](Rewrite-1.4.3#compaction)).
 The summary shows as one row, titled as a summary of the earlier messages, folded to its title and opening to its text, as the row of a tool call does (Tool calls), rather than as today's request in the user's name followed by the model's reply.
 The messages after it show as before, their tool calls included, which today's redraw drops ([R/ext-server.R#L1247-L1256](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1247-L1256)).
@@ -212,12 +216,14 @@ The plugin withdraws each once its cause has gone, and core withdraws them all a
 | A file that the provider refuses | Error, `assistant_attachment_refused` | A later call of the thread succeeds |
 | Compaction that fails, which leaves the thread as it was | Warning, `assistant_compaction_failed` | A later compaction of the thread succeeds, or the thread goes |
 | The skills that R cannot list or read, as for a directory in `assistant_skills` that does not exist | Error, `assistant_skills_failed` | R lists or reads the skills |
+| A template that R cannot read, as for a file in `assistant_template` that does not exist, or one with an `{{id}}` that names no section of blockr.assistant's template | Error, `assistant_template_failed` | R reads a template whose every `{{id}}` names a section |
 | A list of models that leaves none to offer, where the deployment names none, as at a company's own proxy that lists none, or where no model in the list takes tools | Error, `assistant_models_failed` | A list offers a model |
 
 Where the deployment names no models and the base URL's list leaves none to offer, the chat offers no model ([Model access](Rewrite-1.4.1#who-picks-the-model)), so the user can send nothing.
 The plugin asks for the list again as the user tries to send, as a new key comes and as the next board opens, so that a list that failed for a moment comes back.
 A list that the base URL refuses for its key goes as any refused key does, and where the key is the visitor's, the chat asks for it again (The credential).
 Where R cannot list the skills, the chat goes on without any, until the plugin asks again as the next board opens ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)).
+Where the template fails, the calls go on with blockr.assistant's own template, until the plugin asks again as the next board opens ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
 A failure that ends a turn shows at that turn in the transcript too, so that the user sees why the reply stopped, while the board stays open, since the plugin keeps it in its memory rather than in the thread.
 The thread keeps what the turn finished, and what its reply streamed until the failure, as after a stop (Stopping a turn), and a tool call left without a result reads, to the model, that the turn ended before the call returned ([The assistant's state](Rewrite-1.4.3#the-state)).
 What a tool returns as a failure, such as `inspect_results` on a locked board, which it refuses before R reads anything, goes to the model as the tool's result, which tells the user in its reply ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
