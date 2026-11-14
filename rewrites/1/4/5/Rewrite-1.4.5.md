@@ -49,6 +49,9 @@ Each paragraph of the template, and each preamble, goes as follows:
 Each call to the model sends, in this order:
 
 1. The tools' definitions, which change only with a release of blockr.assistant, since the edit tool takes any command by its id ([The assistant's tools](Rewrite-1.4.2#the-tools)).
+   That holds for the edit tool, the first version.
+   The two versions that the benchmark compares with it put the schemas of the app's commands or block classes into the definitions, so that theirs change with the app's packages, and within a thread where the tools for block classes come a few at a time ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+   The benchmark reports, for each version, how many of its input tokens the cache served ([The assistant's benchmark](Rewrite-1.8.1#what-a-comparison-reports)).
 2. The system prompt: the template, and the catalogue of the skills that no block class or plugin scopes, which changes only with the app's skills.
 3. The thread's messages, those that the plugin keeps in its memory included ([The assistant's state](Rewrite-1.4.3#how-much-of-a-thread-the-state-keeps)).
 4. The board and the focus as they are when the call goes out, which the plugin adds after the last message, and which the thread never keeps.
@@ -89,14 +92,17 @@ What the note holds and how much, so that the model stays in step without readin
 The template keeps the rules that carry over (Today), and states those of the new tools:
 
 - The model reads what an edit relies on rather than guessing at it, since a result's summary, the state that `describe_block` reports and a class's description are bounded, and the Board section shows no plugin's state in full: through `get_block_result`, `inspect_results`, `get_block_state`, `get_plugin_state`, `describe_block_type` or `describe_command` ([The assistant's tools](Rewrite-1.4.2#the-tools)).
-- One edit is one list of commands, which applies all or none, as one undo step, in the order given: a block before its links, with an id that the model gives it, so that later commands of the list name it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+- One edit is one list of commands, which applies all or none, in the order given: a block before its links, with an id that the model gives it, so that later commands of the list name it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+  An edit is one undo step, unless every command of it has `undo: false`, as the dock's command that switches views has, or it sets only board options ([Board updates](Rewrite-1.1.2#undo)).
   An edit holds one change that the user would take back as one, so that the chat's Undo takes back what the user expects ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
-- An edit returns a review of the blocks that it changed, of the blocks that feed them directly and of every block downstream: each block's status, its conditions and what `describe_result()` writes about its result, and the state of each block that it added ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+- An edit returns a review of the blocks that it changed, of the blocks that feed them directly and of every block downstream: each block's status, the conditions that appeared since the edit began, what `describe_result()` writes about its result, and the state of each block that it added ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   The model checks the review against what the user asked, and corrects with another edit, rather than reporting as done a change that left a block `failed`, `invalid` or `waiting`.
   Where the review leaves out the blocks past `assistant_review_max_blocks`, the model says that it has not checked them, rather than reporting the change as verified.
 - A refused edit names the command and why, so the model changes the args or the commands rather than sending the same list again.
 - The commands come from `list_commands`, so the model looks up the frontend's own for views and panels, as the dock's are, and a plugin's own or `blockr.core-set_plugin_state` for that plugin's state, rather than assuming any.
-- The tool `undo_edit` takes back the model's last edit, for when the user asks for that in words.
+- The tool `undo_edit` takes back the assistant's last undo step, for when the user asks for that in words ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+  That step may be an edit of another thread, and `undo_edit` passes over an edit that took no undo step, such as one that only switched views.
+  So the model tells the user what `undo_edit` took back, as its result says, rather than taking for granted that it was the model's own last edit.
 - On a locked board, the model tells the user what the lock refuses, as the edit tool returns it, rather than trying another way ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
 - A note of what the user changed says what the user wants, so the model builds on it, rather than putting back what the user removed or took back, unless the user asks for that (What changed under the model).
 
@@ -169,7 +175,7 @@ Whether a model does better with words of its own is for the benchmark to show, 
 
 The template, the preambles and the code that writes the sections live in blockr.assistant, in the plugin's bundle, and change with its releases.
 A pull request that changes any of them, or a tool's description, shows the benchmark's comparison of the change with the version before it (condition 6).
-So does a pull request of blockr.dock that changes its `layout` skill, since the model reads the skill as it reads the template.
+So does a pull request of another package that changes what the model reads, such as one of core that changes a command's description, or one of blockr.dock that changes its `layout` skill, since the model reads those as it reads the template ([The assistant's benchmark](Rewrite-1.8.1#where-it-lives)).
 A Vitest snapshot of the prompt takes the place of today's golden copy ([tests/testthat/_snaps/system-prompt.md](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/tests/testthat/_snaps/system-prompt.md)), since it catches a change that nobody meant, while only the benchmark says whether a change that someone meant helps.
 
 ## Open questions

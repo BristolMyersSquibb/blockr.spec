@@ -9,7 +9,7 @@ Each decision is designed on the page that The decisions it compares names, and 
 
 1. A change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model itself, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
 2. Each question's answer key judges a run without a person, by the values that the data gives, the board that the turn leaves, the page that it draws and the tools that it calls.
-3. A run starts each question from its own board and an empty thread, as a reload does in today's checks by hand, and names the model, its settings and the versions of blockr.assistant and blockr.dock that it runs.
+3. A run starts each question from its own board and an empty thread, as a reload does in today's checks by hand, and names the model, its settings and the ref of each package that it runs.
 4. Each question runs several times, since the misses vary from run to run, and a comparison reports each question's share of runs that pass, with the tokens, calls and seconds of the runs.
 5. A turn stops at a cap on its calls, which fails the run, so that what a run costs is bounded.
 6. The questions exercise each decision that the benchmark compares, since a question that a decision cannot change says nothing of it, starting from the clinical data explorer's five, with their answer keys.
@@ -50,7 +50,9 @@ The benchmark compares two versions of any decision that shapes what the model s
 | Compaction: when it runs and what its summary keeps | [The assistant's state](Rewrite-1.4.3#compaction) | Those long enough to compact |
 | The model and its settings, and the library that runs the loop | [Model access](Rewrite-1.4.1), [Assistant as a plugin](Rewrite-1.4#proposal) | Every question |
 
-A version is a ref of blockr.assistant, or of blockr.dock for its `layout` skill, so that the harness compares a pull request's head with its base, or two branches that try one decision two ways, as whether fewer tools serve the model better ([The assistant's tools](Rewrite-1.4.2#the-tools)).
+A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
+Besides blockr.assistant, whose tools and template the model reads, any package can change what the model reads: core or a plugin's package through the descriptions of its commands, a package of block classes through their guidance and arg specs, and any of them through its skills, as the dock's `layout` skill does.
+So the harness compares a pull request's head with its base, whichever of these packages the pull request changes, or two branches that try one decision two ways, as whether fewer tools serve the model better ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 A comparison names the decision that it tests.
 
 ### A question
@@ -120,9 +122,9 @@ The models are OpenAI's and Anthropic's, whose APIs the plugin speaks ([Model ac
 
 The questions, their answer keys and the harness live in blockr.bench, a repo of their own, as the part's other benchmarks do ([Benchmarks of the new stack](Rewrite-1.8#proposal)).
 Neither blockr.assistant nor blockr.sandbox holds them, so that neither depends on the other for the benchmark.
-A run installs blockr.assistant, or blockr.dock, at the refs that its comparison names, with the packages of each question's board, such as blockr.sandbox's for the clinical data explorer's, and blockr.bench holds the providers' keys as its secrets.
+A run installs each package at the ref that its comparison names, with the packages of each question's board, such as blockr.sandbox's for the clinical data explorer's, and blockr.bench holds the providers' keys as its secrets.
 A pull request of blockr.assistant that changes what the model sees or may do starts a run in blockr.bench, which shows its comparison on that pull request (What must hold 1).
-So does a pull request of blockr.dock that changes its `layout` skill ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
+So does a pull request of another package that changes what the model reads, such as one of core that changes a command's description, or one of blockr.dock that changes its `layout` skill ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
 
 ### When it runs
 
