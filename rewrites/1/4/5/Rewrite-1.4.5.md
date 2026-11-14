@@ -1,5 +1,5 @@
 # The system prompt
-Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
+Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own, or a deployment replaces the template.
 It shapes the Work items that run the agent loop, build the requests in R, write the template and write the guide, and the one that asks blockr.dock for its `layout` skill.

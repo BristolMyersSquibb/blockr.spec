@@ -8,6 +8,6 @@
 - [The assistant's tools](Rewrite-1.4.2), settled
 - [The assistant's state: threads and compaction](Rewrite-1.4.3), settled
 - [The assistant's chat](Rewrite-1.4.4), settled
-- [The system prompt](Rewrite-1.4.5), review
+- [The system prompt](Rewrite-1.4.5), settled
 
 <!-- dropped: Rewrite-1.4.6 -->
