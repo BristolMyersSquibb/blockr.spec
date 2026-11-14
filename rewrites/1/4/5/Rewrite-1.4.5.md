@@ -2,7 +2,7 @@
 Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own, or a deployment replaces the template.
-It shapes the Work items that run the agent loop, build the requests in R, write the template and write the guide, and the one that asks blockr.dock for its `layout` skill.
+It shapes the requests in R that list the skills and read a deployment's template ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), what each call sends ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the note of what others changed ([blockr.assistant#228](https://github.com/BristolMyersSquibb/blockr.assistant/issues/228)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the `layout` skill of blockr.dock ([blockr.dock#597](https://github.com/BristolMyersSquibb/blockr.dock/issues/597)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
 The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, and how a change to the prompt is judged is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
 ## What must hold
@@ -126,7 +126,7 @@ The plugin writes three sections from what `CoreApi` gives, in place of the gene
 | Section | What it holds | Where it goes, within which cap |
 |---|---|---|
 | Skills | The name and description of each skill that the model may read and that no block class or plugin scopes, from the reply to `list_skills`, under today's preamble, changed as Today has it | The system prompt, after the template, each description cut at `assistant_skill_description_max_chars`, 1024, while the catalogue is not cut, and R logs a warning where it passes `assistant_skill_catalogue_max_chars`, 4000, as today |
-| Board | Today's parts: a line of counts, the blocks, each with its id, its class, the names of its state args, its status and the counts of its conditions, the links, the stacks, the board options, the app's plugins but for the assistant's own, which `list_plugins` leaves out too, and, where the dock is the frontend and has more than one view, its views with the panels of each, from `store.board()`, `scheduler.status()`, `options.inUse()` and `plugins.appPlugins()` | After the last message, each part within `assistant_board_section_max_chars`, 1500 |
+| Board | Today's parts: a line of counts, the blocks, each with its id, its class, the names of its state args, its status and the counts of its conditions, the links, the stacks, the board options that the board holds, the app's plugins but for the assistant's own, which `list_plugins` leaves out too, and, where the dock is the frontend and has more than one view, its views with the panels of each, from `store.board()`, `scheduler.status()` and `plugins.appPlugins()` | After the last message, each part within `assistant_board_section_max_chars`, 1500 |
 | Focus | The block that has focus in `CoreApi.focus`, and, where the dock is the frontend, the active view and the panels that show in it, which are the panel that each of its tab groups shows and that of each rail that is not collapsed ([The dock's state](Rewrite-1.2.1#grids)), under its preamble | After the last message, after the board |
 
 Each section keeps today's headings, lines and markers, with the client's names in place of R's, such as a class's registry id in place of its S3 class, and with these changes:
@@ -163,7 +163,7 @@ A package teaches the model in other ways too, which [The assistant's tools](Rew
 
 The dock gives its guidance on arranging views as the skill `layout` of blockr.dock, in place of blockr.assistant's skill of that name.
 The dock knows its views and grids best, and today's skill teaches the view tools, which the dock's commands replace ([Assistant as a plugin](Rewrite-1.4#today)).
-What the skill says of the dock's commands and grids ([The dock's state](Rewrite-1.2.1#grids)) is blockr.dock's to write, from an issue there ([Assistant as a plugin](Rewrite-1.4#work)), as any package writes its own.
+What the skill says of the dock's commands and grids ([The dock's state](Rewrite-1.2.1#grids)) is blockr.dock's to write, from an issue there ([blockr.dock#597](https://github.com/BristolMyersSquibb/blockr.dock/issues/597)), as any package writes its own.
 The assistant asks only that it names no class in `blocks:` or `plugins:`, so that the catalogue lists it in every app that runs the dock.
 The model then learns of it before it arranges a view, as it learns of today's `layout`.
 The skill is the first form to try.

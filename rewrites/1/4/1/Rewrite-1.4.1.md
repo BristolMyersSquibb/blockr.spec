@@ -2,7 +2,7 @@
 Status: settled on 2026-11-13. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options, and the model's settings.
-It shapes the Work items of that part that send the calls, let a visitor use their own key and let a visitor log in, and what blockr.assistant's migration notes say of a deployment's variables.
+It shapes the loop's credential and the model's settings ([blockr.assistant#225](https://github.com/BristolMyersSquibb/blockr.assistant/issues/225)), sending the calls ([blockr.assistant#226](https://github.com/BristolMyersSquibb/blockr.assistant/issues/226)), the pick of the model in the chat ([blockr.assistant#230](https://github.com/BristolMyersSquibb/blockr.assistant/issues/230)), the visitor's own key ([blockr.assistant#236](https://github.com/BristolMyersSquibb/blockr.assistant/issues/236)) and login ([blockr.assistant#237](https://github.com/BristolMyersSquibb/blockr.assistant/issues/237)), the examples ([blockr.assistant#239](https://github.com/BristolMyersSquibb/blockr.assistant/issues/239)), what the migration notes say of a deployment's variables ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
 The loop that makes the calls stays with the part, the state that keeps each thread's pick of the model is [The assistant's state](Rewrite-1.4.3)'s, and the chat that asks for a key and offers the pick is [The assistant's chat](Rewrite-1.4.4)'s.
 
 ## What must hold
@@ -170,7 +170,7 @@ An environment variable gives a string, and so does an R option that names one m
 
 ### Today's deployments across the switch
 
-A deployment of today's assistant moves to the blockr options above at the switch, and blockr.assistant's migration notes list each step below among the changes of the app scripts that use the assistant ([Assistant as a plugin](Rewrite-1.4#work)):
+A deployment of today's assistant moves to the blockr options above at the switch, and blockr.assistant's migration notes list each step below among the changes of the app scripts that use the assistant ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)):
 
 - A deployment that gives today's assistant its key in `OPENAI_API_KEY` sets the key in `BLOCKR_ASSISTANT_API_KEY` too, since the plugin reads no variable of a provider's own clients (How a call is authenticated).
   Without it, the chat asks each visitor for a key of their own.

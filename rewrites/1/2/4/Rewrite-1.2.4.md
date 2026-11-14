@@ -98,7 +98,7 @@ A locked dock adds no panel, so there `blockr.dock-show_panel` only brings to th
 A plugin keeps a setting of its own in its state first, so that the setting saves and migrates with the plugin, and the plugin's UI shows it and changes it through the plugin's commands, in its panel or in the top layer ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 A board option is no substitute for that state, since it is meant for how the board is shown, such as the dock's `view_tabs` ([Board options and blockr options](Rewrite-1.1.13#the-two-kinds)).
 A plugin's class names the board options of that kind that it requires in `options`, and its package registers those it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
-The dock's options sidebar shows every board option that `core.options.inUse()` lists, on the page of its `category`, and mounts each with `mountOption()`.
+The dock's options sidebar shows each board option that the board holds, which include every one that something on the page requires, on the page of its `category`, and mounts each with `mountOption()`.
 Today's sidebar shows the board options that an extension brings in the same way ([Client-drawn dock](Rewrite-1.2#today)).
 So settings need no member of the dock's.
 A plugin's board options show under every frontend, as core's basic frontend shows them in its toolbar ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).

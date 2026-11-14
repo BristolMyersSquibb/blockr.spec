@@ -1,5 +1,5 @@
 # Assistant as a plugin
-Status: settled on 2026-11-14. Part of [State in JS](Rewrite-1).
+Status: implementing in [blockr#505](https://github.com/orgs/BristolMyersSquibb/discussions/505). Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.
 It builds on the plugins, commands, scheduler and requests of [Client-owned board state](Rewrite-1.1), on the dock's commands for the views it arranges today ([Client-drawn dock](Rewrite-1.2)), and on blockr.ui's design system for its look ([UI kit and design system for the client](Rewrite-1.7)).
@@ -98,21 +98,7 @@ None.
 
 ## Work
 
-- Let the command registry run and plan a list of commands as one step, each planned on the board that the commands before it leave, and, where it refuses a list, say which command refused, by its index, and whether that command's `enabled()` refused it, as [The assistant's tools](Rewrite-1.4.2#the-edit-tool) has it, in blockr.core
-- Register the assistant's plugin class, with its state and its commands, and give `new_assistant_plugin()` in R, as [The assistant's state](Rewrite-1.4.3) has it, in blockr.assistant
-- Send the assistant's calls where its blockr options say, to the models that they name or that the base URL lists, authenticated with the deployment's key or with none, as [Model access](Rewrite-1.4.1#the-blockr-options) has it, in blockr.assistant
-- Build the tools, the edit tool among them, and the requests that the plugin gives in R, as [The assistant's tools](Rewrite-1.4.2) has it, in blockr.assistant
-- Run the agent loop from the plugin's `start`, on pi, through the module of the plugin's own that the Proposal names, with the system prompt that [The system prompt](Rewrite-1.4.5) gives, holding a Web Lock while a turn runs, and ship the license texts of what its bundle holds, in blockr.assistant
-- Record a span for each turn and each tool call, and hand pi the turn's span for its calls to the model, under ellmer's names, as the Proposal has it, on the tracing of [blockr.core#552](https://github.com/BristolMyersSquibb/blockr.core/issues/552), in blockr.assistant
-- Draw the chat in the plugin's `ui`, as [The assistant's chat](Rewrite-1.4.4) has it, in blockr.assistant
-- Write the template of the system prompt for the new tools, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The system prompt](Rewrite-1.4.5) has it, in blockr.assistant
-- Give the model the dock's guidance on arranging views as a `layout` skill of blockr.dock, for the dock's commands and grids, in place of blockr.assistant's, as [The system prompt](Rewrite-1.4.5#what-a-package-adds) has it, in blockr.dock
-- Compare the edit tool with a tool per command and with tools for each block class, by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), and keep the version that passes, as [The assistant's tools](Rewrite-1.4.2#the-edit-tool) has it, settling which version stays where one does only as well as the edit tool, or where both other versions pass, in blockr.assistant
-- Port compaction, settling when it runs and how much it keeps by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The assistant's state](Rewrite-1.4.3#compaction) has it, in blockr.assistant
-- Let a visitor use their own key, held in the page's memory, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
-- Let a visitor log in with a service that offers it, such as OpenRouter, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
-- Write the migration notes for app scripts that use the assistant, with the variables that their deployments set, and for the skills of a deployment, as a vignette, which lists each change that such a script or skill needs, for an AI to apply, as [Model access](Rewrite-1.4.1#todays-deployments-across-the-switch) has it for a deployment's variables, in blockr.assistant
-- Write the guide to the assistant's plugin as a vignette, in place of `intro.Rmd`, for apps that offer models, credentials, skills and a template of their own to it, with the ids of the template's sections, and for packages that give it skills, in blockr.assistant
+The spec [blockr#505](https://github.com/orgs/BristolMyersSquibb/discussions/505) holds the Work list from here, each item with its issue.
 
 ## Design pages
 

@@ -80,7 +80,7 @@ So blockr.session imports blockr.convert, and every app that may open a record s
 ### The migration notes
 
 Each package whose functions app scripts call, and which the switch changes, writes migration notes, a vignette, which list each change of a script, with what takes the place of each function that goes, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
-They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.dag's ([Client-drawn DAG](Rewrite-1.3#work)), blockr.assistant's ([Assistant as a plugin](Rewrite-1.4#work)), blockr.code's ([Code export as a plugin](Rewrite-1.5#work)) and blockr.session's ([Session management as a storage plugin](Rewrite-1.6#work)), and each block package's as it is ported.
+They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.dag's ([Client-drawn DAG](Rewrite-1.3#work)), blockr.assistant's ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)), blockr.code's ([Code export as a plugin](Rewrite-1.5#work)) and blockr.session's ([Session management as a storage plugin](Rewrite-1.6#work)), and each block package's as it is ported.
 The package blockr.md has no part yet, so its notes wait for one, and the notes of blockr.outline and blockr.viz, outside the workspace, are their maintainers' to write.
 
 ### Testing
