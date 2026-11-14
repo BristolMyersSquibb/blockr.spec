@@ -1,5 +1,5 @@
 # Assistant as a plugin
-Status: review. Part of [State in JS](Rewrite-1).
+Status: settled on 2026-11-14. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.assistant, which becomes a plugin whose agent loop runs in the browser.
 It builds on the plugins, commands, scheduler and requests of [Client-owned board state](Rewrite-1.1), on the dock's commands for the views it arranges today ([Client-drawn dock](Rewrite-1.2)), and on blockr.ui's design system for its look ([UI kit and design system for the client](Rewrite-1.7)).
@@ -111,7 +111,7 @@ None.
 - Port compaction, settling when it runs and how much it keeps by the comparisons of [The assistant's benchmark](Rewrite-1.8.1), as [The assistant's state](Rewrite-1.4.3#compaction) has it, in blockr.assistant
 - Let a visitor use their own key, held in the page's memory, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
 - Let a visitor log in with a service that offers it, such as OpenRouter, as [Model access](Rewrite-1.4.1) has it, in blockr.assistant
-- Write the migration notes for app scripts that use the assistant, and for the skills of a deployment, as a vignette, which lists each change that such a script or skill needs, for an AI to apply, in blockr.assistant
+- Write the migration notes for app scripts that use the assistant, with the variables that their deployments set, and for the skills of a deployment, as a vignette, which lists each change that such a script or skill needs, for an AI to apply, as [Model access](Rewrite-1.4.1#todays-deployments-across-the-switch) has it for a deployment's variables, in blockr.assistant
 - Write the guide to the assistant's plugin as a vignette, in place of `intro.Rmd`, for apps that offer models, credentials, skills and a template of their own to it, with the ids of the template's sections, and for packages that give it skills, in blockr.assistant
 
 ## Design pages

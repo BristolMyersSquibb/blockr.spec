@@ -203,7 +203,11 @@ When another board opens in the same page, the key stays, since it is the visito
 Until the visitor gives a key, the field for it shows above the message field, which sends nothing.
 A reload asks again, since neither a typed key nor the key that a login gives outlives the page.
 A key that the base URL refuses fails the call, as any call fails (What fails), and the chat asks for the key again.
-OpenAI's refusal reaches a page only as a failed connection, since its 401 carries no CORS header ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)), so where a call to OpenAI fails that way, the chat says that the key may be wrong as well as the connection lost, and shows the field for the key again, holding the key, so that the visitor can change it or send again.
+OpenAI's refusal of a call reaches a page only as a failed connection, since its 401 carries no CORS header, while its list of models answers a page, its 401 for a wrong key included ([Model access](Rewrite-1.4.1#how-a-call-is-authenticated)).
+So where a call fails as a failed connection, the plugin asks the base URL for its list of models with the same key.
+A 401 says that the key is wrong, which goes as any refused key does, so that the chat asks for the visitor's key again.
+A list says that the key works and the connection failed, which reaches the user as any failed call does (What fails).
+Where the list fails as well, as at a base URL that gives none, the chat says that the connection was lost and that the key may be wrong, and shows the field for the key again, holding the key, so that the visitor can change it or send again.
 
 ### What fails
 

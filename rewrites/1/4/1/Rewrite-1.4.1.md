@@ -2,7 +2,7 @@
 Status: settled on 2026-11-13. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options, and the model's settings.
-It shapes the Work items of that part that send the calls, let a visitor use their own key and let a visitor log in.
+It shapes the Work items of that part that send the calls, let a visitor use their own key and let a visitor log in, and what blockr.assistant's migration notes say of a deployment's variables.
 The loop that makes the calls stays with the part, the state that keeps each thread's pick of the model is [The assistant's state](Rewrite-1.4.3)'s, and the chat that asks for a key and offers the pick is [The assistant's chat](Rewrite-1.4.4)'s.
 
 ## What must hold
@@ -106,7 +106,8 @@ So no blockr option lists the ways, and the hosting platform's integration, once
   The platform vouches for the visitor or for the deployment, so that the app holds no key of the hoster's, as Connect's AI Gateway takes a short-lived credential of Connect's own for Anthropic's API and puts the real key on the call (notes).
   Only R gets such a credential, since Connect hands it and the visitor's session token to the app's server alone, so R would pass it on to the page, while the calls still leave from the page (condition 3).
 
-Of the base URLs that a page reached in the probes, OpenAI alone puts no CORS header on the 401 with which it refuses a key, so a page sees that refusal as a failed connection ([Assistant as a plugin](Rewrite-1.4)), and the chat says that the key may be wrong ([The assistant's chat](Rewrite-1.4.4#the-credential)).
+Of the base URLs that a page reached in the probes, OpenAI alone puts no CORS header on the 401 with which it refuses a call's key, so a page sees that refusal as a failed connection, while its list of models puts one on its 401 too ([Assistant as a plugin](Rewrite-1.4)).
+So where a call fails as a failed connection, the plugin asks the base URL for its list of models with the same key, which tells a wrong key from a lost connection ([The assistant's chat](Rewrite-1.4.4#the-credential)).
 
 ### Who picks the model
 
@@ -169,7 +170,7 @@ An environment variable gives a string, and so does an R option that names one m
 
 ### Today's deployments across the switch
 
-A deployment of today's assistant moves to the blockr options above at the switch:
+A deployment of today's assistant moves to the blockr options above at the switch, and blockr.assistant's migration notes list each step below among the changes of the app scripts that use the assistant ([Assistant as a plugin](Rewrite-1.4#work)):
 
 - A deployment that gives today's assistant its key in `OPENAI_API_KEY` sets the key in `BLOCKR_ASSISTANT_API_KEY` too, since the plugin reads no variable of a provider's own clients (How a call is authenticated).
   Without it, the chat asks each visitor for a key of their own.
