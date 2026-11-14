@@ -99,7 +99,8 @@ So the plugin keeps them in memory, by message, and sends them to the model whil
 The state names each file and counts each tool result's images, so that once the board opens again the thread still tells the model that a turn had them, but not what they showed.
 
 Raw responses from the provider stay out of the state, as a saved board leaves them out today.
-So does a reply's reasoning, which only the provider reads, and which pi asks back for the next call ([Model access](Rewrite-1.4.1#the-models-settings)): the plugin keeps it in memory, by message, as it keeps the bytes of files.
+So does a reply's reasoning, which pi asks back for the next call ([Model access](Rewrite-1.4.1#the-models-settings)), whether the provider returns it encrypted or as a summary in text.
+Like the bytes of files, it would reach every follower of the store and every saved board, while the calls that follow it need it most, so the plugin keeps it in memory, by message.
 
 ### How much of a thread the state keeps
 
