@@ -36,7 +36,7 @@ export default {
 ```
 
 Core refuses a module whose major does not match its own.
-Beside `render()`, the default may hold `options`, the ids of the board options the module requires, whose values core resolves, the board's or else their defaults, before it calls `render()`, and for a renderer before it first asks R for an output that the renderer draws ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+Beside `render()`, the default may hold `options`, the ids of the board options the module requires, which core puts on the board, each with its default where the board holds no value, before it calls `render()`, and for a renderer before it first asks R for an output that the renderer draws ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 Those include every board option that a request of the module's class reads, as the block registry entry names them, and core refuses a module that leaves one out, naming the board option and the request.
 Where a module fails to load, declares another major, leaves out such a board option or throws in `render()`, core leaves its element empty and raises a notification that names the module and its package, so that the frontend shows the failure where it chooses, as AFM has a failing hook fail visibly, and the rest of the page, the block's evaluation included, carries on ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 A custom element meets the contract through `render()`, which puts one in `el` and hands it the host, so the contract has no second form for it, since that would tie the contract to the page's element registry, where a name is defined once and never removed.
@@ -118,7 +118,7 @@ A board option's UI, or the renderer that replaces it, gets an `OptionHost`, whi
 ```ts
 interface OptionHost<V extends Json = Json> {
   readonly option: OptionId;
-  value(): V;                                        // the board option's value in the board, or else its default, which core resolves before render()
+  value(): V;                                        // the board option's value in the board, where core puts its default before render() if the board holds none
   on(event: "value", fn: () => void): () => void;
   submit(value: V): Promise<void>;                   // runs core's command that sets a board option
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached

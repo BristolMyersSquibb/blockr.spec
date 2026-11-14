@@ -255,7 +255,7 @@ A file of today's stack is converted to a JSON board outside core first ([Serial
 
 A board opens with the app's plugins, each with the state that the board holds for it, and core draws it with the app's frontend, as a fresh app serving the board would ([Drawing the board](Rewrite-1.1.8#opening-a-board)), where a restore today is a `session$reload()` that builds the page for the restored board's class ([Client-owned board state](Rewrite-1.1)).
 Nothing converts the board, so its board option values stay, but for those that no package of the app registers, and the store drops the state of the plugins that the app does not hold ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
-Core resolves the defaults of the board options that the classes of its plugins require, where the board holds no value, and keeps them beside the board rather than in it, as [Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds) has it.
+Core puts on the board the board options that the classes of its plugins require, each with its default where the board holds no value, as [Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds) has it.
 
 ### Undo
 
