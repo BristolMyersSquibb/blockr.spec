@@ -10,7 +10,7 @@ What the tools' calls and results in a thread hold is [The assistant's tools](Re
 1. A board's threads are the assistant's plugin state, which a JSON board saves with the rest of the board, and which its class's `migrate` brings to the class's latest shape ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 2. No undo takes back a change that the assistant makes to its state, such as a message, and no such change takes an undo step.
 3. A reply enters its thread as one finished message, never token by token.
-4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds as today.
+4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds with today's option.
 5. Boards saved with today's assistant open, with none of their threads, as condition 6 of [Assistant as a plugin](Rewrite-1.4#what-must-hold) asks.
 
 ## Today
@@ -109,6 +109,7 @@ Today it bounds only a save, and after the switch a save writes the state, so it
 A message counts as one of today's turns does, since a message of the role `tool` holds the results of one reply's calls, as one of ellmer's turns holds them.
 A note of what others changed in the board counts as none, since it is none of today's turns, and a call adds at most one, so each thread stays bounded, while how many threads a board holds stays unbounded, as today (Today).
 The cut falls between whole exchanges, so that what the state keeps starts on a message that the user sent, as today's trimming for a save has it ([R/ext-history.R#L172-L271](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L172-L271)), or on a summary, which counts as one message and as an exchange of its own (Compaction).
+Where the last exchange alone holds more messages than the cap, as a turn with many tool calls can, the state keeps that exchange whole, so that the thread goes on from it once the board opens again, while today's save drops such a thread from the file ([R/ext-history.R#L199-L203](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-history.R#L199-L203)).
 As a board opens, the plugin cuts every thread to the cap through `blockr.assistant-trim_threads`, as today's save cuts every thread, so that a board saved under a higher cap keeps no more than this one allows.
 With `0`, the plugin runs none of the commands that write a thread, so that the state holds none, as today's save writes none ([R/ext-serdes.R#L70-L74](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-serdes.R#L70-L74)), and as a board opens it moves every thread that the state holds into its memory, through `blockr.assistant-remove_thread`.
 The threads then live in its memory alone, with their titles, their usage and their picks of the model, as today's live in R's memory (Today).
@@ -129,7 +130,7 @@ The assistant's class registers a command for each change to its state, which it
 | `blockr.assistant-add_thread` | `id`, `title`, `model` | Adds an empty thread under `id`, which the chat mints, since running a command returns nothing ([Board updates](Rewrite-1.1.2#commands)), with `model` as its pick of the model, null where that is left out ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
 | `blockr.assistant-rename_thread` | `thread`, `title` | Gives a thread a new title |
 | `blockr.assistant-remove_thread` | `thread` | Removes a thread |
-| `blockr.assistant-add_message` | `thread`, `message`, `keep` | Adds a finished message at the end of the thread, and drops the oldest messages past `keep`, which the plugin passes from `chat_save_turns` and leaves out for `Inf`, since a command's args are JSON, which holds no infinity (How much of a thread the state keeps) |
+| `blockr.assistant-add_message` | `thread`, `message`, `keep` | Adds a finished message at the end of the thread, and drops its oldest exchanges past `keep` messages, but never the last one (How much of a thread the state keeps). The plugin passes `keep` from `chat_save_turns`, and leaves it out for `Inf`, since a command's args are JSON, which holds no infinity |
 | `blockr.assistant-trim_threads` | `keep` | Drops the oldest messages of every thread past `keep`, as `blockr.assistant-add_message` drops them |
 | `blockr.assistant-compact_thread` | `thread`, `summary`, `from` | Puts a summary in place of the messages before `from`, the first message that it keeps, and is enabled only where the thread in the state still holds `from` (Compaction) |
 | `blockr.assistant-add_usage` | `thread`, `input`, `output`, `total` | Adds a call's input and output tokens to the thread's count, and keeps `total`, every token of the call, cached input included, as its `last` (Compaction) |
