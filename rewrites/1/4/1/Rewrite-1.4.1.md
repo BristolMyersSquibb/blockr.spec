@@ -178,7 +178,7 @@ A deployment of today's assistant moves to the blockr options above at the switc
 - A chat function of another provider becomes that provider's base URL in `assistant_base_url`, with `assistant_api` where that base URL does not speak the Responses API.
   Where a page cannot call the provider, the base URL is a gateway's or a proxy's instead (Where the calls go).
 
-A board saved today opens with each of its threads on the default model, since the conversion leaves out the value of `llm_model` ([The assistant's state](Rewrite-1.4.3#todays-threads-across-the-switch)).
+A board saved today opens with none of its threads, and the conversion leaves out the value of `llm_model` ([The assistant's state](Rewrite-1.4.3#boards-saved-today)).
 
 ## Open questions
 
