@@ -62,7 +62,7 @@ Each tool runs in the browser, and those that need R send a request of the assis
 | `inspect_results` | What the model's R code prints, and up to four of the plots it draws, given the code, the ids of the blocks whose results it reads, and the width and height of its plots | The request `inspect_results` |
 | `read_skill` | The text of a skill that the model may read, or a file that the skill holds | The request `read_skill` |
 | `edit` | Runs a list of commands as one step of the assistant, and returns a review of the blocks it changed, those that feed them and those downstream (below) | `commands.run()`, `store.subscribe()`, `scheduler.evaluate()`, `scheduler.status()`, the request `describe_result` |
-| `undo_edit` | Takes back the assistant's last undo step, as the chat's Undo does ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)), and returns as `edit` does (below) | `store.canUndo("assistant")`, `store.undo("assistant")`, and what `edit` reads |
+| `undo_edit` | Takes back the assistant's last undo step, past any step of the user's after it ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)), and returns as `edit` does (below) | `store.canUndo("assistant")`, `store.undo("assistant")`, and what `edit` reads |
 
 The read tools that carry over keep today's names.
 Of the two pairs that are new, `list_commands` and `describe_command` follow today's `list_block_types` and `describe_block_type`.
@@ -139,7 +139,7 @@ A pull request that changes a command's description shows the benchmark's compar
 The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves out the assistant's own commands, since only the assistant's chat and loop change its threads and each thread's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L101](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L101)).
 
 The tool `undo_edit` takes back the assistant's last undo step with `core.store.undo("assistant")`, which applies the undo as a new edit, and then returns as the edit tool does from step 3, so that the model learns what the undo changed.
-That step may be another thread's, since the edits of every thread are steps of the one origin `assistant`, which the chat's Undo takes back as well ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
+That step may be another thread's, since the edits of every thread are steps of the one origin `assistant` ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
 It passes over an edit that took no undo step, and leaves the board options as they are, as every undo does ([Board updates](Rewrite-1.1.2#undo)).
 Where `core.store.canUndo("assistant")` is false, it changes nothing and returns that the assistant has no edit left to take back.
 Where the store refuses the undo, as a lock or a check of the board refuses it, it returns why, as step 2 returns a refusal, and the board stays as it was.
@@ -164,7 +164,7 @@ The assistant keeps the version that passes the comparison ([The assistant's ben
 ### The requests in R
 
 The assistant's class gives R four requests through its method of `plugin_requests()`: the three that the tools send, and `list_skills`, which the plugin sends once a board opens.
-The chat sends `read_skill` too, for a skill that the user calls with `/name` ([The assistant's chat](Rewrite-1.4.4#commands)).
+The chat sends `read_skill` too, for a skill that the user calls with `/name` ([The assistant's chat](Rewrite-1.4.4#slash-commands)).
 R calls each with the blocks that it reads in `reads`, each by its id with its result ([Plugins](Rewrite-1.1.12#a-plugins-requests)):
 
 ```r
@@ -273,8 +273,7 @@ The store's `run()` works out the board after each delta of a step before it com
 
 The edit tool subscribes to the store before it calls `commands.run()`, and ends the subscription once the call settles.
 It takes the changes of the origin `assistant` that it hears meanwhile, since the user and other plugins edit with origins of their own ([Board updates](Rewrite-1.1.2#the-store)).
-An undo or a redo through the chat's Undo or Redo carries the origin `assistant` too, and can land while a command of the list waits in its `prepare()`.
-Its blocks then join the review, which only widens the review.
+An undo through the frontend's Undo carries the origin `user`, even where it takes back a step of the assistant's, so the edit tool does not take it for one of its own changes ([Board updates](Rewrite-1.1.2#undo)).
 The tool `undo_edit` hears the changes of its undo within its call of `store.undo()`, which applies at once.
 A step took an undo step unless every command of its list has `undo: false` in `commands.registered()`, or the changes that the tool heard set only board options ([Board updates](Rewrite-1.1.2#undo)).
 

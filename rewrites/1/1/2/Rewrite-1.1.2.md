@@ -60,10 +60,10 @@ interface Store {
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
   save(): string;                                            // the text of jsonBoard(), as a file holds it, which open() opens (Serialization)
 
-  undo(origin?: Origin): void;                               // takes that origin's last step back, as a new edit (below)
-  redo(origin?: Origin): void;
+  undo(origin?: Origin): void;                               // takes back the history's last step, or that origin's last step, as a new edit (below)
+  redo(): void;                                              // applies again the step that the last undo took back
   canUndo(origin?: Origin): boolean;
-  canRedo(origin?: Origin): boolean;
+  canRedo(): boolean;
 
   readonly plugins: Plugins;                                 // the plugin classes that core registers from the modules that the reply names (Plugins)
   readonly options: Options;                                 // the board options that core registers from the modules that the reply names (Board options and blockr options)
@@ -73,7 +73,7 @@ interface Store {
 }
 ```
 
-Besides the board, the store keeps the undo and redo steps of each origin, its subscribers, what is registered, and the edit id of each block and of each plugin: the number of the step that last changed it, from one count of the steps, the opening of a board, an undo and a redo included, so that no number names two versions of one object.
+Besides the board, the store keeps one history of the undo and redo steps of every origin, its subscribers, what is registered, and the edit id of each block and of each plugin: the number of the step that last changed it, from one count of the steps, the opening of a board, an undo and a redo included, so that no number names two versions of one object.
 It holds no board until it opens one and refuses every delta until then, so that nothing builds on a board that no opening made.
 Core creates a store for each board it opens, with `createStore({ hello, loaded, signal })`, given the reply to `hello` and a signal that ends the store as another board opens, and the store sends R nothing, since it opens its board with what the reply to `hello` holds, while a board that another replaces goes with its store, as core starts again ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 The `loaded(reply)` callback is what the store awaits before it opens its board, given the reply to `hello`, while core registers the plugin classes and board options whose modules the reply names before it calls `open()` ([blockr.core#499](https://github.com/BristolMyersSquibb/blockr.core/pull/499), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)), so that the store opens the board with the class of every plugin of the app registered ([Plugins](Rewrite-1.1.12#a-plugin)).
@@ -258,12 +258,17 @@ Core resolves the defaults of the board options that the classes of its plugins 
 
 ### Undo
 
-The deltas of one command are one undo step, which `store.undo()` takes back and `store.redo()` applies again, each for one origin, so that the assistant's steps undo apart from the user's.
+The deltas of one command are one undo step, and the store keeps the steps of every origin in one history, in the order the board took them.
+So `store.undo()` takes back the history's last step, whoever took it, and `store.redo()` applies again the step that the last undo took back, which is what the user expects of the frontend's Undo and Redo once the assistant edits beside them.
+Given an origin, `store.undo()` takes back that origin's last step instead, past the steps of others after it, as the assistant's tool `undo_edit` does ([The assistant's tools](Rewrite-1.4.2#the-tools)).
+An undo is a change of the origin that asks for it, the user's where none is given, so that the assistant hears the user's undo of its edit as the user's ([The system prompt](Rewrite-1.4.5#what-changed-under-the-model)).
+A new step empties the redo steps, whoever takes it.
+How a peer's steps undo, once a package syncs boards between people, is that package's to settle, and nothing here rules out keeping them apart.
 Undo works as it does in Figma, Google Slides and tldraw, as a new edit on the board as it is: it applies the inverse the store kept where what the step changed is still there, over what another origin changed since, the last writer winning, does nothing where it is gone, and is expanded, checked and announced as any delta, covering the state of its plugins as it covers core's objects.
 It leaves board option values alone, since a board option never changes what the board computes, so a step that sets only those is no undo step ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 For the same reason, a command whose definition has `undo: false` takes no undo step, as the dock's commands that switch views, show another tab and open or collapse a rail do, since they change only what the user looks at ([The dock's state](Rewrite-1.2.1#commands)).
-The store applies, announces and saves the deltas of such a command as any others, keeps no inverse of them, and leaves every origin's redo steps as they were.
-It keeps what it replaced for redo, so that undoing and then redoing leaves the board as it was, whatever another origin changed in between, which is Figma's principle ([How Figma's multiplayer technology works](https://www.figma.com/blog/how-figmas-multiplayer-technology-works/)).
+The store applies, announces and saves the deltas of such a command as any others, keeps no inverse of them, and leaves the redo steps as they were.
+It keeps what it replaced for redo, so that undoing and then redoing leaves the board as it was, which is Figma's principle ([How Figma's multiplayer technology works](https://www.figma.com/blog/how-figmas-multiplayer-technology-works/)).
 Undo and redo are steps of their own, so edit ids only grow and refuse a delta built on an older board, such as the assistant's plans, but no undo.
 Undo leaves out a patch whose path no longer leads to what it changes, as it leaves out a change of a block that is gone, and a patch at an array's index changes whatever the array holds there by then.
 A path holds no place among an object's members, so the store keeps the member that followed a removed one, as it keeps an entry's place in core's collections, and undo adds the member back before that one, or last where it is gone.

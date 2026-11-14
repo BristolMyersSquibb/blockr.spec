@@ -77,7 +77,7 @@ The board stays open to the user while a turn runs, and between turns, so it can
 The board after the last message shows the board as it is, but neither what changed nor who changed it.
 So a model that said it added a block `adults` would later read a board without `adults`, and nothing to tell it why, which is what shinychat#375 describes for a context that a message does not keep.
 
-To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it: the user, the user through the chat's Undo or Redo, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
+To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it: the user, the user through Undo or Redo, the assistant in another thread, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
 Before each call, the plugin adds a note of the changes since the thread's previous call to the thread, as a message of its own, which it marks as the app's rather than the user's ([The assistant's state](Rewrite-1.4.3#the-state)).
 So the thread keeps the note, as shinychat#375 asks of a message's context, and a call with no such changes carries none.
 The note comes before the board, which the call adds after the thread's last message, so that the cache serves the thread up to the note on the calls after.
@@ -94,7 +94,7 @@ The template keeps the rules that carry over (Today), and states those of the ne
 - The model reads what an edit relies on rather than guessing at it, since a result's summary, the state that `describe_block` reports and a class's description are bounded, and the Board section shows no plugin's state in full: through `get_block_result`, `inspect_results`, `get_block_state`, `get_plugin_state`, `describe_block_type` or `describe_command` ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 - One edit is one list of commands, which applies all or none, in the order given: a block before its links, with an id that the model gives it, so that later commands of the list name it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   An edit is one undo step, unless every command of it has `undo: false`, as the dock's command that switches views has, or it sets only board options ([Board updates](Rewrite-1.1.2#undo)).
-  An edit holds one change that the user would take back as one, so that the chat's Undo takes back what the user expects ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
+  An edit holds one change that the user would take back as one, so that the frontend's Undo takes back what the user expects ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
 - An edit returns a review of the blocks that it changed, of the blocks that feed them directly and of every block downstream: each block's status, the conditions that appeared since the edit began, what `describe_result()` writes about its result, and the state of each block that it added ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   The model checks the review against what the user asked, and corrects with another edit, rather than reporting as done a change that left a block `failed`, `invalid` or `waiting`.
   Where the review leaves out the blocks past `assistant_review_max_blocks`, the model says that it has not checked them, rather than reporting the change as verified.

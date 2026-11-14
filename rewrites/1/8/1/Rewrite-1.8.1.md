@@ -93,7 +93,7 @@ What no function can check, such as whether a reply explains a number well, a mo
 The harness serves the question's board with `serve()`, with the app's packages, its skills and a key of its own, as a deployment does ([Model access](Rewrite-1.4.1#the-blockr-options)), and drives the page in a headless browser:
 
 1. It opens the page, and waits until the board is drawn.
-2. It types each turn into the chat's composer, as a user does, and waits until the turn ends ([The assistant's chat](Rewrite-1.4.4#the-composer-and-a-turn)).
+2. It types each turn into the chat's message field, as a user does, and waits until the turn ends ([The assistant's chat](Rewrite-1.4.4#the-message-field-and-a-turn)).
 3. It applies the checks on the page, then saves the board, as a user does, and reads the JSON board, whose assistant's state holds the thread with its tool calls and its `usage` ([The assistant's state](Rewrite-1.4.3#the-state)).
 4. It applies the checks on the values, the board and the tools.
 

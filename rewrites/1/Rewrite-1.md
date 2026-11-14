@@ -75,7 +75,7 @@ The client follows established JS patterns, as the module contract follows anywi
   A board can run any R code, since a block may parse a string into code, so a client can read whatever the R process can, its environment variables and R options included ([Client-owned board state](Rewrite-1.1#proposal)), and limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
 - Shiny stays as host and transport for now, since on Connect a Shiny app with *Max connections per process* at 1 gives each session its own process.
   One small module, the Shiny transport, carries the protocol, and leaving Shiny later replaces only that module ([Client-owned board state](Rewrite-1.1)).
-- The assistant is a collaborator, editing the board beside the user, which is why collaboration shapes the design now: a delta names its origin, so the user and the assistant each undo their own steps ([Board updates](Rewrite-1.1.2)).
+- The assistant is a collaborator, editing the board beside the user, which is why collaboration shapes the design now: a delta names its origin, so that the store tells the assistant's steps from the user's, while both go into one history, which the user's undo takes back in order ([Board updates](Rewrite-1.1.2#undo)).
   Collaboration between people is not built, but stays open on the same terms, with the dock plugin's state holding what opening, saving and restoring a board need, and a later relay free to keep each person's switching between views on their own screen ([Client-drawn dock](Rewrite-1.2)).
   Early cutoff is not built either and can come later, opt-in per block class.
 
