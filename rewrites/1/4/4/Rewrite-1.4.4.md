@@ -216,7 +216,7 @@ The plugin withdraws each once its cause has gone, and core withdraws them all a
 | A file that the provider refuses | Error, `assistant_attachment_refused` | A later call of the thread succeeds |
 | Compaction that fails, which leaves the thread as it was | Warning, `assistant_compaction_failed` | A later compaction of the thread succeeds, or the thread goes |
 | The skills that R cannot list or read, as for a directory in `assistant_skills` that does not exist | Error, `assistant_skills_failed` | R lists or reads the skills |
-| A template that R cannot read, as for a file in `assistant_template` that does not exist, or one with an `{{id}}` that names no section of blockr.assistant's template | Error, `assistant_template_failed` | R reads a template whose every `{{id}}` names a section |
+| A template that R cannot read, as for a file in `assistant_template` that does not exist, or one with an `<<id>>` that names no section of blockr.assistant's template | Error, `assistant_template_failed` | R reads a template whose every `<<id>>` names a section |
 | A list of models that leaves none to offer, where the deployment names none, as at a company's own proxy that lists none, or where no model in the list takes tools | Error, `assistant_models_failed` | A list offers a model |
 
 Where the deployment names no models and the base URL's list leaves none to offer, the chat offers no model ([Model access](Rewrite-1.4.1#who-picks-the-model)), so the user can send nothing.
