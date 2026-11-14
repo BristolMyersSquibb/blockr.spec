@@ -59,7 +59,7 @@ Core's method for a constructor leaves a closure unread, rather than unserialize
 
 The methods of the other packages that wrote today's files move into blockr.convert as well, so that none of those packages keeps code for today's files (condition 3).
 On main, those are blockr.dplyr's 16, blockr.assistant's one and blockr.dock's 7, which build the dock plugin's state and the plugins that take the place of today's extensions ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)).
-The method for each extension that a plugin takes the place of makes the plugin from the extension's state, with the constructor of the plugin's class: that of blockr.dag for the DAG, of blockr.assistant for the assistant, as [The assistant's state](Rewrite-1.4.3#todays-threads-across-the-switch) has it, and of blockr.md for its documents ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+The method for each extension that a plugin takes the place of makes the plugin from the extension's state, with the constructor of the plugin's class: that of blockr.dag for the DAG, of blockr.assistant for the assistant, which takes none of the threads, as [The assistant's state](Rewrite-1.4.3#boards-saved-today) has it, and of blockr.md for its documents ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### What a session cannot rebuild
 
@@ -105,7 +105,7 @@ None.
 - Create blockr.convert, with `blockr_deser()` and the methods of blockr.core's main, and `convert_file()`, which reads a file of today's stack with typedjson in the mode that refuses code and writes its JSON board with `blockr_ser()`, with a README on converting a file, in blockr.convert
 - Convert a dock board, with the methods of blockr.dock's main for the dock board, its stacks and the Edit board extension, which write the dock plugin's state at version 1 ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)), in blockr.convert
 - Refuse a file without a `format`, in the client and in `serve()`, with an error that names blockr.convert's `convert_file()`, in blockr.core
-- Carry over the methods of `blockr_deser()` of blockr.dplyr's and blockr.assistant's main, and write those that make the plugins of the DAG and of blockr.md from today's extensions, in blockr.convert
+- Carry over the methods of `blockr_deser()` of blockr.dplyr's main, and write those that make the plugins of the DAG, the assistant and blockr.md from today's extensions, in blockr.convert
 - Write the test files of every package that wrote today's files and of the clinical data explorer's board, from main at the switch, and the check that each example's script, changed by an AI from the migration notes alone, opens into the same board as the conversion of its file, in blockr.convert
 
 <details><summary>Notes for implementers</summary>

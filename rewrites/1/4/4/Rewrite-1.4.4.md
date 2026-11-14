@@ -2,7 +2,7 @@
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the chat that the assistant's `ui` draws in a panel of any frontend.
-It covers the composer and a turn as it streams, what waits while a turn runs, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads, attachments, the focus, the commands, the meter, the pick of the model, the visitor's credential and what fails.
+It covers the composer and a turn as it streams, what waits while a turn runs, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the threads, attachments, the commands, the meter, the pick of the model, the visitor's credential and what fails.
 It shapes the Work item that draws the chat, and the two that let a visitor use their own key and log in.
 What a thread holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, how a call is authenticated and who picks the model is [Model access](Rewrite-1.4.1)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
@@ -33,7 +33,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 | The drawer of shinychat, which starts, switches, renames, deletes and searches threads, with the titles that a model call gives ([NEWS.md#L16](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/pkg-r/NEWS.md#L16)), groups them by how recently each was updated, searches their titles ([ChatHistoryDrawer.tsx#L220-L226](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/js/src/chat/ChatHistoryDrawer.tsx#L220-L226)), and asks before it deletes one ([#L323-L332](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/js/src/chat/ChatHistoryDrawer.tsx#L323-L332)) | Carried over ([Threads](#threads)) |
 | Editing a sent message, which forks the thread, with `‹ 1 / 2 ›` controls to switch between the versions | Dropped for now, since an edit forks the thread but not the board: the blocks that the assistant added in the first version stay on the board, while the thread of the second never mentions them. So the user corrects the assistant with a new message, which the model reads after its own earlier edits. Editing and its branches are later work, which nothing here rules out ([The assistant's state](Rewrite-1.4.3#the-state)) |
 | Attachments of images, PDFs and text files, about 30 MB together, which open large when clicked ([ChatMessage.tsx#L135-L139](https://github.com/posit-dev/shinychat/blob/6cb14177de45a78ab50aeb54a1540d8ac560a3de/js/src/chat/ChatMessage.tsx#L135-L139)) | Carried over, with their bytes in the page's memory, and the bound set by the plugin, since no app sets the variable that sets it today ([Attachments](#attachments)) |
-| The footer: the tags of the focus, the @ button with blockr.ui's multi-select of the blocks in view, the token meter, and the button that opens the drawer ([R/focus.R#L202-L274](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R#L202-L274), [R/ext-server.R#L845-L864](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L845-L864)) | Carried over, with the @ button listing every block, those of the active view first where the dock is the frontend, since another frontend has no views ([The focus](#the-focus), [The meter](#the-meter)) |
+| The footer: the tags of the focus, the @ button with blockr.ui's multi-select of the blocks in view, the token meter, and the button that opens the drawer ([R/focus.R#L202-L274](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R#L202-L274), [R/ext-server.R#L845-L864](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L845-L864)) | Carried over for the meter and the drawer's button ([The meter](#the-meter), [Threads](#threads)), while the tags of the focus and the @ button are dropped, since the plugin tells the model which block has focus and which panels show, so that the user sets nothing ([The system prompt](Rewrite-1.4.5#the-sections)) |
 | The pick of the model where the blockr option `chat_function` offers several, outside the chat, through core's board option `llm_model`, which the dock's options sidebar shows ([blockr.core R/board-option.R#L709-L722](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L709-L722)), after which the thread goes on with the model picked ([R/ext-server.R#L556-L568](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L556-L568)) | In the chat's footer, where the deployment offers more than one model or names none ([The model](#the-model)) |
 | The commands `/compact` and `/clear`, and `/name` for each skill that the user may call ([R/ext-commands.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-commands.R), [R/skills-invoke.R#L80-L114](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-invoke.R#L80-L114)) | Carried over ([Commands](#commands)) |
 | Blanking the chat in a panel 140 px wide or narrower, as a collapsed rail is ([R/ext-server.R#L365-L376](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L365-L376)) | Dropped, since a collapsed rail hides its panels ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)) |
@@ -88,7 +88,7 @@ The tools say what changed under them too, such as a block that the user removed
 The chat's own actions wait for the turn to end, as today, since they change the thread that the turn writes to.
 The user can type into the composer, but cannot send a message or a command until the turn ends.
 Switching threads, starting one and deleting one wait too, as today's drawer asks the user to "Wait for the response to finish".
-Renaming a thread and changing the focus stay open, as today, and so does the pick of the model, which applies from the next turn (The model).
+Renaming a thread stays open, as today, and so does the pick of the model, which applies from the next turn (The model).
 
 ### Stopping a turn
 
@@ -136,14 +136,6 @@ The composer takes images, PDFs and text files, up to about 30 MB together, as t
 The plugin sets that bound itself, since the environment variable that sets it today goes with shinychat, and no app sets it (notes).
 The plugin keeps their bytes in memory and sends them to the model with the message and in the turns after it, while the state names each file ([The assistant's state](Rewrite-1.4.3#files-and-images)).
 A file that the provider refuses reaches the user as a notification (What fails).
-
-### The focus
-
-The footer shows a tag for the block that has focus in `CoreApi.focus`, which the frontend sets ([Block cards in the dock](Rewrite-1.2.7#focus)), with a × that hides the tag until focus moves to another block.
-It shows a tag too for each block that the user added with @, which stays until the user removes it.
-The @ button opens blockr.ui's multi-select of the blocks, those of the active view first where the dock is the frontend, and its picks become the thread's `focus` through `blockr.assistant-set_focus` ([The assistant's state](Rewrite-1.4.3#commands)).
-Where a frontend sets no focus, the footer shows no tag for it.
-The model reads the focus before each call ([The system prompt](Rewrite-1.4.5#the-sections)).
 
 ### Commands
 
@@ -203,7 +195,7 @@ What a tool's request returns as a failure, such as `inspect_results` on a locke
 The chat works on a locked board as on any other: the user asks, and the model reads and answers.
 The edit tool returns why a lock refuses an edit ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
 An edit that the locks leave open applies as on any board, such as one to the state of a block whose `locked` is `FALSE`, and Undo and Redo take it back ([Locked boards and the properties of blocks](Rewrite-1.1.11#the-board-lock)).
-The assistant's commands stay enabled, so that threads, the focus and the pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
+The assistant's commands stay enabled, so that threads and the pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ## Open questions
 
@@ -217,7 +209,7 @@ Editing and its branches, once they come, go through `onEdit`, "required for edi
 Its `onReload` regenerates a reply, which today's chat does not offer, so the chat leaves it out for now.
 Its package, `@assistant-ui/react`, is under MIT, read on npm on 2026-11-13 for 0.15.36, so its text joins those that the plugin's build writes beside the bundle ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
-Today's code, at `fcbdb27`: the footer's button for the drawer clicks shinychat's hidden trigger ([R/ext-server.R#L318-L364](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L318-L364)), the @ button sends every ticked id as `focus_set` from `inst/assets/focus.js`, the × of the focus's tag sends `focus_dismiss`, and removing a tag added with @ sends `focus_drop` ([R/focus.R](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/focus.R)), the meter counts each turn's input and output tokens ([R/ext-server.R#L1281-L1309](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1281-L1309)), and the skin over shinychat's classes is scoped under `.asst-panel` ([R/ext-skin.R#L84-L344](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-skin.R#L84-L344)).
+Today's code, at `fcbdb27`: the footer's button for the drawer clicks shinychat's hidden trigger ([R/ext-server.R#L318-L364](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L318-L364)), the meter counts each turn's input and output tokens ([R/ext-server.R#L1281-L1309](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1281-L1309)), and the skin over shinychat's classes is scoped under `.asst-panel` ([R/ext-skin.R#L84-L344](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-skin.R#L84-L344)).
 Today's `/clear` starts a new chat through shinychat's `new_chat()` and drops what is staged ([R/ext-server.R#L1055-L1067](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1055-L1067)).
 Today, shinychat bounds attachments through its environment variable `SHINYCHAT_MAX_ATTACHMENT_SIZE`, which no app in the workspace sets.
 Today's assistant drops the last turns of a failed exchange as it hands a thread to another model, since an empty reply would show as a spinner ([R/ext-server.R#L510-L536](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L510-L536)), so a reply that streamed nothing before a stop or a failure adds no message.
