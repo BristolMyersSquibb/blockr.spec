@@ -93,12 +93,13 @@ What no function can check, such as whether a reply explains a number well, a mo
 The harness serves the question's board with `serve()`, with the app's packages, its skills and a key of its own, as a deployment does ([Model access](Rewrite-1.4.1#the-blockr-options)), and drives the page in a headless browser:
 
 1. It opens the page, and waits until the board is drawn.
-2. It types each turn into the chat's message field, as a user does, and waits until the turn ends ([The assistant's chat](Rewrite-1.4.4#the-message-field-and-a-turn)).
-3. It applies the checks on the page, then saves the board, as a user does, and reads the JSON board, whose assistant's state holds the thread with its tool calls and its `usage` ([The assistant's state](Rewrite-1.4.3#the-state)).
-4. It applies the checks on the values, the board and the tools.
+2. It follows the board through `core.store.subscribe()`, as any follower of the board does ([Board updates](Rewrite-1.1.2#following-the-board)), and records each message as it enters the thread.
+   It records them as they come, since compaction replaces a thread's older messages with a summary, in the saved thread and in what the chat shows alike ([The assistant's state](Rewrite-1.4.3#compaction)).
+3. It types each turn into the chat's message field, as a user does, and waits until the turn ends ([The assistant's chat](Rewrite-1.4.4#the-message-field-and-a-turn)).
+4. It applies the checks on the page, then saves the board, as a user does, and reads the JSON board, whose assistant's state holds the thread's `usage` ([The assistant's state](Rewrite-1.4.3#the-state)).
+5. It applies the checks on the values, the board and the tools, and reads the replies and the tool calls from the messages that it recorded rather than from the saved thread.
 
 The harness makes a question's edits through `core.commands.run()` with the origin `user`, as the frontend makes the user's, at the point that the question names, such as after the turn's first edit.
-The harness sets `chat_save_turns` to `Inf`, so that the saved thread holds every message of the run ([The assistant's state](Rewrite-1.4.3#how-much-of-a-thread-the-state-keeps)).
 A turn that passes the cap on its calls is stopped, as the chat's stop button stops it, and the run fails.
 The cap is the question's, and the first runs set its default from how many calls a passing run takes.
 Each run starts from a new page and the question's board, so that no run sees another's blocks or thread.
