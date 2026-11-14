@@ -169,9 +169,8 @@ The card places each notification by its severity:
 - Messages fold under the output behind their count, such as "2 messages", as warnings and messages fold today.
 
 Today's card folds warnings with the messages, against the design system, which puts a block's warning above its output, as its error.
-The card leaves out what core or the renderer already shows in an element of the card, as core's basic frontend does: a module that cannot draw, of the code `module_failed`, and an output that R could not make, which its renderer shows.
 It also leaves out the two messages that its status note holds ([The output](#the-output)).
-A notification that a plugin raises shows as a toast, even where it concerns the block, as core's basic frontend shows it.
+A notification that a plugin raises shows as a toast, even where it concerns the block.
 So does every notification that concerns no block ([Client-drawn dock](Rewrite-1.2#proposal)).
 A notification's message shows as text, never as HTML.
 
