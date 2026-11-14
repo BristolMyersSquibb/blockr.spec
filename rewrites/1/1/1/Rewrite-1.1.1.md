@@ -12,7 +12,7 @@ What a plugin is, and which plugins run on a board, are [Plugins](Rewrite-1.1.12
 
 1. A board built in R by `new_board()` and the block, link, stack and board option constructors maps to the client's board and back without losing any of its state, and so does the JSON `blockr_ser()` writes today.
    An app can start from a JSON board in place of a constructor call, as `serve()` takes a file's path today.
-2. The board is plain data, so it serializes as is, and every change to it can be written as a delta and undone, but for a board option's value, which undo leaves alone ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+2. The board is plain data, so it serializes as is, and every change to it can be written as a delta and undone, but for a board option's value, which undo leaves alone ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)), and the deltas of a command with `undo: false`, which take no undo step ([Board updates](Rewrite-1.1.2#undo)).
 3. A board has no class of its own, and what a package adds to a board, as blockr.dock adds its views today, is the state of one of the board's plugins, beside core's objects, which core carries without reading it ([Plugins](Rewrite-1.1.12#what-must-hold)).
 4. A board saved with a package that is not installed opens without the objects that need it, and the user learns which ones were dropped.
 5. The board names its blocks' classes by registry id and its plugins' classes by their ids only, while no object in it, nor in the file it is saved to, carries an R class, names a constructor or holds a block class's source ([Serialization](Rewrite-1.1.4)).
