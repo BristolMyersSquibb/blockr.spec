@@ -53,8 +53,8 @@ A demand has an owner, and every owner demands the same way, so core never learn
   It takes each block's recipe then, at the revision the block has when it is sent, so an edit made while it waits delays it, as it delays a download ([UI modules in JS](Rewrite-1.1.7#the-contract)).
   Once it is sent, the scheduler never cancels it, whatever its evaluation priority, and sends no other evaluation of those revisions.
   It resolves with the statuses its replies give, which become the blocks' own where those revisions are still current.
-  It rejects at once where a block reads `waiting`, since no result is in sight.
-  A block's own status never holds it back otherwise, since a write block in manual mode reads `invalid` whenever it is evaluated without `save`.
+  It rejects at once where an unlinked input or a block upstream keeps a block `waiting`, since no result is in sight.
+  A block's own status never holds it back otherwise, since a block that R says waits runs once asked, as a write block in manual mode reads `waiting` whenever it is evaluated without `save`.
   It also rejects where its block leaves the board before it is sent, and where a new session starts before R replies, since it may have run (Scheduling).
 
 Every demand and one-time evaluation has an evaluation priority, a number that defaults to 0, and a block takes the highest of anything that needs it, itself or a block downstream of it, so that what a view shows and everything upstream of it go first.
@@ -102,6 +102,7 @@ interface BlockStatus {
   stdout: string;                                  // its standard output and error
   stderr: string;
   summary: string | null;                          // the result's summary from that reply, "<data.frame> [150 × 7]"
+  reason: string | null;                           // why an invalid or a waiting block does not run (below)
 }
 
 scheduler.status("b");                                         // the block's status now, read by whatever draws it
@@ -109,12 +110,13 @@ scheduler.subscribe(changed => { /* redraw these blocks */ });  // after statuse
 ```
 
 The names are today's ([R/block-server.R#L20-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L20-L71)), with `invalid` in place of `unset`, since a block class says only whether a state can run, by signalling `blockr_invalid()` in its `expr` or its `block_eval()` method or using an arg the state leaves unset ([Block classes in R](Rewrite-1.1.5#expressions)), and the conditions are those a reply carries ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
+A class signals `blockr_waiting()` instead where a state can run but runs only once something else happens, as a write block in manual mode does, and R then replies `waiting` ([blockr.core#598](https://github.com/BristolMyersSquibb/blockr.core/pull/598)).
 A block's status is the first of these that holds:
 
 1. It is `waiting` while an input without a default is unlinked and R does not bind it itself, as it binds the data `serve()` is given for a block it serves alone ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)), while a variadic block has no link, or while a block upstream reads `failed`, `invalid` or `waiting`, which the client sees from the block registry, the board and the reply to `hello` without asking R ([Block classes in R](Rewrite-1.1.5#the-block-class), [Wire protocol](Rewrite-1.1.9#handshake)).
 2. It is `unevaluated` before its first reply.
 3. It is `stale` while its revision is newer than its latest reply's, whether anything demands it or not.
-4. It is what that reply says: `ready` for `ok`, `failed` for `error` and `invalid` for `invalid`.
+4. It is what that reply says: `ready` for `ok`, `failed` for `error`, `invalid` for `invalid` and `waiting` for `waiting`.
 
 A reply of `cancelled` or `missing` counts as none, since the scheduler sends again what it still needs.
 Only a fault in R makes R lack a result that reads `ready` at the block's current revision.
@@ -122,10 +124,9 @@ The scheduler then invalidates that block, so that it is evaluated again.
 An evaluation that the transport cannot send fails its block, with the transport's error as its condition.
 The scheduler then sends that revision no more, and tries again once the block's revision moves.
 A block nothing demands reads the same way, so one that failed and has not changed since still reads `failed`, and a `stale` block keeps its latest reply's conditions, so one that failed before it went stale shows why.
-The conditions of an `invalid` reply hold the message of its `blockr_invalid()` or name the unset arg.
-While a block is `waiting`, its status holds no summary, and as its conditions only one the scheduler writes, of the phase `status`, naming the unlinked input or the upstream block that keeps it waiting, as today's board server records a note for `waiting` and `unset` with no result ([R/block-server.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L66-L71)).
-That condition is a message, of the class `blockr_message`, since the status already says that the block waits.
-It names every unlinked input, or else every block upstream that keeps the block waiting, by id.
+An `invalid` or a `waiting` reply carries why in its `reason`, which the block's status keeps: the message of the `blockr_invalid()` or the `blockr_waiting()` that stopped the block, or of R's error for an unset arg, while the reply's conditions hold only what R raised ([blockr.core#598](https://github.com/BristolMyersSquibb/blockr.core/pull/598)).
+While an unlinked input or a block upstream keeps a block `waiting`, its status holds no summary, and the scheduler writes its `reason`, as today's board server records a note for `waiting` and `unset` with no result ([R/block-server.R#L66-L71](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L66-L71)).
+That reason names every unlinked input, or else every block upstream that keeps the block waiting, by id.
 
 ### Scheduling
 

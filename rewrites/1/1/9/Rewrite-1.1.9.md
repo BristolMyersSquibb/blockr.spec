@@ -25,7 +25,7 @@ The client sends nothing but its `hello` until R has answered it, as an MCP clie
 type Kind = "hello" | "blockr_options" | "evaluate" | "request" | "output" | "cancel" | "forget";
 
 interface Request { id?: string; kind: Kind; traceparent?: string }   // id on every kind but cancel and forget, and traceparent while the client records spans
-interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "missing" }
+interface Reply { id: string; status: "ok" | "error" | "cancelled" | "invalid" | "waiting" | "missing" }
 interface Progress { id: string; progress: { value?: number; message?: string } }
 ```
 
@@ -85,7 +85,7 @@ R keeps the result under the block's id, with its revision, its block expression
 It carries no code, since exporting a block's code is blockr.code's, through a request of its own that reads the expressions R keeps ([Code export as a plugin](Rewrite-1.5)).
 
 ```json
-{ "id": "17", "status": "ok", "block": "c", "revision": 4, "summary": "<data.frame> [150 × 7]",
+{ "id": "17", "status": "ok", "block": "c", "revision": 4, "summary": "<data.frame> [150 × 7]", "reason": null,
   "conditions": [ { "severity": "warning", "class": ["simpleWarning", "warning", "condition"], "phase": "block_eval", "message": "..." } ],
   "stdout": "", "stderr": "" }
 ```
@@ -93,7 +93,9 @@ It carries no code, since exporting a block's code is blockr.code's, through a r
 A reply carries every condition raised, however many, and no tracebacks, and replaces the conditions of the block's earlier reply, as the Language Server Protocol replaces diagnostics ([LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics)).
 No property of a reply has a limit of its own, since such a limit guesses a size for one property, and a count drops a condition however short it is, while what matters is the size of a whole message, which the transport bounds (below).
 The phase names what raised a condition: the class's `expr`, which builds the expression, its `inputs`, whose body checks the data, `block_eval()`, which runs the block expression, or `result_summary()`, which describes the result, and in the reply to an output request or a request, `output` or `request`, for the coercion or the request's function.
-The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `blockr_invalid()`, with its message, or `expr` uses an arg the state leaves unset, naming it, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
+The status is `invalid` when the block class's `expr` or its `block_eval()` method signals `blockr_invalid()`, or `expr` uses an arg the state leaves unset, before the block expression runs ([Block classes in R](Rewrite-1.1.5#evaluation)).
+It is `waiting` when either signals `blockr_waiting()`, for a state that runs only once something else happens, such as a write block in manual mode.
+R sends why in the reply's `reason`, the message of the signal or of R's error for the unset arg, rather than as a condition, and `reason` is `null` in a reply of any other status ([blockr.core#598](https://github.com/BristolMyersSquibb/blockr.core/pull/598)).
 A request on a revision that is still computing waits for it.
 
 R replies `missing` to any request that names a block's revision it does not hold, such as a result it has forgotten or replaced, naming the blocks and revisions it lacks in `missing`, as `[ { "block": "b", "revision": 4 } ]`.
@@ -229,8 +231,8 @@ lock_board <- function(board, open = character()) {        # once, when the app 
     cls    <- block_registry[[blk$registry_id]]
     inputs <- upstream_ids(board$links, id)                  # input -> upstream id, list(data = "a")
     list(cls = cls, inputs = inputs,
-         expression = if (!id %in% open)                     # or the blockr_invalid() that building it signals,
-           tryCatch(build_block_expression(cls, blk$state, inputs), blockr_invalid = identity))   # while another error stops the app
+         expression = if (!id %in% open)                     # or the blockr_invalid() or blockr_waiting() that building it signals,
+           tryCatch(build_block_expression(cls, blk$state, inputs), blockr_invalid = identity, blockr_waiting = identity))   # while another error stops the app
   })
 }
 
