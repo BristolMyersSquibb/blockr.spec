@@ -163,7 +163,7 @@ The assistant keeps the version that passes the comparison ([The assistant's ben
 
 ### The requests in R
 
-The assistant's class gives R four requests through its method of `plugin_requests()`: the three that the tools send, and `list_skills`, which the plugin sends once a board opens.
+The assistant's class gives R five requests through its method of `plugin_requests()`: the three that the tools send, and `list_skills` and `read_template`, which the plugin sends once a board opens.
 The chat sends `read_skill` too, for a skill that the user calls with `/name` ([The assistant's chat](Rewrite-1.4.4#slash-commands)).
 R calls each with the blocks that it reads in `reads`, each by its id with its result ([Plugins](Rewrite-1.1.12#a-plugins-requests)):
 
@@ -181,6 +181,7 @@ plugin_requests.assistant_plugin <- function(x, ...) {                  # in blo
       run_inspection(parse(text = code), env, width, height)             # what it prints, and its plots as base64 PNGs
     },
     list_skills = function() skill_catalogue(),                          # the skills of the packages whose classes the app uses, then those of the directory that assistant_skills names
+    read_template = function() template_text(),                          # the text of the file that assistant_template names, or NULL where it names none
     read_skill = function(name, path = NULL) skill_text(name, path)      # a skill's text, or a file that it bundles, named by path, since R binds file to a request's body
   )
 }
@@ -208,6 +209,8 @@ The tools `describe_block` and `describe_block_type` list the skills that name t
 The system prompt lists only the skills that name no class ([The system prompt](Rewrite-1.4.5#the-sections)).
 As today, these lists and the tool `read_skill` take only the skills that the model may read, while the chat's `/name` takes those that the user may call (notes).
 What a skill written for today's stack changes at the switch is in the notes of [The conversion and the migration notes](Rewrite-1.9).
+
+The reply to `read_template` gives the text of the file that the blockr option `assistant_template` names, or none where the option names no file, and the plugin puts in blockr.assistant's sections for the file's `{{id}}`s ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
 
 ### On a locked board
 

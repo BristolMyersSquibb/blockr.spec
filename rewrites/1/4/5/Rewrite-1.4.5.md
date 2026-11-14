@@ -1,8 +1,8 @@
 # The system prompt
 Status: review. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own.
-It shapes the Work items that run the agent loop, write the template and write the dock's `layout` skill.
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template with its rules, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own, or a deployment replaces the template.
+It shapes the Work items that run the agent loop, build the requests in R and write the template, and the one that asks blockr.dock for its `layout` skill.
 The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, and how a change to the prompt is judged is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
 ## What must hold
@@ -11,8 +11,8 @@ The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, 
 2. The prompt names only tools that the model has, statuses that the scheduler gives and commands that the command registry holds, and nothing of staging.
 3. The model is told the board, the blocks' statuses and the focus as they are when each call goes out.
 4. Each section that the plugin writes is bounded as today, so that no call fills the model's context.
-5. A deployment adds instructions of its own through skills alone, and no app script writes the prompt.
-6. A change to the template, the preambles, the sections' format, a tool's description or a skill that a package of the new stack gives, such as the dock's `layout`, merges only once [The assistant's benchmark](Rewrite-1.8.1) has compared it with the version before it.
+5. A deployment adds instructions of its own as skills, and may replace the template with one file of its own through the blockr option `assistant_template`, which keeps, rearranges or leaves out the template's sections by their ids and adds text of its own.
+6. After `js-state` has merged into main, a change to the template, the preambles, the format of the plugin's sections, a tool's description or a skill that a package of the new stack gives, such as the dock's `layout`, merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
 7. Before each call, the model learns what the user or another plugin changed in the board's blocks, links and stacks since the thread's previous call, and the thread keeps what it learned.
 8. A package gives the model guidance on its block classes and plugins as skills of its own, with no dependency on blockr.assistant, and the model sees them only in an app that offers those block classes or runs those plugins.
 
@@ -52,7 +52,7 @@ Each call to the model sends, in this order:
    That holds for the edit tool, the first version.
    The two versions that the benchmark compares with it put the schemas of the app's commands or block classes into the definitions, so that theirs change with the app's packages, and within a thread where the tools for block classes come a few at a time ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
    The benchmark reports, for each version, how many of its input tokens the cache served ([The assistant's benchmark](Rewrite-1.8.1#what-a-comparison-reports)).
-2. The system prompt: the template, and the catalogue of the skills that no block class or plugin scopes, which changes only with the app's skills.
+2. The system prompt: the template, which places the catalogue of the skills that no block class or plugin scopes, and which changes only with the app's skills and its template (What a deployment adds).
 3. The thread's messages, those that the plugin keeps in its memory included ([The assistant's state](Rewrite-1.4.3#how-much-of-a-thread-the-state-keeps)).
 4. The board and the focus as they are when the call goes out, which the plugin adds after the last message, and which the thread never keeps.
 
@@ -69,7 +69,7 @@ Today's assistant cannot send the board in a message instead, since shinychat's 
 In this order, the cache serves the tools, the system prompt and the thread so far, and only the board, the focus and the newest messages are read anew.
 Anthropic's cache keeps the start of a call only up to a block that the call marks.
 So each call marks the end of the thread, before the board, since a call that marked the board would keep a start that no later call repeats (notes).
-[The assistant's benchmark](Rewrite-1.8.1) compares this order with today's, by the questions that pass and by cost, before the issue that writes the template closes.
+[The assistant's benchmark](Rewrite-1.8.1) compares this order with today's, by the questions that pass and by cost.
 
 ### What changed under the model
 
@@ -77,15 +77,23 @@ The board stays open to the user while a turn runs, and between turns, so it can
 The board after the last message shows the board as it is, but neither what changed nor who changed it.
 So a model that said it added a block `adults` would later read a board without `adults`, and nothing to tell it why, which is what shinychat#375 describes for a context that a message does not keep.
 
-To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it: the user, the user through Undo or Redo, the assistant in another thread, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
+To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it, by the origin that the store gives the change: the user, whose Undo and Redo count as theirs, in the frontend or through `/undo` and `/redo` ([Board updates](Rewrite-1.1.2#undo)), the assistant in another thread, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
 Before each call, the plugin adds a note of the changes since the thread's previous call to the thread, as a message of its own, which it marks as the app's rather than the user's ([The assistant's state](Rewrite-1.4.3#the-state)).
 So the thread keeps the note, as shinychat#375 asks of a message's context, and a call with no such changes carries none.
+
+The plugin builds the note from what the store gives, with no text diff, since the store announces each change as a delta keyed by the ids of the blocks, links and stacks that it touches, with its origin ([Board updates](Rewrite-1.1.2#deltas)).
+For each thread, it keeps a copy of the board's blocks, links and stacks as the thread's previous call saw them, and the ids that each change since then touched, with the change's origin.
+Before the thread's next call, it compares the entry in the copy of each id that another origin touched with the board's.
+The note has a line for each that differs: added, removed, or changed, with the names of the args that changed rather than their values, which `get_block_state` reads, and who changed it.
+So an arg set and set back leaves no line, and the note grows with what changed rather than with the board.
+Every thread edits as the origin `assistant`, so the plugin tells the thread's own edits from another thread's by the turn that ran them, since one turn runs at a time ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
+The store gives the undo that `/undo` asks for the origin `assistant` too, since it takes back the assistant's step, so the plugin counts that undo as the user's ([The assistant's chat](Rewrite-1.4.4#slash-commands)).
 The note comes before the board, which the call adds after the thread's last message, so that the cache serves the thread up to the note on the calls after.
 The board itself stays out of the thread, since a board for every call would fill the model's context window.
 The note stays within `assistant_board_section_max_chars`, as each part of the Board section does.
 The plugin records the changes while the board stays open, so the first call after the board opens again, as after a reload, carries no note of what changed before it.
 
-What the note holds and how much, so that the model stays in step without reading updates that it does not need, is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, version against version.
+What the note holds and how much, so that the model stays in step without reading updates that it does not need, is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, version against version, such as this note against a summary of the board after others changed it.
 
 ### The rules
 
@@ -94,13 +102,13 @@ The template keeps the rules that carry over (Today), and states those of the ne
 - The model reads what an edit relies on rather than guessing at it, since a result's summary, the state that `describe_block` reports and a class's description are bounded, and the Board section shows no plugin's state in full: through `get_block_result`, `inspect_results`, `get_block_state`, `get_plugin_state`, `describe_block_type` or `describe_command` ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 - One edit is one list of commands, which applies all or none, in the order given: a block before its links, with an id that the model gives it, so that later commands of the list name it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   An edit is one undo step, unless every command of it has `undo: false`, as the dock's command that switches views has, or it sets only board options ([Board updates](Rewrite-1.1.2#undo)).
-  An edit holds one change that the user would take back as one, so that the frontend's Undo takes back what the user expects ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
+  An edit holds one change that the user would take back as one, so that the frontend's Undo and `/undo` take back what the user expects ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
 - An edit returns a review of the blocks that it changed, of the blocks that feed them directly and of every block downstream: each block's status, the conditions that appeared since the edit began, what `describe_result()` writes about its result, and the state of each block that it added ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   The model checks the review against what the user asked, and corrects with another edit, rather than reporting as done a change that left a block `failed`, `invalid` or `waiting`.
   Where the review leaves out the blocks past `assistant_review_max_blocks`, the model says that it has not checked them, rather than reporting the change as verified.
 - A refused edit names the command and why, so the model changes the args or the commands rather than sending the same list again.
 - The commands come from `list_commands`, so the model looks up the frontend's own for views and panels, as the dock's are, and a plugin's own or `blockr.core-set_plugin_state` for that plugin's state, rather than assuming any.
-- The tool `undo_edit` takes back the assistant's last undo step, for when the user asks for that in words ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+- The tool `undo_edit` takes back the assistant's last undo step, for when the user asks for that in words, while `/undo` does it without the model ([The assistant's tools](Rewrite-1.4.2#the-edit-tool), [The assistant's chat](Rewrite-1.4.4#slash-commands)).
   That step may be an edit of another thread, and `undo_edit` passes over an edit that took no undo step, such as one that only switched views.
   So the model tells the user what `undo_edit` took back, as its result says, rather than taking for granted that it was the model's own last edit.
 - On a locked board, the model tells the user what the lock refuses, as the edit tool returns it, rather than trying another way ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
@@ -143,17 +151,17 @@ A skill that names no class in `blocks:` or `plugins:` goes into the catalogue o
 A skill that names classes is listed where the model reads those classes ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 Either way, the model sees a package's skills only in an app that offers the package's block classes or runs its plugin classes.
 
-A package teaches the model in two other ways, which [The assistant's tools](Rewrite-1.4.2) gives:
+A package teaches the model in other ways too, which [The assistant's tools](Rewrite-1.4.2) gives:
 
+- The description and guidance that each of its block classes registers, the class's arg specs and the JSON Schema of its state, which `describe_block_type` gives ([The tools](Rewrite-1.4.2#the-tools)).
+- The JSON Schema of each of its plugin classes' state, whose `description` keywords say what the state holds, which `get_plugin_state` gives with a plugin's state, so that the model sets that state as the schema has it ([The tools](Rewrite-1.4.2#the-tools)).
 - The description and args of each command that the package registers ([The edit tool](Rewrite-1.4.2#the-edit-tool)).
 - A method of `describe_result()` for a class of results ([The requests in R](Rewrite-1.4.2#the-requests-in-r)).
 
 The dock gives its guidance on arranging views as the skill `layout` of blockr.dock, in place of blockr.assistant's skill of that name.
 The dock knows its views and grids best, and today's skill teaches the view tools, which the dock's commands replace ([Assistant as a plugin](Rewrite-1.4#today)).
-The new skill teaches the dock's commands and its grids ([The dock's state](Rewrite-1.2.1#grids)).
-It keeps the parts of today's skill that fit them, such as how a grid nests splits and tab groups, what a share and a rail's width mean, and worked examples.
-It drops the parts that teach today's view tools, such as probing a layout with `validate_layout`, since each of the dock's commands checks its args.
-It names no class in `plugins:`, so the catalogue lists it in every app that runs the dock.
+What the skill says of the dock's commands and grids ([The dock's state](Rewrite-1.2.1#grids)) is blockr.dock's to write, from an issue there ([Assistant as a plugin](Rewrite-1.4#work)), as any package writes its own.
+The assistant asks only that it names no class in `plugins:`, so that the catalogue lists it in every app that runs the dock.
 The model then learns of it before it arranges a view, as it learns of today's `layout`.
 The skill is the first form to try.
 Whether the model does better with it, or with the same guidance in the descriptions of the dock's commands, is for the benchmark to show.
@@ -164,7 +172,15 @@ The benchmark compares the two as versions of blockr.dock ([The assistant's benc
 A deployment adds instructions of its own as skills, through the blockr option `assistant_skills`, as the script of the clinical data explorer adds eight, two of them scoped to block classes.
 A skill's description in the catalogue tells the model when to read it, as the explorer's test questions expect the first call to read its skill on working with an existing study board ([The assistant's benchmark](Rewrite-1.8.1#today)).
 A deployment's skill takes the place of a package's skill of the same name (What a package adds).
-No app script replaces the template, since the `system_prompt` argument goes ([Assistant as a plugin](Rewrite-1.4#today)).
+Where a skill would contradict the template, a deployment replaces the template instead, since a skill that contradicts it leaves the model two instructions to choose between, and the catalogue's preamble tells the model that the prompt wins (Today).
+The template is written in sections, each with an id, such as `edits` for the rules of the edit tool.
+The template that blockr.assistant ships sets them out, each as `{{id}}` on a line of its own, in the order in which the model reads them, with `{{skills}}` last for the catalogue of skills, and the text of each section lives beside the template (How the template changes).
+A deployment's template is one Markdown file, which the blockr option `assistant_template` names, and which takes the place of blockr.assistant's.
+In it, `{{id}}` puts in blockr.assistant's section of that id, so the file keeps a section by naming it, rearranges the sections by the order in which it names them, leaves one out by not naming it, and adds text of its own around them.
+R reads the file in its reply to the request `read_template`, which the plugin sends once a board opens, as it sends `list_skills` ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)), and the plugin puts in the sections that the file's `{{id}}`s name.
+A file that R cannot read, or an `{{id}}` that names no section, is an error that the chat shows, as it shows a directory of skills that R cannot list ([The assistant's chat](Rewrite-1.4.4#what-fails)).
+So a release that renames a section fails where the deployment sees it rather than dropping the section, while the calls go on with blockr.assistant's template until the next board opens.
+The `system_prompt` argument goes all the same, since a function in R cannot shape a prompt built in the browser ([Assistant as a plugin](Rewrite-1.4#today)).
 
 ### One template for every model
 
@@ -173,8 +189,9 @@ Whether a model does better with words of its own is for the benchmark to show, 
 
 ### How the template changes
 
-The template, the preambles and the code that writes the sections live in blockr.assistant, in the plugin's bundle, and change with its releases.
-A pull request that changes any of them, or a tool's description, shows the benchmark's comparison of the change with the version before it (condition 6).
+The template, its sections, the preambles and the code that writes the plugin's sections live in blockr.assistant, in the plugin's bundle, and change with its releases.
+The ids of the template's sections are part of blockr.assistant's interface, which its guide lists, since a deployment's template names them (What a deployment adds).
+After `js-state` has merged into main, a pull request that changes any of them, or a tool's description, shows the benchmark's comparison of the change with the version before it (condition 6), while a deployment's template is the deployment's to judge.
 So does a pull request of another package that changes what the model reads, such as one of core that changes a command's description, or one of blockr.dock that changes its `layout` skill, since the model reads those as it reads the template ([The assistant's benchmark](Rewrite-1.8.1#where-it-lives)).
 A Vitest snapshot of the prompt takes the place of today's golden copy ([tests/testthat/_snaps/system-prompt.md](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/tests/testthat/_snaps/system-prompt.md)), since it catches a change that nobody meant, while only the benchmark says whether a change that someone meant helps.
 

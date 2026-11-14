@@ -143,7 +143,7 @@ Today's assistant builds its chat with `ctor(system_prompt = "")` ([R/ext-server
 The chat function that blockr.uat takes, core's default, sets none of its own ([blockr.core R/board-option.R#L660-L662](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/board-option.R#L660-L662)), and neither do those of the clinical data explorer's script.
 After the switch, the plugin's code fixes the settings, such as the `thinkingLevel` of pi's agent, which starts at `medium`.
 Today's calls send no reasoning effort, so each model reasons at its own default, which OpenAI gives as `medium` for its current models, while pi sends an effort on every call to a model that reasons, `none` for its level `off`, which GPT-6 Astra refuses (notes).
-A change to the settings changes what the model does, so it merges only once [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) has compared it with the version before it.
+A change to the settings changes what the model does, so after `js-state` has merged into main, it merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
 
 Letting someone change the settings is later work, which nothing here rules out, such as a pick of the thinking level for each thread beside its pick of the model.
 A setting for a thread would go in the assistant's state, as its pick of the model does, since a setting of a plugin's own goes there first ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
