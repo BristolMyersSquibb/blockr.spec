@@ -210,7 +210,7 @@ The system prompt lists only the skills that name no class ([The system prompt](
 As today, these lists and the tool `read_skill` take only the skills that the model may read, while the chat's `/name` takes those that the user may call (notes).
 What a skill written for today's stack changes at the switch is in the notes of [The conversion and the migration notes](Rewrite-1.9).
 
-The reply to `read_template` gives the text of the file that the blockr option `assistant_template` names, or none where the option names no file, and the plugin puts in blockr.assistant's sections for the file's `{{id}}`s ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
+The reply to `read_template` gives the text of the file that the blockr option `assistant_template` names, or none where the option names no file, and the plugin puts in blockr.assistant's sections where the file names them ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
 
 ### On a locked board
 
