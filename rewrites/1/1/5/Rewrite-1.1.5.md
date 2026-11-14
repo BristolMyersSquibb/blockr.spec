@@ -108,7 +108,7 @@ new_block_class <- function(id, inputs = NULL, expr, ui,
     stopifnot("a request's other args are parameters, with defaults" =
       all(nzchar(vapply(formals(r$fun)[params], deparse1, ""))))
   }
-  res <- tryCatch(expr(), blockr_invalid = function(e) NULL, missingArgError = function(e) NULL)
+  res <- tryCatch(expr(), blockr_invalid = function(e) NULL, blockr_waiting = function(e) NULL, missingArgError = function(e) NULL)
   holds_function <- function(e) is.function(e) || (is.call(e) && any(vapply(as.list(e), holds_function, NA)))
   stopifnot(
     "expr() gives a call, a string, a function or a blockr_expr" = is.null(res) ||
@@ -148,7 +148,7 @@ block_constructor <- function(cls) {
     })
     tryCatch(
       do.call(framed, mget(given, env), quote = TRUE),
-      blockr_invalid = function(e) NULL, missingArgError = function(e) NULL
+      blockr_invalid = function(e) NULL, blockr_waiting = function(e) NULL, missingArgError = function(e) NULL
     )
     unset <- vapply(state_args, function(arg) eval(call("missing", as.name(arg)), frame), NA)
     structure(
@@ -170,6 +170,10 @@ default_block_name <- function(class) {   # today's
 
 blockr_invalid <- function(message) {   # core's, a sibling of blockr_abort() (blockr.core#461)
   stop(structure(class = c("blockr_invalid", "blockr_error", "error", "condition"), list(message = message, call = NULL)))
+}
+
+blockr_waiting <- function(message) {   # core's too, for a state that runs only once something else happens (blockr.core#598)
+  stop(structure(class = c("blockr_waiting", "blockr_error", "error", "condition"), list(message = message, call = NULL)))
 }
 ```
 
@@ -331,7 +335,10 @@ R keeps taking them, and checks them as it checks the examples of the arg specs,
 
 R calls a constructor only where an app script builds a board ([Board objects](Rewrite-1.1.1#the-board)), and keeps no block while the app runs.
 To evaluate a block, it looks the class up by the recipe's registry id, runs the checks of a function given as `inputs` with the linked results, calls its `expr` with the recipe's state, interpolates what it returns into the block expression (above), and evaluates that with `block_eval()`, with each upstream block's result bound to its id, so that the expression R runs is the one a script holds, labels included, such as the column names `cbind()` takes from its arguments, where today a block whose `expr_type` is `"bquoted"` is evaluated with its inputs' names and exported with the upstream ids in their place ([R/block-server.R#L754-L768](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L754-L768), [R/utils-code.R#L58-L69](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-code.R#L58-L69)).
-An `blockr_invalid()` that `expr` or a `block_eval()` method signals, or an unset arg that the body of `expr` uses or interpolation fills in, as in the `.()` of a function `expr` returns, makes R run nothing and reply `invalid`, with the message or the arg's name, while a check in the body of a function given as `inputs` that fails makes R reply `error`, as a failed `dat_valid` makes a block `failed` today.
+A `blockr_invalid()` that `expr` or a `block_eval()` method signals, or an unset arg that the body of `expr` uses or interpolation fills in, as in the `.()` of a function `expr` returns, makes R run nothing and reply `invalid`.
+A `blockr_waiting()` that either signals makes R run nothing and reply `waiting`, for a state that runs only once something else happens, as the write block's does without `save` (below).
+R sends the signal's message, or that of its error for the unset arg, as the reply's `reason` ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
+A check in the body of a function given as `inputs` that fails makes R reply `error`, as a failed `dat_valid` makes a block `failed` today.
 Conditions raised in interpolation come under the phase of `expr`, which builds the block expression ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)).
 Otherwise R runs the expression, which it keeps with the result for the requests that read it, such as blockr.code's code export, while its reply carries no code ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)):
 
@@ -346,7 +353,7 @@ The write block of blockr.io writes in manual mode only when its save button ask
 
 ```r
 block_eval.write_block <- function(x, expr, env, save = FALSE, ...) {
-  if (!isTRUE(x$auto_write) && !save) blockr_invalid("Save to write the file.")
+  if (!isTRUE(x$auto_write) && !save) blockr_waiting("Save to write the file.")
   NextMethod()
 }
 ```
@@ -525,7 +532,7 @@ None.
 
 The constructor takes the state from the frame `expr` ran in, through a copy of `expr` that hands the frame over as it exits (above), so that what the checks in `expr` change, such as `match.arg()` picking `"head"` out of `c("head", "tail")`, is the state the block holds, as `initial_block_state()` reads a block's state from its server's environment today ([R/block-class.R#L719-L725](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-class.R#L719-L725)).
 An arg without a default stays out of the state while `missing()` finds it missing in the frame, so one the body assigns, such as a value it works out, is in it.
-The frame is kept when `expr` signals `blockr_invalid()` too, so a class checks its args before it signals.
+The frame is kept when `expr` signals `blockr_invalid()` or `blockr_waiting()` too, so a class checks its args before it signals.
 R tells a body's use of an unset arg by the class `missingArgError`, which R 4.5.0 added and `bbquote()` and base `bquote()` raise too when they fill in the `.()` of an unset arg, and in older R by the error's message, translated as R translates it.
 The `bbquote()` function reads only the names of the frame it runs in, so that an input's placeholder, `.(data)`, stays for interpolation, although `utils::data` exists.
 The method of `bquoted_expr` puts the upstream id in place of a placeholder wherever it is, but for one in a default of a function that the expression defines, which it leaves as it is ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).

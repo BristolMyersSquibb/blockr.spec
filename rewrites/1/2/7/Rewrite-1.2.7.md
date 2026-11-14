@@ -150,8 +150,8 @@ A failed block's output takes no room, as the `inputs` section of a block whose 
 
 The status note says what the block lacks, in one line of italic `text-muted` text at 13px where the output would be, with no icon, as the design system has a block with nothing to draw say what is missing ([design-system.Rmd#L1348-L1356](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1348-L1356)):
 
-- For a `waiting` block, it holds the message that the scheduler writes, of the phase `status`, which names each unlinked input or each upstream block that keeps the block waiting ([Evaluation in the client](Rewrite-1.1.10#statuses)).
-- For an `invalid` block, it holds the message of the reply's condition: the message of the `blockr_invalid()` that the class signalled, such as "Choose a dataset.", or the name of the arg that is unset.
+- For a `waiting` block, it holds the block's `reason`: the message that the scheduler writes, which names each unlinked input or each upstream block that keeps the block waiting, or the message of the `blockr_waiting()` that the class signalled, such as "Save to write the file." ([Evaluation in the client](Rewrite-1.1.10#statuses)).
+- For an `invalid` block, it holds the block's `reason`: the message of the `blockr_invalid()` that the class signalled, such as "Choose a dataset.", or of R's error for the arg that is unset.
 
 Today's notes say only "Waiting for a data input" and "Set this block's inputs", each with an icon, against the design system ([R/plugin-block.R#L699-L730](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L699-L730)).
 The note alone shows those two messages, so the card shows neither again among the block's notifications.
