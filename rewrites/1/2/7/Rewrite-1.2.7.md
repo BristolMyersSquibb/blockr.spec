@@ -200,7 +200,7 @@ The card reads the option's value through `core.options`, and the dock plugin's 
 
 The dock sets which block has focus in `CoreApi.focus`, which the assistant reads to tell which block the user is looking at ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)):
 
-- A block takes focus when the user clicks into its card or onto its tab, or when a command shows its panel, such as `blockr.dock-show_panel` ([The dock's state](Rewrite-1.2.1#commands)).
+- A block takes focus when the user clicks into its card or onto its tab, when a command shows its panel, such as `blockr.dock-show_panel` ([The dock's state](Rewrite-1.2.1#commands)), or when a plugin shows it through core's `show()`, which gives it focus under every frontend ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
 - A block takes focus when the keyboard's focus moves into its card.
 - Hovering over a card gives no focus.
 - Focus stays where it is when the user clicks into a plugin's panel, so that the block the user clicked before moving to the assistant's panel keeps focus, as today's assistant reads only block panels ([blockr.assistant R/focus.R#L10-L17](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fd5865593fd8b015d00df9238e2e622475c2a9df/R/focus.R#L10-L17)).
@@ -212,6 +212,7 @@ The dock demands the blocks whose cards are on screen, at the evaluation priorit
 A card is on screen where it is in the active view and its panel is the one that its tab group shows, or that an open rail shows, as today's dock holds eager the front panel of each tab group and of each rail that is not collapsed ([R/utils-ui.R#L101-L111](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-ui.R#L101-L111)).
 A card whose sections are both closed is on screen too, so that its status dot stays current.
 The dock replaces its demand with the new set whenever the active view or its grid changes, as when a tab group shows another panel or a rail collapses or opens ([The dock's state](Rewrite-1.2.1#commands)).
+As it replaces its demand, it sets `CoreApi.onScreen` to the blocks whose cards are on screen and to the plugins whose panels are, by the same rule ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
 It makes its first demand within the frontend's `render()`, from the board, so that the blocks of the opening view are evaluated first ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 
 ### The block's lock
