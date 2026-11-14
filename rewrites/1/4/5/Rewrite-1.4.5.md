@@ -226,4 +226,7 @@ Today, `skill_sources()` lists the directory `skills` that blockr.assistant inst
 Then `scan_skills()` lets a skill shadow one of the same name listed before it, and logs that it does ([#L54-L68](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-scan.R#L54-L68)).
 R finds a package's directory with `system.file("skills", package = pkg)`, as it finds blockr.assistant's own.
 
+Today's tests read what R logs about the skills through `capture_logs()`, which sets a function as the blockr option `logger` ([tests/testthat/helper-skills.R#L14-L36](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/tests/testthat/helper-skills.R#L14-L36)).
+On the new stack, that option takes only `"console"`, `"otel"` or `"condition"` ([blockr.core#551](https://github.com/BristolMyersSquibb/blockr.core/issues/551)), so the helper sets `"condition"` and catches the messages and the warnings.
+
 </details>
