@@ -11,7 +11,7 @@ What the tools' calls and results in a thread hold is [The assistant's tools](Re
 2. No undo takes a message back, and no message takes an undo step.
 3. A reply enters its thread as one finished message, never token by token.
 4. A thread goes on once its board is saved and opened again, from the messages that a saved board keeps, which the deployment bounds as today.
-5. Boards saved with today's assistant open, with none of its threads, as condition 6 of [Assistant as a plugin](Rewrite-1.4#what-must-hold) asks.
+5. Boards saved with today's assistant open, with none of their threads, as condition 6 of [Assistant as a plugin](Rewrite-1.4#what-must-hold) asks.
 
 ## Today
 
