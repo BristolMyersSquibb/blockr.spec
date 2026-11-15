@@ -138,3 +138,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
   It does not follow the patterns and utilities the blockr packages have settled on, internal ones such as blockr.core's `chr_ply()` family, `coal()` and `blockr_abort()`, which a sketch writes as `vapply()`, `is.null(x) ||` and `stop()`, and third-party ones such as rlang, vctrs and cli, so an implementation adapts it to the package it lands in.
   Adapting it is no departure from the pages.
 - TypeScript: client code is strict TypeScript, or JS checked through `// @ts-check`, gated in each package's CI by `tsc`, typescript-eslint and Vitest on happy-dom, and a package that builds bundles its modules with esbuild into `inst/`, which it commits, while CI checks that a rebuild changes nothing there ([UI modules in JS](Rewrite-1.1.7#packaging)).
+  A package's own code stays unminified in what it builds, so that a diff of `inst/` shows what an edit changed.
+  The tarball of a package leaves out its TypeScript, so what it builds is the only form of its own code there.
+  Unminified, that code comes close to the "source or something which can easily be converted back to source" that [CRAN's policy](https://cran.r-project.org/web/packages/policies.html) asks of every component.
+  The libraries that a package bundles go, minified, into one file for those it loads up front, and into one more file for each part that it loads on demand, such as pi, which the assistant loads as the first turn starts ([Assistant as a plugin](Rewrite-1.4#proposal)).
