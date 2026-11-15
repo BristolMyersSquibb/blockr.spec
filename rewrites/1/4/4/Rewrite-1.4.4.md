@@ -237,7 +237,7 @@ What a tool returns as a failure, such as `inspect_results` on a locked board, w
 The chat works on a locked board as on any other: the user asks, and the model reads and answers.
 The edit tool returns why a lock refuses an edit ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
 An edit that the locks leave open applies as on any board, such as one to the state of a block whose `locked` is `FALSE`, and Undo and Redo take it back ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-locks)).
-The assistant's commands stay enabled, so that threads and the pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
+The assistant's commands still pass their preflight, so that threads and the pick of the model work as on any board ([The assistant's state](Rewrite-1.4.3#commands)).
 
 ## Open questions
 

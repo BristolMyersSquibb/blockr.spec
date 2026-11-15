@@ -303,7 +303,7 @@ On a locked board, the store applies a patch inside the dock's state and leaves 
 - No command adds, renames, moves or removes a view or a folder, adds or removes a panel, or sets a card's sections, as a locked card offers no toggle today ([R/plugin-block.R#L128-L137](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L128-L137)).
 - No command moves or resizes a panel unless a deployment leaves that to readers through the blockr options `lock_rearrange` and `lock_resize`, as today ([R/utils-dock.R#L311-L343](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/utils-dock.R#L311-L343)), so `blockr.dock-set_grid` refuses a grid that differs from the stored one in more than the lock leaves open.
 
-Core's `blockr.core-set_plugin_state` is not enabled on a locked board ([Plugins](Rewrite-1.1.12#a-plugins-state)), so nothing changes the dock's state there past the dock's own commands.
+Core's `blockr.core-set_plugin_state` fails its preflight on a locked board ([Plugins](Rewrite-1.1.12#a-plugins-state)), so nothing changes the dock's state there past the dock's own commands.
 
 ## Open questions
 

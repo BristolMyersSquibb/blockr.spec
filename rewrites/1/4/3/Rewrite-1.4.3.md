@@ -132,16 +132,16 @@ The assistant's class registers a command for each change to its state, which it
 | `blockr.assistant-remove_thread` | `thread` | Removes a thread |
 | `blockr.assistant-add_message` | `thread`, `message`, `keep` | Adds a finished message at the end of the thread, and drops its oldest exchanges past `keep` messages, but never the last one (How much of a thread the state keeps). The plugin passes `keep` from `chat_save_turns`, and leaves it out for `Inf`, since a command's args are JSON, which holds no infinity |
 | `blockr.assistant-trim_threads` | `keep` | Drops the oldest messages of every thread past `keep`, as `blockr.assistant-add_message` drops them |
-| `blockr.assistant-compact_thread` | `thread`, `summary`, `from` | Puts a summary in place of the messages before `from`, the first message that it keeps, and is enabled only where the thread in the state still holds `from` (Compaction) |
+| `blockr.assistant-compact_thread` | `thread`, `summary`, `from` | Puts a summary in place of the messages before `from`, the first message that it keeps, and passes its preflight only where the thread in the state still holds `from` (Compaction) |
 | `blockr.assistant-add_usage` | `thread`, `input`, `output`, `total` | Adds a call's input and output tokens to the thread's count, and keeps `total`, every token of the call, cached input included, as its `last` (Compaction) |
 | `blockr.assistant-set_model` | `thread`, `model` | Sets the thread's pick of the model, or removes it with `null`, after which the thread talks to the default ([Model access](Rewrite-1.4.1#who-picks-the-model)) |
 
-A command that names a thread is not enabled where the state lacks that thread, and `blockr.assistant-add_thread` and `blockr.assistant-add_message` are not enabled for an id that the state holds already, which keeps the ids unique, as no schema can.
+A command that names a thread fails its preflight where the state lacks that thread, and `blockr.assistant-add_thread` and `blockr.assistant-add_message` fail theirs for an id that the state holds already, which keeps the ids unique, as no schema can.
 So a turn whose thread another plugin removes meanwhile stops at its next message, which no thread takes.
 
 A reply streams in the plugin's memory and enters its thread as one finished message, through `blockr.assistant-add_message`, since a delta for each token would reach every follower of the store ([Board updates](Rewrite-1.1.2#undo)).
 After a thread's first exchange, a model call writes its title, which the plugin gives it through `blockr.assistant-rename_thread` where the title is still "New thread", so that a rename that the user made meanwhile stands.
-The commands stay enabled on a locked board, since they change the assistant's own state alone, so that a reader of a locked board still chats, while core's `blockr.core-set_plugin_state` is not enabled there ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+The commands still pass their preflight on a locked board, since they change the assistant's own state alone, so that a reader of a locked board still chats, while core's `blockr.core-set_plugin_state` fails its preflight there ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 
 ### Compaction
 
@@ -156,7 +156,7 @@ Neither pi nor the AI SDK summarizes a thread itself, so the plugin ports today'
 The command names the first message that it keeps, rather than how many, since the thread may grow while the model writes the summary.
 With a count, a turn that added two messages meanwhile would have the command replace two messages that the summary does not cover.
 The plugin puts the summary in place of the messages before that message in its memory, under `0` too, and through the command in the state.
-The command is not enabled where the state no longer holds that message, as where the cap has cut the thread past it, and the state then keeps the messages that it holds, every one of them newer than what the summary covers.
+The command fails its preflight where the state no longer holds that message, as where the cap has cut the thread past it, and the state then keeps the messages that it holds, every one of them newer than what the summary covers.
 A summary whose thread goes meanwhile goes with it, as today's compaction drops a summary whose thread changed meanwhile (Today).
 
 ### The schema, the default and the version

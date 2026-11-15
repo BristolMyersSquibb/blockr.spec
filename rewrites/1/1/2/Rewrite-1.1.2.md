@@ -196,7 +196,7 @@ interface Command<A extends Json = Json, P = A> {
   description?: string;                        // what it does and when to use it
   args?: JsonSchema;                           // for forms and the assistant's tools
   shortcut?: string;                           // "Mod+Backspace"
-  enabled?(board: Board, args: A): boolean;
+  preflight?(board: Board, args: A): boolean;    // whether the command has what it needs on the board as it is, checked before any work
   undo?: false;                                // its deltas take no undo step, as switching the dock's views takes none (Undo)
   prepare?(board: Board, args: A): Promise<P>; // what has to wait, such as a layout that elkjs returns as a promise
   run(board: Board, args: P): Delta | Delta[]; // reads the board, returns deltas, changes nothing itself
@@ -205,7 +205,7 @@ interface Command<A extends Json = Json, P = A> {
 interface Commands {
   register(command: Command): () => void;
   registered(): Record<string, Command>;                         // the registered commands by id, for menus, a command palette and the assistant's tools
-  enabled(id: string, args?: Json): boolean;                     // whether the command applies to the current board with these args
+  preflight(id: string, args?: Json): boolean;                   // whether the command passes its preflight on the current board with these args
   run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false
   run(list: { id: string; args?: Json }[], origin?: Origin): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
   plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
@@ -225,6 +225,9 @@ Core's commands cover what its plugins of today and the dock's actions do: add, 
 Changing a stack sets its blocks, its colour or both, and clears its colour with `null` ([Board objects](Rewrite-1.1.1#stacks)).
 Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.
+Before a command does any work, the command registry runs its preflight, `preflight()`, which checks the board as it is and the args, as `blockr.core-remove_block` checks that its block is on the board.
+The command registry refuses a command that fails its preflight, and a menu greys it out.
+A pass promises nothing beyond itself, since the command's `run()` and the store's checks of its deltas can still refuse.
 A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to.
 The assistant edits through commands as well, each named by its id, and its edit tool runs a list of them as one step of its origin ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 Its tools give the model each command's `description` and `args`, the schema of a block class's state, which the class's UI ships and its arg specs describe, and the schema of a plugin class's state.
@@ -306,7 +309,7 @@ The store reads the board before the delta to tell an array's index from an obje
 An `update` that adds something for a new object, such as a panel for a block that a delta adds, first checks whether the delta's own patches add it already, which it can, since it gets the delta.
 An `update` that changes an element of an array checks the delta's own patches in the same way, since the store applies both patches there.
 An `update` gets the board before the delta, so that it sees what the delta removes.
-Once a command's `prepare()` resolves, the command registry checks `enabled()` again before it calls `run()`, since the board may have changed while the command waited, and opening a board drops every command still in its `prepare()`.
+Once a command's `prepare()` resolves, the command registry runs its `preflight()` again before it calls `run()`, since the board may have changed while the command waited, and opening a board drops every command still in its `prepare()`.
 An `update` leaves the edit ids out, as a command does, since it builds on the board the delta applies to.
 Within a collection's part of a delta, `rm` applies before `add`, as core's parts do, since a delta may reuse an id it drops, and `mod` applies last, while patches apply in their order, after core's parts.
 The store checks a plugin's state against its class's schema only where a patch changed that state.
