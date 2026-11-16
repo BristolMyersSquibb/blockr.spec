@@ -9,7 +9,7 @@ Each decision is designed on the page that The decisions it compares names, and 
 
 1. After `js-state` has merged into main ([State in JS](Rewrite-1#migration)), a change to what the model sees or may do, from what it is told to its tools, what they return, how failures reach it, compaction and the model's settings, merges only with a comparison against the version before it, on every question of the benchmark, with the same models.
 2. Each question's answer key judges a run without a person, by the values that the data gives, the board that the turn leaves, the page that it draws and the tools that it calls.
-3. A run starts each question from its own board and an empty thread, as a reload does in today's checks by hand, and names the model, its settings and the ref of each package that it runs.
+3. A run starts each question from its own board and an empty conversation, as a reload does in today's checks by hand, and names the model, its settings and the ref of each package that it runs.
 4. Each question runs several times, since the misses vary from run to run, and a comparison reports each question's share of runs that pass, with the tokens, calls and seconds of the runs.
 5. A turn stops at a cap on its calls, which fails the run, so that what a run costs is bounded.
 6. The questions exercise each decision that the benchmark compares, since a question that a decision cannot change says nothing of it, starting from the clinical data explorer's five, with their answer keys.
@@ -78,7 +78,7 @@ A question is a board to start from, what the user writes, with any follow-ups, 
 
 The board is a JSON board, which the harness opens as the page starts ([Serialization](Rewrite-1.1.4#files)).
 A question may also hold edits that the harness makes as the user would, between two turns or while a turn runs, so that the board changes under the model ([The system prompt](Rewrite-1.4.5#what-changed-under-the-model)).
-Beside today's five, the questions include turns that meet what each decision governs: a column that the data lacks, which one of today's runs looked for in 35 calls of its tool for R code, an edit that a command refuses, a block that fails or reads `invalid` once edited, an error in the model's own R code, a locked board, a board that the user changes during a turn, and a thread long enough to compact.
+Beside today's five, the questions include turns that meet what each decision governs: a column that the data lacks, which one of today's runs looked for in 35 calls of its tool for R code, an edit that a command refuses, a block that fails or reads `invalid` once edited, an error in the model's own R code, a locked board, a board that the user changes during a turn, and a conversation long enough to compact.
 An answer key holds four kinds of check, each a function in the benchmark's code but for the tools, which it names:
 
 - **The values** that the data gives, computed by the benchmark's code as today's script computes the keys, which the reply or a named block's result must hold, such as the counts by arm.
@@ -93,16 +93,16 @@ What no function can check, such as whether a reply explains a number well, a mo
 The harness serves the question's board with `serve()`, with the app's packages, its skills and a key of its own, as a deployment does ([Model access](Rewrite-1.4.1#the-blockr-options)), and drives the page in a headless browser:
 
 1. It opens the page, and waits until the board is drawn.
-2. It follows the board through `core.store.subscribe()`, as any follower of the board does ([Board updates](Rewrite-1.1.2#following-the-board)), and records each message as it enters the thread.
-   It records them as they come, since compaction replaces a thread's older messages with a summary, in the saved thread and in what the chat shows alike ([The assistant's state](Rewrite-1.4.3#compaction)).
+2. It follows the board through `core.store.subscribe()`, as any follower of the board does ([Board updates](Rewrite-1.1.2#following-the-board)), and records each message as it enters the conversation.
+   It records them as they come, since compaction replaces a conversation's older messages with a summary, in the saved conversation and in what the chat shows alike ([The assistant's state](Rewrite-1.4.3#compaction)).
 3. It types each turn into the chat's message field, as a user does, and waits until the turn ends ([The assistant's chat](Rewrite-1.4.4#the-message-field-and-a-turn)).
-4. It applies the checks on the page, then saves the board, as a user does, and reads the JSON board, whose assistant's state holds the thread's `usage` ([The assistant's state](Rewrite-1.4.3#the-state)).
-5. It applies the checks on the values, the board and the tools, and reads the replies and the tool calls from the messages that it recorded rather than from the saved thread.
+4. It applies the checks on the page, then saves the board, as a user does, and reads the JSON board, whose assistant's state holds the conversation's `usage` ([The assistant's state](Rewrite-1.4.3#the-state)).
+5. It applies the checks on the values, the board and the tools, and reads the replies and the tool calls from the messages that it recorded rather than from the saved conversation.
 
 The harness makes a question's edits through `core.commands.run()` with the origin `user`, as the frontend makes the user's, at the point that the question names, such as after the turn's first edit.
 A turn that passes the cap on its calls is stopped, as the chat's stop button stops it, and the run fails.
 The cap is the question's, and the first runs set its default from how many calls a passing run takes.
-Each run starts from a new page and the question's board, so that no run sees another's blocks or thread.
+Each run starts from a new page and the question's board, so that no run sees another's blocks or conversation.
 
 ### What a comparison reports
 
