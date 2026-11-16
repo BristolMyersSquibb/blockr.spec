@@ -95,8 +95,8 @@ It applies them in these steps:
    The command registry plans each command on the board that the commands before it leave, and the store applies them all as one step of the origin `assistant`, or applies none ([Board updates](Rewrite-1.1.2#commands)).
 2. Where a command refuses, the tool returns the command's index in the list, its id and each failure that the command registry names, such as a state that the schema of the block's class refuses, and the board stays as it was.
    The store then tells no subscriber of a change, so the scheduler sends R no block to evaluate, and nothing needs undoing (notes).
-   Where the command is not enabled on the board as it is, as `blockr.core-add_link` refuses a block that the board lacks, the tool adds a hint that says what to check, so that the model can correct its args and edit again (notes).
-   On a locked board, the hint says that the lock may be why, since core's `blockr.core-set_plugin_state` is not enabled there, and a plugin's own commands are not enabled for what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
+   Where the command fails its preflight on the board as it is, as `blockr.core-add_link` refuses a block that the board lacks, the tool adds a hint that says what to check, so that the model can correct its args and edit again (notes).
+   On a locked board, the hint says that the lock may be why, since core's `blockr.core-set_plugin_state` fails its preflight there, and a plugin's own commands fail theirs for what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 3. From the changes that the store announces for the step, one for each of its deltas, the tool takes the blocks that the step added or whose state or links it changed, every block downstream of them, and the blocks that feed the changed blocks directly ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 4. It brings those blocks up to date with one one-time evaluation, `core.scheduler.evaluate(blocks, undefined, { signal })`, given the signal of the turn, so that stopping the turn stops the wait ([Evaluation in the client](Rewrite-1.1.10#demand)).
    It passes no parameters, since a one-time evaluation with parameters has R run every block again, whether the block is current or not.
@@ -127,7 +127,7 @@ The tool then waits for the call to settle, and returns whether the commands app
   "adults": { "status": "ready", "conditions": [], "result": "<what describe_result() writes, up to 2,000 characters>", "state": { "conditions": ["AGE >= 18"] } },
   "adsl": { "status": "ready", "conditions": [], "result": "<what describe_result() writes>" }
 } }
-{ "applied": false, "index": 1, "command": "blockr.core-add_link", "failures": ["It is not enabled on the board as it is, with the args {\"from\":\"adsl\",\"to\":\"adlts\"}."],
+{ "applied": false, "index": 1, "command": "blockr.core-add_link", "failures": ["It fails its preflight on the board as it is, with the args {\"from\":\"adsl\",\"to\":\"adlts\"}."],
   "hint": "Check that each block, link, stack and plugin that the args name is on the board, and each board option is defined, with list_blocks, list_links, list_stacks, list_plugins or list_board_options, and that a block that a new link goes to has a free data input, with describe_block." }
 ```
 
@@ -216,7 +216,7 @@ The reply to `read_template` gives the text of the file that the blockr option `
 
 The read tools and `read_skill` work on a locked board as on any other.
 The store refuses an edit or an undo that a lock fixes, and the edit tool and `undo_edit` return why, as they return any refusal ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
-Where a lock leaves a command not enabled, the edit tool's hint names the lock (The edit tool).
+Where a lock makes a command fail its preflight, the edit tool's hint names the lock (The edit tool).
 R refuses the request `inspect_results` on a locked board, since it evaluates what the client sends.
 The tool refuses first, where `core.lock.board` is on, so that core evaluates none of the blocks that the request reads, and the model learns of the lock rather than of a block's status ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 
@@ -231,7 +231,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | A tool's args that its schema refuses | The schema's failures, from the library's check, so that the model calls the tool again with args that fit (notes) |
 | A call to a tool that the plugin does not offer, such as a tool that a later release drops, which the model calls again in a thread that a board saved before | That no such tool is offered, as the library answers it (notes) |
 | A block, a command, a plugin or a skill that a tool names and the board or the app lacks | That it is not there, with the tool that lists those that are, such as `list_blocks` |
-| A command of an edit that refuses | The command's index and id, and each failure that the command registry names, with a hint where the command is not enabled on the board as it is, while the board stays as it was (The edit tool) |
+| A command of an edit that refuses | The command's index and id, and each failure that the command registry names, with a hint where the command fails its preflight on the board as it is, while the board stays as it was (The edit tool) |
 | A block that an edit changed, or one downstream of it, that reads `failed`, `invalid` or `waiting` once evaluated | Its status, why it stopped and the conditions that appeared since the edit began, in the edit's review: the error of a `failed` block, the unset arg or the message of `blockr_invalid()` of an `invalid` one, and what a `waiting` one waits for ([Evaluation in the client](Rewrite-1.1.10#statuses)) |
 | A request whose blocks do not read `ready` | The statuses of those blocks, with which core rejects it (The requests in R) |
 | A request that R loses to a new session | That it was lost, since core sends it no more (notes) |
@@ -264,14 +264,14 @@ Today's `describe_block_type` gives the worked examples that a class passes to `
 Core's merge block passes two, a left join and a full join ([inst/registry/blocks.yml#L240-L246](https://github.com/BristolMyersSquibb/blockr.core/blob/4064d835476c45967ac6bc282de37b739737c928/inst/registry/blocks.yml#L240-L246)).
 The mutate and summarize blocks of blockr.dplyr give theirs in the guidance instead ([R/registry.R#L153-L170](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/bdac6b38f7097425bfe96883032531cc919f6ee7/R/registry.R#L153-L170)).
 
-The command registry refuses a command whose `enabled()` returns false with "It is not enabled on the board as it is, with the args …" ([srcts/commands/commands.ts#L170-L177](https://github.com/BristolMyersSquibb/blockr.core/blob/319f81c355383cdea9443be48d7e1d316c485a1c/srcts/commands/commands.ts#L170-L177)), since `enabled()` returns only true or false.
-Nearly every `enabled()` of core's commands checks that an id in the args names a block, link, stack or plugin on the board, or a board option that a loaded package defines, while `blockr.core-add_link` and `blockr.core-prepend_block` also need a free data input on the block that the link goes to ([srcts/commands/core.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/319f81c355383cdea9443be48d7e1d316c485a1c/srcts/commands/core.ts)).
+The command registry refuses a command that fails its preflight with "It fails its preflight on the board as it is, with the args …" ([blockr.core#628](https://github.com/BristolMyersSquibb/blockr.core/issues/628)), since `preflight()` returns only true or false.
+Nearly every preflight of core's commands checks that an id in the args names a block, link, stack or plugin on the board, or a board option that a loaded package defines, while `blockr.core-add_link` and `blockr.core-prepend_block` also need a free data input on the block that the link goes to ([srcts/commands/core.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/319f81c355383cdea9443be48d7e1d316c485a1c/srcts/commands/core.ts)).
 So the hint says what to check, and the model finds the wrong id in its args, against the ids that the Board section of each call holds, or through `list_blocks` where that section's list is cut ([The system prompt](Rewrite-1.4.5#the-sections)).
-Core's `blockr.core-set_plugin_state` is not enabled on a locked board ([srcts/commands/core.ts#L571](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/core.ts#L571)), so there the hint names the lock.
-A `CommandError` holds a message and its failures, but neither the index of the command that refused nor whether its `enabled()` refused it ([srcts/commands/commands.ts#L88-L105](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/commands.ts#L88-L105)).
-The Work item in blockr.core has the command registry give both where it refuses a list, so that the edit tool returns the index and adds its hint only for a command that is not enabled.
+Core's `blockr.core-set_plugin_state` fails its preflight on a locked board ([srcts/commands/core.ts#L571](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/core.ts#L571)), so there the hint names the lock.
+A `CommandError` holds a message and its failures, but neither the index of the command that refused nor whether it failed its preflight ([srcts/commands/commands.ts#L88-L105](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/commands.ts#L88-L105)).
+The Work item in blockr.core has the command registry give both where it refuses a list, so that the edit tool returns the index and adds its hint only for a command that fails its preflight.
 
-Each command of an edit is planned on the board that the commands before it leave, since a command checks its args against the board it gets, as `blockr.core-add_link` is enabled only where both of its blocks are on the board ([srcts/commands/core.ts#L337-L358](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L337-L358)), while `commands.plan()` gives each command the current board ([srcts/commands/commands.ts#L191-L194](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/commands.ts#L191-L194)).
+Each command of an edit is planned on the board that the commands before it leave, since a command checks its args against the board it gets, as `blockr.core-add_link` passes its preflight only where both of its blocks are on the board ([srcts/commands/core.ts#L337-L358](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L337-L358)), while `commands.plan()` gives each command the current board ([srcts/commands/commands.ts#L191-L194](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/commands.ts#L191-L194)).
 The store's `run()` works out the board after each delta of a step before it commits any ([srcts/store/store.ts#L248-L293](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/store/store.ts#L248-L293)), which gives the command registry the board for each command after the first.
 
 The edit tool subscribes to the store before it calls `commands.run()`, and ends the subscription once the call settles.

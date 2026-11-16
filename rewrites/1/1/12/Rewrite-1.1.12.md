@@ -390,7 +390,7 @@ So no part of a plugin's state is closed to other plugins, whether or not its cl
 The assistant changes a plugin's state through `blockr.core-set_plugin_state`, as above.
 It reads the schema of the plugin's class, with its `description` keywords, through its tool `get_plugin_state`, as it reads a block class's schema through `describe_block_type` ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 A class's own commands stay for changes that need more than its schema keeps valid, as the dock adds a view with its layout.
-Core's command is not enabled on a locked board, since there only a class's own commands know what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
+Core's command fails its preflight on a locked board, since there only a class's own commands know what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
 
 A plugin's module, its `ui` or its `frontend`, follows the plugin's state through `core.store.subscribe()`, as a block's UI follows the block's state through its host, and updates what it shows in place, leaving the input the user is editing, so that a change that another plugin, the assistant or an undo makes shows at once ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 So what others may change, such as which view the dock shows, lives in the plugin's state rather than in its module alone, while what only one person's screen needs, such as which block has focus, core holds for the page ([What a frontend offers other plugins](#what-a-frontend-offers-other-plugins)).
