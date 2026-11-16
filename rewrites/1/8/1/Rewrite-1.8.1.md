@@ -45,10 +45,19 @@ The benchmark compares two versions of any decision that shapes what the model s
 | The guidance that a package gives on its classes: a skill, such as the dock's `layout` on arranging views, against the same guidance in the descriptions of the package's commands | [The system prompt](Rewrite-1.4.5#what-a-package-adds) | Those that build a view or assemble a set of panels |
 | The tools: how many, how they are cut, their names, descriptions and args, such as one edit tool over every command against a tool per command or against tools for each block class, as today's `add_<type>` and `modify_<type>` are, or fewer read tools than today's | [The assistant's tools](Rewrite-1.4.2#the-tools) | Every question |
 | What the tools return: the summaries of results and states within their caps, the review of an edit with each block's status, conditions and summary, and plots as images | [The assistant's tools](Rewrite-1.4.2#the-edit-tool) | Those that read results or check an edit |
+| How far the review of an edit reaches: every block downstream of the blocks that the edit changed, against those one link away, as today's review does | [The assistant's tools](Rewrite-1.4.2#the-edit-tool) | Those whose edits change a block that many blocks are downstream of |
 | How failures reach the model: the failures that a refused edit names, a block that reads `failed`, `invalid` or `waiting` with its conditions, a request that core rejects or R loses, an error in the model's own R code, and what a lock refuses | [The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model) | Those whose turns fail on the way |
 | What the model learns of what others change in the board: what the note of the changes holds, and how much | [The system prompt](Rewrite-1.4.5#what-changed-under-the-model) | Those whose board the user changes between two turns or during one |
 | Compaction: when it runs and what its summary keeps | [The assistant's state](Rewrite-1.4.3#compaction) | Those long enough to compact |
 | The model's settings, and the library that runs the loop | [Model access](Rewrite-1.4.1#the-models-settings), [Assistant as a plugin](Rewrite-1.4#proposal) | Every question |
+
+How far the review of an edit reaches is one to look into, since its cost grows with the board.
+The review evaluates every block downstream of the blocks that the edit changed, and covers up to `assistant_review_max_blocks` of them, 50 by default.
+Today's review covers only the blocks one link away.
+So on a chain of 40 blocks after a dataset block, an edit of the dataset block has R evaluate all 40 before the tool returns, those off screen included.
+The review then holds up to 40 texts of up to 2,000 characters each, in one tool result.
+A review of the blocks one link away would drop What must hold 2 of [The assistant's tools](Rewrite-1.4.2#what-must-hold).
+That condition has the edit tool return only once every block downstream of the change is current.
 
 A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
 Besides blockr.assistant, whose tools and template the model reads, any package can change what the model reads: core or a plugin's package through the descriptions of its commands, a package of block classes through their guidance and arg specs, and any of them through its skills, as the dock's `layout` skill does.
@@ -78,7 +87,7 @@ A question is a board to start from, what the user writes, with any follow-ups, 
 
 The board is a JSON board, which the harness opens as the page starts ([Serialization](Rewrite-1.1.4#files)).
 A question may also hold edits that the harness makes as the user would, between two turns or while a turn runs, so that the board changes under the model ([The system prompt](Rewrite-1.4.5#what-changed-under-the-model)).
-Beside today's five, the questions include turns that meet what each decision governs: a column that the data lacks, which one of today's runs looked for in 35 calls of its tool for R code, an edit that a command refuses, a block that fails or reads `invalid` once edited, an error in the model's own R code, a locked board, a board that the user changes during a turn, and a conversation long enough to compact.
+Beside today's five, the questions include turns that meet what each decision governs: a column that the data lacks, which one of today's runs looked for in 35 calls of its tool for R code, an edit that a command refuses, a block that fails or reads `invalid` once edited, an error in the model's own R code, a locked board, a board that the user changes during a turn, an edit of a block that many blocks are downstream of, and a conversation long enough to compact.
 An answer key holds four kinds of check, each a function in the benchmark's code but for the tools, which it names:
 
 - **The values** that the data gives, computed by the benchmark's code as today's script computes the keys, which the reply or a named block's result must hold, such as the counts by arm.
