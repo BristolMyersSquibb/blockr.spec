@@ -100,6 +100,7 @@ The spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503
 - [Board options and blockr options](Rewrite-1.1.13): the two kinds side by side, defining a board option, which board options a board holds, the renderer before the first output, how R and the client read a board option's value, locked boards, blockr options, and where the two kinds meet
 - [Notifications, logging and tracing: what the user is told and what is recorded where](Rewrite-1.1.14): one member of `CoreApi` for every message, warning and error that the user should see, whoever raised it, the API through which packages log in R and in the client with the logger that a deployment swaps, and the spans that join the client's work and R's into one trace
 - [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15): core's plugin that adds, changes and removes blocks, links and stacks under every frontend, in place of the dialogs of core's basic frontend and the dock's Edit board extension, how each edit applies at once, where it shows, and what `serve()` gives by default
+- [Board actions: menus, quick actions and advanced actions](Rewrite-1.1.16): what a board action is and who registers one, the menus of the board and of its blocks, links and stacks that offer board actions, quick actions and advanced actions, what a frontend gives to draw them, and core's board actions
 
 <details><summary>Notes for implementers</summary>
 
