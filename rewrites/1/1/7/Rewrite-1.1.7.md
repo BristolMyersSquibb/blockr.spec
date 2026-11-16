@@ -64,7 +64,7 @@ interface BlockContext {
   options: Record<OptionId, Json>;                   // the values of the board options its module names
 }
 
-interface HostRequestOpts extends Omit<RequestOpts, "reads"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds
+interface HostRequestOpts extends Omit<RequestOpts, "reads" | "conditions"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds, and without conditions, since a host's request leaves them to the notifications ([Notifications, logging and tracing](Rewrite-1.1.14#notifications))
   file?: File;                                       // a file it sends, such as an upload or the bitmap of a chart
 }
 ```
