@@ -1,7 +1,7 @@
 # Client-drawn DAG
 Status: draft. Part of [State in JS](Rewrite-1).
 
-This part covers blockr.dag, which becomes the DAG plugin, of the plugin class `blockr.dag-dag_plugin`: a plugin drawn in the browser, which draws the board's blocks, links and stacks, edits them through commands, and keeps the blocks' positions and the layout's direction and spacing in its state.
+This part covers blockr.dag, which becomes the DAG plugin, of the plugin class `blockr.dag-dag_plugin`: a plugin drawn in the browser, which draws the board's blocks, links and stacks, edits them through commands, and keeps the blocks' positions and its layout's direction, spacing and placement in its state.
 It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), works under every frontend, the dock among them ([Client-drawn dock](Rewrite-1.2)), and follows the design system of [UI kit and design system for the client](Rewrite-1.7).
 
 ## Problem
@@ -18,20 +18,21 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 1. The DAG draws the board's blocks, links and stacks in the browser, without g6R, from the board alone, so that it shows every change, whoever makes it.
 2. Every edit that the DAG makes is a command, core's for blocks, links and stacks and its own for its state, so that undo and save cover it, and none of it reaches R.
 3. It works under every frontend through `CoreApi` alone, as condition 2 of [Plugins](Rewrite-1.1.12#what-must-hold) asks of every plugin.
-4. The blocks' positions and the layout's direction and spacing are the DAG plugin's state, open to external control, and boards saved today open with theirs, through the conversion in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+4. The blocks' positions and the layout's direction, spacing and placement are the DAG plugin's state, open to external control, and boards saved today open with theirs, through the conversion in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
 5. What blockr.dag offers today carries over, but for what Today drops with its reason.
+6. A block that someone adds gets a place without any other block moving, and the whole board is laid out again only when someone asks for it, as [blockr.dag#40](https://github.com/BristolMyersSquibb/blockr.dag/issues/40) asks.
 
 ## Today
 
 | Today, at `898a097` | Lines | Where it goes |
 |---|---|---|
 | The extension and its state: `new_dag_extension()` with `positions` and `layout`, the description of both for the assistant, `dag_ext_meta()`, and their external control, which keeps reactive values in step with the canvas | 365 | Replaced by the DAG plugin, which `new_dag_plugin()` makes in R ([Plugins](Rewrite-1.1.12#a-plugin)), whose state holds `positions` and `layout`, with the `description` keywords of the state's schema in place of `dag_ext_meta()`, and the DAG's commands and core's `blockr.core-set_plugin_state` in place of external control ([Plugins](Rewrite-1.1.12#a-plugins-state)), so that nothing keeps two copies in step |
-| Layouts: `dag_layout()`, the spacing presets tuned around dagre, which does not know a stack's padding, and the toolbar's layout menu | 114, and 252 of JS | `dag_layout()` kept for app scripts, the layout run by dagre or elkjs, as the spike decides (Proposal), and the menu carried over in the client, where it runs the DAG's command `blockr.dag-relayout` ([Board updates](Rewrite-1.1.2#commands)) |
+| Layouts: `dag_layout()`, the spacing presets tuned around dagre, which does not know a stack's padding, and the toolbar's layout menu | 114, and 252 of JS | `dag_layout()` kept for app scripts, with the placement of new blocks beside its direction and spacing, the layout run by dagre or elkjs, as the spike decides, and the menu carried over as the quick action of the DAG's board action Layout (Proposal) |
 | Drawing with G6: g6R's options and behaviors, ids, a node for each block with its mark and its ports, a link with its ports and its label on hover, a combo for each stack in its colour, and the script and styles that give the canvas the design system's tokens | 709, 177 of JS and 391 of CSS | Replaced by React Flow (Proposal), with a node for each block that draws its mark from the entry of the block's class in the block registry ([Block classes in R](Rewrite-1.1.5#registration)), its ports from its class's inputs, and each stack in the colour that core keeps on it ([Board objects](Rewrite-1.1.1#stacks)) |
-| Following the board: the observer that applies `update()` to the canvas, the server that wires the extension, and the placing of a block that is added or spliced into a link | 399 | Replaced by drawing from the board through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)), so nothing applies a delta by hand, while where a new block goes is an open question |
+| Following the board: the observer that applies `update()` to the canvas, the server that wires the extension, and the placing of a block that is added or spliced into a link | 399 | Replaced by drawing from the board through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)), so nothing applies a delta by hand, while the class's `update` places an added block without moving another, where today an inserted block pushes the blocks below it down (Proposal) |
 | Status badges: the DAG's method of `extension_block_callback()`, which draws the badge that `blockr.dock::block_status_badge()` specs | 111 | Replaced by `scheduler.status()` and the notifications of `CoreApi`, read for every block ([Plugins](Rewrite-1.1.12#a-plugin)), drawn as the dock's card draws its status dot ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)) |
 | The context menu: the generic `context_menu_items()` with `new_context_menu_entry()`, the request that fetches the entries, and the DAG's fourteen entries, on a block, a link, a stack and the canvas | 624 | The entries carried over as board actions, core's and the DAG's, which the DAG's menus of a node, a link, a stack, its canvas and its selection offer through core, and the generic dropped (Proposal, [Board actions](Rewrite-1.1.16#the-menus-of-board-objects)) |
-| The toolbar: the generic `toolbar_items()` with `new_toolbar_item()`, and the DAG's eight items | 329 | Search, zoom, fit and the layout menu carried over as the DAG's own controls, the items that add a block or a stack and remove the selection carried over as triggers of board actions, and the generic dropped (Proposal) |
+| The toolbar: the generic `toolbar_items()` with `new_toolbar_item()`, and the DAG's eight items | 329 | Search, zoom and fit carried over as the DAG's own controls, the layout menu as the quick action of the DAG's board action Layout, and the items that add a block or a stack and remove the selection as buttons of the board actions on the board and on the selection, with the generic dropped (Proposal) |
 | Actions: the DAG's own, which draw a link, remove the selection, copy, cut and paste, and the wiring that fires them and the dock's twelve by id | 310 | Core's board actions for the dock's twelve edits and for removing the selection, with their block picker and their editors of links, inputs and stacks ([Board actions](Rewrite-1.1.16#cores-board-actions)), and the DAG's own board actions for copy, cut and paste |
 | Copy and paste: the part of the board that a selection covers, written to the clipboard, and new ids for what a paste adds | 186, and 93 of JS | Carried over as the DAG's commands `blockr.dag-copy`, `blockr.dag-cut` and `blockr.dag-paste`, with the pasted blocks' positions in the same delta ([Board updates](Rewrite-1.1.2#plugins)) |
 | Selection and the dock: a selected node shows its block in the active view through a `views$mod` of its own, and a pinned editor follows the selection through `sidebar_owned_by()` | 95 | Replaced by `core.show()` ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)), and by `core.boardActions.select()`, whose selection a pinned advanced action follows ([Board actions](Rewrite-1.1.16#the-advanced-action)) |
@@ -52,7 +53,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 - In R, `new_dag_plugin(positions, layout)` makes the plugin, as `new_dag_extension()` makes the extension today, and `dag_layout()` gives the layout's direction and spacing, as today ([R/layout.R#L1-L33](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/layout.R#L1-L33)).
   The package lists the class in its `._BLOCKR_MODULES_` and ships the JSON Schema of its state beside its module ([Plugins](Rewrite-1.1.12#a-plugin)).
   The plugin gives R no requests, since it lives in the browser alone ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
-- The state keeps the positions, so that a board reopens as the user arranged it, and the layout's direction and spacing, so that a layout run later and the sides of the blocks' ports follow what the user picked.
+- The state keeps the positions, so that a board reopens as the user arranged it, and the layout's direction, spacing and placement, so that a layout run later, the place of a new block and the sides of the blocks' ports follow what the user picked.
   The `description` keywords of its schema tell the assistant what `dag_ext_meta()` tells it today: that a position is a point on the canvas, and how to place a block beside another ([R/ext.R#L54-L109](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L54-L109)).
   The assistant moves blocks through the DAG's commands or through `blockr.core-set_plugin_state` ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 - The DAG is drawn with React Flow (`@xyflow/react`), in place of G6.
@@ -69,6 +70,20 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
   Its class's `update` drops the position of a removed block in the same step ([Plugins](Rewrite-1.1.12#a-plugin)).
 - The DAG draws each block's status badge from `scheduler.status()` and the notifications of `CoreApi`, as the dock's card draws its status dot ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
   It demands no block of its own, so a block that nothing demands reads `unevaluated` or `stale` there until something demands it or an app has R evaluate in the background ([Evaluation in the client](Rewrite-1.1.10#demand)), where today's badge keeps the outcome of the block's last check ([R/ext.R#L538-L580](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L538-L580)).
+- The DAG places a block that someone adds without moving any other block, and lays the whole board out again only when someone asks, where G6 lays the board out again as blocks come ([blockr.dag#40](https://github.com/BristolMyersSquibb/blockr.dag/issues/40)):
+  1. The state holds a position for every block.
+  2. The class's `update` places the blocks that a change adds, in the same step, so that undo takes back a block and its position together, whoever adds it: the DAG's own gestures, a dock card's Append block or the assistant ([Plugins](Rewrite-1.1.12#a-plugin)).
+  3. It places them through a placement strategy, which takes every existing position as fixed and returns positions for the added blocks alone (notes).
+     Beside, the default, puts a block one step after the block it reads from, below it or to its right as the direction says, then moves it to the nearest spot where it overlaps nothing, and Grid snaps it to the nearest free cell of a grid that follows the spacing.
+  4. A block that the user drops or clicks into place starts from that point, which the DAG adds to the board action's step, and the strategy only moves it off what it would overlap ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+     Several blocks added at once, as the assistant adds them, are placed in the order of their links, so that a new chain comes out as a chain ([blockr.dag#117](https://github.com/BristolMyersSquibb/blockr.dag/issues/117)).
+  5. The command `blockr.dag-relayout` lays the whole board out again with dagre or elkjs, as one undo step, from the toolbar's Layout or the assistant.
+  6. A board that opens without the position of any block gets them from one such layout as the DAG starts, and one that lacks the positions of some blocks gets theirs from the strategy, as added blocks do.
+     Either is one delta of the origin `blockr.dag-dag_plugin` with `undo: false`, as the dock adds its first view ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
+
+  A strategy sees only the board and the change, since `update` gives the same patches wherever it runs, so it works from a node's nominal size, its mark with room for its label, rather than from what the page measures ([Board updates](Rewrite-1.1.2#plugins)).
+  The user picks the strategy in Layout's quick action, and an inserted block no longer pushes the blocks below it down, as today's does ([R/g6r.R#L856-L903](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/g6r.R#L856-L903)).
+  Repulsion fits the same interface, through d3-force, which pins nodes and takes a seeded random source, and comes in should Beside and Grid prove too rigid (notes).
 - Every edit runs a command, so that undo and save cover it:
   - Core's commands add, append, prepend, insert and remove blocks, add, change and remove links and stacks, and edit a block's inputs, which today's DAG asks of the dock's actions ([Board updates](Rewrite-1.1.2#commands)).
   - The DAG's own commands change its state: `blockr.dag-change_position` moves blocks as a drag ends, and `blockr.dag-relayout` lays the board out again, waiting for the layout in `prepare()`, with the direction and spacing that the layout menu picks ([Board updates](Rewrite-1.1.2#commands)).
@@ -79,9 +94,10 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
   So the DAG draws no block picker and no editor of links, inputs or stacks of its own, since those are the quick actions and advanced actions of core's board actions ([Board actions](Rewrite-1.1.16#cores-board-actions)).
   A link that the user drops on the canvas triggers Append block from the link's block at the drop, or Prepend block where the link starts from an input, and the DAG adds the new block's position to the step ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
   The DAG tells core of every node, link and stack that the user selects, through `core.boardActions.select()`, so that a pinned advanced action follows the selection, where today the DAG asks the dock's `sidebar_owned_by()` ([R/srv.R#L444-L474](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L444-L474)).
-- The DAG registers board actions of its own for copy, cut and paste, Copy and Cut on a node, a stack or a selection and Paste on the canvas, which run its commands ([Board actions](Rewrite-1.1.16#a-board-action)).
+- The DAG registers board actions of its own: Copy and Cut on a node, a stack or a selection, and Paste and Layout on the board, which run its commands ([Board actions](Rewrite-1.1.16#a-board-action)).
   So the generics `context_menu_items()` and `toolbar_items()` go, with `new_context_menu_entry()` and `new_toolbar_item()`, since a package adds what it offers in a menu as a board action, which every menu of the object then offers.
-  The toolbar keeps the DAG's own controls, search, zoom, fit and the layout menu, and triggers board actions to add a block or a stack and to remove the selection.
+  The toolbar holds the DAG's own controls, search, zoom and fit, and a button for each board action on the board, core's Add block and Create stack and the DAG's Paste and Layout, whose quick action holds Lay out again with the direction, the spacing and the placement.
+  While the user has selected something, it also holds a button for each board action on the selection, such as Remove, so that a board action that another package registers on the board or on a selection shows there too, as in the DAG's menus ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 - Selecting a node shows its block through core's `show()`, which every frontend carries out in its own way, the dock in the active view, where today the DAG sends the dock a `views$mod` of its own ([R/srv.R#L90-L112](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L90-L112), [Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
   A selection of several nodes shows none, as today.
 - The DAG binds its shortcuts within its own element, since they act on its selection, which it alone holds.
@@ -94,8 +110,6 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 ## Open questions
 
-- When the DAG lays blocks out, and where a block goes that someone adds: on every change, or only on request, with every position that the board holds kept, as [blockr.dag#40](https://github.com/BristolMyersSquibb/blockr.dag/issues/40) asks.
-  It blocks the shape of the state, the class's `update` and its commands, and the user settles it.
 - Whether the state keeps which stacks are collapsed, so that a board reopens with them collapsed, or the DAG keeps them for the page alone, as today, where saving drops them.
   It blocks the schema of the state, and the user settles it.
 - Where the DAG gets the status badge and the block's mark that its node shares with the dock's card, whose status dot the dock's client holds as one function ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)): blockr.dag re-implements both, or both packages take them from blockr.ui.
@@ -107,9 +121,9 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 - Lay out the largest real board with dagre and with elkjs, and draw it in React Flow with stacks that collapse, against the criteria in the notes, to decide between the two layouts, in blockr.dag
 - Make the DAG a plugin in R, with `new_dag_plugin()` and `dag_layout()`, the class listed in `._BLOCKR_MODULES_` and the JSON Schema of its state, in place of `new_dag_extension()`, in blockr.dag
-- Build the DAG plugin's class in the client, with its state, its `update` and its commands for positions, layouts and copy and paste, tested on core's `CoreApi` for tests, in blockr.dag
+- Build the DAG plugin's class in the client, with its state, its `update`, which places added blocks through the strategies Beside and Grid, and its commands for positions, layouts and copy and paste, tested on core's `CoreApi` for tests, in blockr.dag
 - Draw the board in the DAG, with blocks, their marks, ports and status badges, links, stacks that collapse and expand, zoom, pan, dragging, a selection that shows a block, search and the outline, in blockr.dag
-- Open core's menus of board actions from the DAG's nodes, links, stacks, canvas and selection, register the DAG's board actions for copy, cut and paste, draw its toolbar and layout menu, and bind its shortcuts, in blockr.dag
+- Open core's menus of board actions from the DAG's nodes, links, stacks, canvas and selection, register the DAG's board actions for copy, cut, paste and layout, draw its toolbar with the board actions on the board and on the selection, and bind its shortcuts, in blockr.dag
 - Remove the extension, its R UI and server, g6R and the hooks of its menus, and rewrite the user guide for the plugin, in blockr.dag
 - Write the migration notes for app scripts that use the DAG as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.dag
 
@@ -123,6 +137,18 @@ Stacks are combos laid out with dagre, which does not know a combo's padding, so
 
 The context menu's entries by target: on a block, Create link, Remove block, Append block, Edit inputs, Copy and Cut; on a link, Remove link, Edit link and Insert block; on a stack, Remove stack, Edit stack, Copy and Cut; and on the canvas, Add block, Create stack and Paste ([R/ext.R#L118-L419](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L118-L419)).
 The toolbar's items: search, zoom in, zoom out, fit, the layout menu, add a block, add a stack and remove the selection ([R/ext.R#L422-L517](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L422-L517)).
+
+A placement strategy, with illustrative names:
+
+```ts
+interface Placement {
+  id: string;                                       // "beside", "grid"
+  place(args: { board: Board; fixed: Positions; added: BlockId[]; preferred: Positions; layout: Layout }): Positions;   // positions for the added blocks alone
+}
+```
+
+Today a block that is added goes to the last position of the mouse on the canvas, and blocks added at once stack 130 px apart below it ([R/g6r.R#L904-L923](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/g6r.R#L904-L923)).
+Version 3.0.1 of d3-force (ISC, 5.7 KB gzipped) keeps a node with `fx` and `fy` where they say, takes a seeded `randomSource()` and steps through `tick()` without timers, so that it places new blocks with every existing one pinned and the same result each time ([d3-force](https://d3js.org/d3-force/simulation)).
 
 A position today is the centre of a block's node, in pixels of the canvas.
 React Flow places a node by its top left corner, and a node in a group relative to the group, so the DAG converts, while the state keeps today's meaning, so that converted positions keep theirs.

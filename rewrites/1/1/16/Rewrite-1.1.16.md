@@ -52,6 +52,7 @@ type Target =                                                   // what a board 
 interface BoardAction {
   id: string;                                                   // "blockr.core-append_block_action"
   label: string;                                                // what a menu shows, "Append block"
+  icon?: string;                                                // SVG markup, as a block class's icon in the block registry, which a button that offers it shows
   on: ("board" | "block" | "link" | "stack" | "selection")[];   // the menus that offer it
   group: "add" | "edit" | "clipboard" | "remove";               // where those menus show it
   offers?(board: Board, target: Target, lock: Lock): boolean;   // whether a menu offers it for the target now
@@ -96,6 +97,8 @@ boardActions: {                                                 // in CoreApi
 
 The card's menu of core's basic frontend, the "…" menu of the dock's card, the DAG's menus of a node, a link, a stack, its canvas and its selection, and the rows of blockr.outline all open the menus that core draws.
 The package that draws a menu adds to it no row that edits the board, since such a row would show in its own menu alone, and adds rows only for its own UI.
+A toolbar of the board, such as the DAG's, offers the board actions on the board as buttons, each with its icon and its label as a tooltip, and, while the user has selected something, those on the selection, so that it offers what the menus of the board and of the selection offer.
+Each button opens its board action's quick action under itself, or runs the board action where it asks nothing.
 A gesture outside a menu triggers a board action directly, as a link that the user drops on the DAG's canvas triggers Append block at the drop, and as Backspace in the DAG triggers the removal of its selection.
 The caller's `extend` adds commands of its own to the step, as the DAG adds the position of the block that Append block adds where the user dropped the link.
 Core's board actions that add a block, a link or a stack mint its id before they return their command, so that `extend` can name the object.
