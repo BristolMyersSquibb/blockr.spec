@@ -58,6 +58,7 @@ interface Store {
   apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo)
   open(given: string | HelloReply): Promise<Dropped[]>;      // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
   check(text: string): Promise<Dropped[]>;                   // what opening a JSON board's text would drop, or the error that would refuse it, holding nothing
+  read(text: string): Promise<{ board: Board; dropped: Dropped[] }>;   // the board that opening a JSON board's text would give, migrated, and what it would drop, holding nothing, as the DAG's paste reads a copied board
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
   save(): string;                                            // the text of jsonBoard(), as a file holds it, which open() opens (Serialization)
 
@@ -223,7 +224,7 @@ await commands.run([                                              // one step of
 
 Core's commands cover what its plugins of today and the dock's actions do: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`, as `blockr.core-set_block_lock` does, and they set a plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Changing a stack sets its blocks, its colour or both, and clears its colour with `null` ([Board objects](Rewrite-1.1.1#stacks)).
-Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
+Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
 What a user triggers from a menu, a button or a gesture is a board action, which gathers what its commands need from the user and then runs them as one step of the user ([Board actions](Rewrite-1.1.16#a-board-action)), while a command asks the user nothing.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.
 Before a command does any work, the command registry runs its preflight, `preflight()`, which checks the board as it is and the args, as `blockr.core-remove_block` checks that its block is on the board.

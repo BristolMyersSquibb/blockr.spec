@@ -56,7 +56,7 @@ interface BoardAction {
   on: ("board" | "block" | "link" | "stack" | "selection")[];   // the menus that offer it
   group: "add" | "edit" | "clipboard" | "remove";               // where those menus show it
   offers?(board: Board, target: Target, lock: Lock): boolean;   // whether a menu offers it for the target now
-  run?(board: Board, target: Target, core: CoreApi): CommandCall[] | void;   // what it does where it asks nothing
+  run?(board: Board, target: Target, core: CoreApi): CommandCall[] | void | Promise<CommandCall[] | void>;   // what it does where it asks nothing, which may wait, as for reading the clipboard
   quick?(board: Board, target: Target, core: CoreApi): QuickLevel;           // its quick action
   advanced?: AdvancedModule;                                    // its advanced action
 }
@@ -69,7 +69,7 @@ Core's board actions take the name of the command that each runs, as `blockr.cor
 The id ties a board action to no command, since what it runs is what it returns, from `run`, from a row of its quick action or from its advanced action's `done()`: any list of commands of any package.
 So a package's Duplicate block would run `blockr.core-add_block`, and a `blockr.core-add_link` for each link into the block.
 A board action has either `run`, which acts at once, or a quick action, and it has an advanced action only beside a quick action, so that every board action that asks for input starts at its trigger.
-Its `run` returns the commands to run, or does itself what needs no command, as Copy block ID puts the block's id on the clipboard.
+Its `run` returns the commands to run, or does itself what needs no command, as Copy block ID puts the block's id on the clipboard, and may return a promise of them, as the DAG's Paste reads the clipboard first ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
 
 Core registers its own board actions (Core's board actions), and a plugin class lists its own in `boardActions`, which core registers with the class, as it registers the class's commands ([Plugins](Rewrite-1.1.12#a-plugin)).
 A frontend lists its board actions as any plugin does, since a frontend is a plugin.
