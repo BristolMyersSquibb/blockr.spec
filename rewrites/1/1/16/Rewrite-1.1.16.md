@@ -87,6 +87,7 @@ boardActions: {                                                 // in CoreApi
   trigger(id: string, target: Target, opts: { el: HTMLElement; anchor?: DOMRect;
           extend?(calls: CommandCall[]): CommandCall[] }): Promise<void>;     // opens its quick action, or runs it
   mountAdvanced(el: HTMLElement, id: string, target: Target, picked?: Json): () => void;   // an advanced action, in room that a plugin gives
+  select(target: Target): void;                                 // a board object that the user selected, which a pinned advanced action follows
 };
 ```
 
@@ -144,8 +145,11 @@ So it needs no Update button, and each drop that reorders a block's inputs is on
 The frontend shows an advanced action in a place with enough room: at least 420 px wide, or as wide as the window where the window is narrower, as the dock's sidebar is by default ([blockr.dock inst/assets/css/sidebar-server.css#L5-L6](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/css/sidebar-server.css#L5-L6)).
 Where that place is, and whether the user may pin it, is the frontend's choice.
 The dock shows an advanced action in its sidebar, which the user may pin, and core shows one in a modal dialog, as core's basic frontend shows its picker today.
-Where the frontend pins the place, the advanced action stays open.
-An advanced action whose target is a block then takes the focused block as its target whenever `core.focus` changes, so that a pinned Edit inputs follows the DAG's selection, since the DAG sets the focus as the user selects a node ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
+Where the frontend pins the place, the advanced action stays open and follows the selection, as a pinned form of today's actions sidebar follows the DAG's ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162)):
+
+1. Whatever selects a board object tells core through `core.boardActions.select()`, as the DAG does as the user selects a node, a link or a stack, and core counts a block that gets focus as selected too ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)).
+2. Core hands the target to the pinned advanced action where its board action's `on` names the target's kind and its `offers` passes for the target, so that a pinned Edit link follows the links that the user selects.
+3. Otherwise the selection changes nothing, so that a selection never swaps one board action's advanced action for another's, which only opening a board action or closing the place does.
 
 A plugin with room of its own may mount an advanced action there through `mountAdvanced()`, as the Edit board plugin shows the advanced action of Add block in its section of blocks.
 
