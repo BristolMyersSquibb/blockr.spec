@@ -21,6 +21,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 4. The blocks' positions, the layout's direction, spacing and placement, and which stacks are collapsed are the DAG plugin's state, open to external control, and boards saved today open with theirs, through the conversion in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
 5. What blockr.dag offers today carries over, but for what Today drops with its reason.
 6. A block that someone adds gets a place without any other block moving, and the whole board is laid out again only when someone asks for it, as [blockr.dag#40](https://github.com/BristolMyersSquibb/blockr.dag/issues/40) asks.
+7. On a locked board, the DAG offers nothing that the lock fixes, and keeps its blocks where they are, unless the deployment leaves rearranging to readers.
 
 ## Today
 
@@ -108,13 +109,14 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
   Its commands declare no `shortcut`, which a frontend would bind for the whole page ([Board updates](Rewrite-1.1.2#commands)).
 - Under the board lock, the DAG draws no control for what the lock fixes, as a frontend draws none ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
   So its menus offer only the board actions that the lock leaves, it draws no link from a drag and drops no block into a stack, while zoom, pan, selection, search and the outline work as on any board ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board), [Board actions](Rewrite-1.1.16#cores-board-actions)).
+  Its own commands refuse to move blocks, to lay the board out again and to change the layout's settings, unless the deployment sets the blockr option `lock_rearrange` to `FALSE`, the option that leaves the arrangement of the dock's panels to readers, so that one switch decides whether readers may rearrange ([The dock's state](Rewrite-1.2.1#on-a-locked-board)).
+  Collapsing and expanding a stack stays open, as opening and collapsing a rail does, since it changes only what the reader looks at, where today's DAG reads no lock at all, so that a reader drags blocks on a locked board.
 - Boards saved today cross through blockr.convert, whose method for the DAG's extension makes the plugin with `new_dag_plugin()` from the extension's `positions` and `layout` ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
   App scripts pass `new_dag_plugin()` in the board's `plugins` in place of `new_dag_extension()`, as the migration notes say ([Saved boards and app scripts across the switch](Rewrite-1.2.2#app-scripts)), since the old function goes without an alias ([State in JS](Rewrite-1#migration)).
 
 ## Open questions
 
-- Whether a user can move blocks in the DAG on a locked board, as today, where nothing stops a drag.
-  It blocks the DAG's locked mode, and the user settles it.
+None.
 
 ## Work
 
