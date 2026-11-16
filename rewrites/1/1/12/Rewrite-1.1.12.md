@@ -41,7 +41,7 @@ Three mechanisms extend a board, two on main and one on `js-state`:
 | `manage_project()` of blockr.session | Its storage plugin ([Session management as a storage plugin](Rewrite-1.6)) |
 | `generate_code`, core's and blockr.code's `generate_flat_code()` ([blockr.code R/plugin.R#L31-L35](https://github.com/BristolMyersSquibb/blockr.code/blob/72b20d6911496e4edc9ee64db758e70ebf3f50ca/R/plugin.R#L31-L35)) | The plugin of blockr.code ([Code export as a plugin](Rewrite-1.5)) |
 | `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack`, with the dock's Edit board extension | Core's Edit board plugin, which runs core's commands under every frontend and which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15)) |
-| `edit_block`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock](Rewrite-1.2) put them: core's commands, with the menus, cards and notifications of the frontend and the DAG |
+| `edit_block`, `notify_user` and `ctrl_block` | Where the notes of [Client-drawn dock](Rewrite-1.2) put them: core's commands and board actions ([Board actions](Rewrite-1.1.16)), with the cards and notifications of the frontend |
 | The `ctrl_block` of blockr.ai, `ai_ctrl_block()`, a chat on every block ([blockr.ai R/ai-ctrl-block.R#L51-L56](https://github.com/BristolMyersSquibb/blockr.ai/blob/7441767266cd982858bef0c633bcad5597698a0a/R/ai-ctrl-block.R#L51-L56)) | Dropped, since the assistant, a plugin, replaces it ([Assistant as a plugin](Rewrite-1.4)) |
 | The dock's other extensions: the DAG, blockr.md's document, the assistant, blockr.viz's control bridge, and the outline, slides, report and minidag of blockr.outline | A plugin each, whose state is the extension's state |
 | Board classes, the dock board among them | A frontend each, the dock plugin among them, whose state holds what the class's properties held, while core's own gives way to core's basic frontend, which `serve()` gives an app by default ([The frontend](#the-frontend)) |
@@ -111,6 +111,7 @@ interface PluginClass {
   frontend?: FrontendModule;                        // a frontend's: what draws the page, which core calls with the page's element, and what shows a block or a plugin that a plugin asks to show
   storage?: Storage;                                // a storage plugin's: the controls that every frontend draws
   commands?: Command[];                             // the commands that change its plugins' state, which core registers with the class
+  boardActions?: BoardAction[];                     // what users trigger from menus, buttons and gestures, which core registers with the class, from Board actions
   start?({ core, plugin, signal }: { core: CoreApi; plugin: PluginClassId; signal: AbortSignal }): void | (() => void);   // runs from the opening of each board to the next
 }
 
@@ -173,7 +174,7 @@ export default {
 
 So one module draws the plugin of its class, from the plugin's state, which core names by the class's id.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
-A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)).
+A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)), through the tokens of core's theme, named after blockr.ui's, until blockr.ui's own reach the page ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 Core's own Edit board plugin cannot, since blockr.ui builds on blockr.core.
 It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugin](Rewrite-1.1.15#its-look)).
 
@@ -203,6 +204,8 @@ Beside `render()`, the module may give `show()`, which core calls as a plugin as
 interface FrontendModule {                           // the `frontend` of a frontend's class
   render(args: { el: HTMLElement; core: CoreApi; plugin: PluginClassId; signal: AbortSignal; args: Record<string, Json> }): () => void;
   show?(args: { object: { block: BlockId } | { plugin: PluginClassId }; el: HTMLElement; core: CoreApi }): void | Promise<void>;   // brings what a plugin asks to show into view, as the frontend can
+  menu?(args: { level: QuickLevel; el: HTMLElement; anchor: DOMRect; back?(): void; close(): void }): void;   // draws a menu of board actions, or a level of a quick action, in the frontend's look, from Board actions
+  advanced?(args: { title: string; mount(el: HTMLElement): () => void; close(): void }): void;             // shows an advanced action in the frontend's place, from Board actions
 }
 ```
 
