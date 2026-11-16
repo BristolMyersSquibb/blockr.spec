@@ -192,7 +192,7 @@ So `apply()` always applies at once, and throws what rejects a delta.
 ```ts
 interface Command<A extends Json = Json, P = A> {
   id: string;                                  // "blockr.core-remove_block", named as a registry id is
-  label: string;                               // for menus and a command palette
+  label: string;                               // for a command palette, and for the board actions that run it
   description?: string;                        // what it does and when to use it
   args?: JsonSchema;                           // for forms and the assistant's tools
   shortcut?: string;                           // "Mod+Backspace"
@@ -224,6 +224,7 @@ await commands.run([                                              // one step of
 Core's commands cover what its plugins of today and the dock's actions do: add, remove and rename a block, set or unset its state args, append, prepend or insert one on a link, add, change and remove links, add, change, rename and remove stacks, rename the board, set a board option, and set a block's `locked`, as `blockr.core-set_block_lock` does, and they set a plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Changing a stack sets its blocks, its colour or both, and clears its colour with `null` ([Board objects](Rewrite-1.1.1#stacks)).
 Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's copy, cut, paste, relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
+What a user triggers from a menu, a button or a gesture is a board action, which gathers what its commands need from the user and then runs them as one step of the user ([Board actions](Rewrite-1.1.16#a-board-action)), while a command asks the user nothing.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.
 Before a command does any work, the command registry runs its preflight, `preflight()`, which checks the board as it is and the args, as `blockr.core-remove_block` checks that its block is on the board.
 The command registry refuses a command that fails its preflight, and a menu greys it out.

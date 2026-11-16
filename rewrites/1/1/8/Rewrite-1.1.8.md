@@ -9,7 +9,7 @@ The plugin that adds, changes and removes blocks, links and stacks under every f
 ## What must hold
 
 1. Core ships a basic frontend that draws any board, so a board serves without blockr.dock, and a frontend replaces it entirely, so that none of it runs underneath another, as core's stack generics run underneath the dock today.
-2. A frontend draws everything around a block, its card, panel, menus and status, while core mounts the block's UI and output, so a block class works in every frontend.
+2. A frontend draws everything around a block, its card, panel and status, and opens the block's menu of board actions, which core draws or the frontend through its hook ([Board actions](Rewrite-1.1.16)), while core mounts the block's UI and output, so a block class works in every frontend.
 3. A frontend and every other plugin work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
 5. Any package can supply a renderer for an output class or a board option.
@@ -36,7 +36,8 @@ Core gives one `CoreApi` to the module of every plugin, a frontend's among them,
 ```ts
 interface CoreApi {
   store: Store;                    // board(), subscribe(), apply(), open(), from Board updates
-  commands: Commands;              // run(), plan() and the command registry, for menus and shortcuts
+  commands: Commands;              // run(), plan() and the command registry, for board actions and shortcuts
+  boardActions: BoardActions;      // on(), menu(), trigger(), mountAdvanced() and select(), from Board actions
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() and subscribe() alone, from Evaluation in the client
   blockRegistry(): BlockRegistry;  // the block registry's entries by registry id, for pickers, which change as another board opens
   options: Options;                // register(), the board options packages define, by id, and value(), the board's value, which the board holds for every board option that something on the page requires
@@ -133,7 +134,7 @@ So a board made in a core app opens in a dock app with the dock's default layout
 ### Core's basic frontend
 
 Core's basic frontend is a plugin, which `new_basic_frontend_plugin()` makes and an app runs unless another available package gives a frontend ([Plugins](Rewrite-1.1.12#the-frontend)).
-It does what today's frontend does wherever core's commands and store do the work, so that it only draws: a toolbar for setting the board options that the board holds, which include every one that something on the page requires, renaming the board, and the controls of the app's storage plugin, such as saving the board and opening another; a section for the UI of each plugin that has one, beside the board on a wide page and above it on a narrow one, where it mounts the plugin's module ([Plugins](Rewrite-1.1.12#plugin-classes)); stacks as groups; and a card per block with its name, a menu to rename or remove it or add a block before or after it, its UI, its output and its summary, as today's has, and its status and conditions, which today's computes but does not draw on the card, showing the severities that core's `show_conditions` board option names, with the output greyed out while the block is not `ready`, where today's clears it ([R/block-server.R#L63-L66](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L63-L66)).
+It does what today's frontend does wherever core's commands and store do the work, so that it only draws: a toolbar for setting the board options that the board holds, which include every one that something on the page requires, renaming the board, and the controls of the app's storage plugin, such as saving the board and opening another; a section for the UI of each plugin that has one, beside the board on a wide page and above it on a narrow one, where it mounts the plugin's module ([Plugins](Rewrite-1.1.12#plugin-classes)); stacks as groups; and a card per block with its name, the block's menu of board actions, with which the user renames or removes it or appends or prepends a block, among others ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)), its UI, its output and its summary, as today's has, and its status and conditions, which today's computes but does not draw on the card, showing the severities that core's `show_conditions` board option names, with the output greyed out while the block is not `ready`, where today's clears it ([R/block-server.R#L63-L66](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L63-L66)).
 Adding a block from the block registry's entries and editing links and stacks belong to the Edit board plugin, which the basic frontend shows in a section, as it shows any plugin, and which `serve()` gives an app by default ([The Edit board plugin](Rewrite-1.1.15#what-serve-gives-by-default)).
 The user collapses or expands each plugin's section, which hides the plugin's UI but leaves it mounted, so that the UI keeps what it holds outside the plugin's state, and the toolbar needs no button for each plugin ([blockr.core#544](https://github.com/BristolMyersSquibb/blockr.core/pull/544)).
 It requires two board options, which it names in its `options`: `show_conditions`, for the severities that its cards show, and `dark_mode`, for the theme it draws in ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).

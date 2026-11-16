@@ -1,9 +1,9 @@
 # Board actions: menus, quick actions and advanced actions
-Status: draft. Design for [Client-owned board state](Rewrite-1.1).
+Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): board actions, which users trigger from menus, buttons and gestures.
 It covers what a board action is and who registers one, the menus that offer board actions, a board action's quick action and advanced action, and what a frontend gives to draw them.
-It builds on commands ([Board updates](Rewrite-1.1.2#commands)), plugins ([Plugins](Rewrite-1.1.12)) and `CoreApi` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and takes over the entries of a block's menu that the [Backlog](Backlog#entries-of-a-blocks-menu-in-core) held.
+It builds on commands ([Board updates](Rewrite-1.1.2#commands)), plugins ([Plugins](Rewrite-1.1.12)) and `CoreApi` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and takes over an item that the [Backlog](Backlog) held on the entries of a block's menu.
 It changes the card's menu of core's basic frontend and the forms of the Edit board plugin, which [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569) built, and shapes the menu of the dock's card ([blockr.dock#602](https://github.com/BristolMyersSquibb/blockr.dock/pull/602)) and the DAG's menus ([Client-drawn DAG](Rewrite-1.3)).
 The edits themselves are commands, which stay [Board updates](Rewrite-1.1.2#commands)'s, what a frontend is stays [Plugins](Rewrite-1.1.12#the-frontend)'s, and where the dock draws its card's menu stays [Block cards in the dock](Rewrite-1.2.7#the-menu)'s.
 
@@ -47,7 +47,7 @@ With illustrative names:
 type Target =                                                   // what a board action acts on
   | { board: true }                                             // the board, as the DAG's canvas offers it
   | { block: BlockId } | { link: LinkId } | { stack: StackId }  // one board object, as a notification names it
-  | { selection: { blocks: BlockId[]; stacks: StackId[] } };    // several, as the DAG's selection holds them
+  | { selection: { blocks: BlockId[]; links: LinkId[]; stacks: StackId[] } };   // several, as the DAG's selection holds them
 
 interface BoardAction {
   id: string;                                                   // "blockr.core-append_block_action"
@@ -63,7 +63,10 @@ interface BoardAction {
 type CommandCall = { id: string; args?: Json };                 // a command of any package
 ```
 
-A board action's id takes the form `{pkg}-{name}_action`, as the dock names its actions today, so that it never reads as the id of the command that it runs, as `blockr.core-append_block_action` runs `blockr.core-append_block`.
+A board action's id is `{pkg}-{name}`, as the ids of commands are, and ends in `_action` by convention, as the dock names its actions today, so that it does not read as a command's id.
+Core's board actions take the name of the command that each runs, as `blockr.core-append_block_action` runs `blockr.core-append_block`.
+The id ties a board action to no command, since what it runs is what it returns, from `run`, from a row of its quick action or from its advanced action's `done()`: any list of commands of any package.
+So a package's Duplicate block would run `blockr.core-add_block`, and a `blockr.core-add_link` for each link into the block.
 A board action has either `run`, which acts at once, or a quick action, and it has an advanced action only beside a quick action, so that every board action that asks for input starts at its trigger.
 Its `run` returns the commands to run, or does itself what needs no command, as Copy block ID puts the block's id on the clipboard.
 
@@ -190,6 +193,7 @@ Each board action's id is the command's with `_action` after it, such as `blockr
 | Edit stack | A stack | Colour… and Blocks…, as [blockr.dock#550](https://github.com/BristolMyersSquibb/blockr.dock/pull/550) had them | The form of a stack, editing it | `change_stack` |
 | Copy block ID | A block | None, since it acts at once | None | None |
 | Remove block, Remove link and Remove stack | A block, a link or a stack | None, since each acts at once | None | `remove_block`, `remove_link`, `remove_stack` |
+| Remove | A selection | None, since it acts at once, removing every block, link and stack of the selection in one step | None | `remove_block`, `remove_link`, `remove_stack` |
 
 The card's menu of core's basic frontend says "Add block before" and "Add block after" today, and takes the commands' labels here, "Prepend block" and "Append block", which the dock's menus and the DAG's use today, so that every menu agrees.
 Under the board lock, every one of core's board actions but Copy block ID fails its `offers`, since the store refuses what they run ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).

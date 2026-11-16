@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-11.
+Revised on 2026-11-16.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -35,18 +35,3 @@ What it would cost: a request for the rest of a class's entry, which the client 
 The board options of a class that an app takes in while it runs need nothing more, since core adds a component's board options as it first needs the component ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 
 What would settle it: the size of the block registry in the reply to `hello` with every available package offered, measured beside the time to the first draw, and whether apps want to take in packages installed while they run.
-
-## Entries of a block's menu in core
-
-Core would hold the entries of a block's menu, such as removing the block or appending one to it, and every frontend and the DAG would draw them in their menus of a block, so that a plugin adds an entry once for all of them.
-Today core, the dock and the DAG each keep a list of their own.
-Core's `edit_block` plugin offers a field for the block's name and buttons to remove the block and to add one before or after it ([R/plugin-block.R#L252-L294](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plugin-block.R#L252-L294)).
-The dock gives that plugin its own UI, its card, whose "…" menu has items that the dock fixes ([R/plugin-block.R#L191-L247](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L191-L247)).
-The DAG's context menu offers on a block's node to create a link, remove the block, append one and edit its inputs, through its own method of `context_menu_items()`, a generic that any extension may extend and no other does ([R/ext.R#L118-L419](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L118-L419)).
-In State in JS core's basic frontend, the dock and the DAG still draw a menu of a block each ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Client-drawn DAG](Rewrite-1.3)), and the dock's cards offer plugins no entry ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
-
-What it would remove: the three lists of a block's entries that core, the dock and the DAG keep today, which share entries such as removing a block.
-
-What it would cost: a list in core of the commands that a block's menu offers, built on the command registry, whose `label` is for menus already ([Board updates](Rewrite-1.1.2#commands)), a way to offer what is no command, such as renaming a block in place or copying its id, and a menu in every frontend and in the DAG that draws the list and gathers the args of the commands it runs, as the dock's "+" menu gathers those of appending a block.
-
-What would settle it: a package that needs an entry in a block's menu, under every frontend.

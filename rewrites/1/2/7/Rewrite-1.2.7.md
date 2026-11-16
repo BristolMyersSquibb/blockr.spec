@@ -35,7 +35,7 @@ Core clears the output of a block that is not `ready` ([R/block-server.R#L64-L66
 | The status dot, `block_status_dot()`, drawn by the spec that `block_status_badge()` gives the card and blockr.dag's node badge, and the notes of a `waiting` and an `unset` block | Carried over into the dock's client, from `scheduler.status()`, with `invalid` in place of `unset`, and with a dot for `ready` and `unevaluated` too ([The status dot](#the-status-dot), [The output](#the-output)) |
 | The name, `block_card_title()`, which `block-rename.js` renames in place | Carried over, renaming through `blockr.core-rename_block` ([The header](#the-header)) |
 | The toggles, `block_card_toggles()` and `section-toggle.js`: the preview's eye, and the control that a `ctrl_block` plugin adds | The eye carried over, with the Controls toggle beside it, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), while the control goes with `ctrl_block` ([Plugins](Rewrite-1.1.12#today)) |
-| The "…" menu, `block_card_dropdown()` and `block-menu.js`: Controls, Rename, Append block, Copy block ID and Remove block | Carried over without Controls, which moves to the header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), and with core's commands in place of the dock's actions ([The menu](#the-menu)) |
+| The "…" menu, `block_card_dropdown()` and `block-menu.js`: Controls, Rename, Append block, Copy block ID and Remove block | Carried over without Controls, which moves to the header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), and with core's board actions in place of the dock's actions ([The menu](#the-menu)) |
 | Whether a block has controls, `has_expr_ui()`, which renders the block's R UI and looks for markup | Replaced by whether the block's UI module draws anything ([The header](#the-header)) |
 | The sections, `block_card_content()`: the control's, the inputs and the preview, which fold | The inputs and the preview carried over as the sections `inputs` and `outputs` of the dock's state ([The dock's state](Rewrite-1.2.1#card-sections)), while the control's section goes with `ctrl_block` ([Sections](#sections)) |
 | The conditions, which `update_blk_cond_observer()` inserts and removes: errors above the sections, and warnings and messages folded under the preview | Carried over, from the notifications of `CoreApi`, with warnings above the sections beside errors, as the design system has them ([Notifications](#notifications)) |
@@ -72,12 +72,14 @@ The mark takes its icon and category from the entry of the block's class in the 
 Its tooltip is the entry's name, with the package of the registry id as its badge, as "head/tail block · blockr.core".
 Today's tooltip is the block's first class in R with spaces for underscores, which no longer reaches the client, since class vectors stay in R ([State in JS](Rewrite-1#principles)).
 
-A double-click on the name, or Rename in the menu, starts renaming the block in place, as today ([inst/assets/js/block-rename.js](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-rename.js)):
+A double-click on the name starts renaming the block in place, as today ([inst/assets/js/block-rename.js](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-rename.js)):
 
 1. The name turns into a field that holds the name, selected.
 2. Enter, or a click elsewhere, runs `blockr.core-rename_block` with the new name, as one undo step.
 3. Escape restores the name that renaming began with.
 4. The field refuses an empty name, or one of spaces alone, on Enter, saying "A block needs a name", and drops it on a click elsewhere.
+
+Rename in the block's menu shows a field in the menu instead, as in every menu of a block, which refuses an empty name in the same way ([The menu](#the-menu)).
 
 A single click on the name stays free to select the panel.
 
@@ -178,17 +180,17 @@ A block whose card is not on screen keeps its notifications in `CoreApi` until i
 
 ### The menu
 
-The "…" button opens the block's menu on a click, or on ArrowDown while it has the keyboard's focus, as today ([inst/assets/js/block-menu.js#L93-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-menu.js#L93-L99)), drawn as the design system's menus are, with these rows ([design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
+The "…" button opens the block's menu of board actions on a click, or on ArrowDown while it has the keyboard's focus, as today ([inst/assets/js/block-menu.js#L93-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-menu.js#L93-L99)).
+Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and the dock draws it as the design system's menus are drawn ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
 
-1. Rename, which starts renaming the block in place ([The header](#the-header)).
-2. Append block, which opens the dock's "+" menu from the button.
-   The dock appends a block of the class that the user picks there, as `blockr.core-append_block` does.
-3. Copy block ID, with the id as monospaced meta text, which puts the id on the clipboard.
-4. A divider, then Remove block, with the bin icon and the danger colour, which runs `blockr.core-remove_block`.
+1. Rename shows a field with the block's name in the menu, while a double click on the title renames the block in place ([The header](#the-header)).
+2. Append block, Prepend block, Create link, Create stack and Edit inputs show their quick actions in the menu, Append block's as the dock's "+" menu is drawn today, and their advanced actions in the dock's sidebar.
+3. Copy block ID shows the id as monospaced meta text, and puts it on the clipboard.
+4. Remove block, in the last group, after a divider, shows the bin icon and the danger colour, and runs `blockr.core-remove_block`.
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
-The rows are the dock's own for now, and entries that plugins come to add to a block's menu would come from core, so that every menu of a block draws them ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
-The rows that edit the board run core's commands, which make the edits that the dock's actions made today, each as one undo step of the user's ([Client-drawn dock](Rewrite-1.2#proposal), [Board updates](Rewrite-1.1.2#undo)).
+So the menu offers what every menu of a block offers, the DAG's included ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+The board actions that edit the board run commands, which make the edits that the dock's actions made today, each use as one undo step of the user's ([Client-drawn dock](Rewrite-1.2#proposal), [Board updates](Rewrite-1.1.2#undo)).
 
 ### Compact headers
 
@@ -230,7 +232,7 @@ Under the board lock, the card draws no control for what a lock fixes, as `core.
 
 - It shows no toggle and no padlock, since no command sets a card's sections or a block's lock there ([The dock's state](Rewrite-1.2.1#on-a-locked-board), [Locked boards and the properties of blocks](Rewrite-1.1.11#the-board-lock)), and its sections show as the dock's `visible` says, as today's locked card does ([R/plugin-block.R#L131-L137](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L131-L137)).
 - A double-click on its name starts no rename, since the board lock fixes every block's name.
-- Its menu holds Copy block ID alone, as today.
+- Its menu holds only the board actions that the board lock leaves, of core's Copy block ID alone, as today's menu holds it ([Board actions](Rewrite-1.1.16#cores-board-actions)).
 - It mounts the UI only of a block that the board lock leaves open, and shows no `inputs` section for any other block, whatever `visible` says.
 
 A block whose `inputs` show on a locked board is one that its author left open to readers, by opening its padlock or through a script, so a reader sets its state there as on any board ([The block's lock](#the-blocks-lock)).
