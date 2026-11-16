@@ -13,7 +13,7 @@ The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, 
 4. Each section that the plugin writes is bounded as today, so that no call fills the model's context.
 5. A deployment adds instructions of its own as skills, and may replace the template with one file of its own through the blockr option `assistant_template`, which keeps, rearranges or leaves out the template's sections by their ids and adds text of its own, while the sections that the plugin writes and the note of what changed reach the model whatever the file holds.
 6. After `js-state` has merged into main, a change to the template, the preambles, the format of the plugin's sections or of the note of what changed, a tool's description or a skill that a package of the new stack gives, such as the dock's `layout`, merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
-7. Before each call, the model learns what the user, another thread or another plugin changed in the board's blocks, links and stacks since the thread's previous call, while the board stayed open, and the thread keeps what it learned.
+7. Before each call, the model learns what the user, another conversation or another plugin changed in the board's blocks, links and stacks since the conversation's previous call, while the board stayed open, and the conversation keeps what it learned.
 8. A package gives the model guidance on its block classes and plugin classes as skills of its own, with no dependency on blockr.assistant, and the model sees them only in an app that offers those block classes or runs plugins of those classes.
 
 ## Today
@@ -28,7 +28,7 @@ Each paragraph of the template, and each preamble, goes as follows:
 
 | Today, at `fcbdb27` | Where it goes |
 |---|---|
-| The role, "an assistant embedded next to a blockr data analysis board", and that "The Board section below is the current shape of the board" ([#L1-L3](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L1-L3)) | Carried over, with the Board section in a message of the app's after the thread's last message, rather than below the template (What a call sends) |
+| The role, "an assistant embedded next to a blockr data analysis board", and that "The Board section below is the current shape of the board" ([#L1-L3](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L1-L3)) | Carried over, with the Board section in a message of the app's after the conversation's last message, rather than below the template (What a call sends) |
 | A result's summary is "a bounded overview, never the object itself", so the model never guesses at a result and reads it with `inspect_results`, "read-only R over any block's result" ([#L5-L12](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L5-L12)) | Carried over, since both tools stay ([The assistant's tools](Rewrite-1.4.2#the-tools)), with `inspect_results` reading the results of the blocks that the model names ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)) |
 | The state that `describe_block` reports is bounded too, with an arg "too long to show" left out and marked, so the model reads it with `get_block_state` before rewriting it, since `modify_block` "replaces the whole value" ([#L14-L19](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L14-L19)) | Changed, since a delta sets any of a block's state args and leaves the others ([Board updates](Rewrite-1.1.2#deltas)): the model reads an arg that `describe_block` leaves out before it sets that arg anew |
 | The statuses that mark a block, `waiting`, `unset`, `failed`, `unevaluated` and `stale`, what each says, that an `unevaluated` or `stale` block is off screen and has no result to read, and that a commit evaluates the blocks it changed and those linked to them, "and nothing further downstream" ([#L21-L42](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L21-L42)) | Changed: `invalid` takes the place of `unset`, and `unevaluated` and `stale` hold on screen as off it, as the scheduler gives them ([Evaluation in the client](Rewrite-1.1.10#statuses)). A request evaluates the blocks that it reads first, so `get_block_result` and `inspect_results` read the result of an `unevaluated` or `stale` block rather than finding none ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)). The edit tool returns once every block downstream of an edit is current ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)), so the warning about stale blocks further downstream goes, and where an edit leaves out the statuses of the blocks past `assistant_review_max_blocks`, the model says that it has not checked them (The rules) |
@@ -50,11 +50,11 @@ Each call to the model sends, in this order:
 
 1. The tools' definitions, which change only with a release of blockr.assistant, since the edit tool takes any command by its id ([The assistant's tools](Rewrite-1.4.2#the-tools)).
    That holds for the edit tool, the first version.
-   The two versions that the benchmark compares with it put the schemas of the app's commands or block classes into the definitions, so that theirs change with the app's packages, and within a thread where the tools for block classes come a few at a time ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+   The two versions that the benchmark compares with it put the schemas of the app's commands or block classes into the definitions, so that theirs change with the app's packages, and within a conversation where the tools for block classes come a few at a time ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
    The benchmark reports, for each version, how many of its input tokens the cache served ([The assistant's benchmark](Rewrite-1.8.1#what-a-comparison-reports)).
 2. The system prompt, which changes only with the app's skills and its template: the template, then the catalogue of the skills that no block class or plugin scopes (What a deployment adds).
-3. The thread's messages, those that the plugin keeps in its memory included ([The assistant's state](Rewrite-1.4.3#how-much-of-a-thread-the-state-keeps)).
-4. The board and the focus as they are when the call goes out, which the plugin adds after the last message, and which the thread never keeps.
+3. The conversation's messages, those that the plugin keeps in its memory included ([The assistant's state](Rewrite-1.4.3#how-much-of-a-conversation-the-state-keeps)).
+4. The board and the focus as they are when the call goes out, which the plugin adds after the last message, and which the conversation never keeps.
 
 The plugin adds the board and the focus through pi's `transformContext`, which runs before each call, so that no call goes out for them alone.
 At a turn's first call, they show the board that the user's new message is about.
@@ -66,11 +66,11 @@ The checks of pi in the notes of [Assistant as a plugin](Rewrite-1.4) added the 
 The call that writes a summary for compaction sends only the older messages, under a prompt of its own and with no tools, as today's does ([The assistant's state](Rewrite-1.4.3#compaction)), so neither the template nor a deployment's template reaches it.
 
 A provider's prompt cache serves the start of a call that matches an earlier one, and charges a fraction of the price of new input for it (notes).
-Today's board section sits at the end of the system prompt, so each change to the board or the focus changes the system prompt, and the cache serves none of the thread after it, which is read again in full at the price of new input.
+Today's board section sits at the end of the system prompt, so each change to the board or the focus changes the system prompt, and the cache serves none of the conversation after it, which is read again in full at the price of new input.
 Today's assistant cannot send the board in a message instead, since shinychat's `chat_server()` sends what the user typed alone, and gives an app no way to add context to it ([shinychat#375](https://github.com/posit-dev/shinychat/issues/375)).
-In this order, the cache serves the tools, the system prompt and the thread so far, and only the board, the focus and the newest messages are read anew.
+In this order, the cache serves the tools, the system prompt and the conversation so far, and only the board, the focus and the newest messages are read anew.
 Anthropic's cache keeps the start of a call only up to a block that the call marks.
-So each call marks the end of the thread, before the board, since a call that marked the board would keep a start that no later call repeats (notes).
+So each call marks the end of the conversation, before the board, since a call that marked the board would keep a start that no later call repeats (notes).
 [The assistant's benchmark](Rewrite-1.8.1) compares this order with today's, by the questions that pass and by cost.
 
 ### What changed under the model
@@ -79,20 +79,20 @@ The board stays open to the user while a turn runs, and between turns, so it can
 The board after the last message shows the board as it is, but neither what changed nor who changed it.
 So a model that said it added a block `adults` would later read a board without `adults`, and nothing to tell it why, which is what shinychat#375 describes for a context that a message does not keep.
 
-To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the thread's own edits did not make, with who made it, by the origin that the store gives the change: the user, whose Undo and Redo count as theirs, in the frontend or through `/undo` and `/redo` ([Board updates](Rewrite-1.1.2#undo)), the assistant in another thread, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
-Before each call, the plugin adds a note of the changes since the thread's previous call to the thread, as a message of its own, which it marks as the app's rather than the user's, as it marks the board, and whose preamble says that the app writes it ([The assistant's state](Rewrite-1.4.3#the-state)).
-So the thread keeps the note, as shinychat#375 asks of a message's context, and a call with no such changes carries none.
+To tell the model, the plugin follows the store, and records each change to the board's blocks, links and stacks that the conversation's own edits did not make, with who made it, by the origin that the store gives the change: the user, whose Undo and Redo count as theirs, in the frontend or through `/undo` and `/redo` ([Board updates](Rewrite-1.1.2#undo)), the assistant in another conversation, or another plugin, by its name ([Board updates](Rewrite-1.1.2#the-store)).
+Before each call, the plugin adds a note of the changes since the conversation's previous call to the conversation, as a message of its own, which it marks as the app's rather than the user's, as it marks the board, and whose preamble says that the app writes it ([The assistant's state](Rewrite-1.4.3#the-state)).
+So the conversation keeps the note, as shinychat#375 asks of a message's context, and a call with no such changes carries none.
 
 The plugin builds the note from what the store gives, with no text diff, since the store announces each change as a delta keyed by the ids of the blocks, links and stacks that it touches, with its origin ([Board updates](Rewrite-1.1.2#deltas)).
-For each thread, it keeps a copy of the board's blocks, links and stacks as the thread's previous call saw them, and the ids that each change since then touched, with the change's origin and, for a block, the args that the change set or unset.
-Before the thread's next call, it compares the entry in the copy of each id that another origin touched with the board's.
+For each conversation, it keeps a copy of the board's blocks, links and stacks as the conversation's previous call saw them, and the ids that each change since then touched, with the change's origin and, for a block, the args that the change set or unset.
+Before the conversation's next call, it compares the entry in the copy of each id that another origin touched with the board's.
 The note has a line for each that differs: added, removed, or changed, with what another origin changed of it, such as a block's name or the names of its args rather than their values, which `get_block_state` reads, and who changed it.
 So an arg set and set back leaves no line, and the note grows with what changed rather than with the board.
-A thread's first call carries no note, since the thread has no copy to compare with yet.
-Every thread edits as the origin `assistant`, so the plugin tells the thread's own edits from another thread's by the turn that ran them, since one turn runs at a time ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
+A conversation's first call carries no note, since the conversation has no copy to compare with yet.
+Every conversation edits as the origin `assistant`, so the plugin tells the conversation's own edits from another conversation's by the turn that ran them, since one turn runs at a time ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
 The store gives the undo that `/undo` asks for the origin `assistant` too, since it takes back the assistant's step, so the plugin counts that undo as the user's ([The assistant's chat](Rewrite-1.4.4#slash-commands)).
-The note comes before the board, which the call adds after the thread's last message, so that the cache serves the thread up to the note on the calls after.
-The board itself stays out of the thread, since a board for every call would fill the model's context window.
+The note comes before the board, which the call adds after the conversation's last message, so that the cache serves the conversation up to the note on the calls after.
+The board itself stays out of the conversation, since a board for every call would fill the model's context window.
 The note stays within `assistant_board_section_max_chars`, as each part of the Board section does.
 The plugin records the changes while the board stays open, so the first call after the board opens again, as after a reload, carries no note of what changed before it.
 
@@ -112,7 +112,7 @@ The template keeps the rules that carry over (Today), and states those of the ne
 - A refused edit names the command and why, so the model changes the args or the commands rather than sending the same list again.
 - The commands come from `list_commands`, so the model looks up the frontend's own for views and panels, as the dock's are, and a plugin's own or `blockr.core-set_plugin_state` for that plugin's state, rather than assuming any.
 - The tool `undo_edit` takes back the assistant's last undo step, for when the user asks for that in words, while `/undo` does it without the model ([The assistant's tools](Rewrite-1.4.2#the-edit-tool), [The assistant's chat](Rewrite-1.4.4#slash-commands)).
-  That step may be an edit of another thread, and `undo_edit` passes over an edit that took no undo step, such as one that only switched views.
+  That step may be an edit of another conversation, and `undo_edit` passes over an edit that took no undo step, such as one that only switched views.
   So the model tells the user what `undo_edit` took back, as its result says, rather than taking for granted that it was the model's own last edit.
 - On a locked board, the model tells the user what the lock refuses, as the edit tool, `undo_edit` and `inspect_results` return it, rather than trying another way ([The assistant's tools](Rewrite-1.4.2#on-a-locked-board)).
 - A note of what the user changed says what the user wants, so the model builds on it, rather than putting back what the user removed or took back, unless the user asks for that (What changed under the model).

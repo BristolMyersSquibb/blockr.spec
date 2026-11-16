@@ -3,7 +3,7 @@ Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
 It shapes running and planning a list of commands as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
-Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the threads that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, how the chat shows those calls is [The assistant's chat](Rewrite-1.4.4)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
+Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the conversations that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, how the chat shows those calls is [The assistant's chat](Rewrite-1.4.4)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
 ## What must hold
 
@@ -70,12 +70,12 @@ The pair `list_plugins` and `get_plugin_state` takes the place of `list_extensio
 Every other read tool carries over one for one, as parity has it, and whether fewer tools serve the model better is for the benchmark to show ([The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares)).
 A tool that sends no request reads the board as it is now, and says of a block that reads `stale` or `unevaluated` that it does, without evaluating it.
 A tool that sends a request has the blocks that the request reads evaluated first, as every request does ([Evaluation in the client](Rewrite-1.1.10#demand)).
-The tools `list_plugins` and `get_plugin_state` leave out the assistant's own plugin, since its state holds the threads, and the model has its own thread already.
+The tools `list_plugins` and `get_plugin_state` leave out the assistant's own plugin, since its state holds the conversations, and the model has its own conversation already.
 The tool `read_skill` is offered in every app, even where no skill is listed, so that the tools' definitions change only with a release of blockr.assistant ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
 The tool `list_board_options` lists every board option that a loaded package defines, so that the model can set one that nothing on the page uses yet, such as `n_rows` before any table is drawn.
 It gives the value of each board option that the board holds, and no value for the others, since core puts a default on the board only once something on the page requires the board option ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 The edit tool sets any of them through core's `blockr.core-set_option`, on a locked board too, since a lock leaves board options open ([Board options and blockr options](Rewrite-1.1.13#locked-boards)).
-Unlike today's `set_board_option`, it refuses none of them, since `llm_model` goes and each thread keeps its own pick of the model ([Assistant as a plugin](Rewrite-1.4#proposal)).
+Unlike today's `set_board_option`, it refuses none of them, since `llm_model` goes and each conversation keeps its own pick of the model ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
 ### The edit tool
 
@@ -136,10 +136,10 @@ It learns what a command's args take from `describe_command`, which gives the co
 Guidance on using several commands together, such as how to arrange the dock's views, goes first in a skill of the package, as the dock's `layout` skill does, and the benchmark compares that with the same guidance in the commands' descriptions ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
 So a package that registers a command opens it to the assistant with no code of the assistant's, as today's `new_ext_meta()` opens an extension ([Board updates](Rewrite-1.1.2#what-must-hold)).
 After `js-state` has merged into main, a pull request that changes a command's description shows the benchmark's comparison, in whichever package registers the command ([The assistant's benchmark](Rewrite-1.8.1#where-it-lives)).
-The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves out the assistant's own commands, since only the assistant's chat and loop change its threads and each thread's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L101](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L101)).
+The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves out the assistant's own commands, since only the assistant's chat and loop change its conversations and each conversation's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L101](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L101)).
 
 The tool `undo_edit` takes back the assistant's last undo step with `core.store.undo("assistant")`, which applies the undo as a new edit, and then returns as the edit tool does from step 3, so that the model learns what the undo changed.
-That step may be another thread's, since the edits of every thread are steps of the one origin `assistant` ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
+That step may be another conversation's, since the edits of every conversation are steps of the one origin `assistant` ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
 It passes over an edit that took no undo step, and leaves the board options as they are, as every undo does ([Board updates](Rewrite-1.1.2#undo)).
 Where `core.store.canUndo("assistant")` is false, it changes nothing and returns that the assistant has no edit left to take back.
 Where the store refuses the undo, as a lock or a check of the board refuses it, it returns why, as step 2 returns a refusal, and the board stays as it was.
@@ -229,7 +229,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | What fails | What the model gets |
 |---|---|
 | A tool's args that its schema refuses | The schema's failures, from the library's check, so that the model calls the tool again with args that fit (notes) |
-| A call to a tool that the plugin does not offer, such as a tool that a later release drops, which the model calls again in a thread that a board saved before | That no such tool is offered, as the library answers it (notes) |
+| A call to a tool that the plugin does not offer, such as a tool that a later release drops, which the model calls again in a conversation that a board saved before | That no such tool is offered, as the library answers it (notes) |
 | A block, a command, a plugin or a skill that a tool names and the board or the app lacks | That it is not there, with the tool that lists those that are, such as `list_blocks` |
 | A command of an edit that refuses | The command's index and id, and each failure that the command registry names, with a hint where the command fails its preflight on the board as it is, while the board stays as it was (The edit tool) |
 | A block that an edit changed, or one downstream of it, that reads `failed`, `invalid` or `waiting` once evaluated | Its status, why it stopped and the conditions that appeared since the edit began, in the edit's review: the error of a `failed` block, the unset arg or the message of `blockr_invalid()` of an `invalid` one, and what a `waiting` one waits for ([Evaluation in the client](Rewrite-1.1.10#statuses)) |
@@ -238,7 +238,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | An error in the model's own R code | The error's message, as R gives it |
 | What a lock refuses | Why the lock refuses it, as the store, the edit tool's hint, the tool `inspect_results` or R says (On a locked board) |
 | A value past its cap | What today's tools give for it: a value left out and marked, with the tool that reads it in full, as today's `describe_block` marks an arg too long to show ([R/describe-block.R#L126-L141](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/describe-block.R#L126-L141)), or a text cut and marked, as today's caps cut what `describe_result()` writes |
-| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a thread only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)). An edit stopped while it waits says too that its commands applied (The edit tool) |
+| A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a conversation only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)). An edit stopped while it waits says too that its commands applied (The edit tool) |
 
 How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, where its questions have turns that meet it.
 None of these reaches the user as a notification, since the model tells the user of them in its reply.

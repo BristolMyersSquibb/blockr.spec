@@ -3,7 +3,7 @@ Status: settled on 2026-11-13. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): where the assistant's calls to a model go, how they are authenticated, which models a deployment offers and who picks among them, through four blockr options, and the model's settings.
 It shapes the loop's credential and the model's settings ([blockr.assistant#225](https://github.com/BristolMyersSquibb/blockr.assistant/issues/225)), sending the calls ([blockr.assistant#226](https://github.com/BristolMyersSquibb/blockr.assistant/issues/226)), the pick of the model in the chat ([blockr.assistant#230](https://github.com/BristolMyersSquibb/blockr.assistant/issues/230)), the visitor's own key ([blockr.assistant#236](https://github.com/BristolMyersSquibb/blockr.assistant/issues/236)) and login ([blockr.assistant#237](https://github.com/BristolMyersSquibb/blockr.assistant/issues/237)), the examples ([blockr.assistant#239](https://github.com/BristolMyersSquibb/blockr.assistant/issues/239)), what the migration notes say of a deployment's variables ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
-The loop that makes the calls stays with the part, the state that keeps each thread's pick of the model is [The assistant's state](Rewrite-1.4.3)'s, and the chat that asks for a key and offers the pick is [The assistant's chat](Rewrite-1.4.4)'s.
+The loop that makes the calls stays with the part, the state that keeps each conversation's pick of the model is [The assistant's state](Rewrite-1.4.3)'s, and the chat that asks for a key and offers the pick is [The assistant's chat](Rewrite-1.4.4)'s.
 
 ## What must hold
 
@@ -118,8 +118,8 @@ Both options go, since they were shaped for ellmer's chat functions ([Assistant 
 
 The models that a deployment offers are those it names in `assistant_models`, and the first is the default (The blockr options):
 
-- One model fixes the model for every thread, and the chat offers no pick.
-- Several let the user pick one in the chat for each thread.
+- One model fixes the model for every conversation, and the chat offers no pick.
+- Several let the user pick one in the chat for each conversation.
 - Where the deployment names none, the chat offers the models that the base URL lists for the key, and keeps those that take tools where the list says which do, the first that it keeps being the default.
 
 OpenAI's list says nothing of what a model takes, so the issue that sends the calls settles how the plugin keeps the models that take tools from it, such as by their ids (notes).
@@ -127,15 +127,15 @@ Anthropic's and OpenRouter's lists put the newest model first, while OpenAI's an
 A call to a model that the visitor's account cannot reach fails as any call does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 Where the base URL gives no list, as a company's own proxy may not, or one in which no model takes tools, the chat says so and offers no model, so a deployment on such a base URL names its models, while a list refused for its key goes as any refused key does ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
-Each thread keeps its own pick of the model, in the assistant's state, so that it talks to the same model after a reload and in a saved board ([The assistant's state](Rewrite-1.4.3#the-state)).
-A new thread takes the pick of the thread that is open as it is added, so that it goes on with the last pick, as threads do under today's board option.
-Where no thread is open, a pick goes to the thread that the first message adds.
-A thread that nobody picked a model for talks to the default.
-A pick in the chat's footer sets the model of the open thread alone, through the command `blockr.assistant-set_model`.
+Each conversation keeps its own pick of the model, in the assistant's state, so that it talks to the same model after a reload and in a saved board ([The assistant's state](Rewrite-1.4.3#the-state)).
+A new conversation takes the pick of the conversation that is open as it is added, so that it goes on with the last pick, as conversations do under today's board option.
+Where no conversation is open, a pick goes to the conversation that the first message adds.
+A conversation that nobody picked a model for talks to the default.
+A pick in the chat's footer sets the model of the open conversation alone, through the command `blockr.assistant-set_model`.
 It is a command of the assistant's own, as every change to its state is, so that a pick takes no undo step and works on a locked board, which core's command for a plugin's state would not ([The assistant's state](Rewrite-1.4.3#commands)).
-Where the deployment does not offer a thread's pick, the chat says so and the thread talks to the default, while the pick stays in the state, so that the thread talks to its model again under a deployment that offers it.
+Where the deployment does not offer a conversation's pick, the chat says so and the conversation talks to the default, while the pick stays in the state, so that the conversation talks to its model again under a deployment that offers it.
 The chat's footer offers the pick where the deployment offers more than one model or names none ([The assistant's chat](Rewrite-1.4.4#the-model)).
-A default of the visitor's own for new threads, such as one kept in the browser's local storage, is later work, which nothing here rules out.
+A default of the visitor's own for new conversations, such as one kept in the browser's local storage, is later work, which nothing here rules out.
 
 ### The model's settings
 
@@ -146,8 +146,8 @@ After the switch, the plugin's code fixes the settings, such as the `thinkingLev
 Today's calls send no reasoning effort, so each model reasons at its own default, which OpenAI gives as `medium` for its current models, while pi sends an effort on every call to a model that reasons, `none` for its level `off`, which GPT-6 Astra refuses (notes).
 A change to the settings changes what the model does, so after `js-state` has merged into main, it merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
 
-Letting someone change the settings is later work, which nothing here rules out, such as a pick of the thinking level for each thread beside its pick of the model.
-A setting for a thread would go in the assistant's state, as its pick of the model does, since a setting of a plugin's own goes there first ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
+Letting someone change the settings is later work, which nothing here rules out, such as a pick of the thinking level for each conversation beside its pick of the model.
+A setting for a conversation would go in the assistant's state, as its pick of the model does, since a setting of a plugin's own goes there first ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
 A setting for a deployment would be a blockr option, as the models that it offers are.
 
 ### The blockr options
@@ -179,7 +179,7 @@ A deployment of today's assistant moves to the blockr options above at the switc
 - A chat function of another provider becomes that provider's base URL in `assistant_base_url`, with `assistant_api` where that base URL does not speak the Responses API.
   Where a page cannot call the provider, the base URL is a gateway's or a proxy's instead (Where the calls go).
 
-A board saved today opens with none of its threads, and the conversion leaves out the value of `llm_model` ([The assistant's state](Rewrite-1.4.3#boards-saved-today)).
+A board saved today opens with none of its conversations, and the conversion leaves out the value of `llm_model` ([The assistant's state](Rewrite-1.4.3#boards-saved-today)).
 
 ## Open questions
 
@@ -226,7 +226,7 @@ Read on 2026-11-13 in pi's READMEs at `e3da248`:
 - A model of pi is an object that names its `api`, `baseUrl`, `reasoning`, `input`, `contextWindow` and `maxTokens` ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)), which `getBuiltinModel()` gives for the models of pi's catalog ([README](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#static-catalog-reads)).
   So the plugin builds one for a model that the catalog lacks, as behind a company's own proxy, with defaults that the issue that sends the calls sets.
   Its `input` holds `"image"`, so that the plots of `inspect_results` reach the model, as today's assistant sends them to every model through `ellmer::content_image_file()` ([R/utils-plot.R#L62-L64](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/utils-plot.R#L62-L64)).
-  Where such a model takes no images, its server may refuse the call that carries a plot, and every later call of the thread, since the plot stays in the thread's history, as it would with today's assistant.
+  Where such a model takes no images, its server may refuse the call that carries a plot, and every later call of the conversation, since the plot stays in the conversation's history, as it would with today's assistant.
   A blockr option that names the models that take no images, for which pi replaces each image with "(tool image omitted: model does not support images)", is later work for a deployment that needs it, which nothing here rules out.
 - "Every provider declares auth; keyless local servers resolve as configured with no key", through an `auth` whose `resolve()` gives `{ auth: {} }` ([createProvider()](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#createprovider)).
 - The agent of pi takes a `thinkingLevel` in its initial state, one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max` ([Agent Options](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/agent/README.md#agent-options)), and pi-ai turns a level into each provider's own control, such as OpenAI's `reasoningEffort` ([Thinking/Reasoning](https://github.com/earendil-works/pi/blob/e3da248ea9100a3b5d53f9c701b6a47ef7f58d6e/packages/ai/README.md#thinkingreasoning)).
