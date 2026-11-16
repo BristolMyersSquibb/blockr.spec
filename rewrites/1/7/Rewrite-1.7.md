@@ -46,6 +46,7 @@ Its R helpers draw into Shiny UIs, and its table preview implements the Shiny me
 - Port the table preview to a renderer of the output class `table_output`, paging and sorting through the output's parameters, in blockr.ui
 - Bring the design system's locked mode in line with block locks: under the board lock a locked block shows no UI, its reader controls included, and an open block shows all of its UI, its gear included ([UI modules in JS](Rewrite-1.1.7#the-contract), [Block cards in the dock](Rewrite-1.2.7#the-blocks-lock)), in blockr.ui
 - Add `ready`, a dot of `border-success`, and `unevaluated`, a ring of `text-muted`, to the design system's spec of block status, which the dock's cards and the DAG's badges share ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)), in blockr.ui
+- Offer the block's mark, the status dot and the tooltip as one module, which the dock and the DAG import in place of the copies that each draws until then, and set core's status and category tokens from blockr.ui's, in blockr.ui ([Block cards in the dock](Rewrite-1.2.7#the-status-dot), [Client-drawn DAG](Rewrite-1.3))
 
 ## Design pages
 

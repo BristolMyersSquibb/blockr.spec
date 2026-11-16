@@ -69,6 +69,7 @@ The header is one row, as the design system's "Dock header" has it ([design-syst
 4. The "…" button, which opens the block's menu ([The menu](#the-menu)).
 
 The mark takes its icon and category from the entry of the block's class in the block registry, which `core.blockRegistry()` gives by the block's registry id ([Block classes in R](Rewrite-1.1.5#registration)).
+It takes the colour of the category from core's token for it, as `--bc-color-category-input`, which the dock sets from blockr.ui's tokens, so that the DAG's nodes draw the same colours ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 Its tooltip is the entry's name, with the package of the registry id as its badge, as "head/tail block · blockr.core".
 Today's tooltip is the block's first class in R with spaces for underscores, which no longer reaches the client, since class vectors stay in R ([State in JS](Rewrite-1#principles)).
 
@@ -120,8 +121,9 @@ That carries over: the dot reads `failed` while an error about the block's outpu
 A `stale` block is the exception, as today, since its errors were raised for inputs it no longer has.
 The dot shows no evaluation that is running, as today's shows none, while the card fades the output ([The output](#the-output)).
 
-The dock's client holds this spec as one function, which takes a block's status and its notifications and gives the dot's fill, ring and tooltip, with the light value of each colour for a renderer that cannot read CSS, as today's `block_status_badge()` gives them to the card and to blockr.dag's node badge.
-The function uses nothing else of the dock's, so that blockr.dag can draw the same badge, whether it re-implements the function or both take it from another package, which [Client-drawn DAG](Rewrite-1.3#open-questions) leaves open.
+The dot takes its colours from core's status tokens, as `--bc-color-status-stale`, whose defaults are the colours of the table, and which the dock sets from blockr.ui's tokens ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+The dock's client holds the rest of the spec as one function, which takes a block's status and its notifications and gives whether the dot is filled or a ring, the token of its colour and its tooltip.
+The DAG keeps a copy of the function for its node's badge, and a test in each package checks its copy against the table above, while the colours have one home, core's tokens ([Client-drawn DAG](Rewrite-1.3#proposal)).
 
 ### Sections
 

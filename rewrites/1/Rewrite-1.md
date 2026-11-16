@@ -103,7 +103,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 |---|---|---|---|
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
-| blockr.dag | A plugin drawn in the browser | [Client-drawn DAG](Rewrite-1.3) | blockr.dock |
+| blockr.dag | A plugin drawn in the browser | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
