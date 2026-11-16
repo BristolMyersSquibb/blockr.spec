@@ -14,7 +14,7 @@ How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evalua
 2. Each holds what a frontend needs to choose how and where to show it without reading its message: its severity, who raised it, and the board object that it concerns or the board, each apart from the other.
    So a frontend places a notification by either, such as on the card of the block that it concerns or next to the plugin that raised it.
 3. Core withdraws each notification once its cause has gone, so that a frontend can take down one that has gone stale.
-   A block's conditions go when the block's next reply replaces them, the conditions of R's reply to a request when R next replies to a request of the same name, and the rest when whoever raised them withdraws them, and every one as the block, link or stack that it concerns leaves the board or the next board opens.
+   A block's conditions go when the block's next reply replaces them, the conditions of R's reply to a request when R next replies to a request of the same name, unless a plugin takes that reply's conditions itself, and the rest when whoever raised them withdraws them, and every one as the block, link or stack that it concerns leaves the board or the next board opens.
 4. A frontend reads those that hold as it draws, and hears each one that comes or goes.
    So one raised before it draws, such as the failure of a module that the reply names, still reaches the user.
 5. The frontend alone decides how each shows and for how long, such as until core withdraws it, until the user dismisses it, or as a toast that fades after a few seconds.
@@ -152,9 +152,14 @@ So the same condition in the block's next reply keeps its id, and a frontend can
 Two conditions of one reply that share all four are one notification, as today's toasts show such a condition once.
 Where R cannot make a block's output, core raises a notification with the condition that the output's host gives through `error()`, concerning the block, until the block's next output arrives ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 It is R's, of the request `output`, or core's, of the code `output_unanswered`, where the ask got no reply or R's error held no condition.
-Where R replies error to a request, core raises a notification for each condition of the reply, R's, with the request's type and name, which concerns what the request was made for: the block of a block class's, an output class's or a renderer's request, the board option, or the plugin.
-It holds until R next replies to a request of the same name for that board object, so that a request that fails again keeps its notifications, and one that succeeds withdraws them.
-The request still rejects to its caller with the conditions, and a frontend leaves out, by the request's type, what the caller shows already.
+Where R replies to a request, ok or error, core raises a notification for each condition of the reply, R's, with the request's type and name, which concerns what the request was made for: the block of a block class's, an output class's or a renderer's request, the board option, or the plugin.
+It holds until R next replies to a request of the same name for that board object, so that a request that fails again keeps its notifications, and one that succeeds with no condition withdraws them.
+A request that fails still rejects to its caller with the conditions.
+A plugin that hands the conditions of its own request on, as the assistant hands them to the model ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)), takes them through a function that it passes to `core.request()` in `conditions` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), since a frontend cannot tell the assistant's requests from another plugin's.
+Core then hands that function the conditions of each reply, ok or error, and raises no notification for them.
+It withdraws none of the request's earlier notifications either, since it cannot tell which plugin calls `core.request()`, and a withdrawal could take back what another plugin's call raised.
+A plugin passes the function only for a request of its own, which core cannot check.
+A module that core mounts has no such option, since none hands the conditions of its requests on.
 
 Core raises its own notifications where it fails at something that the user asked for or that the board needs.
 Each names what failed and what needed it, and its source is core's, with the code that the table gives:
@@ -182,7 +187,7 @@ Where a board option that a block's UI module, a renderer or a plugin's UI requi
 The frontend's own module is the exception: where it cannot draw, no frontend runs to draw a notification, so core shows the error in the page's element alone, as it does for a page that cannot start.
 
 A failure that a call returns goes to the caller, which tells the user where it should.
-The store throws what refuses an edit, a command rejects with it, and a request that fails rejects with the reply's conditions besides its notifications ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+The store throws what refuses an edit, a command rejects with it, and a request that fails rejects with the reply's conditions besides their notifications, unless a plugin takes the conditions itself ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 So core's basic frontend raises a notification of its own for each of its edits that the store or the command registry refuses, in place of the list it keeps today, and so does the Edit board plugin for its own edits ([The Edit board plugin](Rewrite-1.1.15)).
 It is an error of the code `edit_refused`, which concerns the plugin that made the edit, whatever block the edit names, so that it shows as a toast rather than on a card, which the dialog that made the edit may cover ([Core's basic frontend](#cores-basic-frontend)).
 A board that fails to open after core's check is an exception.

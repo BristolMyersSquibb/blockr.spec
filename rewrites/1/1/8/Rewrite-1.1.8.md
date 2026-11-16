@@ -67,6 +67,7 @@ interface RequestOpts {
   signal?: AbortSignal;                                      // cancels it, as a cancel does on the wire
   file?: File;                                               // a file it sends, which R hands the function in its argument file
   progress?(note: { value?: number; message?: string }): void;   // each progress note R sends for it
+  conditions?(conditions: readonly Condition[]): void;       // the conditions of each reply, ok or error, in place of their notifications, for a request of the plugin's own ([Notifications, logging and tracing](Rewrite-1.1.14#notifications))
 }
 
 interface OutputEvents {
