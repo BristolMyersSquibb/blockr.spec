@@ -2,7 +2,7 @@
 Status: review. Design for [Benchmarks of the new stack](Rewrite-1.8).
 
 One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
-It shapes the Work items of that part that build the benchmark and take its baseline, and the issues of [Assistant as a plugin](Rewrite-1.4) that settle a decision by its comparisons: the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), compaction ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)) and the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)).
+It shapes the Work items of that part that build the benchmark and take its baseline, and the issues of [Assistant as a plugin](Rewrite-1.4) that settle a decision by its comparisons: the rules, the preambles and the tools' descriptions ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), compaction ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)) and the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)).
 Each decision is designed on the page that The decisions it compares names, and how fast the new stack runs is the part's.
 
 ## What must hold
@@ -41,7 +41,7 @@ The benchmark compares two versions of any decision that shapes what the model s
 
 | Decision | Where it is designed | The questions that exercise it |
 |---|---|---|
-| What the model is told: the template and its rules, the sections that the plugin writes, and their order | [The system prompt](Rewrite-1.4.5) | Every question |
+| What the model is told: the template, the rules after it, the sections that the plugin writes, and their order | [The system prompt](Rewrite-1.4.5) | Every question |
 | The guidance that a package gives on its classes: a skill, such as the dock's `layout` on arranging views, against the same guidance in the descriptions of the package's commands | [The system prompt](Rewrite-1.4.5#what-a-package-adds) | Those that build a view or assemble a set of panels |
 | The tools: how many, how they are cut, their names, descriptions and args, such as one edit tool over every command against a tool per command or against tools for each block class, as today's `add_<type>` and `modify_<type>` are, or fewer read tools than today's | [The assistant's tools](Rewrite-1.4.2#the-tools) | Every question |
 | What the tools return: the summaries of results and states within their caps, the review of an edit with each block's status, conditions and summary, and plots as images | [The assistant's tools](Rewrite-1.4.2#the-edit-tool) | Those that read results or check an edit |
