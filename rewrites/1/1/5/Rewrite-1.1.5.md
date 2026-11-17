@@ -75,7 +75,7 @@ A class has no say in when its blocks are evaluated: a block that must run with 
 
 The function properties name what they read: `expr` the state args, a request the inputs and state args it reads, beside the board options its `new_block_request()` names, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below).
 How R evaluates a block and describes a result are generics rather than properties: `block_eval()` dispatches on the block's class, which R gives the recipe's state, building no block, and `result_summary()` on the result's class (below), while a state that an older version of a class wrote migrates in JS, through the migration its package registers for the class, by the version of the state's shape that the class gives in `version`, a whole number from 1 that the package raises as it changes the shape, and that a JSON board records with each block, since the class's UI owns the state's shape ([Serialization](Rewrite-1.1.4#migrations)).
-The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `locked`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the board options that its `new_block_request()` names, but for an action's `file` and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
+The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `locked`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the board options that its `new_block_request()` names, but for the argument that its `new_block_request()` names for a file, which is neither an input nor a state arg, and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
 All but the last read only the class's properties and the formals of its functions, while registration checks that the properties of the schema the class's UI ships are the state args, as it reads the schema (below).
 
 A sketch of `new_block_class()`, in which a property a class leaves out is `NULL`:
@@ -104,7 +104,7 @@ new_block_class <- function(id, inputs = NULL, expr, ui,
   )
   for (r in cls$requests) {
     option_args <- if (is.function(r$options)) "options" else names(r$options)   # one constructor, or a list named by args
-    params <- setdiff(names(formals(r$fun)), c(input_args, state_args, option_args, if (r$action) "file"))
+    params <- setdiff(names(formals(r$fun)), c(input_args, state_args, option_args, r$file))
     stopifnot("a request's other args are parameters, with defaults" =
       all(nzchar(vapply(formals(r$fun)[params], deparse1, ""))))
   }
@@ -122,8 +122,8 @@ new_block_class <- function(id, inputs = NULL, expr, ui,
   structure(cls, class = "block_class")
 }
 
-new_block_request <- function(fun, options = NULL, volatile = FALSE, action = FALSE) {
-  structure(list(fun = fun, options = options, volatile = volatile, action = action), class = "block_request")
+new_block_request <- function(fun, options = NULL, volatile = FALSE, action = FALSE, file = NULL) {
+  structure(list(fun = fun, options = options, volatile = volatile, action = action, file = file), class = "block_request")
 }
 
 as_block_request <- function(x) if (inherits(x, "block_request")) x else new_block_request(x)
@@ -223,10 +223,10 @@ A body that can do without an unset arg tests it with `missing()`, as a merge by
 ### Requests
 
 A request is a function, or an object that `new_block_request()` makes around one, which the UI calls through its host for whatever it needs from R, such as the head block's `n_max`, the maximum of its numeric input, which never enters the block's state ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-R binds each of its arguments by name: an input to the result of the upstream block at the revision the request reads ([UI modules in JS](Rewrite-1.1.7#the-contract)), a variadic block's `...` to its inputs in link order, named by their links' inputs, a state arg to the value the request carries, which the host fills in from the block's state where the UI passes none ([Wire protocol](Rewrite-1.1.9)), leaving an unset one missing, the argument that takes a board option's value to that value, as blockr.io's read block lists the files under its `data_dir` ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)), and any other argument to a parameter the UI passes, which must have a default, so that `new_block_class()` still catches a misspelled state arg written without one, as a state arg in a request needs none.
+R binds each of its arguments by name: an input to the result of the upstream block at the revision the request reads ([UI modules in JS](Rewrite-1.1.7#the-contract)), a variadic block's `...` to its inputs in link order, named by their links' inputs, a state arg to the value the request carries, which the host fills in from the block's state where the UI passes none ([Wire protocol](Rewrite-1.1.9)), leaving an unset one missing, the argument that takes a board option's value to that value, as blockr.io's read block lists the files under its `data_dir` ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)), the argument that `new_block_request()` names for a file to the file that the client sends with the request (below), and any other argument to a parameter the UI passes, which must have a default, so that `new_block_class()` still catches a misspelled state arg written without one, as a state arg in a request needs none.
 A request reads board options only where `new_block_request()` names them, by their constructors: given one, its function takes the board option's value in its argument `options`, and given a named list of them, each value in the argument of that name, whole, whatever its shape, while an argument whose board option the client sends no value for is left missing ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 Each board option that a request names is one that the class's UI module names too, which core checks as it loads the module ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
-No argument is matched to a board option by its name.
+No argument is matched to a board option or to a file by its name.
 A request's parameter holds only what the UI is showing, such as the column whose values a dropdown lists or the text typed into its search, never what the block computes.
 That holds by construction, since only requests, outputs and one-time evaluations take parameters, and `expr` never sees them, so no parameter changes a block's expression or saved state:
 
@@ -234,14 +234,20 @@ That holds by construction, since only requests, outputs and one-time evaluation
 requests = list(
   values   = function(data, column = NULL, query = "", limit = 1000L) column_values(data, column, query, limit),
   files    = new_block_request(function(options, path = "") list_dir(file.path(options, path)),
-                               options = new_data_dir_option, volatile = TRUE)   # blockr.io's data_dir, in options
+                               options = new_data_dir_option, volatile = TRUE),  # blockr.io's data_dir, in options
+  upload   = new_block_request(function(picked) keep_upload(picked), action = TRUE,
+                               file = "picked")                                  # the file the user picked, in picked
 )
 ```
 
 R writes a request's answer, which no schema describes, with every vector as an array, a length-one vector included, so that a module reads a single value as `answer[0]`, while a request that answers with a file, such as a download, returns a reply body, `new_reply_body("report.pptx", type, name = "report.pptx")`, which R sends as its reply's binary body.
 Core keeps each answer by registry id, name, state args, the values of the board options it reads, parameters and the revisions of the inputs read, as a snapshot of them, so that reopening a column's dropdown is answered without asking R, and data that changes behind an input, such as a database's, is read again once something invalidates the block that reads it ([Evaluation in the client](Rewrite-1.1.10#invalidation)).
 A request that `new_block_request(volatile = TRUE)` makes is never kept and goes to R every time, which suits a cheap lookup outside the board, such as a directory listing, and nothing expensive.
-A request that `new_block_request(action = TRUE)` makes acts rather than reads, such as an upload, which receives the file the user picked in its argument `file`, a list of the path of the temporary file R wrote the bytes to and the file's name, MIME type and size, as Shiny's `fileInput()` gives them today, keeps the file where its package decides and returns its path for the block's state: R runs it once per call and it may write, and core never keeps or merges its answer.
+A request that `new_block_request(action = TRUE)` makes acts rather than reads, such as an upload, which keeps the file the user picked where its package decides and returns its path for the block's state: R runs it once per call and it may write, and core never keeps or merges its answer.
+A request takes a file that the client sends only where `new_block_request()` names the argument that receives it, in `file`, under any name, so that no argument gets a file by its name alone ([blockr.core#697](https://github.com/BristolMyersSquibb/blockr.core/pull/697)).
+That argument gets a list of the path of the temporary file R wrote the bytes to and the file's name, MIME type and size, as Shiny's `fileInput()` gives them today, and the client sends no file with a request that names no such argument.
+A request that is no action may take a file too, such as one that shows a file's first rows before the user uploads it.
+Core runs each call that sends a file once, since the file is no part of the key that core keeps answers by.
 
 ### Core's classes and hooks
 
@@ -323,6 +329,7 @@ interface RegistryEntry {
     options: OptionId[];                  // the ids of the board options it reads, whose values the client sends
     volatile?: true;                      // never kept
     action?: true;                        // acts rather than reads
+    file?: true;                          // takes a file, in the argument that its new_block_request() names
   }>;
   renderer?: { id: string; module: string; css?: string };   // the renderer of its outputs, where an output class gives the coercion it names
 }
@@ -490,7 +497,8 @@ A subclass's method returns its own requests before those that `NextMethod()` re
 A renderer may bring requests of its own too, for what it alone offers, such as the labels of a table's columns, which its package gives it as it makes it ([Drawing the board](Rewrite-1.1.8#renderers)).
 A request that names a renderer is one of the requests of the renderer that draws the output, which has to be the one named, and one that names none is the output class's, so that a renderer's request and one of its output class may share a name and neither hides the other.
 R runs a renderer's request as it runs one of the output class.
-The client keeps an answer as it keeps the output, unless the class wraps the request in `volatile()`, which a renderer's request never is, and no request of an output class or of a renderer writes.
+The client keeps an answer as it keeps the output, and no request of an output class or of a renderer writes.
+None is volatile either, since no output class has needed such a request, so `new_block_request()` alone makes a request volatile ([blockr.core#697](https://github.com/BristolMyersSquibb/blockr.core/pull/697)).
 
 ### Generics
 
@@ -522,7 +530,7 @@ Most of its builders make that call with `bbquote()` already, so it is a `bquote
 
 Core ships helpers to test a block class without Shiny: its `expr` with sample states, its block expressions with sample inputs, its requests, its output's coercion with sample results, and its module against a stub host.
 They replace `testServer()`.
-A class's R tests and its module tests share one fixture file in its package's `tests/`, since the class's two halves meet only in JSON: the file lists states, the R tests record into it what the class's requests answer for sample inputs, states and parameters and check that the block expression built for each state runs, and the module tests serve the recorded answers through the stub host and check that the module submits only listed states, the pattern of consumer-driven contract tests ([Pact](https://docs.pact.io/)).
+A class's R tests and its module tests share one fixture file in its package's `tests/`, since the class's two halves meet only in JSON: the file lists states, the R tests record into it what the class's requests answer for sample inputs, states, parameters and files and check that the block expression built for each state runs, and the module tests serve the recorded answers through the stub host and check that the module submits only listed states, the pattern of consumer-driven contract tests ([Pact](https://docs.pact.io/)).
 
 ## Open questions
 
@@ -549,9 +557,8 @@ The `js_module(path, package = utils::packageName())` function keeps the path, r
 It resolves nothing when it runs, since a package's classes are defined while R installs it, when `system.file()` would give the staging directory, a path a staged install refuses to keep.
 Outside a package, where it finds none, it resolves the path against the working directory when it runs.
 
-The `new_block_request()` function returns an object of class `block_request` that holds the request's function, the constructors of the board options it reads, and whether it is volatile or an action, and `new_block_class()` takes a plain function as such a request with none of them, so that it reads every request's formals in one way, and the block registry marks each request by its properties ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
+The `new_block_request()` function returns an object of class `block_request` that holds the request's function, the constructors of the board options it reads, whether it is volatile or an action, and the argument that receives a file, and `new_block_class()` takes a plain function as such a request with none of them, so that it reads every request's formals in one way, and the block registry marks each request by its properties ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 Registration calls each constructor once to read the board option's id for the entry, and drops the object.
-An output class still marks a volatile request with `volatile()`, which sets an attribute on the function ([Outputs](#outputs)).
 
 Writing a class's expression gets a vignette of its own in blockr.core, within the guide for block class authors ([Client-owned board state](Rewrite-1.1#work)): what `expr` returns, a call, a string, a function or a `blockr_expr`, and what `inputs` is, a character vector, a list from `alist()` or a function; writing inputs as placeholders with `bbquote()`, and why that is the default; which tools keep a placeholder, and why base `bquote()` does not; the block expression a script holds for each of the four and for a variadic block's `...`; a class of a package's own that inherits from `blockr_expr`, with its `interpolate()` method; unset args, with `missing()` and `blockr_invalid()`; a state arg written bare, which nothing catches; and data.table's `.()`, which `list()` replaces where it would read as a placeholder.
 Each case shows its block expression in the script.
