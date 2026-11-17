@@ -66,7 +66,7 @@ type CommandCall = { id: string; args?: Json };                 // a command of 
 
 A board action's id is `{pkg}-{name}`, as the ids of commands are, and ends in `_action` by convention, as the dock names its actions today, so that it does not read as a command's id.
 Core's board actions take the name of the command that each runs, as `blockr.core-append_block_action` runs `blockr.core-append_block`.
-The id ties a board action to no command, since what it runs is what it returns, from `run`, from a row of its quick action or from its advanced action's `done()`: any list of commands of any package.
+The id ties a board action to no command, since what it runs is what it returns, from `run`, from a row of its quick action or from its advanced action's `done()`: any batch, whose commands may come from any package.
 So a package's Duplicate block would run `blockr.core-add_block`, and a `blockr.core-add_link` for each link into the block.
 A board action has either `run`, which acts at once, or a quick action, and it has an advanced action only beside a quick action, so that every board action that asks for input starts at its trigger.
 Its `run` returns the commands to run, or does itself what needs no command, as Copy block ID puts the block's id on the clipboard, and may return a promise of them, as the DAG's Paste reads the clipboard first ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
@@ -87,7 +87,8 @@ Whoever draws a menu of a board object asks core to open it at the point of its 
 ```ts
 boardActions: {                                                 // in CoreApi
   on(target: Target): BoardAction[];                            // what a menu offers for the target, in order
-  menu(target: Target, opts: { el: HTMLElement; anchor: DOMRect }): void;     // opens the target's menu at the anchor
+  menu(target: Target, opts: { el: HTMLElement; anchor: DOMRect;
+       extend?(calls: CommandCall[]): CommandCall[] }): void;        // opens the target's menu at the anchor
   trigger(id: string, target: Target, opts: { el: HTMLElement; anchor?: DOMRect;
           extend?(calls: CommandCall[]): CommandCall[] }): Promise<void>;     // opens its quick action, or runs it
   mountAdvanced(el: HTMLElement, id: string, target: Target, picked?: Json): () => void;   // an advanced action, in room that a plugin gives
@@ -100,7 +101,8 @@ The package that draws a menu adds to it no row that edits the board, since such
 A toolbar of the board, such as the DAG's, offers the board actions on the board as buttons, each with its icon and its label as a tooltip, and, while the user has selected something, those on the selection, so that it offers what the menus of the board and of the selection offer.
 Each button opens its board action's quick action under itself, or runs the board action where it asks nothing.
 A gesture outside a menu triggers a board action directly, as a link that the user drops on the DAG's canvas triggers Append block at the drop, and as Backspace in the DAG triggers the removal of its selection.
-The caller's `extend` adds commands of its own to the step, as the DAG adds the position of the block that Append block adds where the user dropped the link.
+The caller's `extend`, which `menu()` takes as `trigger()` does, adds commands of its own to the batch of the board action that the user picks or triggers, whether its `run`, a row of its quick action or its advanced action's `done()` returns that batch.
+So the DAG adds the position of a block that Append block adds where the user dropped a link, and of a block or a stack that the menu of its canvas adds, through a row or a form, where the user right-clicked.
 Core's board actions that add a block, a link or a stack mint its id before they return their command, so that `extend` can name the object.
 
 ### The quick action

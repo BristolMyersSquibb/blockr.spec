@@ -2,7 +2,7 @@
 Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
-It shapes running and planning a list of commands as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
+It shapes running and planning a batch as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
 Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the conversations that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, how the chat shows those calls is [The assistant's chat](Rewrite-1.4.4)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
 ## What must hold
@@ -61,7 +61,7 @@ Each tool runs in the browser, and those that need R send a request of the assis
 | `get_block_result` | What `describe_result()` writes about one block's result | The request `describe_result` |
 | `inspect_results` | What the model's R code prints, and up to four of the plots it draws, given the code, the ids of the blocks whose results it reads, and the width and height of its plots | The request `inspect_results` |
 | `read_skill` | The text of a skill that the model may read, or a file that the skill holds | The request `read_skill` |
-| `edit` | Runs a list of commands as one step of the assistant, and returns a review of the blocks it changed, those that feed them and those downstream (below) | `commands.run()`, `store.subscribe()`, `scheduler.evaluate()`, `scheduler.status()`, the request `describe_result` |
+| `edit` | Runs a batch as one step of the assistant, and returns a review of the blocks it changed, those that feed them and those downstream (below) | `commands.run()`, `store.subscribe()`, `scheduler.evaluate()`, `scheduler.status()`, the request `describe_result` |
 | `undo_edit` | Takes back the assistant's last undo step, past any step of the user's after it ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)), and returns as `edit` does (below) | `store.canUndo("assistant")`, `store.undo("assistant")`, and what `edit` reads |
 
 The read tools that carry over keep today's names.
@@ -79,7 +79,7 @@ Unlike today's `set_board_option`, it refuses none of them, since `llm_model` go
 
 ### The edit tool
 
-The edit tool takes a list of commands, each by its id with its args, here with an illustrative state:
+The edit tool takes a batch, each command by its id with its args, here with an illustrative state:
 
 ```json
 { "commands": [
@@ -91,9 +91,9 @@ The edit tool takes a list of commands, each by its id with its args, here with 
 
 It applies them in these steps:
 
-1. The edit tool runs the commands with `core.commands.run(list, "assistant")`, passing each command's `command` as its `id`.
+1. The edit tool runs the commands with `core.commands.run(batch, "assistant")`, passing each command's `command` as its `id`.
    The command registry plans each command on the board that the commands before it leave, and the store applies them all as one step of the origin `assistant`, or applies none ([Board updates](Rewrite-1.1.2#commands)).
-2. Where a command refuses, the tool returns the command's index in the list, its id and each failure that the command registry names, such as a state that the schema of the block's class refuses, and the board stays as it was.
+2. Where a command refuses, the tool returns the command's index in the batch, its id and each failure that the command registry names, such as a state that the schema of the block's class refuses, and the board stays as it was.
    The store then tells no subscriber of a change, so the scheduler sends R no block to evaluate, and nothing needs undoing (notes).
    Where the command fails its preflight on the board as it is, as `blockr.core-add_link` refuses a block that the board lacks, the tool adds a hint that says what to check, so that the model can correct its args and edit again (notes).
    On a locked board, the hint says that the lock may be why, since core's `blockr.core-set_plugin_state` fails its preflight there, and a plugin's own commands fail theirs for what the plugin locks ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
@@ -119,7 +119,7 @@ Some lists leave no block to evaluate, such as one that changes only the dock's 
 The tool then evaluates nothing and returns at once, since a one-time evaluation of no block rejects.
 A stop while the tool waits leaves its commands applied.
 So the tool still returns that they applied, with as much of the review as it has, and that the user stopped the turn, so that the model does not run them again ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)).
-A stop while a command of the list waits in its `prepare()`, as the DAG's relayout waits for elkjs, does not stop `commands.run()`, which takes no signal ([Board updates](Rewrite-1.1.2#commands)).
+A stop while a command of the batch waits in its `prepare()`, as the DAG's relayout waits for elkjs, does not stop `commands.run()`, which takes no signal ([Board updates](Rewrite-1.1.2#commands)).
 The tool then waits for the call to settle, and returns whether the commands applied, with no review.
 
 ```json
@@ -136,7 +136,7 @@ It learns what a command's args take from `describe_command`, which gives the co
 Guidance on using several commands together, such as how to arrange the dock's views, goes first in a skill of the package, as the dock's `layout` skill does, and the benchmark compares that with the same guidance in the commands' descriptions ([The system prompt](Rewrite-1.4.5#what-a-package-adds)).
 So a package that registers a command opens it to the assistant with no code of the assistant's, as today's `new_ext_meta()` opens an extension ([Board updates](Rewrite-1.1.2#what-must-hold)).
 After `js-state` has merged into main, a pull request that changes a command's description shows the benchmark's comparison, in whichever package registers the command ([The assistant's benchmark](Rewrite-1.8.1#where-it-lives)).
-The edit tool refuses a list that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves out the assistant's own commands, since only the assistant's chat and loop change its conversations and each conversation's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L101](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L101)).
+The edit tool refuses a batch that holds a command of the assistant's own, or core's `blockr.core-set_plugin_state` for the assistant's plugin, and `list_commands` leaves out the assistant's own commands, since only the assistant's chat and loop change its conversations and each conversation's pick of the model, as today's `set_board_option` refuses `llm_model`, which "drives the assistant's own chat client" ([R/tools-options.R#L93-L101](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/tools-options.R#L93-L101)).
 
 The tool `undo_edit` takes back the assistant's last undo step with `core.store.undo("assistant")`, which applies the undo as a new edit, and then returns as the edit tool does from step 3, so that the model learns what the undo changed.
 That step may be another conversation's, since the edits of every conversation are steps of the one origin `assistant` ([The assistant's chat](Rewrite-1.4.4#undoing-the-assistants-edits)).
@@ -155,7 +155,7 @@ The benchmark compares it with two others ([The assistant's benchmark](Rewrite-1
 - Beside the edit tool, two tools for each block class: one adds a block of the class, and one sets a block's state.
   Their args follow the JSON Schema of the class's state, as the args of today's `add_<type>` and `modify_<type>` follow the class's arg types.
 
-Each tool of these versions runs the steps above on a list of one command, such as `blockr.core-add_block` or `blockr.core-set_block`.
+Each tool of these versions runs the steps above on a batch of one command, such as `blockr.core-add_block` or `blockr.core-set_block`.
 So an edit through them takes one call for each command, and each call is a step of its own.
 Their tools' definitions hold the schemas of the app's commands or classes, which a provider may refuse in part (notes).
 How many tools for block classes the model is offered at once, as today's typed tools come twenty at a time, is for the issue that runs the comparison to settle.
@@ -269,7 +269,7 @@ Nearly every preflight of core's commands checks that an id in the args names a 
 So the hint says what to check, and the model finds the wrong id in its args, against the ids that the Board section of each call holds, or through `list_blocks` where that section's list is cut ([The system prompt](Rewrite-1.4.5#the-sections)).
 Core's `blockr.core-set_plugin_state` fails its preflight on a locked board ([srcts/commands/core.ts#L571](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/core.ts#L571)), so there the hint names the lock.
 A `CommandError` holds a message and its failures, but neither the index of the command that refused nor whether it failed its preflight ([srcts/commands/commands.ts#L88-L105](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/commands/commands.ts#L88-L105)).
-The Work item in blockr.core has the command registry give both where it refuses a list, so that the edit tool returns the index and adds its hint only for a command that fails its preflight.
+The Work item in blockr.core has the command registry give both where it refuses a batch, so that the edit tool returns the index and adds its hint only for a command that fails its preflight.
 
 Each command of an edit is planned on the board that the commands before it leave, since a command checks its args against the board it gets, as `blockr.core-add_link` passes its preflight only where both of its blocks are on the board ([srcts/commands/core.ts#L337-L358](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/core.ts#L337-L358)), while `commands.plan()` gives each command the current board ([srcts/commands/commands.ts#L191-L194](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/commands/commands.ts#L191-L194)).
 The store's `run()` works out the board after each delta of a step before it commits any ([srcts/store/store.ts#L248-L293](https://github.com/BristolMyersSquibb/blockr.core/blob/69770d0aa9ba04954775e7827944b92d66cc2630/srcts/store/store.ts#L248-L293)), which gives the command registry the board for each command after the first.
@@ -278,14 +278,14 @@ The edit tool subscribes to the store before it calls `commands.run()`, and ends
 It takes the changes of the origin `assistant` that it hears meanwhile, since the user and other plugins edit with origins of their own ([Board updates](Rewrite-1.1.2#the-store)).
 An undo through the frontend's Undo carries the origin `user`, even where it takes back a step of the assistant's, so the edit tool does not take it for one of its own changes ([Board updates](Rewrite-1.1.2#undo)).
 The tool `undo_edit` hears the changes of its undo within its call of `store.undo()`, which applies at once.
-A step took an undo step unless every command of its list has `undo: false` in `commands.registered()`, or the changes that the tool heard set only board options ([Board updates](Rewrite-1.1.2#undo)).
+A step took an undo step unless every command of its batch has `undo: false` in `commands.registered()`, or the changes that the tool heard set only board options ([Board updates](Rewrite-1.1.2#undo)).
 
 Applying a delta in the browser costs little.
 Evaluating a block in R costs more.
 The store sets the board and announces a step only once every delta of the step has passed its checks ([srcts/store/store.ts#L348-L377](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/store/store.ts#L348-L377)).
 The scheduler hears of a change only through `store.subscribe()` ([srcts/scheduler/scheduler.ts#L639-L642](https://github.com/BristolMyersSquibb/blockr.core/blob/4507d893e8cd9e656fcebf75ee15dff34bb0768e/srcts/scheduler/scheduler.ts#L639-L642)).
 So a refused list starts no evaluation in R.
-The edit tool therefore does not plan a list before it runs it, since `commands.plan()` would only repeat the checks of `commands.run()`.
+The edit tool therefore does not plan a batch before it runs it, since `commands.plan()` would only repeat the checks of `commands.run()`.
 Only a failure that R finds costs an evaluation, such as a filter on a column that the data lacks.
 The edit then stays applied, and its review gives the error.
 
