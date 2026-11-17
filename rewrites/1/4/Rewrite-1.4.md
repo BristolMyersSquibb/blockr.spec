@@ -74,7 +74,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
   Should the loop move to the AI SDK, it reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id, which the AI SDK sends there by default (notes).
 - The board options `llm_model`, which core defines today, and `chat_compact_tokens` and `chat_compact_keep` go, with the blockr option `chat_function`, since all four were shaped for ellmer's chat functions (Today), while the blockr option `chat_save_turns` carries over, bounding the state rather than a save ([The assistant's state](Rewrite-1.4.3#how-much-of-a-conversation-the-state-keeps)).
   Who picks the model is [Model access](Rewrite-1.4.1#who-picks-the-model)'s, which keeps each conversation's pick in the assistant's state, where any setting of the assistant's own that a later need brings goes first too ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
-- One edit tool takes a list of commands, which core plans in order, each on the board that the commands before it leave, and applies as one step of the assistant, all or none.
+- One edit tool takes a batch, whose commands core plans in order, each on the board that the commands before it leave, and applies as one step of the assistant, all or none.
   That step is an undo step of the assistant, unless every command of it has `undo: false`, as the dock's command that switches views has, or it sets only board options ([Board updates](Rewrite-1.1.2#undo)).
   The tool returns once the blocks it changed and those downstream of them are current, through one one-time evaluation, or once the user stops the turn ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
   So one edit can add a block, link it and show its panel, while each change goes through the command that keeps it valid and refuses what a lock fixes.
@@ -148,7 +148,7 @@ So a page can read OpenAI's list of models, and the list's refusal of a wrong ke
 
 Run on 2026-11-13 from a page in headless Chromium against the real APIs, with `claude-haiku-5-5` and `gpt-5.4-nano`:
 
-- On Anthropic's Messages API, pi streamed a tool loop in 2.2 s and stopped 1 ms after an abort, filled the args of a tool shaped as the edit tool, a list of commands, as asked, and read a board that `transformContext` added after the last message of each of its two calls, while the agent's messages kept no copy of it.
+- On Anthropic's Messages API, pi streamed a tool loop in 2.2 s and stopped 1 ms after an abort, filled the args of a tool shaped as the edit tool, a batch, as asked, and read a board that `transformContext` added after the last message of each of its two calls, while the agent's messages kept no copy of it.
   A conversation that it wrote as 698 bytes of JSON went on in a new agent, which remembered what the first had been told, and a refused key reached the page as a readable 401, `authentication_error`.
 - The AI SDK and LangChain.js's model classes streamed the same tool loop on Anthropic's API, and the AI SDK stopped on an abort.
 - On OpenAI's Responses and Chat Completions APIs, pi and the AI SDK each streamed the tool loop, and pi read the board on the Responses API, while a refused key reached the page only as "Failed to fetch".

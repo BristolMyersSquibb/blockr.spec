@@ -106,6 +106,7 @@ interface PluginClass {
   options?: OptionId[];                             // the board options it requires, put on the board as a board opens with one of its plugins
   state?: { schema: JsonSchema; default: Json };    // what each of its plugins keeps in the board, which holds nothing for a class without it, and which the store reads, as it reads the next two
   update?(delta: Delta, board: Board, plugin: PluginClassId): Patch[];   // patches to the state of its plugin that follow from a change
+  afterStep?(board: Board, before: Board, plugin: PluginClassId): Patch[];   // patches to the state of its plugin that follow from a step as a whole, once its last delta is in
   migrate?(state: Json, version: number): Json;     // a plugin's state of an older version, in its latest shape
   ui?: PluginModule;                                // what every frontend places for the class's plugin, which the class holds itself
   frontend?: FrontendModule;                        // a frontend's: what draws the page, which core calls with the page's element, and what shows a block or a plugin that a plugin asks to show
@@ -122,6 +123,7 @@ interface Plugin {                                  // one of the app's plugins,
 export default {                                   // blockr.dag's, from dag.js, the module that it lists for blockr.dag-dag_plugin
   state: { schema: dagState, default: { positions: {} } },
   update: (delta, board, plugin) => dropPositions(delta.blocks?.rm ?? [], board, plugin),   // a removed block's position goes with it
+  afterStep: (board, before, plugin) => placeAdded(board, before, plugin),                // a block that the step adds gets its place by the step's links
   ui: dagUi,
   commands: [relayout],
 };
@@ -376,6 +378,7 @@ A plugin's state takes the place of a board class's properties, and the store ke
 - The store keeps an edit id for each plugin, as it kept one for each property, which a patch to the plugin names, so that the store refuses the patch where another edit to the plugin came first ([Board updates](Rewrite-1.1.2#deltas)).
 - The store checks the state against its class's schema after every change, keeps the inverse patches for undo, but for those of a command with `undo: false`, and saves the state with the board.
 - The store calls the `update` of each plugin's class with every change it applies, in the same step, and refuses a patch that an `update` returns outside the state of its own plugin ([Board updates](Rewrite-1.1.2#applying-a-delta)).
+- Once the last delta of a step is in, the store calls the `afterStep` of each plugin's class that has one, with the board that the step leaves and the one that it started from, and applies its patches as one more delta of the step ([Board updates](Rewrite-1.1.2#plugins)).
 - Core's command `blockr.core-set_plugin_state` and the commands of the plugin's class change its state, naming the plugin by its class's id, and everything else changes it through them, which is external control ([Board updates](Rewrite-1.1.2#commands)).
 - A JSON board records in `versions` the version of each class whose plugin's state it holds, by the class's id, and the class's package in `packages`, and the class's `migrate` takes its plugin's state at an older version ([Serialization](Rewrite-1.1.4#migrations)).
 
