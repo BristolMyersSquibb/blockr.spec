@@ -98,8 +98,9 @@ It is an error of the code `edit_refused`, which the plugin raises through `noti
 Every frontend places it as it places any plugin whose class has a `ui`, without knowing its class by id ([Plugins](Rewrite-1.1.12#plugin-classes)).
 Core's basic frontend shows it in a section of its own beside the board, as it shows every plugin, and its toolbar draws no control for blocks, links or stacks ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 The card's menu offers the board actions on its block, renaming and removing it and appending or prepending a block among them, since those edits act on one card ([Board actions](Rewrite-1.1.16#cores-board-actions)).
-The plugin's forms are the advanced actions of Add block, Create link and Create stack, which it mounts in its sections through `mountAdvanced()`, so that the menu and the plugin share the picker and the forms.
-Renaming and removing a stack, which today's `edit_stack` does from the stack's own UI, is the plugin's alone, since the group that draws a stack holds no control.
+The plugin's forms are the advanced actions of Add block, Create link, Edit link, Create stack and Edit stack, which it mounts in its sections through `mountAdvanced()`, so that the menu and the plugin share the picker and the forms.
+Under core's basic frontend, renaming and removing a stack, which today's `edit_stack` does from the stack's own UI, is the plugin's alone, since the group that draws a stack holds no control.
+The DAG's menu of a stack offers both as well, as core's Rename and Remove stack ([Board actions](Rewrite-1.1.16#cores-board-actions)).
 The dock shows the plugin in a panel wherever the app holds it, as it shows any plugin, so that a dock app without the DAG still edits its links and stacks ([Client-drawn dock](Rewrite-1.2#proposal)).
 
 Under the board lock, the store refuses every edit that the plugin makes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
