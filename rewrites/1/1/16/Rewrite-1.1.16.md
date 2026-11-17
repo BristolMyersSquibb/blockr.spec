@@ -114,7 +114,7 @@ A gesture outside a menu triggers a board action directly, as a link that the us
 A call of `trigger()` runs nothing where the target's menu would not offer the board action, so that those keys remove nothing under the board lock.
 The caller's `extend`, which `menu()` takes as `trigger()` does, adds commands of its own to the batch of the board action that the user picks or triggers, whether its `run`, a row of its quick action or its advanced action's `done()` returns that batch.
 So the DAG adds the position of a block that Append block adds where the user dropped a link, and of a block or a stack that the menu of its canvas adds, through a row or a form, where the user right-clicked.
-Core's board actions that add a block, a link or a stack mint its id before they return their command, so that `extend` can name the object.
+Core's board actions that add a block, a link or a stack mint its id with `core.mintId()` before they return their batch, so that the later commands of the batch and `extend` can name the object.
 
 ### The quick action
 
@@ -217,9 +217,9 @@ Within a group, a menu offers them in the order of this table:
 | Board action, with its id | On | Group | Quick action | Advanced action | Commands, of `blockr.core` |
 |---|---|---|---|---|---|
 | Add block, `add_block_action` | The board | Add | A filter, and a row for each block class under the heading of its category, which adds a block of that class with an id that core mints and the class's name | The block picker on its own: class, id and name | `add_block` |
-| Append block, `append_block_action` | A block | Add | The block classes that have an input, each of which appends a block of that class through its first free input | The picker after the block: class, input, id and name | `append_block` |
-| Prepend block, `prepend_block_action` | A block with an input that no link feeds | Add | The block classes, each of which adds a block that feeds the block's first free input | The picker before the block | `prepend_block` |
-| Insert block, `insert_block_action` | A link | Add | The block classes that have an input | The picker on the link, a fourth mode of the picker | `insert_block` |
+| Append block, `append_block_action` | A block | Add | The block classes that have an input, each of which appends a block of that class through its first free input | The picker after the block: class, input, id and name | `add_block`, `add_link` |
+| Prepend block, `prepend_block_action` | A block with an input that no link feeds | Add | The block classes, each of which adds a block that feeds the block's first free input | The picker before the block | `add_block`, `add_link` |
+| Insert block, `insert_block_action` | A link | Add | The block classes that have an input | The picker on the link, a fourth mode of the picker | `add_block`, `add_link`, `change_link` |
 | Create link, `add_link_action` | A block | Add | The blocks that it can feed, and those that can feed it, without closing a cycle, then the input, where the block that the link goes into has several free ones, as [blockr.dock#549](https://github.com/BristolMyersSquibb/blockr.dock/pull/549) had them | The Edit board plugin's form of a link, starting from the block | `add_link` |
 | Create stack, `add_stack_action` | A block, a selection or the board | Add | On a block or a selection, the board's stacks, which the blocks join, and New stack, and on the board New stack alone, which adds a stack that holds no block | The Edit board plugin's form of a stack, with the blocks given, or with none on the board | `add_stack`, `change_stack` |
 | Rename, `rename_action` | A block or a stack | Edit | A text row with the name | None | `rename_block`, `rename_stack` |
@@ -235,7 +235,7 @@ That preflight refuses a link that would close a cycle, join a block to itself o
 So a menu offers no such link, the assistant's edit fails before any command does work, and a user who drops such a link in the DAG learns why ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 The store keeps its own check of the same rules behind the preflight ([Board objects](Rewrite-1.1.1#what-the-store-checks)).
 
-The card's menu of core's basic frontend says "Add block before" and "Add block after" today, and takes the commands' labels here, "Prepend block" and "Append block", which the dock's menus and the DAG's use today, so that every menu agrees.
+The card's menu of core's basic frontend says "Add block before" and "Add block after" today, and takes the labels of the board actions here, "Prepend block" and "Append block", which the dock's menus and the DAG's use today, so that every menu agrees.
 Under the board lock, every one of core's board actions but Copy block ID fails its `offers`, since the store refuses what they run ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 Other packages register board actions of their own, as the DAG does for copy, cut and paste and for laying the board out again ([Client-drawn DAG](Rewrite-1.3)).
 
@@ -255,9 +255,10 @@ The pull requests of [blockr.dock#544](https://github.com/BristolMyersSquibb/blo
 The drag that reorders a variadic block's inputs is in `R/sidebar-inputs.R` of blockr.dock at `655e323`, with its script and styles, which the advanced action of Edit inputs takes over.
 
 On `js-state`, at `9f431f0`, core's block picker has a mode for each of `add_block`, `append_block` and `prepend_block` ([srcts/picker/picker.tsx#L43-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/9f431f0f5612a6aa3271ef58dc1037b69cb343df/srcts/picker/picker.tsx#L43-L47)), and Insert block gives it a fourth, on a link.
+With [blockr.core#695](https://github.com/BristolMyersSquibb/blockr.core/issues/695), its modes after and before a block run batches of `add_block` and `add_link` instead, as [Board updates](Rewrite-1.1.2#commands) has them.
 On `js-state`, at `7fd739c`, the preflight of `blockr.core-add_link` checks only that the first block exists and that the second has a free input, and lets a named input pass unchecked (`linkable()` in `srcts/commands/core.ts`), while the store refuses a cycle once the link is added.
 A preflight says why it refuses by throwing the `refusal()` of its context, with one sentence per failure, which `commands.run()` rejects with, while `commands.preflight()` answers `false` (`srcts/commands/commands.ts`).
-The picker leaves an id that the user does not give to the command ([#L11-L12](https://github.com/BristolMyersSquibb/blockr.core/blob/9f431f0f5612a6aa3271ef58dc1037b69cb343df/srcts/picker/picker.tsx#L11-L12)), so as an advanced action it mints the id itself, as every board action of core's that adds an object does (The menus of board objects).
+The picker leaves an id that the user does not give to the command ([#L11-L12](https://github.com/BristolMyersSquibb/blockr.core/blob/9f431f0f5612a6aa3271ef58dc1037b69cb343df/srcts/picker/picker.tsx#L11-L12)), so as an advanced action it mints the id itself, through `mintId()`, as every board action of core's that adds an object does (The menus of board objects).
 Copy block ID copies through the document's copy command where the page has no clipboard API, and raises an error notification of the code `copy_failed` where the browser refuses both, as the dock's card does since [blockr.dock#602](https://github.com/BristolMyersSquibb/blockr.dock/pull/602).
 The Edit board plugin's forms of a link and of a stack are in `srcts/modules/edit-board/links.tsx` and `srcts/modules/edit-board/stacks.tsx`, and the dialog of core's basic frontend, which is at most 576 px wide, is `Dialog` in `srcts/modules/basic/ui.tsx`.
 

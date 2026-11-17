@@ -165,9 +165,9 @@ interface Placement {
 - Both place a stack that holds no block as a block that reads from none, with the size of its box, which holds the stack's name and the number of its blocks, as a collapsed stack's box does ([Drawing the DAG](Rewrite-1.3.2#stacks)).
 - The gaps are those of today's presets, 50 px when compact, 70 px when normal and 100 px when loose, between two nodes and between two ranks alike ([R/layout.R#L66-L76](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/layout.R#L66-L76)).
 - A strategy works from a node's nominal size, its mark with room for its label, rather than from what the page measures, since `afterStep` reads nothing on the page (notes).
-- A strategy places a block by the links of the board that the step leaves, so that a batch that adds a block and then links it places the block as `blockr.core-append_block` does in one command.
+- A strategy places a block by the links of the board that the step leaves, so that a batch that adds a block and then links it places the block by that link, as Append block does ([Board actions](Rewrite-1.1.16#cores-board-actions)).
   A block that one step adds and a later step links stays where it landed, as where the assistant edits through a tool for each command ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
-  So the description of `blockr.core-add_block`, which the assistant's model reads, sends it to `blockr.core-append_block` for a block that reads from another.
+  So the description of `blockr.core-add_block`, which the assistant's model reads, tells it to link a block that reads from another in the same batch.
 - Several blocks that one step adds are placed in the order of their links, each against the blocks placed before it, so that a new chain comes out as a chain ([blockr.dag#117](https://github.com/BristolMyersSquibb/blockr.dag/issues/117)).
 - A strategy starts a block from the point that `preferred` gives it, where there is one, as for the toolbar's Add block, and moves it from there off what it would overlap.
 - An inserted block starts between the two ends of the link that it splits, and no block moves to make room for it, unlike today's.
