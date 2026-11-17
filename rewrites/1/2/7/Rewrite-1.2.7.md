@@ -192,7 +192,7 @@ Core gives the menu, with core's board actions on a block and those that other p
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
 So the menu offers what every menu of a block offers, the DAG's included ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
-The board actions that edit the board run commands, which make the edits that the dock's actions made today, each use as one undo step of the user's ([Client-drawn dock](Rewrite-1.2#proposal), [Board updates](Rewrite-1.1.2#undo)).
+The board actions that edit the board run commands, which make the edits that the dock's actions made today, each batch as one undo step of the user's ([Client-drawn dock](Rewrite-1.2#proposal), [Board updates](Rewrite-1.1.2#undo)).
 
 ### Compact headers
 
