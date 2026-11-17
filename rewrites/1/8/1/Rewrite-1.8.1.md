@@ -59,6 +59,21 @@ The review then holds up to 40 texts of up to 2,000 characters each, in one tool
 A review of the blocks one link away would drop What must hold 2 of [The assistant's tools](Rewrite-1.4.2#what-must-hold).
 That condition has the edit tool return only once every block downstream of the change is current.
 
+Two decisions on the message of the app's are ones to look into, since that message is new input at every call ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
+It comes after the conversation's last message, behind the mark of Anthropic's cache, so no call reads it from the cache.
+On the board of the snapshot in blockr.assistant's tests, with six blocks, five links, a stack, two board options, two plugins and two views, it holds 1,691 characters, about 400 tokens at four characters a token.
+The tools and the system prompt before it take some 5,000 tokens, which the cache serves at a tenth of the price of new input (notes).
+
+- Where the fixed text of the message goes.
+  Of those 1,691 characters, some 640 are the same at every call: the preamble that says that the app writes the message, and the preamble of the Focus section on the block last clicked.
+  In the message, each stands beside what it explains.
+  In the rules of the system prompt, the cache serves them, which saves some 400 characters at each call, about 100 tokens, while one sentence of the message still says that the app writes it.
+- Whether every call needs the whole board.
+  The message goes to every call of a turn, so that the model sees what its own edits did, and what the user changed meanwhile, before it says that it is done.
+  A turn of ten calls on the board above reads about 4,000 tokens of boards as new input.
+  The versions to compare it with are a board at a turn's first call alone, where the review of each edit and the note of what others changed tell the later calls what moved, or a smaller board at the later calls, such as one without the board options and the plugins.
+  The conversation keeps no board, so a call that the message leaves without one has no board to read.
+
 A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
 Besides blockr.assistant, whose tools and template the model reads, any package can change what the model reads: core or a plugin's package through the descriptions of its commands, a package of block classes through their guidance and arg specs, and any of them through its skills, as the dock's `layout` skill does.
 So the harness compares a pull request's head with its base, whichever of these packages the pull request changes, or two branches that try one decision two ways, as whether fewer tools serve the model better ([The assistant's tools](Rewrite-1.4.2#the-tools)).
@@ -159,5 +174,11 @@ Today's five questions build a table, answer with a number, build a view, challe
 They name the traps of the data, such as counting by the wrong treatment arm, or keeping screen failures, subjects who never started treatment, among the treated, each of which has produced a wrong number in a run.
 
 The page check reads the views' outputs from the page, which is what today's third check reads by eye, while the board check reads the saved JSON board.
+
+Measured on 2026-11-17 through the loop of [blockr.assistant#259](https://github.com/BristolMyersSquibb/blockr.assistant/pull/259), against the providers' own APIs:
+
+- On Anthropic's Messages API, a turn of two calls on claude-haiku-5-5 wrote 5,008 tokens to the cache at its first call, the tools, the system prompt and the question among them, and read them at its second call.
+  That second call read 219 tokens anew, the message of the app's of a board of one block among them.
+- On OpenAI's Chat Completions API, the second call of a turn on gpt-4o-mini read 2,816 tokens from the cache and 288 anew.
 
 </details>
