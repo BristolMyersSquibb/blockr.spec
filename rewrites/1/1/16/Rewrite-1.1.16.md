@@ -194,11 +194,16 @@ Each board action's id is the command's with `_action` after it, such as `blockr
 | Create link | A block | The blocks that it can feed, and those that can feed it, without closing a cycle, then the input, where the block that the link goes into has several free ones, as [blockr.dock#549](https://github.com/BristolMyersSquibb/blockr.dock/pull/549) had them | The Edit board plugin's form of a link, starting from the block | `add_link` |
 | Edit link | A link | Change source…, Move to input… and, into a variadic block, Rename input…, as blockr.dock#549 had them | The form of a link, editing it | `change_link`, `move_link` |
 | Edit inputs | A block with inputs | The block's inputs, each with Rename…, Move to… and Remove | The block's inputs in their order, which the user drags into another, as the dock's actions sidebar has them today | `change_link`, `move_link`, `remove_link` |
-| Create stack | A block or a selection | The board's stacks, which the block joins, and New stack | The Edit board plugin's form of a stack, with the blocks given | `add_stack`, `change_stack` |
+| Create stack | A block, a selection or the board | On a block or a selection, the board's stacks, which the blocks join, and New stack, and on the board New stack alone, which adds a stack that holds no block | The Edit board plugin's form of a stack, with the blocks given, or with none on the board | `add_stack`, `change_stack` |
 | Edit stack | A stack | Colour… and Blocks…, as [blockr.dock#550](https://github.com/BristolMyersSquibb/blockr.dock/pull/550) had them | The form of a stack, editing it | `change_stack` |
 | Copy block ID | A block | None, since it acts at once | None | None |
 | Remove block, Remove link and Remove stack | A block, a link or a stack | None, since each acts at once | None | `remove_block`, `remove_link`, `remove_stack` |
 | Remove | A selection | None, since it acts at once, removing every block, link and stack of the selection in one step | None | `remove_block`, `remove_link`, `remove_stack` |
+
+Create link's quick action lists only the blocks for which the preflight of `blockr.core-add_link` passes, through `core.commands.preflight()`.
+That preflight refuses a link that would close a cycle, join a block to itself or feed an input that a link feeds already, with a sentence that says which.
+So a menu offers no such link, the assistant's edit fails before any command does work, and a user who drops such a link in the DAG learns why ([Drawing the DAG](Rewrite-1.3.2#gestures)).
+The store keeps its own check of the same rules behind the preflight ([Board objects](Rewrite-1.1.1#what-the-store-checks)).
 
 The card's menu of core's basic frontend says "Add block before" and "Add block after" today, and takes the commands' labels here, "Prepend block" and "Append block", which the dock's menus and the DAG's use today, so that every menu agrees.
 Under the board lock, every one of core's board actions but Copy block ID fails its `offers`, since the store refuses what they run ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
@@ -220,6 +225,8 @@ The pull requests of [blockr.dock#544](https://github.com/BristolMyersSquibb/blo
 The drag that reorders a variadic block's inputs is in `R/sidebar-inputs.R` of blockr.dock at `655e323`, with its script and styles, which the advanced action of Edit inputs takes over.
 
 On `js-state`, at `9f431f0`, core's block picker has a mode for each of `add_block`, `append_block` and `prepend_block` ([srcts/picker/picker.tsx#L43-L47](https://github.com/BristolMyersSquibb/blockr.core/blob/9f431f0f5612a6aa3271ef58dc1037b69cb343df/srcts/picker/picker.tsx#L43-L47)), and Insert block gives it a fourth, on a link.
+On `js-state`, at `7fd739c`, the preflight of `blockr.core-add_link` checks only that the first block exists and that the second has a free input, and lets a named input pass unchecked (`linkable()` in `srcts/commands/core.ts`), while the store refuses a cycle once the link is added.
+A preflight says why it refuses by throwing the `refusal()` of its context, with one sentence per failure, which `commands.run()` rejects with, while `commands.preflight()` answers `false` (`srcts/commands/commands.ts`).
 The Edit board plugin's forms of a link and of a stack are in `srcts/modules/edit-board/links.tsx` and `srcts/modules/edit-board/stacks.tsx`, and the dialog of core's basic frontend, which is at most 576 px wide, is `Dialog` in `srcts/modules/basic/ui.tsx`.
 
 </details>
