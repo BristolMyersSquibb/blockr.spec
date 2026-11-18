@@ -11,7 +11,7 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it, beside what its package gives in R for the board option's class `{id}_option`: the version of the value's shape and the board option's own requests.
 2. Each component that reads a board option's value names the board option in its own definition: a plugin class, a renderer of outputs, or a block class in its UI module, which also names every board option that the class's requests read, while a board option's UI reads its own value alone.
    Core puts the board option on the board, with its default where the board holds no value, before that component first reads it, on a locked board too.
-   Where no loaded package defines the board option, or its default fails or does not fit its schema, core reports it, and draws or runs nothing that requires it.
+   Where no available package defines the board option, or its default fails or does not fit its schema, core reports it, and draws or runs nothing that requires it.
    A plugin may also read a board option that it does not name, where the board holds its value, as the board holds the value of every board option that something on the page requires.
    The assistant does so, to tell its model the value of each board option in use ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 3. A board holds the value of every board option that a script, a file or a command has set, or that something on the page requires, its default included where nobody set one, so that a board option left at its default counts as chosen ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
@@ -92,7 +92,7 @@ export default {                                   // the module of n_rows, whic
 The id says which board option it is and never changes, while the label is only what the user sees.
 The user does not rename a board option, so its label takes the place of a name.
 The client holds one definition per id, which R makes sure of first: two packages that list one id stop the app as `serve()` is called, naming both, since the reply holds one entry for each id ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
-The store checks every value that a delta sets against the board option's schema, and refuses a value for a board option that no loaded package defines ([Board objects](Rewrite-1.1.1#what-the-store-checks)), while it refuses a JSON board that holds a value the schema refuses once migrated, naming the board option, and the page stays as it was ([Board updates](Rewrite-1.1.2#opening-a-board)).
+The store checks every value that a delta sets against the board option's schema, and refuses a value for a board option that no available package defines ([Board objects](Rewrite-1.1.1#what-the-store-checks)), while it refuses a JSON board that holds a value the schema refuses once migrated, naming the board option, and the page stays as it was ([Board updates](Rewrite-1.1.2#opening-a-board)).
 R writes a value that a script gives by the schema that the board option's package ships beside its module, as core does for its own three ([UI modules in JS](Rewrite-1.1.7#packaging)).
 
 A definition's `default` is a value, or a function that core calls where something requires the board option and the board holds no value, or as the board opens where the board option has an `onChange` (below).
@@ -129,7 +129,7 @@ Core puts on the board, with its `default`, each board option that a component r
 
 So a board opened later gets them as a page that starts with that board would ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 While the component stays on the page, core puts the default back where a delta removes the value, so that every reader gets the board's value ([Reading a board option in the client](#reading-a-board-option-in-the-client)), as do the requests that carry the board option to R ([Board option values in R](#board-option-values-in-r)).
-Where no loaded package defines a board option that a component requires, or its default fails or does not fit its schema, core reports the board option in a notification that concerns it, naming it and what requires it, and draws or runs nothing that requires it ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
+Where no available package defines a board option that a component requires, or its default fails or does not fit its schema, core reports the board option in a notification that concerns it, naming it and what requires it, and draws or runs nothing that requires it ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
 It leaves the element of a block's UI, a board option's UI or a plugin's UI empty, asks R for no output for a renderer that requires the board option, and calls no `start` of a plugin whose class requires it, while the element of a frontend that requires it shows why.
 
 A value on the board is the board's, whether someone set it or core put the default there: a delta changes or removes it, a save writes it, and opening the saved board restores it ([Serialization](Rewrite-1.1.4#board-options)).
@@ -154,7 +154,7 @@ R therefore also names the renderer of a block class's outputs in the class's re
 4. The client loads that renderer and puts the board options it names on the board, and only then asks R for the block's first output.
 
 An output of a subclass that has a renderer of its own still names that renderer, and core loads that one, puts the board options it names on the board and, where the output was asked without their values, asks R for it again with them.
-An entry names no renderer where no output class gives the coercion that its block class names, and the first output request then carries the value of every board option that a loaded package defines, the board's or else its default, which core sends without putting it on the board, so that a coercion that wraps `as_table_output()` gets `n_rows` on a fresh board too.
+An entry names no renderer where no output class gives the coercion that its block class names, and the first output request then carries the value of every board option that the reply to `hello` names, the board's or else its default, which core sends without putting it on the board, so that a coercion that wraps `as_table_output()` gets `n_rows` on a fresh board too.
 
 ### Board option values in R
 

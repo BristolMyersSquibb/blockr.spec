@@ -202,7 +202,7 @@ export default {                                     // blockr.dag's plugin clas
 };
 ```
 
-R names each module in its reply to `hello`: that of each of the app's plugins' classes, in the plugin's entry of `plugins`, that of each board option that a loaded package lists, in `options`, and those that packages offer each other ([Wire protocol](Rewrite-1.1.9#handshake)).
+R names each module in its reply to `hello`: that of each of the app's plugins' classes, in the plugin's entry of `plugins`, that of each board option that an available package lists, in `options`, and those that packages offer each other ([Wire protocol](Rewrite-1.1.9#handshake)).
 Core imports each module that the reply names once per page, and registers the default export of each under the id that R gives it before every board opens, with the commands that a plugin class holds, so that the store finds every plugin class and every board option registered as it opens the board ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
 No package sets anything up for another, so no order holds between packages, and core imports the modules all at once.
 A package has no module of its own beside these: a storage plugin names a board to open in place of the one R sent through its class's `storage.load()` ([Plugins](Rewrite-1.1.12#storage)), and a package that follows the store, such as one that saves drafts, subscribes from its plugin's `start()` ([Board updates](Rewrite-1.1.2#following-the-board)).

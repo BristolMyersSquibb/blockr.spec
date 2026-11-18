@@ -149,7 +149,7 @@ In R, core defines two plugin classes beside `plugin` for other classes to exten
 A package's class extends one of them or `plugin` itself, as blockr.session's is `c("session_plugin", "storage_plugin", "plugin")`.
 Core's own plugins do so too: its basic frontend is `c("basic_frontend_plugin", "frontend_plugin", "plugin")`, its storage plugin `c("file_storage_plugin", "storage_plugin", "plugin")` and its Edit board plugin `c("edit_board_plugin", "plugin")` ([The frontend](#the-frontend), [Storage](#storage), [The Edit board plugin](Rewrite-1.1.15#the-plugin)).
 R's `serve()` reads them to run core's basic frontend and storage plugin only where no other row is a frontend or a storage plugin, and to refuse rows that hold no frontend, or two frontends or two storage plugins besides core's ([Which plugins a board has](#which-plugins-a-board-has)).
-R calls a plugin class's methods of `plugin_version()` and `plugin_requests()` on an object of the class vector that the class's constructor gives, which it finds by the class's id among the classes that the available packages list, since a request names the plugin's class by its id alone ([A plugin's requests](#a-plugins-requests)).
+R calls a plugin class's methods of `plugin_version()` and `plugin_requests()` as `serve()` builds the app, on the plugin that the class's constructor makes, for each class of the app's plugins, and the app holds what they give, so that a request, which names the plugin's class by its id alone, finds its function there ([A plugin's requests](#a-plugins-requests)).
 For the app's frontend, it also calls the method of `frontend_args()` on such an object ([The frontend](#the-frontend)).
 So only `serve()` reads `frontend_plugin` and `storage_plugin`.
 
@@ -337,10 +337,12 @@ A plugin needs no member to stop, since the signal stops it, so core could suspe
 
 A plugin class that needs R gives its requests through a method of `plugin_requests()` for its class, as blockr.md does to export a document.
 One that lives in the browser alone, such as the DAG's, gives R nothing but its constructor, for app scripts, as a block class's UI lives in the browser and its `expr` in R.
-Core answers a plugin's requests as a type of request of its own, `plugin`, beside the four types that [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built, as it answers a board option's through `board_option_requests()` ([Wire protocol](Rewrite-1.1.9#requests)).
+Core answers a plugin's requests as a type of request of its own, `plugin`, beside the four types that [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built, as it answers a board option's, which come from `board_option_requests()` ([Wire protocol](Rewrite-1.1.9#requests)).
 So no package adds a request type of its own, as that pull request left the dock to do for its extensions, and `CoreApi.request()` sends a plugin's request alone.
 
-Whoever calls `CoreApi.request()` names one of the app's plugins by its class's id, which the message carries, and by which R finds the method.
+Whoever calls `CoreApi.request()` names one of the app's plugins by its class's id, which the message carries, and by which R finds the request's function among the requests that the app holds for that plugin, which `serve()` got from the method of `plugin_requests()` for the plugin's class as it built the app, as it got the class's version ([blockr.core#678](https://github.com/BristolMyersSquibb/blockr.core/pull/678)).
+So R calls no method of `plugin_requests()` to answer a request, and reads no package's listing for it, in whatever process runs the app, and refuses a request of a plugin class that the app does not run.
+A method of `plugin_requests()` that gives anything but a list of functions by name stops `serve()`, as a method of `plugin_version()` does that gives no whole number from 1.
 R calls the request's function with the args that the client passes, by name, with the request's body in `file` where the function takes it, and with the blocks that the request reads in `reads`, by block id, each a list of the block's `result` and its block expression `expr`.
 Core has those blocks evaluated first, even off screen, as for a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)).
 A plugin's request may write, so the client never keeps its answer ([Wire protocol](Rewrite-1.1.9#requests)).
@@ -524,7 +526,7 @@ A plugin's request carries the type `plugin` and the id of the plugin's class, b
   "args": { "content": "# Report" }, "reads": [ { "block": "a", "revision": 2 } ] }
 ```
 
-R reads it into an object of class `plugin_request`, and its method of `request_call()` dispatches `plugin_requests()` on an object of class `c("md_plugin", "plugin")`, which it makes from the class's id, as the method for board options makes one with `new_board_option()`, and binds the args with `request_call_args()`, as that method does, with `reads` and `file` reserved.
+R reads it into an object of class `plugin_request`, and its method of `request_call()` takes the function that the app holds under the request's name for the plugin class whose id the request names, which the method of `plugin_requests()` for `c("md_plugin", "plugin")` gave as `serve()` built the app, as the method for board options takes the one that the app holds for the board option, and binds the args with `request_call_args()`, as that method does, with `reads` and `file` reserved.
 
 On `js-state`, at `d363b48`, `CoreApi.request()` still takes a request's type and its properties, as a request of a type that a package adds ([srcts/types/core-api.ts#L32-L34](https://github.com/BristolMyersSquibb/blockr.core/blob/d363b480c1db16451788d507b41c49cd99133d4a/srcts/types/core-api.ts#L32-L34)), which `srcts/core/requests.ts` sends, and core exports `request_call()` with an example of a package adding the type `code` ([R/request-types.R#L30-L69](https://github.com/BristolMyersSquibb/blockr.core/blob/d363b480c1db16451788d507b41c49cd99133d4a/R/request-types.R#L30-L69)).
 Both go, since no package adds a type ([A plugin's requests](#a-plugins-requests)): `request()` takes a plugin's class's id, and core keeps the generic to itself.
