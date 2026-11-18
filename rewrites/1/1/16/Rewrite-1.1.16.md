@@ -14,12 +14,16 @@ The edits themselves are commands, which stay [Board updates](Rewrite-1.1.2#comm
 2. A board action changes the board only through commands, core's and any package's.
    Each batch that it runs is one undo step of the user ([Board updates](Rewrite-1.1.2#undo)).
    So a pick in its quick action takes one step, and so does each edit in an advanced action that applies edits at once ([The Edit board plugin](Rewrite-1.1.15#each-edit-at-once)).
-3. Every menu of the board, of one of its board objects, or of a selection of them offers the board actions that apply to it, whichever package opens the menu, so that a board action that one package registers shows in all of them.
+3. Each board action says which targets it applies to, and every menu of the board, of one of its board objects or of a selection of them offers each board action that applies to its target.
+   The package that opens a menu names the target alone, and neither adds a row nor leaves one out, so that a board action that one package registers shows in the menus that every package opens.
 4. Every board action works the same way from every trigger: its quick action shows at the trigger, and its advanced action shows in a place with enough room, opened from the quick action, or at once where the board action has no quick action.
 5. The UI of a board action is written once, by the package that registers it, and every trigger reuses it, as core's block picker serves both the card's menu of core's basic frontend and the Edit board plugin today ([The Edit board plugin](Rewrite-1.1.15#where-it-shows)).
-6. A frontend needs to draw nothing for board actions to work: core draws the menus and the quick actions, and shows advanced actions in a dialog of its own, while a frontend may draw menus and quick actions in its own look, without writing the rules that they follow, and show advanced actions in a place of its own, pinned or not.
-7. Under a lock, a menu offers no board action whose commands the lock refuses, as a frontend draws no control for what a lock fixes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
-8. Commands stay free of UI, so that what runs commands without a user, such as the assistant, never meets a board action ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
+6. A frontend needs to draw nothing for board actions to work: core draws the menus and the quick actions, and shows advanced actions in a dialog of its own.
+   A frontend may instead draw menus and quick actions in its own look, without writing the rules that they follow, and show advanced actions in a place of its own.
+7. A frontend may let the user pin its place for advanced actions, as the dock lets the user pin its actions sidebar today.
+   A pinned place stays open once an advanced action ends, and may move on to another target by the frontend's own rules, as the pinned sidebar follows the DAG's selection today ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162)).
+8. Under a lock, a menu offers no board action whose commands the lock refuses, as a frontend draws no control for what a lock fixes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+9. Commands stay free of UI, so that what runs commands without a user, such as the assistant, never meets a board action ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 
 ## Today
 
@@ -73,6 +77,9 @@ So blockr.md could offer Export as HTML on its plugin, while the DAG's menus ope
 No frontend opens the menu of a plugin or of a board option yet, and none has to: blockr.md would trigger Export as HTML from its own toolbar through `core.boardActions.trigger()`, and a menu on the dock's panels could offer it later, with no change to core.
 A board action on a selection takes the kinds that it knows from it, as Create stack takes only the blocks (Core's board actions).
 Core hands a board action only targets of the kinds that its `on` names, so that a kind added later, such as a tab group in the dock's state, reaches no board action that does not name it.
+A target names no input of a block.
+So a link that the user drags from an input and drops on the DAG's canvas triggers Prepend block on the block alone, which feeds the block's first free input rather than the one that the link came from, as the DAG and the dock do today ([blockr.dag R/srv.R#L412-L425](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/srv.R#L412-L425)).
+A later change may add an input to a target that names a block, as `{ block: "b", input: "y" }`, for Prepend block to feed, and no other board action changes for it, since the field is optional and the others ignore it.
 
 A board action's id is `{pkg}-{name}`, as the ids of commands are, and ends in `_action` by convention, as the dock names its actions today, so that it does not read as a command's id.
 Core's board actions keep the names of the dock's actions and the DAG's that they replace, as `blockr.core-edit_link_action` replaces the dock's `edit_link_action` (Core's board actions).
@@ -83,7 +90,8 @@ One that asks has a quick action where one or two picks at the trigger finish th
 It has both where both hold, as Add block does, and an advanced action alone where the edit takes more picks than two, as Edit inputs does (Core's board actions).
 Its `run` returns the batch to run, or does itself what needs no command, as Copy block ID puts the block's id on the clipboard, and may return a promise of the batch, as the DAG's Paste reads the clipboard first ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
 
-Core registers its own board actions (Core's board actions), and a plugin class lists its own in `boardActions`, which core registers with the class, as it registers the class's commands ([Plugins](Rewrite-1.1.12#a-plugin)).
+Core registers every board action in JS, and R lists none.
+Core's own are those of its table (Core's board actions), and a plugin class lists its own in `boardActions`, which core registers with the class before every board opens, as it registers the class's commands ([Plugins](Rewrite-1.1.12#a-plugin), [UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 So blockr.md could offer Add to document on every block, which appends the block's output to its document through a command of its own:
 
 ```ts
@@ -103,15 +111,24 @@ export default {                                   // blockr.md's, from the modu
 
 Every menu of a block then offers it, whether the dock's card, the DAG's node or core's basic frontend opens the menu.
 A frontend lists its board actions as any plugin does, since a frontend is a plugin.
-A package without a plugin of its own, such as a package of blocks, lists its board actions in a plugin class that holds nothing but `boardActions`, as blockr.viz's control bridge holds nothing but `start` ([Plugins](Rewrite-1.1.12#running-a-plugin)).
-Registering refuses an id that another board action has, a board action whose `on` is empty, one that has `run` beside `quick` or `advanced`, and one that has none of the three.
+Registering a class refuses the whole class where one of its board actions has the id of another board action, an empty `on`, `run` beside `quick` or `advanced`, or none of the three, as it refuses a class whose id another class has ([Board updates](Rewrite-1.1.2#plugins)).
 
 ### The menus of board objects
 
-The menu of the board, of a board object or of a selection offers each board action whose `on` names the target's kind, and whose `offers` passes for the target or which has no `offers`.
+Core decides which board actions a menu offers, not the package that opens the menu.
+The package names what the menu is about, its target, and each board action says in `on` and `offers` which targets it applies to.
+VS Code fills its menus the same way, from the `when` clause of each command that an extension contributes to a menu ([VS Code](https://code.visualstudio.com/api/references/contribution-points#contributes.menus)), and so does IntelliJ, from each action's `update()` ([IntelliJ](https://plugins.jetbrains.com/docs/intellij/action-system.html#overriding-the-anactionupdate-method)).
+So a right click on block `a` in the DAG opens its menu in three steps:
+
+1. The DAG calls `core.boardActions.menu({ block: "a" }, { el, anchor })`.
+2. Core keeps each board action, core's or any package's, whose `on` names blocks, and whose `offers` passes for block `a` or which has no `offers`.
+3. Core hands those board actions to the frontend's `menu`, which draws them in the frontend's look, or draws them itself in its own menu where the frontend gives none (What a frontend gives).
+
+The "…" button of the dock's card makes the same call for its block, and so does every other menu of a block, so that every menu of block `a` offers the same board actions, blockr.md's Add to document among them.
 No menu greys anything out: it leaves out a board action whose `offers` fails, and a board action leaves out of its quick action each row whose commands would fail their preflight, as Create link's does (Core's board actions).
 So a board action's `offers` fails wherever its quick action would hold no row, as Create link's does on a block that no new link can join to another, so that no menu offers a board action that leads nowhere.
-The menu holds the board actions in a stable order: core's first, in the order of their table (Core's board actions), then each package's, in the order of the app's plugins and as its class lists them.
+Core hands the menu its board actions in a fixed order: core's first, in the order of their table (Core's board actions), then each package's, in the order of the app's plugins and as its class lists them.
+Whoever draws the menu may show them in any other order (What a frontend gives).
 The menu's row for a board action is an item with the board action's label, icon, `detail` for the target and `category`, as an entry of the block registry carries its block class's category ([Block classes in R](Rewrite-1.1.5#cores-classes-and-hooks)).
 Whoever draws the menu decides what to do with the categories, such as ordering the rows by them and dividing them, or nothing at all, as the dock's options sidebar shows each board option on the page of its category ([Places the dock offers plugins](Rewrite-1.2.4#settings)).
 So it can mark the rows that remove, as the dock marks them in its danger colour ([Block cards in the dock](Rewrite-1.2.7#the-menu)), and a package's board action that removes something takes the category "remove", so that a menu treats it as it treats core's.
@@ -119,7 +136,7 @@ Every menu of the board is drawn by the frontend's `menu`, or by core's own menu
 Core's own menu shows the rows of each category together, with a divider between two categories: those that add, those that edit and those of the clipboard, then those of the categories that packages name, in the order in which they first come, and those that remove last, so that the rows that remove end the menu.
 Picking a board action's row opens its quick action as the menu's next level, or its advanced action where it has no quick action, or runs it where it has `run`.
 
-Whoever draws a menu of a board object asks core to open it at the point of its trigger, rather than drawing a list of its own:
+A package that opens a menu of a board object asks core to open it at the point of its trigger, rather than drawing a list of its own:
 
 ```ts
 boardActions: {                                                 // in CoreApi
@@ -137,7 +154,7 @@ The promise that `trigger()` returns resolves once the board action ends, as its
 Both take a `notifier`, which gets the notifications of a refused batch of the board action that they open, in place of core raising them, as `commands.run()` does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)), so that the DAG shows a refusal at the node, the link or the point where it opened the menu ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 
 The card's menu of core's basic frontend, the "…" menu of the dock's card, the DAG's menus of a node, a link, a stack, its canvas and its selection, and the rows of blockr.outline all open their menus through core.
-The package that opens a menu adds no row to it, since a row that edits the board would show in that package's menu alone.
+The package that opens a menu adds no row to it and leaves none out, since either would make its menu differ from every other menu of the same target.
 No menu needs a row for a package's own UI today, and an option of `menu()` can add one later.
 A toolbar of the board, such as the DAG's, offers the board actions on the board as buttons, each with its icon and its label as a tooltip, and, while the user has selected something, those on the selection, so that it offers what the menus of the board and of the selection offer.
 Each button opens its board action's quick action under itself, or its advanced action where it has no quick action, or runs the board action where it asks nothing.
@@ -156,16 +173,15 @@ Core draws it as a menu at the trigger, or the frontend through its hook (What a
 The rows come in kinds that core defines, as it defines the kinds of the storage controls ([Plugins](Rewrite-1.1.12#storage)):
 
 ```ts
-type QuickLevel = { title?: string; filter?: boolean; rows: QuickRow[] };   // filter: a field that narrows the rows as the user types
+type QuickLevel = { title?: string; filter?: boolean; picked?: Json; rows: QuickRow[] };   // filter: a field that narrows the rows as the user types; picked: what was picked so far, which the level's open icon hands the advanced action
 
 type QuickRow =
   | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"];
-      pick(): CommandCall[] | QuickLevel | Promise<CommandCall[] | QuickLevel>; advanced?: Json }   // runs, or opens the next level, either of which may wait; category: its board action's, in a menu of a board object; advanced: what its chevron hands the advanced action
+      pick(): CommandCall[] | QuickLevel | Promise<CommandCall[] | QuickLevel>; advanced?: Json }   // runs, or opens the next level, either of which may wait; category: its board action's, in a menu of a board object; advanced: what its open icon hands the advanced action
   | { kind: "multi"; label: string; choices: { id: string; label: string; picked: boolean }[];
       apply(picked: string[]): CommandCall[] }      // ticks rows, and applies them as the menu closes
   | { kind: "text"; label: string; value?: string; check?(value: string): string | undefined;
-      submit(value: string): CommandCall[] }        // a field, as for a name
-  | { kind: "advanced"; label: string; picked?: Json };        // "Advanced…", which opens the advanced action
+      submit(value: string): CommandCall[] };       // a field, as for a name
 ```
 
 Core runs every open menu by these rules, in logic that draws nothing, so that they hold wherever a quick action shows, whoever draws it (What a frontend gives).
@@ -176,8 +192,10 @@ They come from the menus that [blockr.dock#544](https://github.com/BristolMyersS
    Escape goes back a level, or closes the menu from the first level.
 3. A multi applies its picks as the menu closes by a click outside or by Tab, and drops them on Escape.
 4. A text row refuses a value in place, with what its `check` returns, and submits on Enter.
-5. An item that gives `advanced` shows a chevron at its end, which opens the board action's advanced action with that value, as the chevron of a row in the dock's "+" menu was to open a block's options ([blockr.ui#99](https://github.com/BristolMyersSquibb/blockr.ui/pull/99)).
-   A row of the kind `advanced` opens it with what was picked so far.
+5. Where the board action has an advanced action, every level of its quick action shows the open icon at its top right: a box with an arrow out of its top right corner.
+   An item that gives `advanced` shows the same icon at its end, and a click elsewhere on the item picks it.
+   A click on an icon opens the advanced action with the level's `picked` or the item's `advanced`, and with the text in the level's filter.
+   The icon says that the advanced action opens in another place, as blockr.ui's `open` icon, drawn after Bootstrap's `box-arrow-up-right`, marks the tool with which a menu opens its list somewhere fuller and takes the filter's text along ([blockr.ui inst/assets/icons/open.svg](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/icons/open.svg), [design-system.Rmd#L1083-L1087](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1083-L1087)).
 6. The filter narrows the rows by their labels and details as the user types, and Enter picks the first row left.
 7. Where `quick` or `pick` returns a promise, the menu shows at the same spot that it is loading until the promise resolves, and the error's message in place of the rows where the promise rejects.
    Escape goes back as from any level, and drops what the promise brings later.
@@ -188,12 +206,14 @@ An advanced action is a module that meets the contract of a UI module ([UI modul
 
 ```ts
 interface AdvancedModule {
-  render(args: { el: HTMLElement; core: CoreApi; target: Target; picked?: Json; signal: AbortSignal;
+  render(args: { el: HTMLElement; core: CoreApi; target: Target; picked?: Json; filter?: string; signal: AbortSignal;
                  done(calls?: CommandCall[], opts?: { notifier?(n: readonly Notification[]): void }): Promise<void> }): () => void;   // done() runs the batch as one step and closes, or only closes, and rejects where the batch is refused
 }
 ```
 
 It holds every option of its board action, as the block picker holds a new block's class, id, name and input.
+Opened from a quick action, it gets as `picked` the level's `picked` or the item's `advanced`, whichever open icon the user clicked, and as `filter` the text in that level's filter.
+So the block picker opens on what the user typed in the quick action of Add block, as the design system's add menu hands it to the dock's block browser ([design-system.Rmd#L1199-L1207](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1199-L1207)).
 One that adds an object runs nothing before the user submits it, since an object's id cannot change once the object is on the board, and then hands its batch to `done()`, which runs it as one step.
 Where the store or the command registry refuses the batch, the promise that `done()` returns rejects and the advanced action stays open, so that it shows why beside its submit and keeps what the user gave, as every plugin with a UI shows what fails of what the user did in it ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 It takes the batch's notifications through the `notifier` of `done()`, so that core raises none.
@@ -228,7 +248,7 @@ interface OpenMenu {                                            // a menu that c
   get(): ShownLevel;                                            // the level that the menu shows now
   subscribe(fn: () => void): () => void;                        // calls fn whenever that changes
   pick(row?: number): void;                                     // a click or Enter on a row, by its index, or with none, Enter in the filter
-  chevron(row: number): void;                                   // a click on an item's chevron
+  openAdvanced(row?: number): void;                             // a click on an item's open icon, by its index, or with none, on the level's
   tick(row: number, choice: string): void;                      // a click on a choice of a multi
   type(value: string, row?: number): void;                      // the filter's text, or a text row's value, as the user types
   escape(): void;                                               // Escape
@@ -238,23 +258,23 @@ interface OpenMenu {                                            // a menu that c
 type ShownLevel = {                                             // a level as the menu shows it
   title?: string;
   filter?: string;                                              // the filter's text, where the level has a filter
+  advanced: boolean;                                            // whether the level shows the open icon, as it does where the board action has an advanced action
   back: boolean;                                                // whether Escape goes back a level, rather than closing the menu
   loading: boolean;                                             // while a promise of quick or pick is pending
   error?: string;                                               // the message that it rejected with
   rows: (                                                       // the rows that the filter leaves, without their functions
-    | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"]; chevron: boolean }
+    | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"]; advanced: boolean }   // advanced: whether it shows the open icon
     | { kind: "multi"; label: string; choices: { id: string; label: string; picked: boolean }[] }
     | { kind: "text"; label: string; value: string; refusal?: string }   // refusal: what check returns for the value
-    | { kind: "advanced"; label: string }
   )[];
 };
 ```
 
 Core calls `menu` as a menu of a board object or a quick action opens, and hands it the open menu, which holds the levels, the filter's text, the ticks of a multi and the value of a text row.
 The frontend draws the level that `get()` returns, draws it again whenever `subscribe()` calls it, and calls a member of the open menu for each thing that the user does, while it keeps its own keys for moving between rows, as the design system's menus do.
-It may show the rows of a level in another order, as by their categories, and passes `pick()` a row's index in `rows`, whatever the order it shows.
+It may show the rows of a level in any order, as by their categories, and passes `pick()` a row's index in `rows`, whatever the order it shows.
 Core calls the functions of the board action's rows, `pick()`, `apply()`, `check()` and `submit()`, and runs the batch that they return, with the caller's `extend`, as one step, and waits for it where it comes as a promise, as Paste's `run` returns one.
-For a chevron and for a row of the kind `advanced`, core closes the menu and opens the advanced action with the value that the row holds.
+For a click on an open icon, the level's or an item's, core closes the menu and opens the advanced action with the level's `picked` or the item's `advanced`, and with the filter's text.
 So a frontend never sees a board action's functions, never runs a command and writes none of the rules of a quick action, only its look.
 Core calls the function that `menu` returned as the menu closes, whatever closed it, and returns the keyboard's focus to `el`.
 Core's own menu draws the open menu as a frontend does, so that the rules are written once.
@@ -276,7 +296,7 @@ So do the advanced actions of core's board actions, which show under every front
 Core registers a board action for each of the dock's twelve actions, and three more: Rename and Copy block ID, from the menu of the dock's card, and Remove on a selection, from the DAG's actions.
 Each takes the label that today's menus give it, such as Create link, whose command is labelled Add link.
 Its id is under `blockr.core` and keeps the name of the action that it replaces, as `blockr.core-add_link_action` keeps the dock's `add_link_action`, so that only Rename and Copy block ID take new ones.
-A menu holds them in the order of this table:
+Core hands them to a menu in the order of this table:
 
 | Board action, with its id | On | Category | Quick action | Advanced action | Commands, of `blockr.core` |
 |---|---|---|---|---|---|
@@ -318,6 +338,8 @@ None.
 
 The pull requests of [blockr.dock#544](https://github.com/BristolMyersSquibb/blockr.dock/issues/544), [blockr.dock#549](https://github.com/BristolMyersSquibb/blockr.dock/pull/549) to [blockr.dock#553](https://github.com/BristolMyersSquibb/blockr.dock/pull/553), and [blockr.ui#99](https://github.com/BristolMyersSquibb/blockr.ui/pull/99), keep their branches, with menus opened where the gesture was, their second levels, their multi-selects and their tests, which the quick actions of core's board actions take over.
 The drag that reorders a variadic block's inputs is in `R/sidebar-inputs.R` of blockr.dock at `655e323`, with its script and styles, which the advanced action of Edit inputs takes over.
+Core's own menu draws the open icon from an SVG of its own in the shape of blockr.ui's `open`, since blockr.ui builds on blockr.core.
+The dock draws a level's open icon as the `tool` of `Blockr.menu`, named "Open in the sidebar", which blockr.ui draws at the end of the menu's caption line ([blockr.ui inst/assets/js/blockr-ui.js#L946-L951](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/js/blockr-ui.js#L946-L951)), and today's add menu of the dock passes no tool yet ([blockr.dock inst/assets/js/add-block-menu.js#L49-L57](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/add-block-menu.js#L49-L57)).
 The open menu's members do not rely on `this`, and `get()` returns the same object until the menu changes, so that a frontend in React reads it with `useSyncExternalStore(menu.subscribe, menu.get)`.
 The `mount()` that core hands `advanced` is `mountAdvanced()` with the board action's id given, and core plans the batch of a `done()` once, for the caller's `extend` and for the function that `advanced` returned, and then applies its deltas.
 
