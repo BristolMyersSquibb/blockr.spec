@@ -63,7 +63,7 @@ Without the board lock, core fixes no block, and what a block whose `locked` is 
 ### Board options on a locked board
 
 The board lock leaves board options open, so that a reader may switch to dark mode or show more rows of a table, as on any board.
-A block class reads board options only in its requests, and an output class in its coercion, so no board option reaches a block expression ([Block classes in R](Rewrite-1.1.5#requests)), and a reader who changes one changes nothing that R evaluates.
+A block class reads board options only in its requests, and an output family as it makes an output, so no board option reaches a block expression ([Block classes in R](Rewrite-1.1.5#requests)), and a reader who changes one changes nothing that R evaluates.
 So R takes the board option values that a request carries, under the locks as without them, for every output and every request, a locked block's among them ([What R refuses](#what-r-refuses)).
 A board option is the client's concern, and no lock fixes one.
 A board option's own request runs under the board lock as on any board, as a plugin's does (below).
