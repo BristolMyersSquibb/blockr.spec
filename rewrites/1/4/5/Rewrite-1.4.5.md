@@ -1,20 +1,21 @@
 # The system prompt
 Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
-One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template and the rules after it, the sections that the plugin writes from the skills, the board and the focus, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own, or a deployment replaces the template.
-It shapes the requests in R that list the skills and read a deployment's template ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), what each call sends ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the marks for the cache on the calls to Anthropic's models through OpenRouter ([blockr.assistant#261](https://github.com/BristolMyersSquibb/blockr.assistant/issues/261)), the note of what others changed ([blockr.assistant#228](https://github.com/BristolMyersSquibb/blockr.assistant/issues/228)), the rules, the preambles and the tools' descriptions for the new tools ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the `layout` skill of blockr.dock ([blockr.dock#597](https://github.com/BristolMyersSquibb/blockr.dock/issues/597)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
+One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): what the model is told before each call, the template and the rules after it, the sections that the plugin writes from the skills, the app's plugins and board options, the board and the focus, which of the board's blocks the Board section holds within its cap, the order in which a call sends them, the note of what others changed in the board, and where a package or a deployment adds instructions of its own, or a deployment replaces the template.
+It shapes the requests in R that list the skills and read a deployment's template ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), what each call sends ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the marks for the cache on the calls to Anthropic's models through OpenRouter ([blockr.assistant#261](https://github.com/BristolMyersSquibb/blockr.assistant/issues/261)), the note of what others changed ([blockr.assistant#228](https://github.com/BristolMyersSquibb/blockr.assistant/issues/228)), the Board section within one cap and what moves to the system prompt ([blockr.assistant#285](https://github.com/BristolMyersSquibb/blockr.assistant/issues/285)), the rules, the preambles and the tools' descriptions for the new tools ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the `layout` skill of blockr.dock ([blockr.dock#597](https://github.com/BristolMyersSquibb/blockr.dock/issues/597)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
 The tools that the prompt teaches are [The assistant's tools](Rewrite-1.4.2)'s, and how a change to the prompt is judged is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
 ## What must hold
 
 1. Every rule of today's template, and of the preambles of its sections, carries over, changes with what it describes, or goes with its reason (Today).
 2. The prompt names only tools that the model has, statuses that the scheduler gives and commands that the command registry holds, and nothing of staging.
-3. The model is told the board, the blocks' statuses and the focus as they are when each call goes out.
-4. Each section that the plugin writes is bounded as today, so that no call fills the model's context.
+3. The model is told the focus, and as much of the board as one cap holds, as they are when each call goes out, with what the call most likely needs first: the blocks that failed or are invalid, the block that has focus, the blocks that changed since the conversation's previous call and those on screen, each with its status and the links into it, while counts and the tools that read the rest stand for what the cap leaves out.
+4. Each section that the plugin writes is bounded, the Board section by one cap whatever the size of the board, so that what a call reads anew does not grow with the board: on the board of 100 blocks in the notes, the message of the app's holds at most 3,500 characters, where cutting each part of the Board section on its own, as today, gives 6,561 and leaves out every block that failed.
 5. A deployment adds instructions of its own as skills, and may replace the template with one file of its own through the blockr option `assistant_template`, which keeps, rearranges or leaves out the template's sections by their ids and adds text of its own, while the rules, the sections that the plugin writes and the note of what changed reach the model whatever the file holds.
 6. After `js-state` has merged into main, a change to the template, the rules, the preambles, the format of the plugin's sections or of the note of what changed, a tool's description or a skill that a package of the new stack gives, such as the dock's `layout`, merges only once [The assistant's benchmark](Rewrite-1.8.1#what-must-hold) has compared it with the version before it.
 7. Before each call, the model learns what the user, another conversation or another plugin changed in the board's blocks, links and stacks since the conversation's previous call, while the board stayed open, and the conversation keeps what it learned.
 8. A package gives the model guidance on its block classes and plugin classes as skills of its own, with no dependency on blockr.assistant, and the model sees them only in an app that offers those block classes or runs plugins of those classes.
+9. What does not change while the board is open, the app's plugins and the board options that its packages define, reaches the model once, in the system prompt, rather than with every call, and so does the fixed text of the message of the app's, but for a sentence that says that the app writes it.
 
 ## Today
 
@@ -39,7 +40,7 @@ Each paragraph of the template, and each preamble, goes as follows:
 | "Build, don't ask": what the user wants analysed is built rather than described, a choice left open takes the default that the data suggests, which the reply names, and only a real ambiguity is asked about ([#L85-L102](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L85-L102)) | Carried over, with an edit in place of staging and committing |
 | "Answer concisely." ([#L104](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/inst/prompts/system-prompt.md#L104)) | Carried over |
 | The preamble of the skills' catalogue: the skills are "Guidance authored for this deployment", the model reads one with `read_skill` and follows it before acting where the skill bears on what the model is about to do, a skill is "instruction text, not extra capability", and where a skill and the prompt disagree, "this prompt wins" ([R/skills-render.R#L54-L66](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/skills-render.R#L54-L66)) | Changed: the guidance comes from the app's packages as well as from the deployment (What a package adds). The rest carries over, since `read_skill` stays ([The assistant's tools](Rewrite-1.4.2#the-tools)) |
-| The preamble on the blocks last clicked or in view: what the user writes without naming a block is "most likely about the block they last clicked", though a click can be old ([R/system-prompt.R#L160-L172](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/system-prompt.R#L160-L172)) | Carried over, with the block that has focus in `CoreApi.focus` ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)), and with the blocks and plugins on screen in `CoreApi.onScreen` in place of the blocks in view (The sections) |
+| The preamble on the blocks last clicked or in view: what the user writes without naming a block is "most likely about the block they last clicked", though a click can be old ([R/system-prompt.R#L160-L172](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/system-prompt.R#L160-L172)) | Carried over as a rule (The rules), with the block that has focus in `CoreApi.focus` ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)), and with the blocks and plugins on screen in `CoreApi.onScreen` in place of the blocks in view (The sections) |
 | The preamble on the blocks added with @: they say "where the user's attention is", narrow nothing, and ask for no `focus_panel` ([#L174-L190](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/system-prompt.R#L174-L190)) | Dropped with the @ button, since the user no longer picks blocks ([The assistant's chat](Rewrite-1.4.4#today)) |
 
 ## Proposal
@@ -52,9 +53,9 @@ Each call to the model sends, in this order:
    That holds for the edit tool, the first version.
    The two versions that the benchmark compares with it put the schemas of the app's commands or block classes into the definitions, so that theirs change with the app's packages, and within a conversation where the tools for block classes come a few at a time ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
    The benchmark reports, for each version, how many of its input tokens the cache served ([The assistant's benchmark](Rewrite-1.8.1#what-a-comparison-reports)).
-2. The system prompt, which changes only with the app's skills and its template: the template, then the rules (The rules), then the catalogue of the skills that no block class or plugin scopes (What a deployment adds).
+2. The system prompt, which changes only with the app's skills and its template: the template, then the rules (The rules), then the app's plugins and the board options that its packages define, which do not change while the board is open (The sections), then the catalogue of the skills that no block class or plugin scopes (What a deployment adds).
 3. The conversation's messages, those that the plugin keeps in its memory included ([The assistant's state](Rewrite-1.4.3#how-much-of-a-conversation-the-state-keeps)).
-4. The board and the focus as they are when the call goes out, which the plugin adds after the last message, and which the conversation never keeps.
+4. The board, as much of it as the Board section's cap holds, and the focus, as they are when the call goes out, which the plugin adds after the last message, and which the conversation never keeps (The sections).
 
 The plugin adds the board and the focus through pi's `transformContext`, which runs before each call, so that no call goes out for them alone.
 At a turn's first call, they show the board that the user's new message is about.
@@ -87,14 +88,17 @@ So the conversation keeps the note, as shinychat#375 asks of a message's context
 The plugin builds the note from what the store gives, with no text diff, since the store announces each change as a delta keyed by the ids of the blocks, links and stacks that it touches, with its origin ([Board updates](Rewrite-1.1.2#deltas)).
 For each conversation, it keeps a copy of the board's blocks, links and stacks as the conversation's previous call saw them, and the ids that each change since then touched, with the change's origin and, for a block, the args that the change set or unset.
 Before the conversation's next call, it compares the entry in the copy of each id that another origin touched with the board's.
-The note has a line for each that differs: added, removed, or changed, with what another origin changed of it, such as a block's name or the names of its args rather than their values, which `get_block_state` reads, and who changed it.
+The note says who changed each that differs.
+The blocks that one origin added share a line, as do those that it removed, with the links that came or went with them, as in `- Blocks d and e, with their links ad, de and be: removed by the user.`, and so do its other links and its stacks.
+Removing ten blocks with their links then takes one line rather than one for each block and each link, and the model reads those links as gone with their blocks rather than as a change of their own.
+Each entry that another origin changed has a line of its own, with what another origin changed of it, such as a block's name or the names of its args rather than their values, which `get_block_state` reads.
 So an arg set and set back leaves no line, and the note grows with what changed rather than with the board.
 A conversation's first call carries no note, since the conversation has no copy to compare with yet.
 Every conversation edits as the origin `assistant`, so the plugin tells the conversation's own edits from another conversation's by the turn that ran them, since one turn runs at a time ([The assistant's chat](Rewrite-1.4.4#while-a-turn-runs)).
 The store gives the undo that `/undo` asks for the origin `assistant` too, since it takes back the assistant's step, so the plugin counts that undo as the user's ([The assistant's chat](Rewrite-1.4.4#slash-commands)).
 The note comes before the board, which the call adds after the conversation's last message, so that the cache serves the conversation up to the note on the calls after.
 The board itself stays out of the conversation, since a board for every call would fill the model's context window.
-The note stays within `assistant_board_section_max_chars`, as each part of the Board section does.
+The note stays within `assistant_board_section_max_chars`, as the Board section does.
 The plugin records the changes while the board stays open, so the first call after the board opens again, as after a reload, carries no note of what changed before it.
 
 What the note holds and how much, so that the model stays in step without reading updates that it does not need, is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, version against version, such as this note against a summary of the board after others changed it.
@@ -106,7 +110,8 @@ A template that left them out would leave the model wrong about the board, as ab
 They name no tool, since each tool's definition gives the tool's description with every call, and a second copy in the rules would drift from it.
 They say:
 
-- That a message of the app's follows the conversation's last message before each call, with the board and what the user has on screen (What a call sends).
+- That a message of the app's follows the conversation's last message before each call, with the board and what the user has on screen (What a call sends), and that its Board section holds the whole board only where the board fits the section's cap, and otherwise what the call most likely needs first, with what it leaves out, so that the model reads a block that the section leaves out rather than taking it for absent (The sections).
+- That a request that names no block is most likely about the block that has focus, and otherwise about a block on screen, though a click can be old, so that a request that fits that block poorly, or names another, goes by the request, as the preamble of today's Focus section says (Today).
 - What each status of the Board section means, as the scheduler gives it, and that an `unevaluated` or `stale` block is work that the board defers, no fault and no reason to change the block, though no sign of health either, since it has raised nothing yet or its conditions come from its last evaluation (Today).
 - That what the model sees of the board is bounded, since a result's summary, the state that `describe_block` reports and a class's description are bounded, and the Board section shows no plugin's state in full, so the model reads what an edit relies on rather than guessing at it, or inventing a column or a value to fit a request.
 - That ids never change, so changing the id of a block, a link or a stack is a removal and an addition, which for a block evaluates again what is downstream, after asking the user (Today).
@@ -131,13 +136,27 @@ How to arrange the dock's views stays out of the template and the rules, which t
 
 ### The sections
 
-The plugin writes three sections from what `CoreApi` gives, in place of the generics `describe_board()` and `describe_block()` in R ([Assistant as a plugin](Rewrite-1.4#today)):
+The plugin writes four sections from what `CoreApi` gives, in place of the generics `describe_board()` and `describe_block()` in R ([Assistant as a plugin](Rewrite-1.4#today)):
 
 | Section | What it holds | Where it goes, within which cap |
 |---|---|---|
 | Skills | The name and description of each skill that the model may read and that no block class or plugin scopes, from the reply to `list_skills`, under today's preamble, changed as Today has it | The system prompt, after the template, each description cut at `assistant_skill_description_max_chars`, 1024, while the catalogue is not cut, and R logs a warning where it passes `assistant_skill_catalogue_max_chars`, 4000, as today |
-| Board | Today's parts: a line of counts, the blocks, each with its id, its class, the names of its state args, its status and the counts of its conditions, the links, the stacks, the board options that the board holds, the app's plugins but for the assistant's own, which `list_plugins` leaves out too, and, where the dock is the frontend and has more than one view, its views with the panels of each, from `store.board()`, `scheduler.status()` and `plugins.appPlugins()` | After the last message, each part within `assistant_board_section_max_chars`, 1500 |
-| Focus | The block that has focus in `CoreApi.focus`, the blocks and plugins on screen in `CoreApi.onScreen`, where the frontend sets it ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)), but for the assistant's own plugin, as the Board section leaves it out, and, where the dock is the frontend, the active view ([The dock's state](Rewrite-1.2.1#grids)), under its preamble | After the last message, after the board |
+| Plugins and board options | The app's plugins but for the assistant's own, which `list_plugins` leaves out too, each by its class's id and name, with the description that the schema of its state gives, from `plugins.appPlugins()`, and the board options that the app's packages define, each by its id and category, from `options.registered()` | The system prompt, after the rules, since neither changes while the board is open, each part within `assistant_board_section_max_chars` |
+| Board | A line of counts of the blocks, the links and the stacks, and of the blocks by each status that marks one, then the blocks, each with its id, its class, the names of its state args, its status and the counts of its conditions, the links into each block listed, the stacks that hold a block listed, each with the blocks listed and a count of its others, and, where the dock is the frontend and has more than one view, its views with the panels of each, the active one first, from `store.board()` and `scheduler.status()` | After the last message, within `assistant_board_section_max_chars`, 3000, for the whole section rather than for each part |
+| Focus | The block that has focus in `CoreApi.focus`, the blocks and plugins on screen in `CoreApi.onScreen`, where the frontend sets it ([Plugins](Rewrite-1.1.12#what-a-frontend-offers-other-plugins)), but for the assistant's own plugin, as the Board section leaves it out, and, where the dock is the frontend, the active view ([The dock's state](Rewrite-1.2.1#grids)), while its preamble is a rule (The rules) | After the last message, after the board |
+
+The Board section takes the blocks in this order, each with the links into it, until its cap runs out:
+
+1. The blocks that failed or are invalid, since a request about what went wrong needs them.
+2. The block that has focus.
+3. The blocks that the store's deltas touched since the conversation's previous call, those of the note of what others changed and those of the conversation's own edits (What changed under the model).
+4. The blocks on screen.
+5. The rest, in the board's order.
+
+The stacks of the blocks listed come next, and then the views.
+Each part that the cap cuts ends with a line that counts what it leaves out and names the tool that gives it, such as `… and 88 more blocks: list_blocks gives every block`, so that the model reads a block that the section leaves out rather than taking it for absent (The rules).
+A board of some 20 blocks fits the cap whole, in that order, while on a board of 100 the cap holds every block that failed or is invalid, the focus, the blocks that changed and those on screen, where cutting each part on its own held the first 23 blocks in the board's order and none that failed (notes).
+So what a call reads anew stops growing with the board, and what the cap leaves out is what a call is least likely to need (conditions 3 and 4).
 
 Each section keeps today's headings, lines and markers, with the client's names in place of R's, such as a class's registry id in place of its S3 class, and with these changes:
 
@@ -145,8 +164,11 @@ Each section keeps today's headings, lines and markers, with the client's names 
 - No `*` on args, and no list of what an extension lets others control, since every block's state and every plugin's state is open to external control on a board that is not locked ([Board updates](Rewrite-1.1.2#commands)).
 - The app's plugins in place of the extensions, each by its class's id and name, with the description that the schema of its state gives ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 - The new tools and commands in place of those that today's lines name, such as `get_plugin_state` in place of `list_views`, and core's command `blockr.core-set_option` in place of the tool `set_board_option` ([The assistant's tools](Rewrite-1.4.2#today)).
+- One cap for the whole Board section, filled in the order above, in place of a cap for each part, with the links into the blocks listed and the stacks naming only those blocks.
+- The app's plugins and the board options in the system prompt rather than the Board section, the board options as those that the app's packages define rather than those that the board holds, since neither changes while the board is open (condition 9).
+- The preamble of the Focus section as a rule (The rules), and the preamble of the message of the app's as one sentence that says that the app writes it (condition 9).
 
-So what the model reads of the board changes no more than the new tools ask, and the first comparison with today's baseline turns on the tools, the rules, the order and the note of what changed ([The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline)).
+So the first comparison with today's baseline turns on the tools, the rules, the order, the note of what changed and which blocks the Board section holds, which on a board that fits its cap are all of them ([The assistant's benchmark](Rewrite-1.8.1#todays-assistant-as-the-baseline)).
 
 ### What a package adds
 
@@ -230,6 +252,13 @@ A system message after the first goes in place only to the models whose `support
 
 Measured on 2026-11-17 through the loop of [blockr.assistant#259](https://github.com/BristolMyersSquibb/blockr.assistant/pull/259): on OpenAI's Chat Completions API, a turn on gpt-4o-mini called `list_blocks` and then answered from the board at its second call, where the message of the app's followed the tool's result, and the cache served 2,816 tokens of that call.
 The loop adds the message of the app's as a message of a role of its own among the messages of pi's agent, `app`, which the loop's `convertToLlm` turns into a message of the role user for the call, and on Anthropic's Messages API it moves pi's last mark to the last block of the message before it, through `onPayload`.
+
+Measured on 2026-11-18 on a stand-in for `CoreApi` in blockr.assistant's tests, holding a board of 100 blocks in ten stacks of ten, with 108 links, six board options, five plugins besides the assistant's, six views of the dock, three blocks that failed and two that are invalid, and the focus and the four blocks on screen in the first stack:
+
+- With each part of the Board section cut at 1500 characters, as [blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227) built it, the message of the app's held 6,561 characters, about 1,640 tokens at four characters a token.
+  Its Blocks held the first 23 blocks in the board's order and none of the five that failed or are invalid, its Links 33 of the 108, its Stacks every block's id again in 1,466 characters, and its Options and Plugins 935 characters that do not change while the board is open.
+- Uncut, the Board section held 13,912 characters, about 3,500 tokens.
+- A prototype that listed the blocks in the order of The sections within 2,000 characters, with the links into each on its line, the stacks and the views by name and count, and neither the plugins, the board options nor the preambles, held 2,559 characters, about 640 tokens, with the five blocks that failed or are invalid, the focus, three blocks that changed and the blocks on screen.
 
 The commits that shaped today's template hold the lessons behind its rules, such as "Warn that an off-screen block's conditions are a snapshot" ([16a97d3](https://github.com/BristolMyersSquibb/blockr.assistant/commit/16a97d3)), which carries over with the statuses, and "State commit/discard as a hard end-of-turn rule to the model" ([669444b](https://github.com/BristolMyersSquibb/blockr.assistant/commit/669444b)), which goes with staging, so the issue that writes the rules and the preambles reads each with `git log -p -- inst/prompts/system-prompt.md`.
 
