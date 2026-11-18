@@ -18,6 +18,6 @@
 - [Board options and blockr options](Rewrite-1.1.13), settled
 - [Notifications, logging and tracing: what the user is told and what is recorded where](Rewrite-1.1.14), settled
 - [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15), settled
-- [Board actions: menus, quick actions and advanced actions](Rewrite-1.1.16), review
+- [Board actions: menus, quick actions and advanced actions](Rewrite-1.1.16), settled
 
 <!-- dropped: Rewrite-1.1.6 -->
