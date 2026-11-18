@@ -15,7 +15,7 @@ How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evalua
 2. Each holds what a frontend needs to choose how and where to show it without reading its message: its severity, who raised it, and the board object that it concerns or the board, each apart from the other.
    So a frontend places a notification by either, such as on the card of the block that it concerns or next to the plugin that raised it.
 3. Core withdraws each notification once its cause has gone, so that a frontend can take down one that has gone stale.
-   A block's conditions go when the block's next reply replaces them, the conditions of R's reply to a request when R next replies to a request of the same name, unless the request's caller takes them itself, and the rest when whoever raised them withdraws them, and every one as the block, link or stack that it concerns leaves the board or the next board opens.
+   A block's conditions go when the block's next reply replaces them, those of R's reply to an ask of its output when the next such reply does, the conditions of R's reply to a request when R next replies to a request of the same name, unless the request's caller takes them itself, and the rest when whoever raised them withdraws them, and every one as the block, link or stack that it concerns leaves the board or the next board opens.
 4. A frontend reads those that hold as it draws, and hears each one that comes or goes.
    So one raised before it draws, such as the failure of a module that the reply names, still reaches the user.
 5. A frontend shows each notification where it draws what the notification concerns, such as on the card of the block or by the section or the panel of the plugin, and in a place for the whole board, such as a toast, only one for which it draws no such place, since the user cannot always tell from a toast where a failure lies.
@@ -93,6 +93,12 @@ interface Notification {
   about?: BoardObject;               // the board object that it concerns, none for the board
 }
 
+interface SourceModule {             // the package's module behind a notification, in one form whoever raised it
+  object: { plugin: PluginClassId } | { block: BlockId } | { option: OptionId };  // the board object whose module it is
+  renderer?: string;                 // the renderer, by its id, where the module is the renderer of a block's output or the one that draws a board option
+  package?: string;                  // the module's package, where core knows it
+}
+
 type BoardObject =                   // a board object by its id, a plugin by its class's
   | { block: BlockId } | { link: LinkId } | { stack: StackId } | { option: OptionId } | { plugin: PluginClassId };
 
@@ -102,23 +108,20 @@ interface RSource {                  // R, in a condition of its reply to what c
   request:
     | { type: "evaluate"; phase?: "expr" | "inputs" | "block_eval" | "result_summary" }
     | { type: "output" }
-    | { type: "block_class" | "output_class" | "option" | "plugin"; name: string }
-    | { type: "renderer"; renderer: string; name: string };
+    | { type: "block_class" | "output_class" | "renderer" | "option" | "plugin"; name: string };
+  module?: SourceModule;             // the module that made the request, none for an evaluation or an output, which core asks for
 }
 
 interface CoreSource {               // core, where it fails at something
   kind: "core";
   code: string;                      // what it is of: a code of the table below, "evaluation_unsent" or "output_unanswered"
-  package?: string;                  // the package whose module failed, where core knows it
-  renderer?: string;                 // the renderer of the block's output, by its id, where it is the module that failed
+  module?: SourceModule;             // the module whose code failed, where one did
 }
 
 interface ModuleSource {             // a package's module in the client
   kind: "module";
-  object: { plugin: PluginClassId } | { block: BlockId } | { option: OptionId };  // the board object whose module raised it
+  module: SourceModule;              // the module that raised it
   code: string;                      // the package's own, such as "render_failed"
-  package?: string;                  // the package whose module raised it, where core knows it
-  renderer?: string;                 // the renderer of the block's output, by its id, where it raised it
 }
 
 interface Raised {                   // what a package's module gives notify()
@@ -139,14 +142,15 @@ A frontend reads `get()` as it draws and follows `subscribe()` from then on, the
 The type takes the term's name, `Notification`.
 The browser has a global of that name too, for desktop notifications, and it stays usable: core's type hides only the browser's type, and only in a module that imports core's, where the browser's constructor still works.
 A plugin names itself as the first argument of `notify()`, as it does for `request()`, since `CoreApi` is one object for every plugin and cannot tell who calls it, and core makes the source from it, with the package from the class's id.
-A module that core mounts raises one through its host's `notify()`, which takes what a plugin gives and fills in the block or the board option that the module belongs to, with the module's package ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A module that core mounts raises one through its host's `notify()`, which takes what a plugin gives and fills in the module: the block or the board option that it belongs to, the renderer where it is one, and its package ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 A board option's `onChange()` raises one through the `notify` that it gets beside the value ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 A notification of a module concerns the module's own board object unless it names another, or the board with `null`.
 What a mounted module raises holds until its mount ends at the latest, and what an `onChange()` raises until its next call returns.
 The code lets a frontend choose how to draw a notification, such as a button that reloads the page for core's `page_reload_needed`, while a class vector stays R's, on R's conditions alone.
 The source lets a frontend say who raised one, and lets a plugin find its own.
-A block has two modules, its class's UI module and the renderer of its output, so core's source and a module's name the renderer, by its id, where it is the module that failed or raised the notification, as R's names the renderer of a renderer's own request.
-One of a block's modules without it comes from the block's UI module.
+Each source names the module behind a notification in `module`, in the one form of `SourceModule`, so that a frontend reads which module a notification is of in one way, whoever raised it: the module that made R's request, the module whose code core found failing, or the module that raised it ([blockr.core#615](https://github.com/BristolMyersSquibb/blockr.core/pull/615)).
+A block has two modules, its class's UI module and the renderer of its output, and so has a board option, its own module and the renderer that the app may name to draw its value in place of its UI, so a module names the renderer, by its id, where it is one.
+A module without a renderer is the block's UI module, the board option's own module or the plugin class's module.
 
 Core makes a block's notifications from the conditions of its status, one for each, and derives them from the scheduler rather than copying them.
 So `scheduler.status()` keeps a block's conditions for the frontends and hosts that read them ([UI modules in JS](Rewrite-1.1.7#the-contract)), and the two never differ.
@@ -156,9 +160,9 @@ Why a block is invalid or waiting is no condition but the reason that its status
 A block's notification takes its id from the block, the severity, the source and the message.
 So the same condition in the block's next reply keeps its id, and a frontend can tell that it has shown it already, as a toast that the user closed stays closed today while its condition holds.
 Two conditions of one reply that share all four are one notification, as today's toasts show such a condition once.
-Where R cannot make a block's output, core raises a notification with the condition that the output's host gives through `error()`, concerning the block, until the block's next output arrives ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-It is R's, of the request `output`, or core's, of the code `output_unanswered`, where the ask got no reply or R's error held no condition.
-Where R replies to a request, ok or error, core raises a notification for each condition of the reply, R's, with the request's type and name, which concerns what the request was made for: the block of a block class's, an output class's or a renderer's request, the board option, or the plugin.
+Where R replies to an ask of a block's output, ok or error, core raises a notification for each condition of the reply, R's, of the request `output`, which concerns the block, in place of those of the reply before, so that a warning of an output that R made reaches the user as the error of one that it could not make does ([blockr.core#607](https://github.com/BristolMyersSquibb/blockr.core/pull/607), [blockr.core#614](https://github.com/BristolMyersSquibb/blockr.core/pull/614)).
+Where an ask fails without an error from R, as where it gets no reply or where R's error reply holds no condition of the severity `error`, core raises one of its own beside them, of the code `output_unanswered`, with the failure that the output's host gives through `error()` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+Where R replies to a request, ok or error, core raises a notification for each condition of the reply, R's, with the request's type and name and the module that made it, which concerns what the request was made for: the block of a block class's, an output class's or a renderer's request, the board option, or the plugin.
 It holds until R next replies to a request of the same name for that board object, so that a request that fails again keeps its notifications, and one that succeeds with no condition withdraws them.
 A request that fails still rejects to its caller with the conditions.
 A caller that shows the conditions itself, or hands them on, as the assistant hands them to the model ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)), takes their notifications through the request's `notifier` instead, a plugin and a module that core mounts alike, since a frontend cannot tell the assistant's requests from another plugin's ([Taking a call's notifications](#taking-a-calls-notifications)).
@@ -168,12 +172,12 @@ Each names what failed and what needed it, and its source is core's, with the co
 
 | What | Severity and code | Concerns | Withdrawn when |
 |---|---|---|---|
-| A module that cannot draw: a block's UI, a renderer, a board option's UI or a plugin's UI ([UI modules in JS](Rewrite-1.1.7#the-contract)) | Error, `module_failed` | The block, board option or plugin, with the module's package | The next board opens, or the block leaves the board |
-| A board option that does not go onto the board, since no available package defines it or its default fails or does not fit its schema ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)) | Error, `board_option_failed` | The board option | The next board opens |
-| An `onChange` that throws ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) | Error, `on_change_failed` | The board option, with its package | Its next call returns |
-| A module that the reply names for a plugin class or a board option, and that fails to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Error, `module_failed` | The plugin class or the board option, with the module's package | The next board opens |
-| A plugin's `start` that throws ([Plugins](Rewrite-1.1.12#running-a-plugin)) | Error, `plugin_start_failed` | The plugin, with its class's package | The next board opens |
-| A board that core could not open: one that the app's storage plugin named but that holds no JSON or fails to open, one that the store's check refuses as `store.open()` is called, so that the board on the page stays open, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The storage plugin that named it, with its package, or else the board | The next board opens |
+| A module that cannot draw: a block's UI, a renderer, a board option's UI or a plugin's UI ([UI modules in JS](Rewrite-1.1.7#the-contract)) | Error, `module_failed` | The block, board option or plugin, naming the module | The next board opens, or the block leaves the board |
+| A board option that does not go onto the board, since no available package defines it or its default fails or does not fit its schema ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)) | Error, `board_option_failed` | The board option, naming its own module where an available package defines it | The next board opens |
+| An `onChange` that throws ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)) | Error, `on_change_failed` | The board option, naming its own module | Its next call returns |
+| A module that the reply names for a plugin class or a board option, and that fails to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Error, `module_failed` | The plugin class or the board option, naming the module | The next board opens |
+| A plugin's `start` that throws ([Plugins](Rewrite-1.1.12#running-a-plugin)) | Error, `plugin_start_failed` | The plugin, naming its class's module | The next board opens |
+| A board that core could not open: one that the app's storage plugin named but that holds no JSON or fails to open, one that the store's check refuses as `store.open()` is called, so that the board on the page stays open, or one that fails to open after core's check, so that core opens the board before again ([Drawing the board](Rewrite-1.1.8#opening-a-board)) | Error, `board_open_failed` | The storage plugin that named it, naming its module, or else the board | The next board opens |
 | An edit that the store or the command registry refuses, which a plugin made through `CoreApi` or a module through its host's `submit()`, and whose caller takes no notifications ([Taking a call's notifications](#taking-a-calls-notifications)) | Error, `board_edit_failed` | The board for a plugin's edit, whatever block the edit names, since core cannot tell which plugin made it, and the block or the board option for a module's | The same refusal again, which raises it anew, or the next board opens |
 | A later reply to `hello` that names a package at another version than the page loaded, for which core asks the user to reload the page ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)) | Warning, `page_reload_needed` | The board, naming the packages | A later reply to `hello` that names the versions that the page loaded, or one that names other versions again, which raises it anew with them, and the next board opens, which raises it again while the versions differ |
 | What the store dropped as the board opened ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)) | Warning, `board_objects_dropped` | The board, naming each object with its package | The next board opens |
@@ -199,7 +203,7 @@ A failure inside core's own machinery, such as a subscriber that throws or a dem
 
 Core withdraws every notification as the next board opens, since an opening ends everything core runs for the board ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 It withdraws every notification that concerns a block, a link or a stack as that leaves the board, with those of a block's modules, and a module's own as the module withdraws it.
-A notification raised about a block, a link or a stack that the board no longer holds holds nothing, since the work that raises one, such as a plugin's request, can outlive what it concerns, and core logs it at debug ([Logging](#logging)).
+A notification raised about a block, a link or a stack that the board no longer holds holds nothing, whoever raised it, since the work that raises one, such as a plugin's request, can outlive what it concerns, and core logs it at debug ([Logging](#logging)).
 Core logs one about a board object that the board has never held, and one from a plugin that the app does not run, at error, since only a mistake in the module names one, and `notify()` refuses one whose members are of the wrong kind, as a module in plain JS may give.
 Core's own notifications and those of R's replies to requests take their ids from what they hold, so that a failure raised twice, as by two mounts of one module, is one notification, which holds until each raise of it is withdrawn, while those of modules take a count within the opening.
 
@@ -243,7 +247,7 @@ A frontend may one day also show some as desktop notifications, such as an error
 Core's basic frontend shows each notification once, on a block's card, by a plugin's section or as a toast:
 
 - A block's card shows the notifications about the block, whoever raised them, of the severities that core's `show_conditions` board option names, which are warnings and errors unless a script, a file or the user sets others.
-  Those are the conditions of the block's status, a module of the block that cannot draw, an output that R could not make, a request of the block that failed, and what the block's modules and plugins raise about it, since core draws none of them in an element of the card.
+  Those are the conditions of the block's status and of R's replies to an ask of its output or to its requests, a module of the block that cannot draw, an output that core could not get, and what the block's modules and plugins raise about it, since core draws none of them in an element of the card.
 - A plugin's section shows the notifications about the plugin, of the same severities, as pills on its title beside the plugin's name, whether the section is open or collapsed, as a card's pills count a block's: the pill of the errors reads "error", and those of the warnings and the messages count them, as "2 warnings" ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)).
   Each pill opens the messages of its notifications below the title, as a card's pill opens its banners, but closed at first, since the plugin shows them in its UI, so that the user can still read one that the plugin does not show, such as why its UI cannot draw.
   Those are what the plugin raises about itself, the conditions of its requests, and what core raises about it, such as its module that cannot draw or its `start` that throws.
@@ -261,14 +265,22 @@ The toasts take the place of the list above the board, which moves the board eac
 
 Every log line, in R and in the client, has a level, a message and the package that wrote it.
 Packages write log lines through one API on each side: `write_log()` and its wrappers in R, as today, and `log` in the client.
-A logger writes the lines out, the console's by default, and a deployment swaps it for OpenTelemetry's without changing a package ([Where the records go](#where-the-records-go)).
-In R it sets the blockr option `logger` to `otel_logger()` in place of `cat_logger()`, and in the client it sets the blockr option `otel_client_endpoint`.
+A logger writes the lines out, and the blockr option `logger` names it on both sides, by a string that R and the client both read, since a function tells the client nothing and R cannot send one to it ([blockr.core#612](https://github.com/BristolMyersSquibb/blockr.core/pull/612)):
+
+- With `"console"`, R writes an error to standard error and any other line to standard output, and the client writes each line to the browser's console.
+- With `"otel"`, each side writes each line as a record through OpenTelemetry: R through `otel::log()`, and the client to the collector that the blockr option `otel_client_endpoint` names ([Where the records go](#where-the-records-go)).
+- With `"condition"`, R signals an error or a warning as a warning and any other line as a message, which a test catches as such, and the client writes to the console, since the browser has no conditions.
+
+Where `logger` is not set, each side writes through OpenTelemetry where it has somewhere to send, R where OpenTelemetry has set up an exporter of logs and the client where `otel_client_endpoint` names a collector, and to the console otherwise.
+So a deployment swaps the logger without changing a package, and one that sends its records to a collector sets nothing more.
+Where `logger` is `"otel"`, each side stops where it has nowhere to send: R fails to write a line where OpenTelemetry has set up no exporter, and `serve()` stops before the app's first session where `otel_client_endpoint` names no collector, so that a deployment learns of it before a page starts, while the client checks again as the page starts.
+Any other value of `logger`, a function among them, is an error.
 The blockr option `log_level` sets the lowest level written, on both sides, and is info unless it names another.
 
-In R, the blockr option `logger` picks the logger, as today, and core adds `otel_logger()`, which writes each line through `otel::log()`, with its level as the record's severity and its package as an attribute.
-Where no SDK exports logs, `otel_logger()` writes as `cat_logger()` does, so that no line is lost.
-Since `otel_logger()` records the level and the package as fields of their own, `write_log()` hands its logger the message as written, its level and its package, where today it hands over one finished line (Today).
-So `cat_logger()` itself adds the prefix of level, time and package, as the blockr options `log_time` and `log_mem` set, and wraps the text.
+In R, OpenTelemetry's logger writes each line through `otel::log()`, with its level as the record's severity, and with its package, the session whose message R handles as it writes the line, and the line's attributes as the record's attributes.
+Since it records the level and the package as fields of their own, `write_log()` hands its logger the message as written, its level and its package, where today it hands over one finished line (Today).
+So the console's logger, and the one of `"condition"`, add the prefix of level, time and package themselves, as the blockr options `log_time` and `log_mem` set, and wrap the text.
+Core works the logger out as it first needs one and keeps it for the process, and `serve()` works it out afresh as it starts an app, so a test that changes the blockr option calls `reset_logging()` for core to work it out again.
 With otelsdk's exporter over HTTP, the records leave R from a background thread, so that R's own thread only queues each one.
 The evaluator and the transport log what they fail at, at error, naming the request where there is one, and what they ignore, at warn or debug.
 R also logs every condition that it sends in a reply, of an evaluation, an output or a request, at the level of its severity: a message at info, a warning at warn and an error at error.
@@ -291,11 +303,15 @@ interface Log {
 
 The levels are R's but for fatal, which stops R and has nothing to stop in the client.
 Core logs every failure that it catches at error, with its stack, through its own `log`, where `report()` throws it from a microtask today, and so it logs every failure that it raises a notification for too.
-Core reads `log_level` with the blockr options that it reads as the page starts ([Drawing the board](Rewrite-1.1.8#starting-the-page)), and drops a line below that level before any logger sees it.
-The console's logger writes each line with `console.error()`, `console.warn()`, `console.info()` or `console.debug()`, and puts its package's name in front of it.
-OpenTelemetry's logger, which core uses once the blockr option `otel_client_endpoint` names a collector, sends each line as a log record from the browser to that collector, in batches, and sends what it holds as the page is hidden.
+Core reads `log_level`, `logger` and `otel_client_endpoint` with the blockr options that it reads as the page starts ([Drawing the board](Rewrite-1.1.8#starting-the-page)), and drops a line below that level before any logger sees it.
+A value that the client does not take stops the page, as a bad value of the scheduler's options does: a `log_level` that names no level, a `logger` that names none of the three, and an `otel_client_endpoint` that is no URL over HTTP or HTTPS, while the client takes a level by the start of its name, as R's `as_log_level()` does.
+Core holds every line logged before it has set the logger up, which includes the time that the OpenTelemetry module takes to load, and then writes those that reach the level, each with the time when it was logged, so that what fails as the page starts reaches the logger too.
+Where the page fails before core sets up any logger, core writes what it holds to the console, at info, and where the OpenTelemetry module fails to load, it writes to the console and logs why there.
+The console's logger writes each line with `console.error()`, `console.warn()`, `console.info()` or `console.debug()`, puts its package's name in front of it, and leaves out the attributes, as R's console logger does.
+OpenTelemetry's logger sends each line as a log record from the browser to the collector's path `v1/logs`, in batches, and sends what it holds as the page is hidden.
+It logs an `Error` with the stack of each of its causes after its own, each after `Caused by: `, since core wraps most errors that it catches, and the stack of the wrapper points at core's own catch.
 R does none of that work.
-Tests replace the logger with one that holds the lines, as `reports()` holds what `report()` queues today.
+Tests replace the logger with one that holds the lines, and a test fails where it logs an error that it does not capture, as an error that `report()` threw failed it today, while the stub of `CoreApi` holds each line that a plugin logs, so that a package's test checks what its plugin logged ([UI modules in JS](Rewrite-1.1.7#testing)).
 
 ### Tracing
 
@@ -318,12 +334,14 @@ Each request carries the context of the client's span in `traceparent`, in the f
 So R's span is a child of the client's, and one trace runs from the edit, through R, to the reply.
 The client sends `traceparent` only while it records spans, and R ignores it while it records none.
 Both sides name the session in every record and span by `session.id`, Shiny's session token, as Shiny's own telemetry does (Today), so that a collector joins a session's records from R and from the browser.
+R hands the client the token in the message that starts a session, as `token` beside `body_url`, which the Shiny transport gives core through an optional `sessionId()` of its `Transport` ([Wire protocol](Rewrite-1.1.9#the-shiny-transport)).
 
 ### Where the records go
 
 A deployment sends the records of both sides to one OpenTelemetry collector, which passes them on wherever it is set to.
 R exports through otelsdk, which OpenTelemetry's environment variables set, or, for traces, Connect's own setup for content that opts in (Today).
-The browser exports to the address that the blockr option `otel_client_endpoint` gives, which every user's browser must reach.
+The browser exports to the collector whose base URL the blockr option `otel_client_endpoint` gives, at its path `v1/logs`, as an SDK sends to `OTEL_EXPORTER_OTLP_ENDPOINT`, so that traces can go to `v1/traces` of the same collector, and a relative URL is read against the page.
+Every user's browser must reach that URL.
 A record from the client holds what R's log lines hold, so the collector needs the care that wherever R's logs go needs.
 
 On Connect, that address is best a collector run beside Connect under Connect's host name, such as `https://connect.example.com/otlp/`.
@@ -360,13 +378,14 @@ Core checks that a notifier is a function, as it checks `conditions` today, sinc
 The React SDK's `useNotified()` in `srcts/react/hooks.ts` takes a block, or null for every notification, and takes a board object instead, so that a plugin's UI and the basic frontend's sections read those about a plugin as a card reads those about its block.
 A section's pills reuse what draws a card's, `Pills` and `Banners` in `srcts/card/footer.tsx`, in `srcts/modules/basic/plugins.tsx`, which draws each section as a `<details>` whose `<summary>` holds the plugin's name.
 
-A logger in R becomes a function of the message, its level and its package, which also gets `asis`, whether to keep the message's line breaks rather than wrap it.
-The one logger in the workspace outside core, `blockr.logger = function(msg, level)` in the tests of blockr.assistant (`tests/testthat/helper-skills.R`), takes the new arguments.
+Each of R's loggers is a function inside core of the message, its level and its package, which also gets `asis`, whether to keep the message's line breaks rather than wrap it, and the blockr option `logger` names one by its string.
+The one logger in the workspace that core does not set, in the tests of blockr.assistant (`tests/testthat/helper-skills.R`), names `"condition"`.
 Whether otel logs at all is `otel::is_logging_enabled()`, which is false until otelsdk is configured, as through `OTEL_LOGS_EXPORTER=otlp` and `OTEL_EXPORTER_OTLP_ENDPOINT`.
 The OTLP/HTTP exporters of otelsdk 0.3.0 export from a worker thread of opentelemetry-cpp's batch processors, and drop a record when their queue of 2,048 is full, while its file and console exporters write on R's thread, which a deployment avoids for that reason ([src/stdstream.cc](https://github.com/r-lib/otelsdk/blob/main/src/stdstream.cc)).
 
 The client's OpenTelemetry logger and its tracing are a module of core's that core imports only where `otel_client_endpoint` is set, so that a page without telemetry loads none of it.
-It builds on `@opentelemetry/sdk-logs`, stable since the JS SDK's 3.0.0, and on `@opentelemetry/exporter-logs-otlp-http`, still marked experimental, which send OTLP's JSON encoding, stable for logs and traces, by `fetch`, about 15 to 20 kB gzipped for logs, and on the 3.x trace SDK, `@opentelemetry/sdk-trace` with its `StackContextManager`, and its OTLP/HTTP exporter ([JS SDK 3.0.0](https://github.com/open-telemetry/opentelemetry-js/releases/tag/v3.0.0)).
+The page hands core that import, as `otel` of `StartOptions`, which `startPage()` gives as an import of `@blockr/core/otel`, since the stubs run core without a page and their bundle splits nothing, so that an import inside core would put the SDK into `@blockr/core/stubs`.
+It builds on `@opentelemetry/sdk-logs`, stable since the JS SDK's 3.0.0, and on `@opentelemetry/exporter-logs-otlp-http`, still marked experimental, which send OTLP's JSON encoding, stable for logs and traces, by `fetch`: the parts that core uses, `@opentelemetry/api` among them, ship minified in `opentelemetry-<hash>.js`, at 43 kB, or 14 kB gzipped, which R serves gzipped as httpuv serves every file, while core's own code stays readable in `blockr-core-otel.js`, at 2 kB ([blockr.core#612](https://github.com/BristolMyersSquibb/blockr.core/pull/612)), and on the 3.x trace SDK, `@opentelemetry/sdk-trace` with its `StackContextManager`, and its OTLP/HTTP exporter ([JS SDK 3.0.0](https://github.com/open-telemetry/opentelemetry-js/releases/tag/v3.0.0)).
 The browser's batch processor sends what it holds on `visibilitychange` to hidden, with `fetch`'s `keepalive`.
 The Logs API is part of `@opentelemetry/api` from 1.10.0, which replaced `@opentelemetry/api-logs`.
 A collector at another origin than the page lists the page's origin in its OTLP/HTTP receiver's `cors.allowed_origins`, and never `*`, since its responses allow credentials.
