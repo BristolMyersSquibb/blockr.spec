@@ -38,7 +38,7 @@ Core gives one `CoreApi` to the module of every plugin, a frontend's among them,
 interface CoreApi {
   store: Store;                    // board(), subscribe(), apply(), open(), from Board updates, whose refusals core raises unless the call's notifier takes them
   commands: Commands;              // run(), plan() and the command registry, for board actions and shortcuts, whose refusals core raises unless run()'s notifier takes them
-  boardActions: BoardActions;      // on(), menu(), trigger(), mountAdvanced() and select(), from Board actions
+  boardActions: BoardActions;      // on(), menu(), trigger() and mountAdvanced(), from Board actions
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() and subscribe() alone, from Evaluation in the client
   blockRegistry(): BlockRegistry;  // the block registry's entries by registry id, for pickers, which change as another board opens
   options: Options;                // register(), the board options packages define, by id, and value(), the board's value, which the board holds for every board option that something on the page requires
@@ -53,6 +53,7 @@ interface CoreApi {
   notifications: { notify(plugin: PluginClassId, n: Raised): () => void; get(): readonly Notification[]; subscribe(fn: (all: readonly Notification[]) => void): () => void };   // every notification of the open board, which the frontend draws, from Notifications, logging and tracing
   log(pkg: string): Log;           // log lines that name the package, from Notifications, logging and tracing
   focus: { get(): BlockId | null; set(block: BlockId | null): void; subscribe(fn: (block: BlockId | null) => void): () => void };   // which block has focus, which the frontend sets
+  selection: { get(): BoardObject[]; set(objects: BoardObject[]): void; subscribe(fn: (objects: BoardObject[]) => void): () => void };   // the board objects that the user selected, which whatever selects sets, as the DAG does, from Board actions
   onScreen: OnScreen;              // which blocks and plugins are on screen, which the frontend sets, from Plugins
   show(object: { block: BlockId } | { plugin: PluginClassId }): Promise<void>;   // has the frontend show a block or a plugin in its own way, and gives a block focus, from Plugins
   request<T = Json>(plugin: PluginClassId, name: string, args?: Json, opts?: RequestOpts): Promise<T | Blob>;   // a plugin's request, by its class's id, as Plugins has it

@@ -186,9 +186,9 @@ The "…" button opens the block's menu of board actions on a click, or on Arrow
 Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and the dock draws it as the design system's menus are drawn ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
 
 1. Rename shows a field with the block's name in the menu, while a double click on the title renames the block in place ([The header](#the-header)).
-2. Append block, Prepend block, Create link, Create stack and Edit inputs show their quick actions in the menu, Append block's as the dock's "+" menu is drawn today, and their advanced actions in the dock's sidebar.
+2. Append block, Prepend block, Create link and Create stack show their quick actions in the menu, Append block's as the dock's "+" menu is drawn today, and their advanced actions in the dock's sidebar, where Edit inputs, which has no quick action, opens at once.
 3. Copy block ID shows the id as monospaced meta text, and puts it on the clipboard.
-4. Remove block, in the last group, after a divider, shows the bin icon and the danger colour, and runs `blockr.core-remove_block`.
+4. Remove block, in the last category, after a divider, shows the bin icon and the danger colour, and runs `blockr.core-remove_block`.
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
 So the menu offers what every menu of a block offers, the DAG's included ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
