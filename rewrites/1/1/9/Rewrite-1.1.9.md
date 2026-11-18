@@ -129,7 +129,7 @@ An output class's request, or a renderer's, carries the board options and parame
 ```json
 { "id": "18", "kind": "request", "type": "block_class", "registry_id": "blockr.core-head_block", "name": "n_max", "block": "b", "args": {},
   "reads": [ { "input": "data", "block": "a", "revision": 2 } ] }
-{ "id": "18", "status": "ok", "value": [150] }
+{ "id": "18", "status": "ok", "value": [150], "conditions": [] }
 
 { "id": "19", "kind": "request", "type": "option", "option": "data_dir", "name": "list_dir", "args": { "path": "~" } }
 { "id": "20", "kind": "request", "type": "plugin", "plugin": "blockr.code-code_plugin", "name": "script", "args": {},
@@ -137,11 +137,11 @@ An output class's request, or a renderer's, carries the board options and parame
 
 { "id": "22", "kind": "request", "type": "output_class", "output": { "block": "c", "revision": 7 }, "name": "download", "args": { "format": "pptx" },
   "options": {}, "params": {}, "body": { "type": "image/png" } }
-{ "id": "22", "status": "ok", "body": { "type": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "name": "chart.pptx" } }
+{ "id": "22", "status": "ok", "body": { "type": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "name": "chart.pptx" }, "conditions": [] }
 
 { "id": "35", "kind": "request", "type": "renderer", "output": { "block": "a", "revision": 3 }, "renderer": "blockr.ui-table_preview", "name": "labels",
   "args": {}, "options": { "n_rows": 50 }, "params": {} }
-{ "id": "35", "status": "ok", "value": { "USUBJID": ["Unique Subject Identifier"], "AGE": ["Age"] } }
+{ "id": "35", "status": "ok", "value": { "USUBJID": ["Unique Subject Identifier"], "AGE": ["Age"] }, "conditions": [] }
 ```
 
 What R runs for the client comes in these flavors, which differ in who defines and calls them, whether the client keeps what they answer, and whether they may write:
@@ -171,7 +171,7 @@ An output request asks for the output that the coercion its block class names in
 { "id": "21", "kind": "output", "block": "b", "revision": 4, "options": { "n_rows": 50 },
   "info": { "width": 640, "height": 400, "pixel_ratio": 2, "bg": "#ffffff", "fg": "#212529", "accent": "#0d6efd", "font": "Inter" },
   "params": {} }
-{ "id": "21", "status": "ok", "output": { "renderer": { "id": "blockr.core-table_output", "module": "blockr.core/js/basic-table.js?v=b7e2a915" }, "columns": [], "rows": [], "total": 150 } }
+{ "id": "21", "status": "ok", "output": { "renderer": { "id": "blockr.core-table_output", "module": "blockr.core/js/basic-table.js?v=b7e2a915" }, "columns": [], "rows": [], "total": 150 }, "conditions": [] }
 ```
 
 An output is a description in JSON whose `renderer` is the renderer that draws it, with its id and where R serves its module, which the client loads the first time an output names it, unless it loaded it already as the renderer that the block registry entry names, and mounts to draw it ([Drawing the board](Rewrite-1.1.8#renderers)).
@@ -310,7 +310,7 @@ When it reconnects, shiny.js 1.14.0 sends the new session the last value of ever
 How a body travels was settled by measuring as the transport was built ([blockr.core#455](https://github.com/BristolMyersSquibb/blockr.core/pull/455)).
 A body from R of up to the blockr option `max_message_body` bytes, by default 1 MiB, or 4 MiB in binary frames, goes in its reply's message where the message then stays within `max_message_size`, as base64 in the JSON, a third larger, and any other from a session-scoped URL that `session$registerDataObj()` serves, which the browser fetches itself, so that a download streams to disk and no large body holds up the messages behind it on the websocket ([blockr.core#400](https://github.com/BristolMyersSquibb/blockr.core/issues/400)).
 A body goes in a binary frame from `session$sendBinaryMessage()` only where the blockr option `message_body_encoding` is `"binary"`, which is off by default, since Shiny Server's proxy writes each message of R's into the page's channel as text.
-A body from the client is posted to another such URL, which R gives the client in the message that starts each session, `{ "body_url": ..., "max_request_size": ..., "max_message_size": ... }`, so that the deployment's `shiny.maxRequestSize` still limits it, while the client never goes through Shiny's `uploadInit`, which was never faster.
+A body from the client is posted to another such URL, which R gives the client in the message that starts each session, `{ "body_url": ..., "token": ..., "max_request_size": ..., "max_message_size": ... }`, beside the session's token, by which the client's log records and spans name the session ([Notifications, logging and tracing](Rewrite-1.1.14#tracing)), so that the deployment's `shiny.maxRequestSize` still limits it, while the client never goes through Shiny's `uploadInit`, which was never faster.
 Core's output classes carry one page of rows as JSON, so core needs no Arrow writer, and an output class that needs one brings its own.
 
 Neither Shiny 1.14.0 nor httpuv 1.6.17 bounds a message on the websocket: httpuv grows a message from the client frame by frame with no maximum ([src/websockets.cpp#L343-L380](https://github.com/rstudio/httpuv/blob/5e3d6827c284210b6a7cba7009cf73beb2e03525/src/websockets.cpp#L343-L380)), Shiny writes R's JSON to the socket as it is, and its option `shiny.maxRequestSize` bounds only HTTP requests ([R/middleware.R#L311-L330](https://github.com/rstudio/shiny/blob/dffc756a2867533fafc0858baf4c3fdbed165692/R/middleware.R#L311-L330)).
