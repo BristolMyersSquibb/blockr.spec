@@ -17,6 +17,7 @@ Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this pag
 3. A plugin can show its own panel or a block's in the active view, and change which views hold which panels, as today's extensions can.
 4. The dock asks nothing of a plugin beyond what core's `PluginClass` holds, so that every plugin works under the dock as under any other frontend.
 5. What today's extensions take from the dock carries over where a package still needs it, as condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) asks, and Today names what goes, with the reason.
+6. A warning or an error about a plugin shows on its panel's tab wherever the tab shows, and one about a plugin whose panel the active view does not hold reaches the user as a toast, from which the user reaches the panel.
 
 ## Today
 
@@ -109,11 +110,18 @@ Today's sidebar shows only the code export on a locked board ([R/board-options.R
 
 ### Places besides the panel
 
-Besides the panel, the dock gives plugins what every frontend gives them: it draws the notifications of `CoreApi` ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)), and the controls of the app's storage plugin in its navbar ([The dock's navbar](Rewrite-1.2.5#the-storage-plugins-controls)).
+Besides the panel, the dock gives plugins what every frontend gives them: it draws the notifications of `CoreApi` ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)), and the controls of the app's storage plugin in its navbar ([The dock's navbar](Rewrite-1.2.5#the-storage-plugins-controls)).
 It draws the menus and quick actions of board actions with its own menus, and shows their advanced actions in its sidebar, which the user may pin, through the two members that core's `FrontendModule` offers every frontend ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 What those controls cannot hold, the storage plugin draws in a dialog of its own, in the top layer, which the dock does not place, as it places no plugin's dialog ([A plugin's panel](#a-plugins-panel)).
 The dock offers plugins no other place, so it declares no member of its own on core's `PluginClass`, and reads no member of a plugin's class beyond core's, as core's basic frontend reads none ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares ([TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)), and which changes nothing for the plugins that do not set it.
+
+A plugin shows the notifications about itself in its panel, as every plugin with a `ui` does, and the dock tells the user that a warning or an error about the plugin holds with a dot on the panel's tab, in the design system's danger colour for an error and its amber set for a warning, whichever panel the tab group or rail shows, so that a collapsed rail, which shows its tabs alone, shows the dot too ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
+A tab has no room for a badge that counts them, as core's basic frontend draws on a plugin's section.
+The tab's tooltip holds their messages, so that the user can read one that the plugin does not show, such as why its UI cannot draw.
+Where the active view holds no panel of the plugin, the dock shows each notification about the plugin as a toast, which names the plugin, with a link that shows the panel: it makes the first view of the navigation that holds the panel the active one and shows the panel there, or, where no view holds it, adds it to the active view at the default place, as `blockr.dock-show_panel` does ([Showing a panel](#showing-a-panel)).
+Such a toast goes once the active view holds the panel, since the dot then shows on its tab.
+A plugin without a `ui`, such as the storage plugin, has no panel, so the dock shows its notifications as toasts, as it shows those about the board, a link, a stack or a board option ([Block cards in the dock](Rewrite-1.2.7#notifications)).
 
 The dock draws no picker or editor of its own for a plugin, since a plugin triggers board actions, whose UI the package that registers each one writes ([Board actions](Rewrite-1.1.16#a-board-action)).
 So the DAG's menus offer core's board actions, with the block picker and the editors of links, inputs and stacks, which the dock draws in its menus and its sidebar, where today the DAG opens the dock's through the dock's actions ([Client-drawn DAG](Rewrite-1.3)).

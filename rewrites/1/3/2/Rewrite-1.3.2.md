@@ -81,7 +81,7 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   The DAG checks nothing while the user drags.
   As the user drops the link on a handle, the DAG runs `blockr.core-add_link`, whose preflight refuses a link that would close a cycle, join a block to itself or feed an input that a link feeds already ([Board actions](Rewrite-1.1.16#cores-board-actions)).
   Where the command is refused, the board gains no link, so the DAG draws none.
-  The DAG then tells the user why through an error of the code `edit_refused`, with the reason that the refusal gives, as core's basic frontend does for its own edits ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+  The DAG then shows the user why where the link was dropped, with the reason that the refusal gives, as every plugin with a UI shows what fails of what the user did in it, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 - Dropping a link on the canvas, away from every node and stack, triggers Append block from a block's result, or Prepend block from an input, at the drop.
   The DAG adds `blockr.dag-change_position` with the drop to the board action's step, through `trigger()`'s `extend`, so that the new block lands at the drop ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   A link dropped on a node or on a stack's box, away from its handles, adds nothing, as today's does.

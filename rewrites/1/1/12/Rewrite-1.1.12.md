@@ -236,7 +236,8 @@ type StorageControl =
 A storage plugin gives as many controls of these three kinds as it needs, and a menu holds buttons, statuses and further menus.
 A frontend draws each kind in its own look, and chooses where the controls go and how they give way on a narrow bar.
 It draws them again whenever `subscribe()` calls back, and it binds the `shortcut` of each button, which takes the form of a command's ([Board updates](Rewrite-1.1.2#commands)).
-It shows a `run()` that rejects as a notification ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A storage plugin tells the user why one of its controls failed through a notification of its own, as core's file storage plugin raises an Open whose file it cannot read as an error of the code `board_open_failed`, since the plugin alone knows its backend and learns whether a later save worked, which it needs to know to withdraw the notification ([blockr.core#610](https://github.com/BristolMyersSquibb/blockr.core/pull/610)).
+A frontend logs a `run()` that rejects as a fault of the plugin, and shows the plugin's notifications as a toast, since a storage plugin has no UI of its own to show them in ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 The controls do the saving and the opening themselves: they hand the JSON board that `core.store.save()` writes to where the plugin keeps boards, and open the text of a board with `core.store.open()` ([Serialization](Rewrite-1.1.4#files)).
 They leave out what a lock fixes, such as opening another board under the load lock, since `controls()` reads `core.lock` ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
 
@@ -435,7 +436,7 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
 
 Part of what [The dock's services](Rewrite-1.2.6) gives the dock's extensions, every frontend gives every plugin through `CoreApi`, so a plugin that uses it works under any frontend:
 
-- Notifications, which the frontend draws, core's own among them, such as what the store dropped when a board opened ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+- Notifications, which the frontend draws by what each concerns, such as by a plugin's section or panel, core's own among them, such as what the store dropped when a board opened ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 - Which block has focus, which the frontend sets and the assistant reads to tell which block the user is looking at ([Assistant as a plugin](Rewrite-1.4)).
   Core holds it for the page, outside the board, since only one person's screen needs it ([Board objects](Rewrite-1.1.1#extending-cores-objects)).
   The lists of blockr.outline mark it as their current block, where today they read the block from an event of dockview's ([inst/assets/js/outline.js#L156-L171](https://github.com/cynkra/blockr.outline/blob/d3499f4623f956f6691235f90fa84b46b925852c/inst/assets/js/outline.js#L156-L171)).

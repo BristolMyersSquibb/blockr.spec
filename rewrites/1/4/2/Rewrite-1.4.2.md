@@ -241,7 +241,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a conversation only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)). An edit stopped while it waits says too that its commands applied (The edit tool) |
 
 How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, where its questions have turns that meet it.
-None of these reaches the user as a notification, since the model tells the user of them in its reply.
+None of these reaches the user as a notification, since the plugin takes the notifications of its tools' requests and edits through their `notifier`, and the model tells the user of them in its reply ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 R's failure to list the skills does, since the chat then goes on without them ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
 ## Open questions

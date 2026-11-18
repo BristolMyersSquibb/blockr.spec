@@ -55,15 +55,15 @@ interface Store {
   locked(block: BlockId): boolean;                           // whether a lock fixes the block's state: the board lock is on and its locked is not false (below)
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
-  apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo)
-  open(given: string | HelloReply): Promise<Dropped[]>;      // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
+  apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false; notifier?(n: readonly Notification[]): void }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo), and through CoreApi hands notifier the notification of a refusal in place of raising it ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
+  open(given: string | HelloReply, opts?: { notifier?(n: readonly Notification[]): void }): Promise<Dropped[]>;   // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
   check(text: string): Promise<Dropped[]>;                   // what opening a JSON board's text would drop, or the error that would refuse it, holding nothing
   read(text: string): Promise<{ board: Board; dropped: Dropped[] }>;   // the board that opening a JSON board's text would give, migrated, and what it would drop, holding nothing, as the DAG's paste reads a copied board
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
   save(): string;                                            // the text of jsonBoard(), as a file holds it, which open() opens (Serialization)
 
-  undo(origin?: Origin): void;                               // takes back the history's last step, or that origin's last step, as a new edit (below)
-  redo(): void;                                              // applies again the step that the last undo took back
+  undo(origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): void;   // takes back the history's last step, or that origin's last step, as a new edit (below)
+  redo(opts?: { notifier?(n: readonly Notification[]): void }): void;   // applies again the step that the last undo took back
   canUndo(origin?: Origin): boolean;
   canRedo(): boolean;
 
@@ -214,8 +214,8 @@ interface Commands {
   register(command: Command): () => void;
   registered(): Record<string, Command>;                         // the registered commands by id, for menus, a command palette and the assistant's tools
   preflight(id: string, args?: Json): boolean;                   // whether the command passes its preflight on the current board with these args
-  run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false
-  run(batch: { id: string; args?: Json }[], origin?: Origin): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
+  run(id: string, args?: Json, origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false, and through CoreApi hands notifier the notification of a refusal in place of raising it ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
+  run(batch: { id: string; args?: Json }[], origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
   plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
   plan(batch: { id: string; args?: Json }[]): Promise<Delta[]>;    // the deltas of the commands in order, each built on the board that those before it leave, not applied
 }

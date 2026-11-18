@@ -49,7 +49,7 @@ interface BlockHost<S extends State = State> {
   state(): S;                                        // the block's current state
   context(): BlockContext;                           // what the client knows of the block besides its state
   on(event: "state" | "context", fn: () => void): () => void;
-  submit(change: Partial<S>): Promise<void>;         // one edit, on a user's action only, rejecting with what refused it
+  submit(change: Partial<S>, opts?: { notifier?(notifications: readonly Notification[]): void }): Promise<void>;   // one edit, on a user's action only, rejecting with what refused it, which core raises too unless notifier takes it
   request<T = Json>(name: string, args?: Partial<S> & Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the block class, with state args and parameters
   evaluate(params: Record<string, Json>): Promise<BlockStatus>;   // a one-time evaluation of the block with parameters, which its block_eval() method reads
   module<T = unknown>(id: string): Promise<T>;       // a module another package offers, by id, such as "blockr.dplyr-filter"
@@ -64,7 +64,7 @@ interface BlockContext {
   options: Record<OptionId, Json>;                   // the values of the board options its module names
 }
 
-interface HostRequestOpts extends Omit<RequestOpts, "reads" | "conditions"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds, and without conditions, since a host's request leaves them to the notifications ([Notifications, logging and tracing](Rewrite-1.1.14#notifications))
+interface HostRequestOpts extends Omit<RequestOpts, "reads"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds, with notifier for a module that shows the conditions of a reply itself ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
   file?: File;                                       // a file it sends, such as an upload or the bitmap of a chart
 }
 ```
@@ -105,6 +105,7 @@ Those values are in the context too, which changes when one does, so that a modu
 A module gives a request up through its `signal`, and core sends R a `cancel` once no caller merged with it still waits, so that a search the user has typed on does not hold up what R runs after it, as R runs one request at a time ([Wire protocol](Rewrite-1.1.9#cancelling)).
 A request resolves with its answer as R writes it, every vector as an array, a length-one vector included, so that a module reads a single value as `answer[0]` ([Block classes in R](Rewrite-1.1.5#requests)).
 A request that fails rejects with the reply's status and conditions, or with the statuses of the inputs that could not be evaluated, and one that R reports progress for calls `progress`, as a plugin's does ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+Core raises the conditions of each reply as notifications about the block, and a refused `submit()` as one too, unless the module takes them through `notifier`, as a module that shows them below its inputs does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 A download is a request whose answer is a file, which resolves with a `File` carrying the name the reply gives, for the module to hand the browser, as blockr.io's download block builds its file and its timestamped name in R on each click today ([R/download.R#L80-L92](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/download.R#L80-L92)), and a renderer offers one through a request of its output class (below).
 Core keeps the answers for one opening of the board, shared by every block of the class, by registry id, name, args, the board option values sent and the revisions read: it merges a request with an identical one in flight and drops an answer once the revisions it read are superseded.
 Core keeps no superseded answer, since no host method hands one out, and a module keeps the last answer it got on screen while it asks again.
@@ -122,7 +123,7 @@ interface OptionHost<V extends Json = Json> {
   readonly option: OptionId;
   value(): V;                                        // the board option's value in the board, where core puts its default before render() if the board holds none
   on(event: "value", fn: () => void): () => void;
-  submit(value: V): Promise<void>;                   // runs core's command that sets a board option
+  submit(value: V, opts?: { notifier?(notifications: readonly Notification[]): void }): Promise<void>;   // runs core's command that sets a board option, rejecting with what refused it, which core raises too unless notifier takes it
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
   notify(n: Raised): () => void;                     // a notification of the module's, which concerns the board option unless it names another, until the mount ends at the latest

@@ -36,8 +36,8 @@ Core gives one `CoreApi` to the module of every plugin, a frontend's among them,
 
 ```ts
 interface CoreApi {
-  store: Store;                    // board(), subscribe(), apply(), open(), from Board updates
-  commands: Commands;              // run(), plan() and the command registry, for board actions and shortcuts
+  store: Store;                    // board(), subscribe(), apply(), open(), from Board updates, whose refusals core raises unless the call's notifier takes them
+  commands: Commands;              // run(), plan() and the command registry, for board actions and shortcuts, whose refusals core raises unless run()'s notifier takes them
   boardActions: BoardActions;      // on(), menu(), trigger(), mountAdvanced() and select(), from Board actions
   scheduler: Scheduler;            // demand(), evaluate(), invalidate(), status() and subscribe() alone, from Evaluation in the client
   blockRegistry(): BlockRegistry;  // the block registry's entries by registry id, for pickers, which change as another board opens
@@ -70,7 +70,7 @@ interface RequestOpts {
   signal?: AbortSignal;                                      // cancels it, as a cancel does on the wire
   file?: File;                                               // a file it sends, which R hands the function in its argument file
   progress?(note: { value?: number; message?: string }): void;   // each progress note R sends for it
-  conditions?(conditions: readonly Condition[]): void;       // the conditions of each reply, ok or error, in place of their notifications, for a request of the plugin's own ([Notifications, logging and tracing](Rewrite-1.1.14#notifications))
+  notifier?(notifications: readonly Notification[]): void;   // the notifications of each reply, ok or error, in place of raising them, for a request of the plugin's own ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
 }
 
 interface OutputEvents {
@@ -142,7 +142,7 @@ The user collapses or expands each plugin's section, which hides the plugin's UI
 It requires two board options, which it names in its `options`: `show_conditions`, for the severities that its cards show, and `dark_mode`, for the theme it draws in ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 On a locked board, its toolbar keeps undo, redo, the board options and the storage plugin's controls, which leave out opening another board under the load lock themselves, since no lock fixes the rest ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks), [Plugins](Rewrite-1.1.12#storage)).
 It draws the controls that `core.plugins.storage()` gives at the end of its toolbar, each kind with its own buttons and menus, so that core's storage plugin shows Save, which saves a download, and Open, which opens an upload, as today's `preserve_board` plugin does, while it draws none where the app holds no storage plugin ([Plugins](Rewrite-1.1.12#storage)).
-It also binds undo and redo to their shortcuts, which today's lacks, since the store keeps the steps and a frontend binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), gives a block focus as the user clicks into its card or moves the keyboard's focus into it, but not as the pointer hovers over it ([blockr.core#544](https://github.com/BristolMyersSquibb/blockr.core/pull/544)), and shows every notification, among them what the store dropped when a board opened, which edit the store refused and what plugins notify, as [Notifications, logging and tracing](Rewrite-1.1.14#cores-basic-frontend) has it.
+It also binds undo and redo to their shortcuts, which today's lacks, since the store keeps the steps and a frontend binds the shortcuts ([Board updates](Rewrite-1.1.2#undo)), gives a block focus as the user clicks into its card or moves the keyboard's focus into it, but not as the pointer hovers over it ([blockr.core#544](https://github.com/BristolMyersSquibb/blockr.core/pull/544)), and shows every notification, on a block's card, by a plugin's section or as a toast, among them what the store dropped when a board opened, which edit the store refused and what plugins notify, as [Notifications, logging and tracing](Rewrite-1.1.14#cores-basic-frontend) has it.
 As a plugin asks it to show a block or a plugin, it opens the group of the block's stack, or the plugin's section, where the user collapsed it, and scrolls the card or the section into view, leaving the keyboard's focus where it is ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
 Code export is blockr.code's plugin, which the basic frontend places in a section as it places any other ([Code export as a plugin](Rewrite-1.5)), and the basic frontend reads no member of a plugin class beyond core's, so that a plugin needs only its `ui` to show under it ([Plugins](Rewrite-1.1.12#plugin-classes)).
 

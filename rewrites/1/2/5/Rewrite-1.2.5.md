@@ -151,7 +151,7 @@ Each kind looks as follows:
 They follow blockr.ui's design system for the bar, as the dock's own parts do: 30px controls, tokens only, no field labels, and menus from blockr.ui, as [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) settled.
 The dock calls `controls()` as it draws the bar, and again whenever the storage plugin's `subscribe()` calls back.
 It binds the `shortcut` of every button among the controls, those in menus included.
-Where a `run()` rejects, the dock shows the error as a toast, as it shows every notification that is not a block's ([Client-drawn dock](Rewrite-1.2#proposal)).
+Where a `run()` rejects, the dock logs it as a fault of the storage plugin, which tells the user why through a notification of its own, and the dock shows that notification as a toast, as it shows every notification about a plugin without a panel ([Plugins](Rewrite-1.1.12#storage), [Client-drawn dock](Rewrite-1.2#proposal)).
 The dock draws the controls the same way under every lock, since the storage plugin leaves out what a lock fixes itself (condition 7).
 
 So core's storage plugin shows two buttons, Save and Open, where Import and Export are today.
@@ -193,7 +193,7 @@ Each is greyed out while `canUndo()` or `canRedo()` of the store says there is n
 The dock binds the shortcuts as core's basic frontend binds them: Mod+Z undoes, and Mod+Shift+Z or Mod+Y redoes, with Mod either Ctrl or Cmd, while in a text field the shortcuts stay the field's own.
 Switching views or tabs takes no undo step, so Undo takes back the last edit rather than a switch ([The dock's state](Rewrite-1.2.1#commands)).
 Both stay under the board lock, since what that lock leaves open, such as a block's state, still takes undo steps ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
-Where the store refuses a step, the dock shows the error as a toast, as it shows every notification that is not a block's.
+Where the store refuses a step, core tells the user why through a notification about the board, which the dock shows as a toast, as it shows every notification about the board ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 
 The views menu lists the views and folders of the navigation, each in the order that its `index` gives within its folder ([The dock's state](Rewrite-1.2.1#views-and-folders)).
 A folder opens and closes in the menu, and which folders are open stays on the screen, as that page has it.
@@ -228,7 +228,7 @@ The migration notes of blockr.dock and blockr.session list what a script changes
 
 The dock's tests draw the bar on the `CoreApi` for tests, which needs neither R nor a browser ([Plugins](Rewrite-1.1.12#testing)), from the items that its `frontend_args()` returns.
 A test registers a storage plugin class whose controls hold every kind, a menu inside a menu among them, through `core.plugins.register()`.
-It checks how the dock draws each kind, that a `navbar_storage()` item places its control apart while `storage` draws the rest, that it draws them again as `subscribe()` calls back, that it binds each `shortcut`, that a `run()` that rejects shows as a toast, and that the controls give way first on a narrow bar.
+It checks how the dock draws each kind, that a `navbar_storage()` item places its control apart while `storage` draws the rest, that it draws them again as `subscribe()` calls back, that it binds each `shortcut`, that a `run()` that rejects is logged, and that the controls give way first on a narrow bar.
 It checks too that the dock draws links and menus, mounts a module and takes it down through its signal, and leaves a warning in the place of a module that fails to load, declares another major or throws, while the rest of the bar works.
 It also checks that a click on the board's name renames the board but not under the board lock, that Undo and Redo follow the store's history and run on their shortcuts but not in a text field, and what each of the dock's own parts shows under each lock and without a storage plugin.
 The R tests check that `serve()` hands `navbar` to the dock's `frontend_args()`, which gives `default_navbar()` where a script passes none, that `custom_navbar()` drops what `drop` names, and that the method refuses an item that the dock cannot draw, naming it, a module that no available package offers among them.
