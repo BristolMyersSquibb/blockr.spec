@@ -9,7 +9,7 @@ Each blockr option belongs to the page of the code that reads it, as the three t
 ## What must hold
 
 1. A board option is defined once, in the client, by the package that ships it, and R holds only its id and a value that a script gives it, beside what its package gives in R for the board option's class `{id}_option`: the version of the value's shape and the board option's own requests.
-2. Each component that reads a board option's value names the board option in its own definition: a plugin class, a renderer of outputs, or a block class in its UI module, which also names every board option that the class's requests read, while a board option's UI reads its own value alone.
+2. Each component that reads a board option's value names the board option in its own definition: a plugin class, an output family, a renderer of outputs, or a block class in its UI module, which also names every board option that the class's requests read, while a board option's UI reads its own value alone.
    Core puts the board option on the board, with its default where the board holds no value, before that component first reads it, on a locked board too.
    Where no available package defines the board option, or its default fails or does not fit its schema, core reports it, and draws or runs nothing that requires it.
    A plugin may also read a board option that it does not name, where the board holds its value, as the board holds the value of every board option that something on the page requires.
@@ -110,7 +110,8 @@ A board option comes onto the page, and into the board, through the components t
 Each component names the board options it requires in its own definition:
 
 - A plugin class, in the `options` of its definition ([Plugins](Rewrite-1.1.12#a-plugin)), as core's basic frontend names `show_conditions`, the severities of the notifications that its cards show, and `dark_mode`, the theme it draws in.
-- A renderer of outputs, in the `options` of its module, an array of ids beside `render()`, as core's table renderer names `n_rows`.
+- An output family, in R, by the constructors of the board options it reads, as core's `table_output` holds `new_n_rows_option`, which R names in the registry entry of each block class that names the family, in `output_options` ([Block classes in R](Rewrite-1.1.5#outputs)).
+- A renderer of outputs, in the `options` of its module, an array of ids beside `render()`, for those that it reads itself, while core's table renderer names none, since a table output holds its page and the rows a page holds.
 - A block class, in the `options` of its UI module, those that its requests read included.
 
 The UI module is the one place where a block class names its board options.
@@ -124,13 +125,13 @@ Core puts on the board, with its `default`, each board option that a component r
 1. A plugin class's, as a board opens with one of its plugins, before core calls the plugin's `start` or mounts its UI module ([Running a plugin](Rewrite-1.1.12#running-a-plugin)).
    Core's basic frontend is such a plugin, so it gets `show_conditions` and `dark_mode` before it draws ([Plugins](Rewrite-1.1.12#the-frontend)).
 2. A block class's, before core first calls its module's `render()` after the board opens.
-3. A renderer's, before core first asks R for an output that the renderer draws, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
+3. An output family's, and those of the renderers that may draw its outputs, before core first asks R for an output of a block whose class names the family, which the block registry entry makes possible ([The renderer before the first output](#the-renderer-before-the-first-output)).
 4. A board option's own, before core first calls the `render()` of the board option's UI.
 
 So a board opened later gets them as a page that starts with that board would ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 While the component stays on the page, core puts the default back where a delta removes the value, so that every reader gets the board's value ([Reading a board option in the client](#reading-a-board-option-in-the-client)), as do the requests that carry the board option to R ([Board option values in R](#board-option-values-in-r)).
 Where no available package defines a board option that a component requires, or its default fails or does not fit its schema, core reports the board option in a notification that concerns it, naming it and what requires it, and draws or runs nothing that requires it ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
-It leaves the element of a block's UI, a board option's UI or a plugin's UI empty, asks R for no output for a renderer that requires the board option, and calls no `start` of a plugin whose class requires it, while the element of a frontend that requires it shows why.
+It leaves the element of a block's UI, a board option's UI or a plugin's UI empty, asks R for no output whose family or renderer requires the board option, and calls no `start` of a plugin whose class requires it, while the element of a frontend that requires it shows why.
 
 A value on the board is the board's, whether someone set it or core put the default there: a delta changes or removes it, a save writes it, and opening the saved board restores it ([Serialization](Rewrite-1.1.4#board-options)).
 Removing it puts the default back while something on the page requires the board option, and the value stays when the component that required it goes.
@@ -142,19 +143,17 @@ Undo never takes a value back, nor does redo set it again, since a board option 
 
 ### The renderer before the first output
 
-R makes an output only with the board options its coercion reads.
-The coercion `as_table_output()`, for one, pages a data frame by `n_rows`, and has no fallback of its own.
-The client, though, learns the renderer that requires them from the output itself ([Drawing the board](Rewrite-1.1.8#renderers)).
-Without more, a fresh board's first table could never draw: R needs `n_rows` to make the output, and core resolves `n_rows` only once an output has named its renderer.
-R therefore also names the renderer of a block class's outputs in the class's registry entry ([Block classes in R](Rewrite-1.1.5#registration)):
+R makes an output only with the board options its output family reads.
+The family `table_output`, for one, pages a data frame by `n_rows`, and has no fallback of its own.
+Without more, a fresh board's first table could never draw: R needs `n_rows` to make the output, and core would learn which board options the output needs only from the output.
+A family therefore holds the constructors of the board options that it reads, as `table_output` holds `new_n_rows_option`, beside the renderer of its outputs, and R names both in the registry entry of each block class that names the family ([Block classes in R](Rewrite-1.1.5#registration)):
 
-1. An output class gives its coercion through its method of `output_coercion()`, as `output_coercion.table_output()` returns `as_table_output`.
-2. R finds the output class whose coercion the block class names in `output`.
-3. R puts into the entry's `renderer` what that output class's method of `output_renderer()` gives, which takes the app's choice in the blockr option `renderers` into account.
-4. The client loads that renderer and puts the board options it names on the board, and only then asks R for the block's first output.
+1. R reads the family that the block class names in `output` as the family's package defines it now, with each family that it hands its results to in `families`, and theirs ([Block classes in R](Rewrite-1.1.5#outputs)).
+2. R puts into the entry's `output_options` the ids of the board options that those families read, and into its `renderers` the renderer of each of them that has one, the one that the app names for the family's class in the blockr option `renderers` or else the family's own.
+3. The client loads those renderers, puts the board options that `output_options` names, and those that the renderers name, on the board, and only then asks R for the block's first output, with the values of all of them.
 
-An output of a subclass that has a renderer of its own still names that renderer, and core loads that one, puts the board options it names on the board and, where the output was asked without their values, asks R for it again with them.
-An entry names no renderer where no output class gives the coercion that its block class names, and the first output request then carries the value of every board option that the reply to `hello` names, the board's or else its default, which core sends without putting it on the board, so that a coercion that wraps `as_table_output()` gets `n_rows` on a fresh board too.
+An output that names a renderer that the entry does not, as one from an older R may, makes core load that one, put the board options it names on the board and, where the output was asked without their values, ask R for it again with them.
+Every block class names a family, `text_output` where its package names none, and a function that wraps a family is a family that names it in `families`, so every entry names the board options that its outputs read, and no output request carries a board option that nothing names ([blockr.core#694](https://github.com/BristolMyersSquibb/blockr.core/pull/694)).
 
 ### Board option values in R
 
@@ -169,12 +168,12 @@ R code reads a board option's value only where it names the board option:
   Given one constructor, its function takes that board option's value in its argument `options`.
   Given a list of constructors named by arguments, its function takes each value in the argument of that name.
   No argument is matched to a board option by its name, and a value comes whole, whatever its shape ([Block classes in R](Rewrite-1.1.5#requests)).
-- An output class's coercion gets, in its `options`, the values of the board options that the renderer's module names, as `as_table_output(df, options = list(n_rows = 50L))` pages by `n_rows` ([Block classes in R](Rewrite-1.1.5#outputs)).
+- An output family gets, in its `options`, the values of the board options that it and the families it hands its results to name, and of those that the renderers' modules name, as `table_output(df, options = list(n_rows = 50L))` pages by `n_rows` ([Block classes in R](Rewrite-1.1.5#outputs)).
   A request of the output class, or of the renderer, gets in its `options` the values that its output was asked with, as the download in [Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r) does.
-  A board option that the coercion reads is part of the class's contract, so every renderer of the class requires it.
+  A family names the board options that it reads by their constructors, as a request does, so that a renderer of its outputs names only those that it reads itself.
 
-Registration calls each constructor that a request names once, to read the board option's id for the registry entry, and drops the object.
-The client sends a block class's request the values of the board options that the request names, and an output request those that the renderer names, each the board's value, by id, while a request of an output class or a renderer carries those its output was asked with ([Wire protocol](Rewrite-1.1.9#requests)).
+Registration calls each constructor that a request names once, to read the board option's id for the registry entry, and drops the object, and R calls those that an output family holds the same way as it writes the entry into a reply to `hello`.
+The client sends a block class's request the values of the board options that the request names, and an output request those that the entry names in `output_options` and those that the renderers name, each the board's value, by id, while a request of an output class or a renderer carries those its output was asked with ([Wire protocol](Rewrite-1.1.9#requests)).
 It keeps the answer or the output by those values, so that a change to any other board option leaves it alone ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 A board option's own requests, which its package gives in R through its method of `board_option_requests()` for the board option's class, get only the args that its UI passes, as blockr.io's data directory board option has R list a directory that its UI names ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)).
 No board option reaches `expr` or `block_eval()`, so a change to one evaluates no block, and one that shapes outputs redraws them without evaluating ([Client-owned board state](Rewrite-1.1#proposal)).
@@ -238,12 +237,12 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The departures that this page takes in come from the bodies of [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451) (requests name their board options through `new_block_request()`), [blockr.core#460](https://github.com/BristolMyersSquibb/blockr.core/pull/460) (a board option's R object holds its id and value, with a table of today's functions and what replaced each), [blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468) (a module names its board options in `options`), [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) (board classes require board options, as plugin classes do here), [blockr.core#480](https://github.com/BristolMyersSquibb/blockr.core/pull/480) (core's definitions and the output host's `options()`), [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) (the renderer in the registry entry, the caller of `onChange` and the reads of blockr options), [blockr.core#501](https://github.com/BristolMyersSquibb/blockr.core/pull/501) (the fallback of `n_rows`) and [blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534) (every board option in use on the board, its default included, with no `inUse()`, and nothing drawn without a board option that it names).
+The departures that this page takes in come from the bodies of [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451) (requests name their board options through `new_block_request()`), [blockr.core#460](https://github.com/BristolMyersSquibb/blockr.core/pull/460) (a board option's R object holds its id and value, with a table of today's functions and what replaced each), [blockr.core#468](https://github.com/BristolMyersSquibb/blockr.core/pull/468) (a module names its board options in `options`), [blockr.core#474](https://github.com/BristolMyersSquibb/blockr.core/pull/474) (board classes require board options, as plugin classes do here), [blockr.core#480](https://github.com/BristolMyersSquibb/blockr.core/pull/480) (core's definitions and the output host's `options()`), [blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494) (the renderer in the registry entry, the caller of `onChange` and the reads of blockr options), [blockr.core#501](https://github.com/BristolMyersSquibb/blockr.core/pull/501) (the fallback of `n_rows`), [blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534) (every board option in use on the board, its default included, with no `inUse()`, and nothing drawn without a board option that it names) and [blockr.core#694](https://github.com/BristolMyersSquibb/blockr.core/pull/694) (an output family's board options and renderers in the registry entry, with no fallback).
 
 On `js-state`, core adds the board options that a module names in `addOptions()` in `srcts/mount/block.ts`, but does not check them against those that the `requests` of the class's registry entry name.
 This page has core refuse there a module that leaves one of them out, before it adds the module's board options.
 The reads of blockr options are `createBlockrOptions()` in `srcts/core/blockr-options.ts`, and core's definitions are `nRows()`, `showConditions()`, `darkMode()` and `coreOptions()` in `srcts/options/`.
-In R, `new_block_request()` is in `R/block-request.R` and `output_coercion()` in `R/output-class.R`.
+In R, `new_block_request()` is in `R/block-request.R` and `new_output_family()` in `R/output-class.R`.
 Core puts each default on the board in `addOptions()` in `srcts/mount/block.ts`, through `blockr.core-set_option`, for block and output mounts alike, as [blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534) built it.
 On `js-state`, `answer_blockr_options()` in `R/evaluator-answer.R` fails the whole request where it cannot send one of the blockr options, which this page has R leave out, and the client then takes the fallback of every name in the request ([blockr.core#510](https://github.com/BristolMyersSquibb/blockr.core/issues/510)).
 On `js-state`, core's commands mint ids in the shape `adjective_animal`, through `mintId()` in `srcts/store/ids.ts`, and read no `rand_id` ([blockr.core#510](https://github.com/BristolMyersSquibb/blockr.core/issues/510)).

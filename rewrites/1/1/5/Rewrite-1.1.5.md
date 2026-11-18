@@ -39,7 +39,7 @@ head_block <- new_block_class(
   },
   ui        = js_module("head-block.js"),
   requests  = list(n_max = function(data) nrow(data)),
-  output    = as_table_output
+  output    = table_output
 )
 
 new_head_block <- block_constructor(head_block)
@@ -64,7 +64,7 @@ A class's properties:
 - The `ui` property names the class's UI with `js_module()`, which finds the file in the package's `inst/` when R serves it (notes), a module written against the contract of [UI modules in JS](Rewrite-1.1.7), built from TSX with React, as core's own are, or in JS written by hand or built from TypeScript, which ships the schema of the block's state beside it ([UI modules in JS](Rewrite-1.1.7#packaging)).
   Every class names one, since the schema of its state comes with it, and a module may draw nothing, as core's static block's does, whose expression a script sets.
   The `requests` property takes a named list of requests for whatever the UI asks of R, such as the head block's `n_max`, each a function or an object that `new_block_request()` makes, whose arguments name the inputs and state args it reads and any parameters the UI passes, while `new_block_request()` names the board options it reads (below).
-- The `output` property names the coercion the class's results are shown through, such as `as_table_output`, which makes an output of its class from a result (below).
+- The `output` property names the output family the class's results are shown through, such as `table_output`, which makes an output of its class from a result, and defaults to `text_output` (below).
   A class has no property for the board options it reads, since its UI module names them all, and each request names those of them it reads through `new_block_request()`, as blockr.io's read block names `data_dir`, the directory it lists files from, while the package that ships a board option defines it in the client, its default included ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds), [blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 - The `dat_valid`, `allow_empty_state`, `external_ctrl`, `expr_type` and `block_metadata` properties go.
   The checks of the data are the body of a function given as `inputs` (above), and they read the data inputs only.
@@ -73,16 +73,16 @@ A class's properties:
 
 A class has no say in when its blocks are evaluated: a block that must run with nothing on screen, such as a write block in auto mode, is demanded by its package in the client ([Evaluation in the client](Rewrite-1.1.10#demand)), and a block whose block expression must run only when its UI asks, such as a write block in manual mode, has a `block_eval()` method that runs it only with the parameter the UI's one-time evaluation passes (below).
 
-The function properties name what they read: `expr` the state args, a request the inputs and state args it reads, beside the board options its `new_block_request()` names, a function given as `inputs` the data inputs, and the coercion in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below).
+The function properties name what they read: `expr` the state args, a request the inputs and state args it reads, beside the board options its `new_block_request()` names, a function given as `inputs` the data inputs, and the output family in `output` the result and what the renderer asks with, its `options`, `info` and `params` (below).
 How R evaluates a block and describes a result are generics rather than properties: `block_eval()` dispatches on the block's class, which R gives the recipe's state, building no block, and `result_summary()` on the result's class (below), while a state that an older version of a class wrote migrates in JS, through the migration its package registers for the class, by the version of the state's shape that the class gives in `version`, a whole number from 1 that the package raises as it changes the shape, and that a JSON board records with each block, since the class's UI owns the state's shape ([Serialization](Rewrite-1.1.4#migrations)).
 The `new_block_class()` function checks a class when it is defined, so that no block is checked for being well formed again: that no state arg is `...`, `block_name` or `locked`; that no input shares a state arg's name, since a request's arguments would not say which they mean; that `inputs` is names, formals or a function of them, with no default; that the arguments of each request name inputs, state args or the board options that its `new_block_request()` names, but for the argument that its `new_block_request()` names for a file, which is neither an input nor a state arg, and its parameters, which have a default; and that `expr`, called without args, cannot run yet or returns a call, a string, a function whose formals are the inputs or an object of a class that inherits from `blockr_expr`, holding no function, such as the one base `bquote()` puts in for `.(data)`.
 All but the last read only the class's properties and the formals of its functions, while registration checks that the properties of the schema the class's UI ships are the state args, as it reads the schema (below).
 
-A sketch of `new_block_class()`, in which a property a class leaves out is `NULL`:
+A sketch of `new_block_class()`, in which a property a class leaves out is `NULL`, but for `output`:
 
 ```r
 new_block_class <- function(id, inputs = NULL, expr, ui,
-                            requests = NULL, output = NULL, version = 1L) {
+                            requests = NULL, output = text_output, version = 1L) {
 
   cls <- list(id = id, class = c(id, "block"), inputs = inputs, expr = expr, ui = ui,
               requests = lapply(requests, as_block_request), output = output,
@@ -91,6 +91,8 @@ new_block_class <- function(id, inputs = NULL, expr, ui,
   stopifnot("the version is a whole number from 1" =
     is.numeric(version) && length(version) == 1L && !is.na(version) &&
       version >= 1 && version == trunc(version))
+
+  stopifnot("the output is an output family" = is_output_family(output))
 
   stopifnot("inputs are names, formals or a function of them" =
     is.null(inputs) || is.character(inputs) || is.list(inputs) || is.function(inputs))
@@ -251,17 +253,17 @@ Core runs each call that sends a file once, since the file is no part of the key
 
 ### Core's classes and hooks
 
-A property a class leaves out is `NULL`, and R does what core does by default: where `output` is `NULL`, R shows the result as text, through `as_text_output()`, which prints it (below).
+A property a class leaves out is `NULL`, and R does what core does by default, but for `output`, which defaults to `text_output`, the family that prints any result, so that a class holds its family even where its package leaves `output` out, and no code that reads `output` handles `NULL` (below).
 Core's methods of the generics do the rest: `block_eval()` evaluates the block expression with each upstream block's result bound to its id, as `block_eval()` and `eval_env()` do today, and nothing more, while a class whose expression draws a base plot captures the plot in a method of its own (below); and `result_summary()` gives the result's class and dimensions.
 Today's specializations, `transform_block`, `data_block`, `parser_block`, `plot_block`, `text_block` and `file_block`, go.
-What they carry needs no hierarchy ([R/transform-block.R#L24-L42](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-block.R#L24-L42), [R/plot-block.R#L32-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L32-L68)): the output and UI of a table, a plot or text, which a class names by its output's coercion and a renderer draws; the table's board option `n_rows`, the rows of a page, which every renderer of table outputs brings ([Drawing the board](Rewrite-1.1.8#renderers)), while today's `page_size` and `filter_rows` go, since a table output pages in R and has no search; and a plot's recording, which a class whose expression draws a base plot makes in a `block_eval()` method of its own, with `capture_plot()` (below).
+What they carry needs no hierarchy ([R/transform-block.R#L24-L42](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-block.R#L24-L42), [R/plot-block.R#L32-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L32-L68)): the output and UI of a table, a plot or text, which a class names by its output family and a renderer draws; the table's board option `n_rows`, the rows of a page, which the family `table_output` reads (below), while today's `page_size` and `filter_rows` go, since a table output pages in R and has no search; and a plot's recording, which a class whose expression draws a base plot makes in a `block_eval()` method of its own, with `capture_plot()` (below).
 Nothing outside core dispatches on their classes, which in the workspace appear only in the class vectors blocks are built with, in docs and in tests.
-Blocks group in other ways too, each with a home of its own rather than a place in one hierarchy: the menu's category, from `@blockCategory` at registration; the output class; a renderer's board options; a class's inputs; and what packages demand in [Evaluation in the client](Rewrite-1.1.10#demand).
+Blocks group in other ways too, each with a home of its own rather than a place in one hierarchy: the menu's category, from `@blockCategory` at registration; the output family; the board options of a family or a renderer; a class's inputs; and what packages demand in [Evaluation in the client](Rewrite-1.1.10#demand).
 
 A class's properties belong to its package, so another package cannot change a class in place, as an S3 method registered for the block's class can today.
-Instead, an output class's coercion is a hook where other packages are meant to plug in: `as_table_output()` dispatches on the result's class, so a package that knows another class of table, such as dbplyr's lazy tables, which it pages in the database, registers a method that returns a table output, which every renderer of table outputs then draws.
-How an output looks is no hook of a block class at all, since an app can replace the renderer of an output class with one that any package offers (below).
-Otherwise, a package builds a class of its own from the other package's class's properties, `new_block_class("my_head", inputs = head_block$inputs, expr = head_block$expr, ui = head_block$ui, output = as_text_output)`, and calls the other class's property where it extends one.
+Instead, an output family is a hook where other packages are meant to plug in: `table_output()` dispatches on the result's class, so a package that knows another class of table, such as dbplyr's lazy tables, which it pages in the database, registers a method, `table_output.tbl_lazy()`, that returns a table output, which every renderer of table outputs then draws.
+How an output looks is no hook of a block class at all, since an app can replace the renderer of an output family with one that any package offers (below).
+Otherwise, a package builds a class of its own from the other package's class's properties, `new_block_class("my_head", inputs = head_block$inputs, expr = head_block$expr, ui = head_block$ui, output = text_output)`, and calls the other class's property where it extends one.
 No package in the workspace overrides another's block methods today, and the two registrations across packages, the methods that blockr.sandbox, the private package of the clinical data explorer's boards, gives blockr.ai's `data_schema()` and `data_effect()` and blockr.assistant's `describe_result()`, dispatch on result classes and work as before.
 
 ### Registration
@@ -286,7 +288,7 @@ A row that names a package that is not available, or a class that its package do
 So one argument narrows the classes of every package, in place of today's blockr option `core_blocks`, through which core alone narrows its own ([R/block-registry.R#L524](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L524)), and which goes.
 Today's `available_blocks()`, which gives the block registry's entries by registry id ([#L358](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L358)), gives the data frame instead.
 The packages that an app uses are those that its replies to `hello` name: core, those whose block classes it offers or whose plugins it runs ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)), those of the blocks whose classes R registers from the board that the app script builds (below), so that each of those blocks draws as the ones that the app offers do, and every other available package whose modules or board options a reply carries, since `serve()` reads those from every available package that lists them as it builds the app ([blockr.core#562](https://github.com/BristolMyersSquibb/blockr.core/pull/562), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588), [blockr.core#678](https://github.com/BristolMyersSquibb/blockr.core/pull/678)).
-So an app's block registry stays what the app script set for the life of the app, and its modules and board options what `serve()` read, whatever a block's code loads or a later `register_block()` registers, while a reply's output coercions come from the packages loaded as R sends it ([Wire protocol](Rewrite-1.1.9#handshake)).
+So an app's block registry stays what the app script set for the life of the app, and its modules and board options what `serve()` read, whatever a block's code loads or a later `register_block()` registers, while the board options and renderers of a class's outputs come from its output family as the family's package defines it when R sends each reply ([Wire protocol](Rewrite-1.1.9#handshake)).
 
 An entry of the object holds what `register_block()` takes but `classes` ([R/block-registry.R#L80](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L80)), as the roclet writes it from the `@block` tags: the constructor, as today, from which R reads its block class, which gives the class vector (notes).
 The `register_block()` and `register_blocks()` functions stay for the block classes that an app script defines and for those of a package that lists none, which they register in the block registry of the process, while `blocks` narrows only the classes of packages, since a row names a class by its package and a class that an app script defines records none.
@@ -299,7 +301,7 @@ R takes the registry id, `{pkg}-{id}`, from the class alone, its package and the
 The class records its package, the one whose code calls `new_block_class()`, as `new_plugin()` and `js_module()` record theirs, rather than R reading it off the constructor, since the environment of a function that `block_constructor()` makes, from which `register_block()` reads a constructor's package today, is blockr.core's for every class ([R/block-registry.R#L128-L135](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-registry.R#L128-L135)).
 So `register_block()` takes a constructor itself, without `uid` or `package`, while a package's listing names its constructors, which R looks up in the package's namespace ([blockr.core#561](https://github.com/BristolMyersSquibb/blockr.core/pull/561)).
 A block registry keeps one entry per class, and `registry_id_from_block()` gives a block's registry id from the class the block refers to, whether or not a registry holds the class ([blockr.core#561](https://github.com/BristolMyersSquibb/blockr.core/pull/561)).
-Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests with the board options each names, the renderer of its outputs, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
+Registering no longer builds a block: the block registry reads the block class's class vector, its inputs, its UI and the schema the UI ships, whose properties must be the state args, the version of its state, its requests with the board options each names, its output family, and its default state from `expr` called without args, keeps them by registry id so that R resolves a request without a block, and sends all but the classes to the client ([Board objects](Rewrite-1.1.1#what-lives-where)).
 A class defined outside a package is registered by the script that defines it, or by R from the blocks of the script's board, and a file holds its blocks by registry id alone ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)).
 The arg specs default to every state arg, since `external_ctrl_vars()` goes, and describe each for models and tools, while its shape is the schema's ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)).
 
@@ -331,7 +333,8 @@ interface RegistryEntry {
     action?: true;                        // acts rather than reads
     file?: true;                          // takes a file, in the argument that its new_block_request() names
   }>;
-  renderer?: { id: string; module: string; css?: string };   // the renderer of its outputs, where an output class gives the coercion it names
+  output_options: OptionId[];             // the ids of the board options that its outputs read, those of its output family and of the families it hands its results to
+  renderers: { id: string; module: string; css?: string }[];   // the renderers that may draw its outputs, for each of those families the app's choice or else the family's own
 }
 ```
 
@@ -350,7 +353,7 @@ Conditions raised in interpolation come under the phase of `expr`, which builds 
 Otherwise R runs the expression, which it keeps with the result for the requests that read it, such as blockr.code's code export, while its reply carries no code ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)):
 
 - The `block_eval(x, expr, env, ...)` generic, whose arguments keep today's names, so that a package's methods keep working, runs the block expression, `expr`, in `env`, where each upstream block's result is bound to its id, dispatching on the block's class, as `x` is the recipe's state with the class's class vector, which R gives it without calling the constructor, and gets in `...` the parameters of the one-time evaluation that asked for the block, if any ([Evaluation in the client](Rewrite-1.1.10#demand)).
-  Core's method keeps the block expression's value as the result, and a package adds a method where its class runs otherwise, as a class whose expression draws a base plot captures it with `capture_plot()` for `as_plot_output()` (below), as blockr.ggplot builds a plot today so that a broken one fails as it is evaluated ([R/ggplot-transform.R#L50-L57](https://github.com/BristolMyersSquibb/blockr.ggplot/blob/289cb60f03d10caf13d143d06562f7eb663763d9/R/ggplot-transform.R#L50-L57)), and as blockr.io's write block runs its block expression, which holds the write, in manual mode only when its save button passes `save` (below).
+  Core's method keeps the block expression's value as the result, and a package adds a method where its class runs otherwise, as a class whose expression draws a base plot captures it with `capture_plot()` for `plot_output()` (below), as blockr.ggplot builds a plot today so that a broken one fails as it is evaluated ([R/ggplot-transform.R#L50-L57](https://github.com/BristolMyersSquibb/blockr.ggplot/blob/289cb60f03d10caf13d143d06562f7eb663763d9/R/ggplot-transform.R#L50-L57)), and as blockr.io's write block runs its block expression, which holds the write, in manual mode only when its save button passes `save` (below).
   A method decides whether and how the block expression runs, never what it computes.
 - The `result_summary(result)` generic describes the result in a few words, such as `<data.frame> [150 × 5]`, which R sends with its reply for the block's card ([Wire protocol](Rewrite-1.1.9#evaluating-a-block)), dispatching on the result's class rather than the block's, so that a package describes its results wherever they appear, and its name says that it describes a result rather than a block ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
   Core's method gives the result's class, or its type where it has none, and its dimensions or a vector's length, as `block_summary()` does today ([R/plugin-block.R#L299-L320](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plugin-block.R#L299-L320)), so a frontend has it without asking R again.
@@ -370,12 +373,12 @@ R keeps each block's latest result, with its revision, its block expression and 
 ### Outputs
 
 An output is an S3 object of an output class, whose class vector ends in `block_output`.
-The package that defines an output class gives it a contract, as a MIME type's owner does, and defines it in R with two functions: a constructor, which makes an output of the class and checks the properties its contract gives, and a coercion, a generic that makes one from a result, dispatching on the result's class, as `new_block()` and `as_block()` pair today.
-A block class names the coercion its results are shown through in its `output` property, and R calls it with the block's result and what the renderer asks with, its `options`, `info` and `params` (below), and sends the output as JSON, written by the schema its class's contract gives (below), with the renderer that draws it (below), with at most one binary body, such as a plot's PNG, which the output holds as a reply body and R sends beside the JSON rather than in it ([Wire protocol](Rewrite-1.1.9#outputs)).
+The package that defines an output class gives it a contract, as a MIME type's owner does, and defines it in R with two functions: a constructor, which makes an output of the class and checks the properties its contract gives, and an output family, a generic that makes one from a result, dispatching on the result's class, as `new_block()` and `as_block()` pair today, which `new_output_family()` makes with the class's name as a class of its own, and which the package binds under that name ([blockr.core#694](https://github.com/BristolMyersSquibb/blockr.core/pull/694)).
+A block class names the output family its results are shown through in its `output` property, and R calls it with the block's result and what the renderer asks with, its `options`, `info` and `params` (below), and sends the output as JSON, written by the schema its class's contract gives (below), with the renderer that draws it (below), with at most one binary body, such as a plot's PNG, which the output holds as a reply body and R sends beside the JSON rather than in it ([Wire protocol](Rewrite-1.1.9#outputs)).
 A reply body is made by `new_reply_body(x, type, name = NULL)` from a raw vector or a file's path, with its MIME type and, for a download, a file name, as a plot output's is, `new_plot_output(new_reply_body(png, "image/png"), width, height)`.
-Core defines three output classes: `table_output`, a table's columns, the rows of one page and its total row count, made by `new_table_output()` and, from a result, by `as_table_output()`; `text_output`, made by `new_text_output()` and `as_text_output()`, which prints any result; and `plot_output`, made by `new_plot_output()` and `as_plot_output()`, which draws a plot at the size `info` gives, with thematic set to its theme, so that a theme switch redraws every plot on screen with no new revision, where today the block re-evaluates when the theme changes ([R/plot-block.R#L59-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L59-L68)).
-The coercion prints a ggplot again, and for a base plot it replays the recording where only the size differs from the one it was drawn at, as today's plot block replays it on a resize ([#L33](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L33)), and runs the block expression again where the theme does, since a recording keeps the colours it was drawn in.
-A block class whose expression draws a base plot gives the coercion what that takes, through a `block_eval()` method that calls `capture_plot()`, as core's scatter block does ([R/plot-scatter.R#L85-L87](https://github.com/BristolMyersSquibb/blockr.core/blob/10d5e1007ff06cbf09d2f4382443152cc3351867/R/plot-scatter.R#L85-L87)):
+Core defines three output classes, each with the family of its name: `table_output`, a table's columns, the rows of one page, which page that is and how many rows a page holds, and its total row count, made by `new_table_output()` and, from a result, by `table_output()`; `text_output`, made by `new_text_output()` and `text_output()`, which prints any result; and `plot_output`, made by `new_plot_output()` and `plot_output()`, which draws a plot at the size `info` gives, with thematic set to its theme, so that a theme switch redraws every plot on screen with no new revision, where today the block re-evaluates when the theme changes ([R/plot-block.R#L59-L68](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L59-L68)).
+The family `plot_output()` prints a ggplot again, and for a base plot it replays the recording where only the size differs from the one it was drawn at, as today's plot block replays it on a resize ([#L33](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/plot-block.R#L33)), and runs the block expression again where the theme does, since a recording keeps the colours it was drawn in.
+A block class whose expression draws a base plot gives the family what that takes, through a `block_eval()` method that calls `capture_plot()`, as core's scatter block does ([R/plot-scatter.R#L85-L87](https://github.com/BristolMyersSquibb/blockr.core/blob/10d5e1007ff06cbf09d2f4382443152cc3351867/R/plot-scatter.R#L85-L87)):
 
 ```r
 block_eval.scatter_block <- function(x, expr, env, ...) {
@@ -384,22 +387,29 @@ block_eval.scatter_block <- function(x, expr, env, ...) {
 ```
 
 The `capture_plot()` function runs the block expression on an off-screen device and returns a `captured_plot`, the block's result, which holds the recording with a function that runs the block expression again in its environment ([R/output-plot.R#L153-L185](https://github.com/BristolMyersSquibb/blockr.core/blob/10d5e1007ff06cbf09d2f4382443152cc3351867/R/output-plot.R#L153-L185)).
-The block expression stays a plain call, such as `plot(a$x, a$y)`, so that an exported script draws the plot, while core's own `block_eval()` method only evaluates the block expression, since only the plot output's coercion reads a recording ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
+The block expression stays a plain call, such as `plot(a$x, a$y)`, so that an exported script draws the plot, while core's own `block_eval()` method only evaluates the block expression, since only `plot_output()` reads a recording ([blockr.core#451](https://github.com/BristolMyersSquibb/blockr.core/pull/451)).
 A redraw runs code the plot's revision ran already, so an expression that draws random numbers draws a different plot on a theme switch, as it does today.
 The table output, with illustrative bodies:
 
 ```r
 new_block_output <- function(x, class) structure(x, class = c(class, "block_output"))
 
-new_table_output <- function(columns, rows, total, ..., class = character()) {
+new_table_output <- function(columns, rows, total, page = 1L, page_size = max(nrow(rows), 1L), ...,
+                             class = character()) {
   stopifnot(is.data.frame(columns), identical(names(columns), c("name", "class")),
-            is.data.frame(rows), length(total) == 1L)
-  new_block_output(list(columns = columns, rows = rows, total = total, ...), c(class, "table_output"))
+            is.data.frame(rows), length(total) == 1L, nrow(rows) <= page_size)
+  new_block_output(list(columns = columns, rows = rows, total = total, page = page, page_size = page_size, ...),
+                   c(class, "table_output"))
 }
 
-as_table_output <- function(result, options, info, params) UseMethod("as_table_output")
+table_output <- new_output_family(
+  function(result, options, info, params) UseMethod("table_output"),
+  "table_output",
+  options = new_n_rows_option,                                              # the board options it reads, by constructor
+  renderer = new_renderer("table_output", js_module("js/basic-table.js"))   # the renderer of its outputs, blockr.core-table_output
+)
 
-as_table_output.data.frame <- function(result, options, info, params) {
+table_output.data.frame <- function(result, options, info, params) {
   size <- params$page_size %||% options$n_rows
   page <- params$page %||% 1L
   ord <- seq_len(nrow(result))
@@ -408,7 +418,9 @@ as_table_output.data.frame <- function(result, options, info, params) {
   new_table_output(
     columns = data.frame(name = names(result), class = unname(vapply(result, function(col) class(col)[1L], ""))),
     rows = result[idx[!is.na(idx)], , drop = FALSE],
-    total = nrow(result)
+    total = nrow(result),
+    page = page,
+    page_size = size
   )
 }
 ```
@@ -416,10 +428,10 @@ as_table_output.data.frame <- function(result, options, info, params) {
 For a head block's result, the first seven rows of `iris`, with `n_rows` at 3 and the renderer on page 2, R sends, where the app draws tables with core's plain renderer:
 
 ```json
-{"renderer":{"id":"blockr.core-table_output","module":"blockr.core/js/basic-table.js?v=b7e2a915"},"columns":[{"name":"Sepal.Length","class":"numeric"},{"name":"Sepal.Width","class":"numeric"},{"name":"Petal.Length","class":"numeric"},{"name":"Petal.Width","class":"numeric"},{"name":"Species","class":"factor"}],"rows":[[4.6,3.1,1.5,0.2,"setosa"],[5,3.6,1.4,0.2,"setosa"],[5.4,3.9,1.7,0.4,"setosa"]],"total":7}
+{"renderer":{"id":"blockr.core-table_output","module":"blockr.core/js/basic-table.js?v=b7e2a915"},"columns":[{"name":"Sepal.Length","class":"numeric"},{"name":"Sepal.Width","class":"numeric"},{"name":"Petal.Length","class":"numeric"},{"name":"Petal.Width","class":"numeric"},{"name":"Species","class":"factor"}],"rows":[[4.6,3.1,1.5,0.2,"setosa"],[5,3.6,1.4,0.2,"setosa"],[5.4,3.9,1.7,0.4,"setosa"]],"total":7,"page":2,"page_size":3}
 ```
 
-The contract is what a renderer of the class is written against: a JSON Schema of the class's outputs, by which R writes each output, as it writes a block's state by its class's schema ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), with the TypeScript type that goes with it, as a module ships its state's schema beside its type ([UI modules in JS](Rewrite-1.1.7#packaging)); a type of the parameters its coercion reads, and the board options it reads (below); a type of the events its renderers emit, if they emit any, such as a chart's selection, which a plugin may hear ([UI modules in JS](Rewrite-1.1.7#the-contract)); the types of the args and answers of its requests, if it has any (below); and fixtures of sample outputs, which R's constructor writes and every renderer of the class is tested on.
+The contract is what a renderer of the class is written against: a JSON Schema of the class's outputs, by which R writes each output, as it writes a block's state by its class's schema ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), with the TypeScript type that goes with it, as a module ships its state's schema beside its type ([UI modules in JS](Rewrite-1.1.7#packaging)); a type of the parameters that its family reads; a type of the events its renderers emit, if they emit any, such as a chart's selection, which a plugin may hear ([UI modules in JS](Rewrite-1.1.7#the-contract)); the types of the args and answers of its requests, if it has any (below); and fixtures of sample outputs, which R's constructor writes and every renderer of the class is tested on.
 So a data frame becomes rows wherever the schema wants arrays of arrays, and a length-one vector stays an array wherever the schema wants one.
 The defining package ships them beside its renderer, as core ships the types modules are written against ([UI modules in JS](Rewrite-1.1.7#packaging)), and a subclass's types extend its class's, as its class vector does.
 Core's contracts for its three output classes:
@@ -433,6 +445,8 @@ interface TableOutput extends BlockOutput {
   columns: { name: string; class: string }[];   // in R's order, so names such as "2019" and duplicates keep their places
   rows: Json[][];                        // one page of rows, in the order of columns
   total: number | null;                  // the total row count, or null where it is unknown, as for a lazy table
+  page: number;                          // the page it holds, from 1
+  page_size: number;                     // the rows a page holds, by which a renderer draws its pager
 }
 
 interface TableParams {
@@ -452,19 +466,20 @@ interface PlotOutput extends BlockOutput {
 ```
 
 What draws an output is a renderer, a module for an output class.
-Each output class has a renderer, which the package that defines the class gives through its method of `output_renderer()`, and its coercion, which it gives through its method of `output_coercion()`, so that R names the renderer of a block class's outputs in the class's registry entry before it makes an output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
-An app replaces the renderer only by naming another renderer, which any package may offer, in a blockr option that the method reads, so that loading a package that offers one changes nothing.
-S3 dispatch gives each output the renderer of the most specific class in its class vector that has a method, and R sends the renderer in the output, with where it serves the renderer's module ([Drawing the board](Rewrite-1.1.8#renderers)).
+An output family holds the renderer of the outputs of its class and, as a request that `new_block_request()` makes does, the constructors of the board options that it reads, as `table_output` holds `blockr.core-table_output` and `new_n_rows_option`, so that R names both in the registry entry of each block class that names the family before it makes an output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
+R reads them from the family as its package defines it now, the one bound under the name of its class where its function was defined, so that a block class of a package built against an older core reads core's current board options and renderer, and no reply depends on the methods that the process has registered ([blockr.core#694](https://github.com/BristolMyersSquibb/blockr.core/pull/694)).
+An app replaces the renderer only by naming another renderer, which any package may offer, in the blockr option `renderers` under the family's class, which R reads before the family's own, so that loading a package that offers one changes nothing, and no package takes the app's choice away.
+R sends each output with the renderer that draws it, with where it serves the renderer's module ([Drawing the board](Rewrite-1.1.8#renderers)).
 The client mounts the renderer an output carries, so neither class vectors nor dispatch reach it, as [State in JS](Rewrite-1#principles) keeps them in R.
 An output class is the contract of the package that defines it, and only that package adds properties to it, in a later version whose new properties older renderers skip, as both sides of the protocol ignore properties they do not know ([Wire protocol](Rewrite-1.1.9#versions)).
-Another package extends it with a subclass, whose outputs hold everything the class holds, such as a lazy table's output that adds the SQL behind its page in its database's dialect, of class `c("lazy_table_output", "table_output", "block_output")`, so a renderer of the subclass draws what it adds, and where nothing gives the subclass a renderer of its own, the class's renderer draws what the class holds.
+Another package extends it with a subclass, whose outputs hold everything the class holds, such as a lazy table's output that adds the SQL behind its page in its database's dialect, of class `c("lazy_table_output", "table_output", "block_output")`, so that a renderer of the subclass, held by a family of the subclass's name, draws what it adds, while the class's renderer draws what the class holds wherever the block class's family reaches no family of the subclass (below).
 A lazy table with nothing more to show is a table output, which R pages in the database, as blockr.ui's table preview pages one today ([R/table-preview-engine.R#L67-L68](https://github.com/BristolMyersSquibb/blockr.ui/blob/9bd8312a3408bbcbabff2b57d1d3fd5681843c94/R/table-preview-engine.R#L67-L68)).
 So a block class never names what draws its output, and an app that names blockr.ui's table preview has it take the place of core's plain table for every block whose output is a table output.
 
-An output's parameters are what its renderer keeps and the coercion reads, such as the page a table shows and its sort, which the renderer changes through its host, asking R for the output again, so a table output holds the page its parameters ask for, sorted as they say, with `n_rows` rows to a page unless they give a page size.
-A board option the coercion reads, such as `n_rows`, is part of the class's contract, so every renderer of the class requires it, which the renderer's module names ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+An output's parameters are what its renderer keeps and its family reads, such as the page a table shows and its sort, which the renderer changes through its host, asking R for the output again, so a table output holds the page its parameters ask for, sorted as they say, with `n_rows` rows to a page unless they give a page size, and says which page it holds and how many rows a page holds, by which a renderer draws its pager.
+A board option that a family reads, such as `n_rows`, is the family's to name, so that a renderer of its outputs names only those that it reads itself, and core's table renderer names none ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 An output made of parts is a regular output class, whose renderer draws every part, so core knows nothing of nesting ([blockr.core#494](https://github.com/BristolMyersSquibb/blockr.core/pull/494)).
-So the output blockr.dm draws today through `block_ui()` and `block_output()` methods ([R/dm-block.R#L504-L627](https://github.com/BristolMyersSquibb/blockr.dm/blob/8b37981838cfac63a5d40e270a19857e5ef9ea90/R/dm-block.R#L504-L627)) becomes, with illustrative names, an output class of its own, whose coercion makes a dm's output with the selected table in it, and whose renderer draws the diagram and the table:
+So the output blockr.dm draws today through `block_ui()` and `block_output()` methods ([R/dm-block.R#L504-L627](https://github.com/BristolMyersSquibb/blockr.dm/blob/8b37981838cfac63a5d40e270a19857e5ef9ea90/R/dm-block.R#L504-L627)) becomes, with illustrative names, an output class of its own, whose family makes a dm's output with the selected table in it, and whose renderer draws the diagram and the table:
 
 ```r
 new_dm_output <- function(diagram, preview = NULL) {
@@ -472,27 +487,34 @@ new_dm_output <- function(diagram, preview = NULL) {
   new_block_output(list(diagram = diagram, preview = preview), "dm_output")
 }
 
-as_dm_output <- function(result, options, info, params) UseMethod("as_dm_output")
+dm_output <- new_output_family(
+  function(result, options, info, params) UseMethod("dm_output"),
+  "dm_output",
+  options = new_n_rows_option,                                      # which the preview that it makes with table_output() reads
+  renderer = new_renderer("dm_output", js_module("dm-output.js"))   # blockr.dm-dm_output
+)
 
-as_dm_output.dm <- function(result, options, info, params) {
+dm_output.dm <- function(result, options, info, params) {
   new_dm_output(
     diagram = dm_keylines_meta(result),
-    preview = if (length(params$table)) as_table_output(result[[params$table]], options, info, params$preview)
+    preview = if (length(params$table)) table_output(result[[params$table]], options, info, params$preview)
   )
 }
 
-dm_block <- new_block_class("dm_block", expr = dm_expr, ui = js_module("dm-block.js"), output = as_dm_output)   # inputs and requests left out
+dm_block <- new_block_class("dm_block", expr = dm_expr, ui = js_module("dm-block.js"), output = dm_output)   # inputs and requests left out
 
-output_schema.dm_output <- function(x, ...) read_json_schema("dm-output.schema.json")   # S3 methods, for the schema of its outputs
-output_coercion.dm_output <- function(x, ...) as_dm_output                             # its coercion, by which R finds the renderer for dm_block
-output_renderer.dm_output <- function(x, ...) {                                        # and its renderer, blockr.dm-dm_output
-  chosen_renderer("dm_output", new_renderer("dm_output", js_module("dm-output.js")))
-}
+output_schema.dm_output <- function(x, ...) read_json_schema("dm-output.schema.json")   # an S3 method, for the schema of its outputs
 ```
 
+A family that hands its results to other families, as one that shows a model as a table of its coefficients hands its table to `table_output`, or the family of a block class whose results come in a few kinds, names them in `families`, and R reads their board options and renderers too, so that the block class's registry entry names every renderer that may draw its outputs, which the client loads before the block's first output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
+Each output is drawn by the renderer of the family whose class comes first in the output's class vector, among the block class's family, the families that it hands its results to and theirs, and an output of a class that none of them draws makes R reply `error` ([Wire protocol](Rewrite-1.1.9#outputs)).
+So a function that wraps a family is a family too, as `new_output_family(function(result, ...) table_output(fix(result), ...), "fixed_output", families = table_output)` is, and `new_block_class()` refuses an `output` that is no output family.
+The `new_output_family()` function refuses a class that another family has, since R tells families apart by their class, by which an output finds the renderer that draws it and an app names the family whose renderer it replaces.
+A family for a block whose results may be of any kind, as a code block's, which would take as its members the families that the app's packages list, is [blockr.core#712](https://github.com/BristolMyersSquibb/blockr.core/issues/712).
+
 An output class may have requests, for what its renderers offer beyond the output, such as a download of what they show, as blockr.viz's tables offer the frame on screen as xlsx, HTML and pptx today ([R/table-download.R#L3-L11](https://github.com/BristolMyersSquibb/blockr.viz/blob/332ce573ffafa86f5a41dc400b0f85e6800128f7/R/table-download.R#L3-L11)).
-The package that defines the class gives them in R through its method of `output_requests()`, beside its methods for the class's JSON Schema, coercion and renderer ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), and a renderer of the class calls them through its output host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-R runs one as it runs the coercion, with the block's result at the revision of the output the renderer holds and the board option values and parameters that output was asked with, which the request carries, and with the args the renderer passes and, in the argument `file`, a file it sends, such as the bitmap of a chart the browser drew, and the request answers as a block class's does, a download with a reply body.
+The package that defines the class gives them in R through its method of `output_requests()`, beside its method for the class's JSON Schema and its family ([Drawing the board](Rewrite-1.1.8#what-a-package-declares-in-r)), and a renderer of the class calls them through its output host ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+R runs one as it runs the family, with the block's result at the revision of the output the renderer holds and the board option values and parameters that output was asked with, which the request carries, and with the args the renderer passes and, in the argument `file`, a file it sends, such as the bitmap of a chart the browser drew, and the request answers as a block class's does, a download with a reply body.
 A subclass's method returns its own requests before those that `NextMethod()` returns for its class, so that a subclass has its class's requests and may replace them, while a subclass without a method has its class's alone.
 A renderer may bring requests of its own too, for what it alone offers, such as the labels of a table's columns, which its package gives it as it makes it ([Drawing the board](Rewrite-1.1.8#renderers)).
 A request that names a renderer is one of the requests of the renderer that draws the output, which has to be the one named, and one that names none is the output class's, so that a renderer's request and one of its output class may share a name and neither hides the other.
@@ -504,9 +526,9 @@ None is volatile either, since no output class has needed such a request, so `ne
 
 | Generic | Becomes |
 |---|---|
-| `block_output(x, result, session)` | gone, since a class names its output's coercion in `output`, which makes an output from a result, while its name becomes the base of every output class (above) |
+| `block_output(x, result, session)` | gone, since a class names its output family in `output`, which makes an output from a result, while its name becomes the base of every output class (above) |
 | `block_ui(id, x)`, `block_render_trigger()` | gone, since a renderer draws the output and board options are arguments |
-| `tabular_output(x, result, block, session)` | `as_table_output(result, options, info, params)`, the coercion to a table output, dispatching on the result rather than a display (above) |
+| `tabular_output(x, result, block, session)` | `table_output(result, options, info, params)`, the output family of table outputs, dispatching on the result rather than a display (above) |
 | `tabular_display()`, `tabular_ui()`, `tabular_trigger()`, `tabular_options()` | gone, with the display classes and the `tabular_display` blockr option, since a renderer of table outputs takes a display's place |
 | `block_eval(x, expr, env, ...)` | kept, dispatching on the block's class, with core's method only evaluating the block expression, and a class whose expression draws a base plot capturing it with `capture_plot()` in a method of its own (above) |
 | none | `interpolate(x, inputs)`, a generic on the class of what `expr` returns, which makes the block expression from it with the upstream ids by input, and whose method a package adds for a class of its own that inherits from `blockr_expr` (above) |
@@ -528,7 +550,7 @@ Most of its builders make that call with `bbquote()` already, so it is a `bquote
 
 ### Testing
 
-Core ships helpers to test a block class without Shiny: its `expr` with sample states, its block expressions with sample inputs, its requests, its output's coercion with sample results, and its module against a stub host.
+Core ships helpers to test a block class without Shiny: its `expr` with sample states, its block expressions with sample inputs, its requests, its output family with sample results, and its module against a stub host.
 They replace `testServer()`.
 A class's R tests and its module tests share one fixture file in its package's `tests/`, since the class's two halves meet only in JSON: the file lists states, the R tests record into it what the class's requests answer for sample inputs, states, parameters and files and check that the block expression built for each state runs, and the module tests serve the recorded answers through the stub host and check that the module submits only listed states, the pattern of consumer-driven contract tests ([Pact](https://docs.pact.io/)).
 

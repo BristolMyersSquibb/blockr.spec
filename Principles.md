@@ -8,7 +8,7 @@ A rewrite's root page holds the principles of that rewrite alone and links here 
 
 Core implements what every board needs in a basic form, and offers ways to extend it.
 It does not build one solution for every case, least of all where such a solution would be expensive or cannot work in general.
-A case that needs more uses a way to extend core, such as a renderer of its own, a method of a coercion, a request or a block class of its own.
+A case that needs more uses a way to extend core, such as a renderer of its own, a method of an output family, a request or a block class of its own.
 So core's default stays simple and sensible, and core keeps no special case for what a package can do itself.
 
 Core's table output is an example ([blockr.core#422](https://github.com/BristolMyersSquibb/blockr.core/issues/422)).
@@ -16,7 +16,7 @@ It holds the names and classes of a table's columns, one page of its rows and it
 A cell that is not a single value shows its summary, so that the table stays flat, and every other value goes to the JSON writer as it is.
 Core shows no column labels, no groups and no row names.
 A renderer that shows them asks R for them through requests of its own ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425#issuecomment-6579784904)), and an app picks that renderer for table outputs.
-A package whose results need another kind of table output adds a method of `as_table_output()` for their class.
+A package whose results need another kind of table output adds a method of `table_output()` for their class.
 
 ## A board runs arbitrary R code, and the deployment sandboxes the R process
 
@@ -47,7 +47,7 @@ It leaves out only what changes how a result shows, such as the ggplot theme a p
 
 Today's core misses this for a block whose `expr_type` is `"bquoted"`: it evaluates the block with its inputs' names and exports it with the upstream blocks' ids in their place ([R/block-server.R#L754-L768](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/block-server.R#L754-L768), [R/utils-code.R#L58-L69](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-code.R#L58-L69)), so where a function takes labels from its arguments, as `cbind()` takes column names, the board and the script disagree.
 [Block classes in R](Rewrite-1.1.5#evaluation) closes the gap by having R evaluate the expression the script holds.
-A plot's theme is what the script leaves out: `as_plot_output()` applies it through thematic as it draws, so switching to dark mode redraws the plot and changes neither the block expression nor the script ([blockr.core#422](https://github.com/BristolMyersSquibb/blockr.core/issues/422)).
+A plot's theme is what the script leaves out: `plot_output()` applies it through thematic as it draws, so switching to dark mode redraws the plot and changes neither the block expression nor the script ([blockr.core#422](https://github.com/BristolMyersSquibb/blockr.core/issues/422)).
 
 ## Each piece of state has one writer, and whatever follows from it is derived
 

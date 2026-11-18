@@ -14,7 +14,7 @@ The plugin that adds, changes and removes blocks, links and stacks under every f
 3. A frontend and every other plugin work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
 5. Any package can supply a renderer for an output class or a board option.
-   An app replaces an output class's default renderer, or a board option's UI, with such a renderer through a blockr option, with no change to a block class.
+   An app replaces the renderer that an output family holds, or a board option's UI, with such a renderer through a blockr option, with no change to a block class.
 6. Unless the load lock is on, the app's storage plugin can open another board in place of the opening board before anything is drawn or evaluated, as `rack_loader()` resolves the board a URL names before today's page is drawn.
 7. Opening a board leaves the page as opening that board in a fresh app would, its frontend and its other plugins included, and with no reload ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 
@@ -159,22 +159,22 @@ So every plugin that draws a block's status or the mark of its class draws them 
 ### Renderers
 
 A renderer is a module that draws the outputs of one output class ([Block classes in R](Rewrite-1.1.5#outputs)) or a board option's value.
-A renderer of an output class is written against the class's contract, which the package that defines the class ships: a JSON Schema of its outputs, by which R writes them, with their TypeScript type, such as core's `TableOutput` for table outputs; the types of the parameters its coercion reads, such as `TableParams`, of the events its renderers emit, if they emit any, such as a chart's selection, and of the args and answers of its requests, if it has any, such as a download; the board options its coercion reads, such as `n_rows`, which every renderer of the class requires ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)); and fixtures of sample outputs it is tested on, so that whoever builds another table knows what to draw and what to ask for.
-An output class's renderer is the one that its method of `output_renderer()` gives, an S3 method that the package that defines the class writes beside its methods for the class's JSON Schema, coercion and requests ([Block classes in R](Rewrite-1.1.5#outputs)), as core's method for table outputs gives its plain table, `blockr.core-table_output`, and a board option has the `ui` its definition gives ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
+A renderer of an output class is written against the class's contract, which the package that defines the class ships: a JSON Schema of its outputs, by which R writes them, with their TypeScript type, such as core's `TableOutput` for table outputs; the types of the parameters its output family reads, such as `TableParams`, of the events its renderers emit, if they emit any, such as a chart's selection, and of the args and answers of its requests, if it has any, such as a download; and fixtures of sample outputs it is tested on, so that whoever builds another table knows what to draw and what to ask for.
+The renderer of an output class's outputs is the one that the output family of the class's name holds, which the package that defines the class gives as it makes the family, beside its methods for the class's JSON Schema and requests ([Block classes in R](Rewrite-1.1.5#outputs)), as core's `table_output` holds its plain table, `blockr.core-table_output`, and a board option has the `ui` its definition gives ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 A renderer is an object that `new_renderer()` makes, with its module, its own requests and its id, `{pkg}-{name}`, which its module's package and its name give, as blockr.ui's table preview is `blockr.ui-table_preview`, and one module may stand behind several renderers.
 Any package may offer other renderers, each through a function that makes it, for an output class or for a board option.
-An app replaces a class's renderer, or a board option's `ui`, only by naming another renderer for it in the `renderers` blockr option, under the class's name or the board option's id, which a class's method takes with `chosen_renderer()`, so that a package's renderer draws nothing until an app names it, and loading its package changes nothing.
-S3 dispatch gives each output the renderer of the most specific class in its class vector that has a method, so that the outputs of a subclass without one of its own are drawn by their class's renderer until the subclass's package, or the app script, gives it one, and the client mounts the renderer an output carries, so neither class vectors nor dispatch reach it ([State in JS](Rewrite-1#principles)).
-Another package thus supplies a renderer that an app names, or extends the class with a subclass ([Block classes in R](Rewrite-1.1.5#outputs)).
-R sends each output with its renderer, the renderer's id and where R serves its module, so that the client loads a renderer that no registry entry names the first time an output names it, and needs no list of renderers when it connects, while R sends the renderers that the app names for board options with its reply to `hello`, since a board option's UI mounts without an output ([Wire protocol](Rewrite-1.1.9#handshake)).
-R also names the renderer of a block class's outputs in the class's registry entry, so that core puts that renderer's board options on the board before it asks R for the block's first output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
+An app replaces a family's renderer, or a board option's `ui`, only by naming another renderer for it in the `renderers` blockr option, under the family's class or the board option's id, which R reads before the family's own, so that a package's renderer draws nothing until an app names it, loading its package changes nothing, and no package takes the app's choice away ([blockr.core#694](https://github.com/BristolMyersSquibb/blockr.core/pull/694)).
+Each output is drawn by the renderer of the family whose class comes first in the output's class vector, among the block class's output family and those that it hands its results to, so that the outputs of a subclass are drawn by their class's renderer unless the block class's family reaches a family of the subclass, and the client mounts the renderer an output carries, so neither class vectors nor dispatch reach it ([State in JS](Rewrite-1#principles)).
+Another package thus supplies a renderer that an app names, or extends the class with a subclass and a family of its own ([Block classes in R](Rewrite-1.1.5#outputs)).
+R sends each output with its renderer, the renderer's id and where R serves its module, so that the client loads a renderer that no registry entry names the first time an output names it, while R sends the renderers that the app names for board options with its reply to `hello`, since a board option's UI mounts without an output ([Wire protocol](Rewrite-1.1.9#handshake)).
+R also names in a block class's registry entry the board options that its outputs read and the renderers that may draw them, so that core loads those renderers and puts those board options, and the ones that the renderers name, on the board before it asks R for the block's first output ([Board options and blockr options](Rewrite-1.1.13#the-renderer-before-the-first-output)).
 So an app changes how every table looks, with a UI kit's renderer or another's, without touching a block class, as a JupyterLab extension replaces the renderer of a MIME type by registering its own ([registry.ts#L232-L258](https://github.com/jupyterlab/jupyterlab/blob/a877aee5ac6f490272a5ac18ac16b62b0deb1223/packages/rendermime/src/registry.ts#L232-L258)):
 
 ```r
-# blockr.core: its table outputs, drawn by its plain table, blockr.core-table_output, unless the app names another
-output_renderer.table_output <- function(x, ...) {
-  chosen_renderer("table_output", new_renderer("table_output", js_module("basic-table.js")))
-}
+# blockr.core: the family of its table outputs, drawn by its plain table, blockr.core-table_output, unless the app names another
+table_output <- new_output_family(function(result, options, info, params) UseMethod("table_output"), "table_output",
+                                  options = new_n_rows_option,
+                                  renderer = new_renderer("table_output", js_module("js/basic-table.js")))
 
 # blockr.ui: a richer table, blockr.ui-table_preview, with a request of its own for the columns' labels
 table_preview <- function() {
@@ -182,26 +182,26 @@ table_preview <- function() {
                requests = list(labels = function(result) lapply(result, attr, "label", exact = TRUE)))
 }
 
-# an app that wants blockr.ui's table: an output class, and the renderer
+# an app that wants blockr.ui's table: the class of the output family, and the renderer
 options(blockr.renderers = list(table_output = blockr.ui::table_preview()))
 ```
 
 A renderer gets an output host, or for a board option an `OptionHost` ([UI modules in JS](Rewrite-1.1.7#the-contract)), through which it calls the requests of its output class, such as a download of what it shows, and its own, such as the labels of a table's columns.
 A block's UI has no renderer, since it ships the schema of its block's state ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), so a different UI makes a block class of its own, built from the properties of the block's ([Block classes in R](Rewrite-1.1.5#cores-classes-and-hooks)).
-A renderer's module names the board options it requires, as core's table renderer requires `n_rows` ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
+A renderer's module names the board options that it reads itself, while those that an output family reads are the family's, which it names in R, so that core's table renderer names none, since a table output holds its page and the rows a page holds ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 
 ### What a package declares in R
 
-Besides its block classes, a package declares in R the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is: in the object it exports, `._BLOCKR_MODULES_`, its plugin classes and its board options, each with its module, and the modules it offers other packages' UIs, beside its block classes, which R reads for each available package, so that a package registers nothing as it loads but block classes that it does not list ([Block classes in R](Rewrite-1.1.5#registration)), and the rest through S3 methods.
+Besides its block classes, a package declares in R the rest of its client that R serves or answers for, each under a name that gives it the id `{pkg}-{name}`, as a registry id is: in the object it exports, `._BLOCKR_MODULES_`, its plugin classes and its board options, each with its module, and the modules it offers other packages' UIs, beside its block classes, which R reads for each available package, so that a package registers nothing as it loads but block classes that it does not list ([Block classes in R](Rewrite-1.1.5#registration)), and the rest through the output families that its block classes name and S3 methods.
 With illustrative names:
 
 ```r
 plugin_version.dag_plugin <- function(x, ...) 2L                  # in blockr.dag, once its plugin's state has changed shape, as an exported S3 method
-output_schema.chart_output <- function(x, ...) read_json_schema("chart-output.schema.json")   # in blockr.viz, S3 methods for
-output_coercion.chart_output <- function(x, ...) as_chart_output                               # its schema, its coercion,
-output_renderer.chart_output <- function(x, ...) {                                             # its renderer
-  chosen_renderer("chart_output", new_renderer("chart_output", js_module("chart.js")))
-}
+chart_output <- new_output_family(                                                             # in blockr.viz, the family of its chart outputs,
+  function(result, options, info, params) UseMethod("chart_output"), "chart_output",           # with their renderer,
+  renderer = new_renderer("chart_output", js_module("chart.js"))
+)
+output_schema.chart_output <- function(x, ...) read_json_schema("chart-output.schema.json")    # and S3 methods for their schema
 output_requests.chart_output <- function(x, ...) {                                             # and a download
   list(download = function(result, options, params, format, file) chart_pptx(result, file))
 }
@@ -216,7 +216,7 @@ plugin_requests.code_plugin <- function(x, ...) {                 # in blockr.co
 The object is an environment that the package's `.onLoad()` fills, reading its block classes from its `inst/registry/blocks.yml` with `read_blocks_yml()`, or a list that the package defines in its code ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 A plugin class and a board option each have one module ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)), and a module that a package offers others, which its object lists in `modules`, is reached by its id through `host.module()` and `CoreApi.module()`, while a plugin class holds its `ui` and its `frontend` itself rather than naming a module by id.
 A plugin class gives the version of its state through its method of `plugin_version()` ([Plugins](Rewrite-1.1.12#a-plugin)).
-An output class gives, through S3 methods rather than declarations, the JSON Schema of its outputs, by which R writes them, its coercion, by which R names its renderer in a block class's registry entry, its renderer, `blockr.viz-chart_output` here, and its requests, which R runs with the result the output was made from, so that S3 dispatch gives a subclass what its class gives ([Block classes in R](Rewrite-1.1.5#outputs)).
+An output class has the output family of its name, which holds the renderer of its outputs, `blockr.viz-chart_output` here, and the board options it reads, which R names in the registry entry of each block class that names the family, and gives through S3 methods the JSON Schema of its outputs, by which R writes them, and its requests, which R runs with the result the output was made from, so that S3 dispatch gives a subclass what its class gives ([Block classes in R](Rewrite-1.1.5#outputs)).
 A board option's requests come from its package's method of `board_option_requests()` for the board option's class, `{id}_option`, and a plugin's from its package's method of `plugin_requests()` for the plugin's class, which R calls as `serve()` builds the app, so that the app holds the requests and R answers each by its type with the function that the app holds, as [blockr.core#484](https://github.com/BristolMyersSquibb/blockr.core/pull/484) built requests ([Wire protocol](Rewrite-1.1.9#requests)).
 R calls a board option's request with its args by name, and a plugin's with its args by name and, in `reads`, the blocks it reads by id, each a list of its `result` and the block expression `expr` R built for it.
 A package declares none of the blockr options its client reads, which the client asks R for by name ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
@@ -225,7 +225,7 @@ A module's stylesheet and JSON Schema need no declaration, since they sit beside
 ### What goes from R
 
 The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and so do the `callbacks` through which a frontend hooks into `board_server()`, which goes with the board server ([Client-owned board state](Rewrite-1.1#today)).
-A frontend's R side shrinks to what its object lists, its plugin class with its module and the modules it offers, its plugin class's methods of `plugin_version()`, `plugin_requests()` and `frontend_args()`, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_plugin()` and its `new_dock_board()`, which keeps working as a board that holds the dock's state ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+A frontend's R side shrinks to what its object lists, its plugin class with its module and the modules it offers, its plugin class's methods of `plugin_version()`, `plugin_requests()` and `frontend_args()`, its output families, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_plugin()` and its `new_dock_board()`, which keeps working as a board that holds the dock's state ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### Testing
 
