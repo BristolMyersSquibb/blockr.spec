@@ -1,5 +1,5 @@
 # Board actions: menus, quick actions and advanced actions
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: settled on 2026-11-18. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): board actions, which users trigger from menus, buttons and gestures.
 It covers what a board action is and who registers one, the menus that offer board actions, a board action's quick action and advanced action, and what a frontend gives to draw them.
