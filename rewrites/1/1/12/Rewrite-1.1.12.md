@@ -206,8 +206,8 @@ Beside `render()`, the module may give `show()`, which core calls as a plugin as
 interface FrontendModule {                           // the `frontend` of a frontend's class
   render(args: { el: HTMLElement; core: CoreApi; plugin: PluginClassId; signal: AbortSignal; args: Record<string, Json> }): () => void;
   show?(args: { object: { block: BlockId } | { plugin: PluginClassId }; el: HTMLElement; core: CoreApi }): void | Promise<void>;   // brings what a plugin asks to show into view, as the frontend can
-  menu?(args: { level: QuickLevel<void>; el: HTMLElement; anchor: DOMRect; openAdvanced(row: QuickRow<void>): void; close(): void }): void;   // draws a menu of board actions, or a quick action, from its first level, in the frontend's look, from Board actions
-  advanced?(args: { title: string; mount(el: HTMLElement): () => void; close(): void }): () => void;   // shows an advanced action in the frontend's place, and returns what core calls once done() ends it, from Board actions
+  menu?(args: { menu: OpenMenu; el: HTMLElement; anchor: DOMRect }): () => void;   // draws a menu of board actions, or a quick action, in the frontend's look, from the open menu that core runs by the rules of a quick action, and returns what core calls as the menu closes, from Board actions
+  advanced?(args: { id: string; title: string; target: Target; mount(el: HTMLElement, target?: Target): () => void; close(): void }): (deltas?: Delta[]) => void;   // shows an advanced action in the frontend's place, and returns what core calls once done() ends it, with the deltas of its batch, from Board actions
 }
 ```
 

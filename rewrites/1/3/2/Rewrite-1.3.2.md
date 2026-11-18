@@ -89,16 +89,17 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   A click with Shift adds to the selection, as today.
   A drag with Alt held selects what its rectangle covers, as today.
 - A selection of one node shows its block through `core.show()`, which every frontend carries out in its own way, the dock in the active view ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)), while a selection of several shows none, as today.
-- Every selection goes to `core.boardActions.select()`, which a pinned advanced action follows ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+- The DAG sets every selection in `core.selection`, which the dock's pinned sidebar follows ([Board actions](Rewrite-1.1.16#the-advanced-action)).
 - A right click on a node, a link, a stack or the canvas opens that object's menu through `core.boardActions.menu()`, at the pointer ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
   Where the object belongs to a selection of several, the right click opens the selection's menu instead, and so does a right click on the box that React Flow draws around a selection.
   For the canvas, the DAG passes `menu()` an `extend` that puts each block, or stack that holds no block, that the board action adds where the user right-clicked, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
+  The DAG passes `menu()` and `trigger()` a `notifier` as well, and shows a refused batch at the node, the link or the point where it opened the menu or triggered the board action, as it shows a refused link where the user dropped it ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 
 ### The DAG's board actions
 
 The DAG registers four board actions, beside core's, which every menu of their objects offers ([Board actions](Rewrite-1.1.16#a-board-action)):
 
-| Board action | On | Group | What it does |
+| Board action | On | Category | What it does |
 |---|---|---|---|
 | Copy | A block, a stack or a selection | Clipboard | Puts on the clipboard, at once, a JSON board of the blocks and stacks that it acts on, the blocks of those stacks, the links between those blocks, any other stack that holds a block and whose blocks are all copied, and their positions, as today's copy does |
 | Cut | A block, a stack or a selection | Clipboard | Copies, then runs core's commands that remove them, as one step |
