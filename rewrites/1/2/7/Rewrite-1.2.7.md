@@ -5,7 +5,7 @@ One of the design pages of the client-drawn dock ([Client-drawn dock](Rewrite-1.
 It covers the card's header, after [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492), with the block's mark, status, name, toggles, padlock and menu.
 It also covers the card's sections, which show as the dock's state says ([The dock's state](Rewrite-1.2.1#card-sections)), the look of the output by the block's status, the notifications that [Notifications, logging and tracing](Rewrite-1.1.14) has a card show, compact headers, which block has focus, what the dock demands for its cards, the padlock that sets the block's lock, and the card on a locked board.
 It builds on [Drawing the board](Rewrite-1.1.8#what-core-gives-plugins), through which core mounts the block's UI and output in the card.
-It shapes the card ([blockr.dock#578](https://github.com/BristolMyersSquibb/blockr.dock/issues/578)), its status and notifications ([blockr.dock#579](https://github.com/BristolMyersSquibb/blockr.dock/issues/579)), the toasts of the notifications that no card shows ([blockr.dock#580](https://github.com/BristolMyersSquibb/blockr.dock/issues/580)), the dock's demand, which drawing a view makes ([blockr.dock#577](https://github.com/BristolMyersSquibb/blockr.dock/issues/577)), and what the dock sets as on screen ([blockr.dock#599](https://github.com/BristolMyersSquibb/blockr.dock/issues/599)).
+It shapes the card ([blockr.dock#578](https://github.com/BristolMyersSquibb/blockr.dock/issues/578)), its status and notifications ([blockr.dock#579](https://github.com/BristolMyersSquibb/blockr.dock/issues/579)), the toasts of the notifications that no card shows ([blockr.dock#580](https://github.com/BristolMyersSquibb/blockr.dock/issues/580)), the dock's demand, which drawing a view makes ([blockr.dock#577](https://github.com/BristolMyersSquibb/blockr.dock/issues/577)), what the dock sets as on screen ([blockr.dock#599](https://github.com/BristolMyersSquibb/blockr.dock/issues/599)), and showing on the card what a plugin raises about the block ([blockr.dock#637](https://github.com/BristolMyersSquibb/blockr.dock/issues/637)).
 Which panels a view shows and the tab of a block's panel are [The dock's state](Rewrite-1.2.1#grids)'s, and why plugins add nothing to a card for now is [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)'s.
 
 ## What must hold
@@ -162,7 +162,7 @@ The note alone shows those two messages, so the card shows neither again among t
 
 ### Notifications
 
-A block's card shows the notifications of `CoreApi` that concern the block and that R or core raised, of the severities that core's board option `show_conditions` names, warnings and errors unless a script, a file or the user sets others ([Notifications, logging and tracing](Rewrite-1.1.14#cores-basic-frontend)).
+A block's card shows the notifications of `CoreApi` that concern the block, whoever raised them, of the severities that core's board option `show_conditions` names, warnings and errors unless a script, a file or the user sets others ([Notifications, logging and tracing](Rewrite-1.1.14#cores-basic-frontend)).
 So the dock filters what a card shows as core's basic frontend does, and as today's block server filters a block's conditions by the same board option.
 The dock plugin's class names `show_conditions` among the board options it requires ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
 The card reads `notifications.get()` as it draws and follows `notifications.subscribe()`, so a notification that core withdraws leaves the card at once.
@@ -174,8 +174,8 @@ The card places each notification by its severity:
 
 Today's card folds warnings with the messages, against the design system, which puts a block's warning above its output, as its error.
 It also leaves out the two messages that its status note holds ([The output](#the-output)).
-A notification that a plugin raises shows as a toast, even where it concerns the block.
-So does every notification that concerns no block ([Client-drawn dock](Rewrite-1.2#proposal)).
+Those that a plugin raises about the block show there too, as under core's basic frontend, since the card is where the user looks for what concerns the block ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
+A notification that concerns no block shows by the panel of the plugin that it concerns, or as a toast ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
 A notification's message shows as text, never as HTML.
 
 A block whose card is not on screen keeps its notifications in `CoreApi` until its card shows them, as today's card holds its conditions while it is parked.

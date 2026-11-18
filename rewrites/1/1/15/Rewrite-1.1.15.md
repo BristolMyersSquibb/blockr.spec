@@ -3,7 +3,7 @@ Status: settled on 2026-11-11. Design for [Client-owned board state](Rewrite-1.1
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the plugin in blockr.core that adds, changes and removes the board's blocks, links and stacks, which every frontend places as it places any plugin.
 It replaces the toolbar's dialogs for adding a block and for links and stacks that [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built into core's basic frontend, and the port of the dock's Edit board extension that [The Edit board extension in React](Rewrite-1.2.8) planned.
-It shapes the plugin itself ([blockr.core#565](https://github.com/BristolMyersSquibb/blockr.core/issues/565)), an item in the Work list of the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503), and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
+It shapes the plugin itself ([blockr.core#565](https://github.com/BristolMyersSquibb/blockr.core/issues/565)), an item in the Work list of the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503), showing a refused edit beside the control that made it ([blockr.core#711](https://github.com/BristolMyersSquibb/blockr.core/issues/711)), and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
 What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, the commands it runs are [Board updates](Rewrite-1.1.2#commands)'s, and the rest of core's basic frontend, its card's menu among it, is [Drawing the board](Rewrite-1.1.8#cores-basic-frontend)'s.
 
 ## What must hold
@@ -11,7 +11,7 @@ What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, 
 1. It adds a block of any class in the block registry, under an id and a name that the user may give, renames and removes blocks, and adds, changes and removes links and stacks.
    That covers every edit that today's `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack` and the dock's Edit board extension make, but for giving a new link or stack an id, which the commands mint.
 2. It works on the board through `CoreApi` alone, and every frontend places it as it places any plugin whose class has a `ui`, as condition 2 of [Plugins](Rewrite-1.1.12#what-must-hold) asks of every plugin.
-3. Each edit is one of core's commands, applied as the user makes it, so that undo takes back each one and the user learns at once why the store refused one.
+3. Each edit is one of core's commands, applied as the user makes it, so that undo takes back each one and the user learns at once, beside the control that made it, why the store refused one.
 4. An app script that gives `serve()` no plugins gets this one, as it gets a plugin of each class that an available package lists, so that the user can add the first block to the board that `serve(new_board())` draws, and edit a board that `serve()` is given as a file, as today's `manage_blocks` lets them.
 5. Under the board lock, it draws no control, as condition 3 of [Locked boards and the properties of blocks](Rewrite-1.1.11#what-must-hold) asks for what a lock fixes.
 
@@ -90,8 +90,8 @@ Staging the block edits as well, as [blockr.dock#199](https://github.com/Bristol
 The plugin keeps nothing in its state, and nothing staged in its module.
 That is this plugin's choice, not the API's: another plugin may stage edits and apply them later as one delta, which holds any number of blocks, links and stacks, through `core.store.apply()` or a command of its own, as one step that one undo takes back ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 
-The plugin raises a notification for each of its edits that the store or the command registry refuses, as core's basic frontend does for its own edits ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-It is an error of the code `edit_refused`, which the plugin raises through `notify()`, naming its class's id, and which concerns the plugin, whatever block the edit names.
+Where the store or the command registry refuses one of its edits, the plugin shows why beside the form or the button that made it, in the colour of an error, until the user's next edit there, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
+So the user reads why where they made the edit, rather than in a toast that names no form, as every plugin with a UI shows what fails of what the user did in it ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 
 ### Where it shows
 

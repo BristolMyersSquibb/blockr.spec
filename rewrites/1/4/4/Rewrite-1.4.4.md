@@ -4,6 +4,7 @@ Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the chat that the assistant's `ui` draws in the place that any frontend gives it.
 It covers the message field and a turn as it streams, what waits while a turn runs, stopping a turn, the rows of the tool calls, undoing the assistant's edits, the conversations, attachments, the slash commands, the meter, the pick of the model, the visitor's credential and what fails.
 It shapes how a turn runs and stops ([blockr.assistant#225](https://github.com/BristolMyersSquibb/blockr.assistant/issues/225)), the chat ([blockr.assistant#229](https://github.com/BristolMyersSquibb/blockr.assistant/issues/229)), its drawer of conversations, meter and pick of the model ([blockr.assistant#230](https://github.com/BristolMyersSquibb/blockr.assistant/issues/230)), attachments ([blockr.assistant#231](https://github.com/BristolMyersSquibb/blockr.assistant/issues/231)), the row of a summary ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)), the slash commands ([blockr.assistant#233](https://github.com/BristolMyersSquibb/blockr.assistant/issues/233)), the visitor's own key ([blockr.assistant#236](https://github.com/BristolMyersSquibb/blockr.assistant/issues/236)) and login ([blockr.assistant#237](https://github.com/BristolMyersSquibb/blockr.assistant/issues/237)), and the browser tests ([blockr.assistant#239](https://github.com/BristolMyersSquibb/blockr.assistant/issues/239)), and, with [Board updates](Rewrite-1.1.2#undo), one undo history for every origin ([blockr.core#608](https://github.com/BristolMyersSquibb/blockr.core/issues/608)).
+It shapes showing the plugin's notifications above the message field too ([blockr.assistant#284](https://github.com/BristolMyersSquibb/blockr.assistant/issues/284)).
 What a conversation holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, how a call is authenticated and who picks the model is [Model access](Rewrite-1.4.1)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
 ## What must hold
@@ -12,7 +13,7 @@ What a conversation holds is [The assistant's state](Rewrite-1.4.3)'s, what the 
 2. What today's chat offers carries over, but for what Today drops with its reason.
 3. The user can stop a turn at any point, and a stopped turn leaves applied every edit that it finished, and none half applied.
 4. The user takes back the assistant's edits with the frontend's Undo, in one history with their own, or the assistant's last undo step with `/undo`.
-5. What fails and the user should know of, such as a call to the model, reaches the user as a notification, which the frontend draws ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+5. What fails and the user should know of, such as a call to the model, shows in the chat and reaches the user as a notification about the plugin, which the frontend tells the user of while the chat is collapsed or hidden, but where the chat's own code cannot load, which the panel shows alone ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 6. The chat shows a conversation as the assistant's state holds it, whatever changes that state, after the older messages that the plugin keeps in its memory, or from that memory alone where `chat_save_turns` is `0`.
 7. The user can edit the board while a turn runs, and take back the assistant's edits, as at any other time.
 8. One turn runs at a time on a board, and the user can switch and start conversations while it runs.
@@ -211,7 +212,7 @@ Where the list fails as well, as at a base URL that gives none, the chat says th
 
 ### What fails
 
-A failure that the user should know of becomes a notification that the assistant raises from `start` through `notify()`, naming its class's id, so that it holds once the panel closes, and which the frontend draws as it draws any ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A failure that the user should know of becomes a notification that the assistant raises from `start` through `notify()`, naming its class's id, so that it holds once the panel closes.
 The plugin withdraws each once its cause has gone, and core withdraws them all as the next board opens:
 
 | What | Severity and code | Withdrawn when |
@@ -223,6 +224,8 @@ The plugin withdraws each once its cause has gone, and core withdraws them all a
 | A template that R cannot read, as for a file in `assistant_template` that does not exist, or one with an `<<id>>` that names no section of blockr.assistant's template | Error, `assistant_template_failed` | R reads a template whose every `<<id>>` names a section |
 | A list of models that leaves none to offer, where the deployment names none, as at a company's own proxy that lists none, or where no model in the list takes tools | Error, `assistant_models_failed` | A list offers a model |
 
+The chat shows every notification about the plugin that holds above its message field, as the design system draws a message, danger for an error and the amber set for a warning, so that the user reads why where they would send, while the frontend tells the user that one holds where the chat is collapsed or hidden, as the dock does with a dot on the panel's tab ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows), [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
+
 Where the deployment names no models and the base URL's list leaves none to offer, the chat offers no model ([Model access](Rewrite-1.4.1#who-picks-the-model)), so the user can send nothing.
 The plugin asks for the list again as the user tries to send, as a new key comes and as the next board opens, so that a list that failed for a moment comes back.
 A list that the base URL refuses for its key goes as any refused key does, and where the key is the visitor's, the chat asks for it again (The credential).
@@ -230,6 +233,7 @@ Where R cannot list the skills, the chat goes on without any, until the plugin a
 Where the template fails, the calls go on with blockr.assistant's own template, until the plugin asks again as the next board opens ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
 A failure that ends a turn shows at that turn in the transcript too, so that the user sees why the reply stopped, while the board stays open, since the plugin keeps it in its memory rather than in the conversation.
 The conversation keeps what the turn finished, and what its reply streamed until the failure, as after a stop (Stopping a turn), and a tool call left without a result reads, to the model, that the turn ended before the call returned ([The assistant's state](Rewrite-1.4.3#the-state)).
+Where the page cannot load the chat's own code, the panel says so and the plugin logs why, with no notification, since the panel is where the user looks for the chat ([blockr.assistant#257](https://github.com/BristolMyersSquibb/blockr.assistant/pull/257)).
 What a tool returns as a failure, such as `inspect_results` on a locked board, which it refuses before R reads anything, goes to the model as the tool's result, which tells the user in its reply ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 
 ### On a locked board

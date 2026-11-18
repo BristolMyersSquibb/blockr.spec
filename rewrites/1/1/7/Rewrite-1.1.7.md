@@ -3,6 +3,7 @@ Status: settled on 2026-10-30. Design for [Client-owned board state](Rewrite-1.1
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the contract that the UI of every block, board option and output meets, how core loads these modules and those of the plugin classes and board options that packages list, and how packages ship them.
 It builds on the [board objects](Rewrite-1.1.1) and [board updates](Rewrite-1.1.2) proposals, and shapes blockr.ci's TypeScript gates ([blockr.ci#93](https://github.com/BristolMyersSquibb/blockr.ci/issues/93)) and installing core's types in them ([blockr.ci#97](https://github.com/BristolMyersSquibb/blockr.ci/issues/97)), the toolchain of core's client ([blockr.core#419](https://github.com/BristolMyersSquibb/blockr.core/issues/419)), what packages declare in R ([blockr.core#424](https://github.com/BristolMyersSquibb/blockr.core/issues/424)), exporting the block registry ([blockr.core#426](https://github.com/BristolMyersSquibb/blockr.core/issues/426)), loading and mounting a block class's UI module ([blockr.core#437](https://github.com/BristolMyersSquibb/blockr.core/issues/437)), the UIs of core's built-in blocks ([blockr.core#438](https://github.com/BristolMyersSquibb/blockr.core/issues/438)), core's renderers and board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), the guide for block class authors ([blockr.core#444](https://github.com/BristolMyersSquibb/blockr.core/issues/444)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), filling the block registry from the block classes that the app offers ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), refusing a block class's UI module that leaves out a board option its requests read ([blockr.core#502](https://github.com/BristolMyersSquibb/blockr.core/issues/502)), the modules of plugins ([blockr.core#506](https://github.com/BristolMyersSquibb/blockr.core/issues/506)), keeping the defaults of board options beside the board ([blockr.core#508](https://github.com/BristolMyersSquibb/blockr.core/issues/508)), naming the package of a board option in its errors ([blockr.core#514](https://github.com/BristolMyersSquibb/blockr.core/issues/514)) and stopping the page on a later `hello` that it cannot take ([blockr.core#515](https://github.com/BristolMyersSquibb/blockr.core/issues/515)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
+It shapes the `notifier` of a host's `submit()` and `request()` too ([blockr.core#709](https://github.com/BristolMyersSquibb/blockr.core/issues/709)).
 How R names a class's UI and its requests is [Block classes in R](Rewrite-1.1.5)'s, and how a frontend has core mount these modules is [Drawing the board](Rewrite-1.1.8)'s.
 Core ships the one copy of React that block UIs use, with the React SDK, while richer ready-made components for form-like UIs lie outside this page ([UI kit and design system for the client](Rewrite-1.7)).
 
@@ -49,7 +50,7 @@ interface BlockHost<S extends State = State> {
   state(): S;                                        // the block's current state
   context(): BlockContext;                           // what the client knows of the block besides its state
   on(event: "state" | "context", fn: () => void): () => void;
-  submit(change: Partial<S>): Promise<void>;         // one edit, on a user's action only, rejecting with what refused it
+  submit(change: Partial<S>, opts?: { notifier?(notifications: readonly Notification[]): void }): Promise<void>;   // one edit, on a user's action only, rejecting with what refused it, which core raises too unless notifier takes it
   request<T = Json>(name: string, args?: Partial<S> & Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the block class, with state args and parameters
   evaluate(params: Record<string, Json>): Promise<BlockStatus>;   // a one-time evaluation of the block with parameters, which its block_eval() method reads
   module<T = unknown>(id: string): Promise<T>;       // a module another package offers, by id, such as "blockr.dplyr-filter"
@@ -64,7 +65,7 @@ interface BlockContext {
   options: Record<OptionId, Json>;                   // the values of the board options its module names
 }
 
-interface HostRequestOpts extends Omit<RequestOpts, "reads" | "conditions"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds, and without conditions, since a host's request leaves them to the notifications ([Notifications, logging and tracing](Rewrite-1.1.14#notifications))
+interface HostRequestOpts extends Omit<RequestOpts, "reads"> {   // CoreApi's, whose reads the host fills in, from the block's inputs or the output it holds, with notifier for a module that shows the conditions of a reply itself ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
   file?: File;                                       // a file it sends, such as an upload or the bitmap of a chart
 }
 ```
@@ -105,6 +106,7 @@ Those values are in the context too, which changes when one does, so that a modu
 A module gives a request up through its `signal`, and core sends R a `cancel` once no caller merged with it still waits, so that a search the user has typed on does not hold up what R runs after it, as R runs one request at a time ([Wire protocol](Rewrite-1.1.9#cancelling)).
 A request resolves with its answer as R writes it, every vector as an array, a length-one vector included, so that a module reads a single value as `answer[0]` ([Block classes in R](Rewrite-1.1.5#requests)).
 A request that fails rejects with the reply's status and conditions, or with the statuses of the inputs that could not be evaluated, and one that R reports progress for calls `progress`, as a plugin's does ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
+Core raises the conditions of each reply as notifications about the block, and a refused `submit()` as one too, unless the module takes them through `notifier`, as a module that shows them below its inputs does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 A download is a request whose answer is a file, which resolves with a `File` carrying the name the reply gives, for the module to hand the browser, as blockr.io's download block builds its file and its timestamped name in R on each click today ([R/download.R#L80-L92](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/download.R#L80-L92)), and a renderer offers one through a request of its output class (below).
 Core keeps the answers for one opening of the board, shared by every block of the class, by registry id, name, args, the board option values sent and the revisions read: it merges a request with an identical one in flight and drops an answer once the revisions it read are superseded.
 Core keeps no superseded answer, since no host method hands one out, and a module keeps the last answer it got on screen while it asks again.
@@ -122,7 +124,7 @@ interface OptionHost<V extends Json = Json> {
   readonly option: OptionId;
   value(): V;                                        // the board option's value in the board, where core puts its default before render() if the board holds none
   on(event: "value", fn: () => void): () => void;
-  submit(value: V): Promise<void>;                   // runs core's command that sets a board option
+  submit(value: V, opts?: { notifier?(notifications: readonly Notification[]): void }): Promise<void>;   // runs core's command that sets a board option, rejecting with what refused it, which core raises too unless notifier takes it
   request<T = Json>(name: string, args?: Record<string, Json>, opts?: HostRequestOpts): Promise<T | Blob>;   // a request of the board option, never cached
   readonly log: Log;                                 // log lines that name the module's package, from Notifications, logging and tracing
   notify(n: Raised): () => void;                     // a notification of the module's, which concerns the board option unless it names another, until the mount ends at the latest

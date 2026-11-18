@@ -3,7 +3,7 @@ Status: settled on 2026-10-28. Design for [Client-owned board state](Rewrite-1.1
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how the board changes, core's objects and the state of its plugins alike.
 It builds on the [board objects proposal](Rewrite-1.1.1) and shapes the store ([blockr.core#432](https://github.com/BristolMyersSquibb/blockr.core/issues/432)), the command registry ([blockr.core#433](https://github.com/BristolMyersSquibb/blockr.core/issues/433)), reading a JSON board in R ([blockr.core#429](https://github.com/BristolMyersSquibb/blockr.core/issues/429)), locking a board ([blockr.core#434](https://github.com/BristolMyersSquibb/blockr.core/issues/434)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), leaving board option values out of undo and redo ([blockr.core#503](https://github.com/BristolMyersSquibb/blockr.core/issues/503)), plugins in the store ([blockr.core#504](https://github.com/BristolMyersSquibb/blockr.core/issues/504)), refusing a board that holds a value its schema refuses ([blockr.core#509](https://github.com/BristolMyersSquibb/blockr.core/issues/509)) and keeping an `update`'s append to an array that the delta appends to as well ([blockr.core#513](https://github.com/BristolMyersSquibb/blockr.core/issues/513)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
-It shapes one undo history for the steps of every origin too ([blockr.core#608](https://github.com/BristolMyersSquibb/blockr.core/issues/608)), and appending, prepending and inserting a block through batches ([blockr.core#695](https://github.com/BristolMyersSquibb/blockr.core/issues/695)).
+It shapes one undo history for the steps of every origin too ([blockr.core#608](https://github.com/BristolMyersSquibb/blockr.core/issues/608)), appending, prepending and inserting a block through batches ([blockr.core#695](https://github.com/BristolMyersSquibb/blockr.core/issues/695)), and the `notifier` of the store's and the command registry's calls ([blockr.core#709](https://github.com/BristolMyersSquibb/blockr.core/issues/709)).
 Which blocks a change makes R evaluate is the evaluation proposal ([Evaluation in the client](Rewrite-1.1.10)), how a plugin's state is written to a file is the [serialization proposal](Rewrite-1.1.4), and what a plugin is and which plugins a board holds are [Plugins](Rewrite-1.1.12)'s.
 
 ## What must hold
@@ -55,15 +55,15 @@ interface Store {
   locked(block: BlockId): boolean;                           // whether a lock fixes the block's state: the board lock is on and its locked is not false (below)
   subscribe(fn: (change: Change, board: Board) => void): () => void;   // after every commit and every open
 
-  apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo)
-  open(given: string | HelloReply): Promise<Dropped[]>;      // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
+  apply(delta: Delta | Delta[], origin?: Origin, opts?: { undo?: false; notifier?(n: readonly Notification[]): void }): void;   // expands, checks, commits and announces the deltas as one step, or throws what rejected them, as no undo step with undo: false (Undo), and through CoreApi hands notifier the notification of a refusal in place of raising it ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
+  open(given: string | HelloReply, opts?: { notifier?(n: readonly Notification[]): void }): Promise<Dropped[]>;   // opens the opening board in R's reply to hello, or a JSON board given as its text, with that reply's block registry and plugins, then replaces the board
   check(text: string): Promise<Dropped[]>;                   // what opening a JSON board's text would drop, or the error that would refuse it, holding nothing
   read(text: string): Promise<{ board: Board; dropped: Dropped[] }>;   // the board that opening a JSON board's text would give, migrated, and what it would drop, holding nothing, as the DAG's paste reads a copied board
   jsonBoard(): JsonBoard;                                    // the board as a JSON board holds it, to save (Serialization)
   save(): string;                                            // the text of jsonBoard(), as a file holds it, which open() opens (Serialization)
 
-  undo(origin?: Origin): void;                               // takes back the history's last step, or that origin's last step, as a new edit (below)
-  redo(): void;                                              // applies again the step that the last undo took back
+  undo(origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): void;   // takes back the history's last step, or that origin's last step, as a new edit (below)
+  redo(opts?: { notifier?(n: readonly Notification[]): void }): void;   // applies again the step that the last undo took back
   canUndo(origin?: Origin): boolean;
   canRedo(): boolean;
 
@@ -214,8 +214,8 @@ interface Commands {
   register(command: Command): () => void;
   registered(): Record<string, Command>;                         // the registered commands by id, for menus, a command palette and the assistant's tools
   preflight(id: string, args?: Json): boolean;                   // whether the command passes its preflight on the current board with these args
-  run(id: string, args?: Json, origin?: Origin): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false
-  run(batch: { id: string; args?: Json }[], origin?: Origin): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
+  run(id: string, args?: Json, origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): Promise<void>;   // applies, as one undo step of that origin unless the command has undo: false, and through CoreApi hands notifier the notification of a refusal in place of raising it ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications))
+  run(batch: { id: string; args?: Json }[], origin?: Origin, opts?: { notifier?(n: readonly Notification[]): void }): Promise<void>;   // applies the commands in order as one step of that origin, each planned on the board that those before it leave
   plan(id: string, args?: Json): Promise<Delta[]>;                // the deltas, built on the current board, not applied
   plan(batch: { id: string; args?: Json }[]): Promise<Delta[]>;    // the deltas of the commands in order, each built on the board that those before it leave, not applied
 }

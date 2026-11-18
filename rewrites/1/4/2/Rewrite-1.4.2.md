@@ -3,6 +3,7 @@ Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
 It shapes running and planning a batch as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
+It shapes how the tools take the notifications of their calls too ([blockr.assistant#283](https://github.com/BristolMyersSquibb/blockr.assistant/issues/283)).
 Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the conversations that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, how the chat shows those calls is [The assistant's chat](Rewrite-1.4.4)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
 ## What must hold
@@ -241,7 +242,7 @@ Its text names what failed, why, and where the model can read more, as today's t
 | A tool call that the user stops | A result saying that the user stopped the turn, which the plugin writes for each call left without one, since a provider takes a tool call in a conversation only with its result ([The assistant's chat](Rewrite-1.4.4#stopping-a-turn)). An edit stopped while it waits says too that its commands applied (The edit tool) |
 
 How each of these reads is a decision that [The assistant's benchmark](Rewrite-1.8.1#the-decisions-it-compares) compares, where its questions have turns that meet it.
-None of these reaches the user as a notification, since the model tells the user of them in its reply.
+None of these reaches the user as a notification, since the plugin takes the notifications of its tools' requests and edits through their `notifier`, and the model tells the user of them in its reply ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 R's failure to list the skills does, since the chat then goes on without them ([The assistant's chat](Rewrite-1.4.4#what-fails)).
 
 ## Open questions
