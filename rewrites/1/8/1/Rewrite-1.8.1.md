@@ -59,19 +59,15 @@ The review then holds up to 40 texts of up to 2,000 characters each, in one tool
 A review of the blocks one link away would drop What must hold 2 of [The assistant's tools](Rewrite-1.4.2#what-must-hold).
 That condition has the edit tool return only once every block downstream of the change is current.
 
-Two decisions on the message of the app's are ones to look into, since that message is new input at every call ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
+One decision on the message of the app's is one to look into, since that message is new input at every call ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
 It comes after the conversation's last message, behind the mark of Anthropic's cache, so no call reads it from the cache.
-On the board of the snapshot in blockr.assistant's tests, with six blocks, five links, a stack, two board options, two plugins and two views, it holds 1,691 characters, about 400 tokens at four characters a token.
+Its Board section holds the board within one cap, `assistant_board_section_max_chars`, 3000 characters by default, the blocks that a call most likely needs first, while the app's plugins, the board options and the fixed text of the message go in the system prompt, which the cache serves ([The sections](Rewrite-1.4.5#the-sections)).
+On a board of 100 blocks, the message then holds at most 3,500 characters, about 875 tokens at four characters a token, where cutting each part of the section on its own held 6,561 characters and none of the blocks that failed ([The system prompt](Rewrite-1.4.5#what-must-hold)).
 The tools and the system prompt before it take some 5,000 tokens, which the cache serves at a tenth of the price of new input (notes).
 
-- Where the fixed text of the message goes.
-  Of those 1,691 characters, some 640 are the same at every call: the preamble that says that the app writes the message, and the preamble of the Focus section on the block last clicked.
-  In the message, each stands beside what it explains.
-  In the rules of the system prompt, the cache serves them, which saves some 400 characters at each call, about 100 tokens, while one sentence of the message still says that the app writes it.
-- Whether every call needs the whole board.
+- How much of the board each call needs.
   The message goes to every call of a turn, so that the model sees what its own edits did, and what the user changed meanwhile, before it says that it is done.
-  A turn of ten calls on the board above reads about 4,000 tokens of boards as new input.
-  The versions to compare it with are a board at a turn's first call alone, where the review of each edit and the note of what others changed tell the later calls what moved, or a smaller board at the later calls, such as one without the board options and the plugins.
+  The versions to compare are a smaller or a larger cap, and a board at a turn's first call alone, where the review of each edit and the note of what others changed tell the later calls what moved.
   The conversation keeps no board, so a call that the message leaves without one has no board to read.
 
 A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
