@@ -23,7 +23,7 @@ How a reply carries a block's conditions is [Wire protocol](Rewrite-1.1.9#evalua
    Each frontend decides how far it can follow this, and how each notification shows and for how long, such as until core withdraws it, until the user dismisses it, or as a toast that fades after a few seconds, since core offers each notification with what it concerns and cannot check where it shows.
    Core draws only what no frontend can: the error of a page that cannot start or whose frontend cannot draw.
    It leaves the element of a module that cannot draw empty, so that the frontend says where the failure shows ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-6. A plugin whose class has a `ui` shows the notifications about itself in its UI, and what fails of what the user did there beside where the user did it, such as why the store refused the edit of one of its forms.
+6. A plugin whose class has a `ui` shows the notifications about itself in its UI, and what fails of what the user did there close to where the user did it, such as why the store refused the edit of one of its forms.
    A storage plugin, whose controls the frontend draws, leaves its own to the frontend, as the frontend draws every notification.
 7. Core raises a notification for what fails of a call, a request or an edit, unless the call's caller takes it, which every such call lets its caller do in the same way, so that a caller that shows the failure itself, or hands it on as the assistant hands its tools' failures to the model, shows it once.
 8. Core holds them outside the board, as it holds which block has focus, so that no file saves them and no undo brings one back ([Board objects](Rewrite-1.1.1#what-lives-where)).
@@ -220,7 +220,7 @@ The other such calls take it in an object as their last argument, as the store's
 Core hands it the notifications of a request once for each reply, ok or error, an empty list for a reply with no condition, and the notification of a refused edit or board once, before the call rejects or throws, which it still does, with the reply's conditions or the reason.
 So a caller that shows the user a failure itself, or hands it on, takes the call's notifications, while one that does neither leaves them to core, which raises them for the frontend to show.
 The assistant takes those of its tools' requests and edits, which it hands to the model, since the model tells the user of them in its reply ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
-Core's inputs take those of their block's `submit()`, whose reason they show below themselves ([UI modules in JS](Rewrite-1.1.7#react)), and the Edit board plugin those of its edits, whose reason it shows beside the form or the button that made each ([The Edit board plugin](Rewrite-1.1.15#each-edit-at-once)).
+Core's inputs take those of their block's `submit()`, whose reason they show below themselves ([UI modules in JS](Rewrite-1.1.7#react)), and the Edit board plugin those of its edits, whose reason it shows close to the form or the button that made each ([The Edit board plugin](Rewrite-1.1.15#each-edit-at-once)).
 
 A call with a notifier withdraws none of the notifications that earlier calls raised, such as those of an earlier reply to a request of the same name, since core cannot tell which caller raised them, and a withdrawal could take back what another caller's call raised.
 A plugin passes a notifier only for a call of its own, which core cannot check, since `CoreApi` is one object for every plugin.
@@ -232,7 +232,8 @@ A notification shows best where the user looks for it, by what it concerns, sinc
 Core offers each notification with what it concerns and cannot check where it shows, so frontends and plugins follow this as guidance, each as far as it can:
 
 - A plugin whose class has a `ui` shows the notifications about itself that hold in its UI, those that core and R raise about it included, such as the conditions of its requests, which it reads from `notifications.get()`, or through the React SDK's `useNotified()` given the plugin ([UI modules in JS](Rewrite-1.1.7#react)).
-  It shows what fails of something that the user did in its UI beside where the user did it, such as why the store refused an edit of one of its forms, and takes that call's notifications, so that core raises none (Taking a call's notifications).
+  It shows what fails of something that the user did in its UI close to where the user did it, such as why the store refused an edit of one of its forms, and takes that call's notifications, so that core raises none (Taking a call's notifications).
+  Close means near, not as near as can be: the Edit board plugin says why below a form, and below a table for an edit in one of its rows, rather than at the row ([The Edit board plugin](Rewrite-1.1.15#each-edit-at-once)).
   How it shows them is its own.
 - A frontend shows the notifications about a block on the block's card, and those about a plugin by the plugin's section or panel, where it tells the user that a warning or an error holds while the section is collapsed or the panel is behind another tab, such as with a badge on the section's title or a dot on the panel's tab.
 - A frontend shows a notification in a place for the whole board, such as a toast, only where it draws no place for what the notification concerns: the board, a link, a stack or a board option where it draws none for them, a plugin without a `ui`, such as a storage plugin, or a plugin whose section or panel it does not draw, such as a panel that the dock's active view does not hold.
