@@ -69,7 +69,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
   Since pi is young, its 1.0 out in October 2026, the plugin pins its version and reaches it through one module of its own, which streams a turn with the tools and the hooks, so that a move to the AI SDK, which passed the same checks, rewrites that module alone.
   Its license is MIT, and what it brings into the bundle is under MIT, Apache-2.0 or the Unlicense, so blockr.assistant may ship all of it under its own GPL (>= 3) (notes).
   The bundle keeps no license text, so the plugin's build writes the texts beside it, and DESCRIPTION names each holder as `cph`, as blockr.core's names Meta for React.
-  Which library the chat builds on, assistant-ui or components of the plugin's own, is for the issue that draws the chat to settle ([The assistant's chat](Rewrite-1.4.4#the-panel)).
+  The chat builds on assistant-ui, which the PR that drew the chat kept, rather than components of the plugin's own ([The assistant's chat](Rewrite-1.4.4#the-panel)).
   Beside the library it builds on, the chat draws its other controls and overlays with the components of core's React SDK ([The assistant's chat](Rewrite-1.4.4#the-panel)).
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
   Should the loop move to the AI SDK, it reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id, which the AI SDK sends there by default (notes).

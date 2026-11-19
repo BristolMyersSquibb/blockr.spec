@@ -52,7 +52,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 ### The panel
 
 The assistant's class has a `ui`, a module whose `render()` core calls with the element that the frontend gives `mountPlugin()` ([Plugins](Rewrite-1.1.12#plugin-classes)).
-It draws the chat in React, on the one copy that core ships, in a root of its own, in blockr.ui's design system ([UI modules in JS](Rewrite-1.1.7#react), [UI kit and design system for the client](Rewrite-1.7)).
+It draws the chat in React, on the one copy that core ships, in a root of its own, in blockr.ui's design system through the tokens of core's theme, as every plugin's UI takes its look ([UI modules in JS](Rewrite-1.1.7#react), [Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
 It sizes itself from its element, as a container, so that the message field and the footer fit a rail.
 The list of models, which needs more room than the panel, opens in an overlay of core's React SDK ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)), while the drawer of conversations opens over the chat, in the chat's own element (Conversations).
 The chat's controls and overlays beside the transcript and the message field, such as the buttons of its drawer and its footer, the drawer's search and list, the field for the visitor's key and the login beside it, the dialog before a link opens another site, an attachment opened large and the pick of the model, are the components of core's React SDK ([UI modules in JS](Rewrite-1.1.7#react)).
@@ -65,9 +65,10 @@ The dock may mount the chat again, as when it redraws a view, so what has to out
 
 The chat is built on assistant-ui's primitives over its `ExternalStoreRuntime`, which displays messages that a store of the app's own holds, here the assistant's state (notes).
 That runtime gives stopping, attachments and a list of conversations through handlers that the plugin writes.
-Whether it serves, against components of the plugin's own, is for the issue that draws the chat to settle ([Assistant as a plugin](Rewrite-1.4#proposal)).
-It serves only where it meets conditions 1 and 6, draws on core's React in blockr.ui's design system, as above, and has a license that lets blockr.assistant ship it in the plugin's bundle, as MIT does (notes).
-Where both serve, the issue keeps the one that needs fewer lines of the plugin's own TypeScript for the transcript, the message field and the stop button, and the smaller bundle breaks a tie.
+The PR that drew the chat kept assistant-ui, rather than components of the plugin's own ([blockr.assistant#257](https://github.com/BristolMyersSquibb/blockr.assistant/pull/257)).
+It meets conditions 1 and 6, runs on core's React, and ships no styles of its own, so the chat draws it in the design system as above.
+Its packages ship under licenses that let blockr.assistant bundle them (notes).
+The chat's libraries load in a file of their own as the chat first mounts, since core imports every plugin class's module before it opens a board, and a static import would hold up every board until the page had fetched them.
 
 ### The message field and a turn
 
@@ -128,7 +129,8 @@ Where the model calls tools with no text between the calls, the calls to each to
 A call whose result is marked as an error shows as failed, as today's rows show it ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 A call that holds no result and belongs to no turn that runs, as in a board saved during a turn, shows that the turn ended before the call returned, as the plugin tells the model ([The assistant's state](Rewrite-1.4.3#the-state)).
 The plots that `inspect_results` returns show in its result while the board stays open, since the plugin keeps their bytes in its memory ([The assistant's state](Rewrite-1.4.3#files-and-images)), and once the board opens again the result says how many it had, as the state counts them.
-The edit tool's row names the commands that it ran by their labels, which `core.commands.registered()` gives, such as "Add block" and "Add link", and each block that it changed with its status, drawn as the design system draws a block's status ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
+The edit tool's row names the commands that it ran by their labels, which `core.commands.registered()` gives, such as "Add block" and "Add link", and each block of the edit's review with its status, drawn as the design system draws a block's status ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
+The review does not mark which of its blocks the edit changed, so the row shows them all, in the review's order ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 The status is the one that the edit's review gave, and a command that the app does not register, or a block that has left the board, shows by its id.
 A refused edit shows the command that refused and why, as the model gets it ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 
@@ -153,6 +155,7 @@ Deleting the open conversation opens the chat on no conversation, on the greetin
 It marks the conversation whose turn runs, which the user can leave and come back to while the turn goes on (While a turn runs).
 It switches conversations and searches their titles without a command, since neither changes the board.
 A conversation takes its title from a model call after its first exchange, as shinychat's titles come today, until the user renames it.
+A conversation that the chat starts is titled "New conversation" until that call titles it.
 Which conversation is open stays in the browser's local storage, and a board that lacks that conversation opens on the greeting ([The assistant's state](Rewrite-1.4.3#the-state)).
 
 ### Attachments
@@ -237,7 +240,8 @@ Where R cannot list the skills, the chat goes on without any, until the plugin a
 Where the template fails, the calls go on with blockr.assistant's own template, until the plugin asks again as the next board opens ([The system prompt](Rewrite-1.4.5#what-a-deployment-adds)).
 A failure that ends a turn shows at that turn in the transcript too, so that the user sees why the reply stopped, while the board stays open, since the plugin keeps it in its memory rather than in the conversation.
 The conversation keeps what the turn finished, and what its reply streamed until the failure, as after a stop (Stopping a turn), and a tool call left without a result reads, to the model, that the turn ended before the call returned ([The assistant's state](Rewrite-1.4.3#the-state)).
-Where the page cannot load the chat's own code, the panel says so and the plugin logs why, with no notification, since the panel is where the user looks for the chat ([blockr.assistant#257](https://github.com/BristolMyersSquibb/blockr.assistant/pull/257)).
+Where the page cannot load the chat's libraries, the panel says so and the plugin logs why, with no notification, since the panel is where the user looks for the chat ([blockr.assistant#257](https://github.com/BristolMyersSquibb/blockr.assistant/pull/257)).
+The chat's next mount tries again.
 What a tool returns as a failure, such as `inspect_results` on a locked board, which it refuses before R reads anything, goes to the model as the tool's result, which tells the user in its reply ([The assistant's tools](Rewrite-1.4.2#how-failures-reach-the-model)).
 
 ### On a locked board
@@ -257,7 +261,9 @@ Read on 2026-11-12, assistant-ui's `ExternalStoreRuntime` "bridges your existing
 It takes a conversation's messages as an array in `messages`, and needs `onNew` for a new message and `onCancel` to stop, while `convertMessage` maps the plugin's messages to its own, attachments come through its `adapters`, and conversations through `ExternalStoreThreadListAdapter`.
 Editing and its branches, once they come, go through `onEdit`, "required for edit feature", `setMessages`, "required for branch switching", and a `messageRepository` made with `ExportedMessageRepository.fromBranchableArray()`, where every message has an `id` and a `parentId` and "messages with the same `parentId` create branches".
 Its `onReload` regenerates a reply, which today's chat does not offer, so the chat leaves it out for now.
-Its package, `@assistant-ui/react`, is under MIT, read on npm on 2026-11-13 for 0.15.36, so its text joins those that the plugin's build writes beside the bundle ([Assistant as a plugin](Rewrite-1.4#proposal)).
+Its package, `@assistant-ui/react`, is under MIT, read on npm on 2026-11-13 for 0.15.36, and the packages that it brings into the bundle are under MIT, 0BSD, BSD-3-Clause and ISC, so their texts join those that the plugin's build writes beside the bundle ([Assistant as a plugin](Rewrite-1.4#proposal)).
+In the PR that drew the chat, the chat's file held 549 KB minified and 165 KB gzipped, of which assistant-ui took about 383 KB (115 KB gzipped) and the Markdown that the chat needs either way 166 KB (50 KB) ([blockr.assistant#257](https://github.com/BristolMyersSquibb/blockr.assistant/pull/257)).
+That PR checked in Chromium that the chat draws nothing outside its element, with the panel at 240 px too.
 
 Today's code, at `fcbdb27`: the footer's button for the drawer clicks shinychat's hidden trigger ([R/ext-server.R#L318-L364](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L318-L364)), the meter counts each turn's input and output tokens ([R/ext-server.R#L1281-L1309](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1281-L1309)), and the skin over shinychat's classes is scoped under `.asst-panel` ([R/ext-skin.R#L84-L344](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-skin.R#L84-L344)).
 Today's `/clear` starts a new chat through shinychat's `new_chat()` and drops what is staged ([R/ext-server.R#L1055-L1067](https://github.com/BristolMyersSquibb/blockr.assistant/blob/fcbdb2756a8965915159b7b5ec51197ae458c2c8/R/ext-server.R#L1055-L1067)).
