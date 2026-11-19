@@ -11,7 +11,7 @@ What a conversation holds is [The assistant's state](Rewrite-1.4.3)'s, what the 
 
 ## What must hold
 
-1. The chat draws only in the element that a frontend gives it and in the browser's top layer, and works at any size down to a rail's, under every frontend ([Places the dock offers plugins](Rewrite-1.2.4#what-must-hold)).
+1. The chat draws only in the element that a frontend gives it and in the overlays of core's React SDK, and works at any size down to a rail's, under every frontend ([Places the dock offers plugins](Rewrite-1.2.4#what-must-hold)).
 2. What today's chat offers carries over, but for what Today drops with its reason.
 3. The user can stop a turn at any point, and a stopped turn leaves applied every edit that it finished, and none half applied.
 4. The user takes back the assistant's edits with the frontend's Undo, in one history with their own, or the assistant's last undo step with `/undo`.
@@ -53,7 +53,8 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 The assistant's class has a `ui`, a module whose `render()` core calls with the element that the frontend gives `mountPlugin()` ([Plugins](Rewrite-1.1.12#plugin-classes)).
 It draws the chat in React, on the one copy that core ships, in a root of its own, in blockr.ui's design system ([UI modules in JS](Rewrite-1.1.7#react), [UI kit and design system for the client](Rewrite-1.7)).
 It sizes itself from its element, as a container, so that the message field and the footer fit a rail.
-What needs more room than the panel, such as the drawer of conversations or the list of models, opens in the browser's top layer, as a popover or a `<dialog>` ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
+The list of models, which needs more room than the panel, opens in an overlay of core's React SDK ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)), while the drawer of conversations opens over the chat, in the chat's own element (Conversations).
+The chat's controls and overlays beside the transcript and the message field, such as the buttons of its drawer and its footer, the drawer's search and list, the field for the visitor's key and the login beside it, the dialog before a link opens another site, an attachment opened large and the pick of the model, are the components of core's React SDK ([UI modules in JS](Rewrite-1.1.7#react)).
 The panel's tab shows the plugin's name, Assistant.
 
 The chat follows the assistant's state through `core.store.subscribe()`, so that a conversation shows the same whichever command changed it last (condition 6).
@@ -143,7 +144,7 @@ Changes to the conversations take no undo step, so none of the frontend's Undo, 
 
 ### Conversations
 
-A button in the footer opens the drawer of conversations in the top layer.
+A button in the footer opens the drawer of conversations over the chat, in the chat's own element, as today's drawer opens over its chat, so that it shows at the chat's size wherever a frontend puts the chat, while the chat makes the rest of itself inert and the board stays usable.
 The drawer lists the board's conversations, the last updated first, grouped by how recently each was updated, as today's drawer groups them.
 Its buttons start, rename and delete conversations, as today's drawer does, and it asks the user to confirm before it deletes one.
 Each button runs a command of the assistant's class, `blockr.assistant-add_conversation`, `blockr.assistant-rename_conversation` or `blockr.assistant-remove_conversation` ([The assistant's state](Rewrite-1.4.3#commands)), except where `chat_save_turns` is `0` (The panel).
@@ -191,7 +192,7 @@ The footer shows the tokens that the conversation has spent, input and output, f
 
 ### The model
 
-Where the deployment offers more than one model, or names none, the footer shows the model that the open conversation's next turn talks to, beside the meter, and lists the models offered in the top layer to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where the deployment offers more than one model, or names none, the footer shows the model that the open conversation's next turn talks to, beside the meter, and lists the models offered in an overlay of core's React SDK to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A pick sets the model of the open conversation alone, through `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)).
 A new conversation starts on the open conversation's pick, which the chat passes to `blockr.assistant-add_conversation`.
 Where no conversation is open, the footer shows the default, and a pick made then goes to the next conversation that the chat adds, whether the first message, the drawer or `/clear` adds it ([Model access](Rewrite-1.4.1#who-picks-the-model)).

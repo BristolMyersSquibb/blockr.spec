@@ -13,7 +13,7 @@ The navbar is [The dock's navbar](Rewrite-1.2.5)'s, the card's own design is [Bl
 Condition 3 of [Client-drawn dock](Rewrite-1.2#what-must-hold) rests on this page.
 
 1. The dock can show every plugin whose class has a `ui` in a panel, with the plugin's name on the panel's tab, and draws the controls of the app's storage plugin in its navbar ([The dock's navbar](Rewrite-1.2.5#what-must-hold)), for a plugin of a package that the dock does not know too.
-2. A plugin draws only in the elements that the dock gives it and in the browser's top layer, and nothing it draws depends on the dock's markup, so that it draws the same under any frontend.
+2. A plugin draws only in the elements that the dock gives it and in the overlays of core's React SDK, and nothing it draws depends on the dock's markup, so that it draws the same under any frontend.
 3. A plugin can show its own panel or a block's in the active view, and change which views hold which panels, as today's extensions can.
 4. The dock asks nothing of a plugin beyond what core's `PluginClass` holds, so that every plugin works under the dock as under any other frontend.
 5. What today's extensions take from the dock carries over where a package still needs it, as condition 4 of [Client-drawn dock](Rewrite-1.2#what-must-hold) asks, and Today names what goes, with the reason.
@@ -71,9 +71,8 @@ So no plugin has to tell a collapsed rail from a narrow panel by its width, as t
 The panel's frame, tab and close button are the dock's, in blockr.ui's design system.
 What is inside the panel is the plugin's, in a root of its own ([Plugins](Rewrite-1.1.12#plugin-classes)).
 
-A plugin that needs more room than its panel, as for a menu or a form, opens it in the browser's top layer, as a `<dialog>` that `showModal()` opens or as a popover.
-An element there "cannot be clipped by anything in the document" ([CSS Positioned Layout 4](https://drafts.csswg.org/css-position-4/#top-layer)).
-It still sits inside the plugin's element in the DOM, as the contract asks of a module ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+A plugin that needs more room than its panel, as for a menu or a form, opens it in an overlay of core's React SDK, such as its `Modal` or its `Popover`, which React Aria draws in a portal at the end of the page's body, where no panel clips it ([UI modules in JS](Rewrite-1.1.7#react)).
+It opens nothing in the browser's top layer, such as a `<dialog>` that `showModal()` opens or a popover, since an overlay of the SDK opened inside it would show beneath it.
 So the dock offers no place for dialogs.
 
 A board that holds no state for the dock opens on one view, which shows the panel of every plugin of the app that has a `ui` on its left rail, beside the blocks' panels, as today ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
@@ -98,7 +97,7 @@ A locked dock adds no panel, so there `blockr.dock-show_panel` only brings to th
 
 ### Settings
 
-A plugin keeps a setting of its own in its state first, so that the setting saves and migrates with the plugin, and the plugin's UI shows it and changes it through the plugin's commands, in its panel or in the top layer ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+A plugin keeps a setting of its own in its state first, so that the setting saves and migrates with the plugin, and the plugin's UI shows it and changes it through the plugin's commands, in its panel or in an overlay ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 A board option is no substitute for that state, since it is meant for how the board is shown, such as the dock's `view_tabs` ([Board options and blockr options](Rewrite-1.1.13#the-two-kinds)).
 A plugin's class names the board options of that kind that it requires in `options`, and its package registers those it ships ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 The dock's options sidebar shows each board option that the board holds, which include every one that something on the page requires, on the page of its `category`, and mounts each with `mountOption()`.
@@ -112,7 +111,7 @@ Today's sidebar shows only the code export on a locked board ([R/board-options.R
 
 Besides the panel, the dock gives plugins what every frontend gives them: it draws the notifications of `CoreApi` ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)), and the controls of the app's storage plugin in its navbar ([The dock's navbar](Rewrite-1.2.5#the-storage-plugins-controls)).
 It draws the menus and quick actions of board actions with its own menus, and shows their advanced actions in its sidebar, which the user may pin, through the two members that core's `FrontendModule` offers every frontend ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
-What those controls cannot hold, the storage plugin draws in a dialog of its own, in the top layer, which the dock does not place, as it places no plugin's dialog ([A plugin's panel](#a-plugins-panel)).
+What those controls cannot hold, the storage plugin draws in a dialog of its own, an overlay of core's React SDK, which the dock does not place, as it places no plugin's dialog ([A plugin's panel](#a-plugins-panel)).
 The dock offers plugins no other place, so it declares no member of its own on core's `PluginClass`, and reads no member of a plugin's class beyond core's, as core's basic frontend reads none ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares ([TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)), and which changes nothing for the plugins that do not set it.
 
