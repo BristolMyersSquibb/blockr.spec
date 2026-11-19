@@ -22,7 +22,8 @@ The dock, which draws the board from R with DOM operations, shows the same split
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen, except what an app has R evaluate in the background while it has nothing else to run ([Evaluation in the client](Rewrite-1.1.10#demand)).
 4. Boards written by today's `blockr_ser()` open, with the dock's views, their grids and the DAG's positions, for block classes that have been ported ([Serialization](Rewrite-1.1.4)).
 5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
-6. The [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui stays valid, so the dock and the other plugins follow it, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+6. Every UI on the page draws with the components of core's React SDK, which are React Aria's, wherever the SDK has one ([UI modules in JS](Rewrite-1.1.7#react)).
+   It takes its look from the [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) documented in blockr.ui, and departs from it, with a reason, wherever React Aria's components do better, while core's client builds on Tailwind CSS ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 
 ## Principles
 
@@ -68,8 +69,8 @@ The client follows established JS patterns, as the module contract follows anywi
 - Plugins are the only way to extend a board besides block classes, and core defines them: a plugin keeps its state in the board, works on it through core's JS API, and offers its UI as an ES module that core mounts where the frontend places it, so that it works under every frontend ([Plugins](Rewrite-1.1.12)).
   The frontend is a plugin too: the dock is a React app on core's JS API, which places the other plugins in its panels, and core's basic frontend, which an app runs wherever no other available package gives a frontend, is another ([Client-drawn dock](Rewrite-1.2), [Plugins](Rewrite-1.1.12#the-frontend)).
 - Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy that core puts on the page ([UI modules in JS](Rewrite-1.1.7)).
-  Core draws its own UIs with that copy too, as the dock does, so that they are written as the UIs of packages are ([UI modules in JS](Rewrite-1.1.7#react)).
-  Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
+  Core draws its own UIs with that copy too, as the dock does, and with React Aria's components, which its React SDK offers every package, so that they are written as the UIs of packages are ([UI modules in JS](Rewrite-1.1.7#react)).
+  Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from the SDK's components, built on that contract, is still to be decided.
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
 - The code that a board's script exports is the code that ran, since R builds every block's expression from its block class's `expr`, while exporting it is a plugin's, blockr.code's, rather than core's.
   A board can run any R code, since a block may parse a string into code, so a client can read whatever the R process can, its environment variables and R options included ([Client-owned board state](Rewrite-1.1#proposal)), and limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
@@ -107,8 +108,8 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
-| blockr.ui | Carried to the client: the design system that the dock and the plugins follow, what block UIs draw with in place of today's widgets, and a table preview as a renderer of core's table outputs | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
-| blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time | [Block classes in R](Rewrite-1.1.5) | blockr.core, blockr.ui |
+| blockr.ui | Carried to the client: the design system, from which the dock and the plugins take their look and which restyles the components of core's React SDK under the dock, and a table preview as a renderer of core's table outputs, while block UIs draw with the SDK's components in place of today's widgets | [UI kit and design system for the client](Rewrite-1.7) | blockr.core |
+| blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with the components of core's React SDK | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
 | blockr.convert | New: turns each file of today's stack into a JSON board once, and checks the migration notes of every package against the files that its examples saved | [The conversion and the migration notes](Rewrite-1.9) | Every package that wrote today's files or whose functions app scripts call |

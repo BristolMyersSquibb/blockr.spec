@@ -159,7 +159,7 @@ Right-click to add one.", in the design system's style for an empty place, as to
 
 The DAG takes the design system's colours from core's tokens, without blockr.ui's code for now ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)): the category and status tokens for its nodes, and the theme's tokens for surfaces, text and borders, from which it sets React Flow's own styles.
 It follows the theme that core's board option `dark_mode` switches the page to.
-It draws its tooltips in the design system's style, as the dock draws its own, until blockr.ui offers them in one module with the mark and the status dot ([UI kit and design system for the client](Rewrite-1.7)).
+It draws its tooltips with the `Tooltip` of core's React SDK, as the dock does, and the block's mark and status dot itself, until blockr.ui offers them in one module ([UI modules in JS](Rewrite-1.1.7#react), [UI kit and design system for the client](Rewrite-1.7)).
 Core or the frontend draws its menus and quick actions ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 
 ### On a locked board

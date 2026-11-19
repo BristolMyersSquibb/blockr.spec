@@ -368,7 +368,7 @@ But its type errors would then name two types `Notification`, so such a module i
 Core keeps the type a module export and never declares it global, since TypeScript would then merge it into the browser's interface.
 The type replaces `Note` in `CoreApi`, and the toasts replace the basic frontend's `Notice` and the list of them that `srcts/modules/basic/notices.ts` keeps.
 
-The basic frontend's dialogs are modal: `showModal()` puts each in the top layer, above any `z-index`, and makes the rest of the page inert (`srcts/modules/basic/ui.tsx` at 47).
+The basic frontend's dialogs are React Aria's `Modal`, which makes the rest of the page inert while a dialog is open ([blockr.core#752](https://github.com/BristolMyersSquibb/blockr.core/pull/752)).
 So the toasts show inside an open dialog, through a portal into an element at the dialog's end, so that they come after its content in the order of the keyboard's focus while they stay fixed to the window's corner, above the backdrop, since the toast of an edit that the dialog made would otherwise wait behind it, as the list above the board does today ([blockr.core#610](https://github.com/BristolMyersSquibb/blockr.core/pull/610)).
 A message's toast is a status and a warning's or an error's an alert, which a screen reader reads out at once, as the items of that list are (`srcts/modules/basic/board.tsx` at 126).
 

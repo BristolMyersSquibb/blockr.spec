@@ -50,6 +50,7 @@ Once board state moves to the client ([Client-owned board state](Rewrite-1.1)), 
 
 - The dock is a React app on core's JS API, with the layout drawn by `dockview-react`, since React has the largest pool of components, AI tools write it best, and the prototype of [blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493) ran on it.
   React draws only the chrome, while the board and commands stay in core's store.
+  The dock draws the chrome with the components of core's React SDK wherever the SDK has one, such as its menus and tooltips, and with components of its own only where the SDK has none, such as the card's frame ([UI modules in JS](Rewrite-1.1.7#react)).
   The dock's model (views, grids and the `views$mod` grammar) moves to TypeScript as the dock plugin's state, which the dock's commands change ([Plugins](Rewrite-1.1.12#the-frontend), [The dock's state](Rewrite-1.2.1)), since with the client as sole owner the model is board state.
   A view stores its arrangement as the dock's own grid, as today: its splits, its sizes as ratios, its tab groups with the panel each shows, and its rails ([R/dock-grid.R#L1-L32](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-grid.R#L1-L32)).
   So a board saved today opens with its grids unchanged, and no JSON board depends on dockview, should the dock ever leave it.
