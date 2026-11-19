@@ -2,7 +2,7 @@
 Status: settled on 2026-11-14. Design for [Assistant as a plugin](Rewrite-1.4).
 
 One of the design pages of the assistant ([Assistant as a plugin](Rewrite-1.4)): the tools that the model calls, what each reads, changes and returns, and the requests that some of them send to R.
-It shapes running and planning a batch as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)) and the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)).
+It shapes running and planning a batch as one step in blockr.core ([blockr.core#619](https://github.com/BristolMyersSquibb/blockr.core/issues/619)), the requests in R ([blockr.assistant#222](https://github.com/BristolMyersSquibb/blockr.assistant/issues/222)), the read tools ([blockr.assistant#223](https://github.com/BristolMyersSquibb/blockr.assistant/issues/223)), the edit tool ([blockr.assistant#224](https://github.com/BristolMyersSquibb/blockr.assistant/issues/224)), the sections that the plugin writes ([blockr.assistant#227](https://github.com/BristolMyersSquibb/blockr.assistant/issues/227)), the template ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), the migration notes ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)), the guide ([blockr.assistant#241](https://github.com/BristolMyersSquibb/blockr.assistant/issues/241)) and the Work item of [Benchmarks of the new stack](Rewrite-1.8#work) that compares the edit tool with other versions.
 It shapes how the tools take the notifications of their calls too ([blockr.assistant#283](https://github.com/BristolMyersSquibb/blockr.assistant/issues/283)).
 Where the calls to a model go is [Model access](Rewrite-1.4.1)'s, the conversations that hold the tools' calls and results are [The assistant's state](Rewrite-1.4.3)'s, how the chat shows those calls is [The assistant's chat](Rewrite-1.4.4)'s, and what the model is told before each call is [The system prompt](Rewrite-1.4.5)'s.
 
@@ -159,8 +159,15 @@ The benchmark compares it with two others ([The assistant's benchmark](Rewrite-1
 Each tool of these versions runs the steps above on a batch of one command, such as `blockr.core-add_block` or `blockr.core-set_block`.
 So an edit through them takes one call for each command, and each call is a step of its own.
 Their tools' definitions hold the schemas of the app's commands or classes, which a provider may refuse in part (notes).
-How many tools for block classes the model is offered at once, as today's typed tools come twenty at a time, is for the issue that runs the comparison to settle.
+The issue that runs the comparison builds each version on a branch of its own, with the rules and the tools' descriptions changed to match ([The system prompt](Rewrite-1.4.5#the-rules)).
+It also settles two questions:
+
+- How many tools for block classes the model is offered at once, as today's typed tools come twenty at a time.
+- Which version the assistant keeps where another version does only as well as the edit tool, or where both other versions pass.
+
 The assistant keeps the version that passes the comparison ([The assistant's benchmark](Rewrite-1.8.1#what-a-comparison-reports)).
+Where the assistant keeps the version with tools for each block class, the blockr option `assistant_block_tool_pool` comes back, to cap how many of them the model is offered at once ([Assistant as a plugin](Rewrite-1.4#today)).
+The migration notes then drop it from the options that go.
 
 ### The requests in R
 

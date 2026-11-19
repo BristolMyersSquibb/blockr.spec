@@ -2,7 +2,7 @@
 Status: review. Design for [Benchmarks of the new stack](Rewrite-1.8).
 
 One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
-It shapes the Work items of that part that build the benchmark and take its baseline, and the issues of [Assistant as a plugin](Rewrite-1.4) that settle a decision by its comparisons: the rules, the preambles and the tools' descriptions ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)), compaction ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)) and the comparison of the edit tool with other versions ([blockr.assistant#238](https://github.com/BristolMyersSquibb/blockr.assistant/issues/238)).
+It shapes the Work items of that part that build the benchmark, compare the edit tool with other versions and take its baseline, and the issues of [Assistant as a plugin](Rewrite-1.4) that settle a decision by its comparisons: the rules, the preambles and the tools' descriptions ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)) and compaction ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)).
 Each decision is designed on the page that The decisions it compares names, and how fast the new stack runs is the part's.
 
 ## What must hold
