@@ -7,6 +7,7 @@ It shapes how a turn runs and stops ([blockr.assistant#225](https://github.com/B
 It shapes showing the plugin's notifications above the message field too ([blockr.assistant#284](https://github.com/BristolMyersSquibb/blockr.assistant/issues/284)).
 It shapes keeping a visitor's key in the browser's local storage where a deployment opts in, too ([blockr.assistant#273](https://github.com/BristolMyersSquibb/blockr.assistant/issues/273)).
 That issue departs from "A reload asks again" (The credential), and this page changes to match once its PR merges.
+It shapes drawing the chat with core's React SDK too: its dialogs, buttons and fields ([blockr.assistant#294](https://github.com/BristolMyersSquibb/blockr.assistant/issues/294)), and its tooltips, folds, attachments and the list of the drawer ([blockr.assistant#295](https://github.com/BristolMyersSquibb/blockr.assistant/issues/295)).
 What a conversation holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, how a call is authenticated and who picks the model is [Model access](Rewrite-1.4.1)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
 ## What must hold
