@@ -21,7 +21,7 @@ The edits themselves are commands, which stay [Board updates](Rewrite-1.1.2#comm
 5. The UI of a board action is written once, by the package that registers it, and every trigger reuses it, as core's block picker serves both the card's menu of core's basic frontend and the Edit board plugin today ([The Edit board plugin](Rewrite-1.1.15#where-it-shows)).
 6. A frontend needs to draw nothing for board actions to work: core draws every menu and quick action, and shows advanced actions in a dialog of its own.
    Core's menus take their look from core's theme, which blockr.ui sets under the dock ([UI kit and design system for the client](Rewrite-1.7#proposal)), and a frontend may show advanced actions in a place of its own, as may the package that opens a menu, for the advanced actions that the menu opens.
-7. A frontend may let the user pin its place for advanced actions, as the dock lets the user pin its actions sidebar today.
+7. A frontend may let the user pin its place for advanced actions, as the dock lets the user pin its actions sidebar today, and so may the package that opens a menu, for a place of its own, as the DAG's panel does ([Drawing the DAG](Rewrite-1.3.2#its-advanced-actions)).
    A pinned place stays open once an advanced action ends, and may move on to another target by the frontend's own rules, as the pinned sidebar follows the DAG's selection today ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162)).
 8. Under a lock, a menu offers no board action whose commands the lock refuses, as a frontend draws no control for what a lock fixes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 9. Commands stay free of UI, so that what runs commands without a user, such as the assistant, never meets a board action ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
@@ -161,6 +161,7 @@ Both take a `notifier`, which gets the notifications of a refused batch of the b
 Both take an `advanced` too, of the shape of the frontend's `advanced` member (What a frontend gives), which core calls in place of the frontend's member for every advanced action that the menu or the trigger opens.
 So the package that opens a menu may show the menu's advanced actions in room of its own.
 The Edit board plugin does so for the menu of a row, so that the row turns into Edit link's form, as a row turns into its form today ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)).
+The DAG does so in a panel beside the object that it opened a menu on, where that panel holds up ([Drawing the DAG](Rewrite-1.3.2#its-advanced-actions)).
 A caller that gives no `advanced` leaves the advanced action to the frontend's place.
 
 The card's menu of core's basic frontend, the "…" menu of the dock's card, the DAG's menus of a node, a link, a stack, its canvas and its selection, the rows of the Edit board plugin and its selection ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)), and the rows of blockr.outline all open their menus through core.

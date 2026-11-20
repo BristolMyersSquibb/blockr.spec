@@ -1,7 +1,7 @@
 # Drawing the DAG: nodes, links, stacks, menus and the toolbar
 Status: review. Design for [Client-drawn DAG](Rewrite-1.3).
 
-One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
+One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens and where their advanced actions show, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
 It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, open its menus, register its board actions and draw its toolbar, and the spike's drawing of stacks that collapse.
 What the DAG keeps and the commands that change it are [The DAG's state, commands and placement](Rewrite-1.3.1)'s, and what a board action is, with the menus that offer one, is [Board actions](Rewrite-1.1.16)'s.
 
@@ -89,7 +89,7 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   A click with Shift adds to the selection, as today.
   A drag with Alt held selects what its rectangle covers, as today.
 - A selection of one node shows its block through `core.show()`, which every frontend carries out in its own way, the dock in the active view ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)), while a selection of several shows none, as today.
-- The DAG sets every selection in `core.selection`, which the dock's pinned sidebar follows ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+- The DAG sets every selection in `core.selection`, which the dock's pinned sidebar follows, and so does the DAG's own pinned panel (Its advanced actions, [Board actions](Rewrite-1.1.16#the-advanced-action)).
 - A right click on a node, a link, a stack or the canvas opens that object's menu through `core.boardActions.menu()`, at the pointer ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
   Where the object belongs to a selection of several, the right click opens the selection's menu instead, and so does a right click on the box that React Flow draws around a selection.
   For the canvas, the DAG passes `menu()` an `extend` that puts each block, or stack that holds no block, that the board action adds where the user right-clicked, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
@@ -125,6 +125,24 @@ The toolbar floats in a column at the canvas's top left, as today, and holds, in
 Each button shows its board action's icon, has the board action's label as its tooltip, and opens its quick action below it, or its advanced action where it has no quick action on the board, as Create link, or runs it where it asks nothing ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 A board action that another package registers on the board or on a selection gets a button too, as it gets a row in the DAG's menus.
 A block, or a stack that holds no block, that the toolbar's Add block or Create stack adds starts from the middle of the view, where the DAG runs the placement strategy for it ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
+
+### Its advanced actions
+
+The DAG shows the advanced actions that its menus, its toolbar and its gestures open close to where the user opened them, rather than in the frontend's place.
+It hands `menu()` and `trigger()` an `advanced`, through which core mounts an advanced action in a panel that the DAG draws on its canvas ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)):
+
+1. The user opens Edit link on a link, through the link's menu and the open icon of its quick action.
+2. Core calls the DAG's `advanced`.
+3. The DAG draws its panel beside the link and has core mount the form there.
+4. Once `done()` ends the advanced action, the DAG closes the panel.
+
+The DAG tries this first, and building it settles whether it works well, by two tests:
+
+1. The panel, at least 420 px wide as every place of an advanced action is, leaves in view the node, the link or the stack that the advanced action is about, since the DAG places the panel beside it and pans the canvas where it must ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+2. The user can pin the panel, and a pinned panel stays open once `done()` ends its advanced action and follows the DAG's selection, as the dock's pinned sidebar does today ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162)).
+
+Where the panel fails either test, the DAG hands core no `advanced`, and its advanced actions show in the frontend's place, as those of every other menu do, the dock's sidebar under the dock.
+Where the canvas has no room for the panel beside the object, as in a narrow panel of the dock, the DAG hands that call no `advanced` either.
 
 ### Search and the outline
 
