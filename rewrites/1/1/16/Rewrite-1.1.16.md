@@ -146,10 +146,10 @@ A package that opens a menu of a board object asks core to open it at the point 
 boardActions: {                                                 // in CoreApi
   on(target: Target): BoardAction[];                            // what a menu offers for the target, core's board actions first, then each package's
   menu(target: Target, opts: { el: HTMLElement; anchor: DOMRect;
-       extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void;
+       extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[], action: BoardAction): void;
        advanced?: FrontendModule["advanced"] }): void;                                                        // opens the target's menu at the anchor
   trigger(id: string, target: Target, opts: { el: HTMLElement; anchor?: DOMRect;
-          extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void;
+          extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[], action: BoardAction): void;
           advanced?: FrontendModule["advanced"] }): Promise<void>;                                            // opens its quick action or its advanced action, or runs it
   mountAdvanced(el: HTMLElement, id: string, target: Target, picked?: Json): () => void;   // an advanced action, in room that a plugin gives
 };
@@ -157,7 +157,8 @@ boardActions: {                                                 // in CoreApi
 
 In both `menu()` and `trigger()`, `el` is the element that the user triggered from, to which the keyboard's focus returns as the menu closes, and `anchor` is where the menu opens, such as the pointer of a right click, or the box of `el` where `trigger()` is given none.
 The promise that `trigger()` returns resolves once the board action ends, as its batch has run or its menu or advanced action has closed without one, and rejects with the refusal where a command of the batch fails.
-Both take a `notifier`, which gets the notifications of a refused batch of the board action that they open, in place of core raising them, as `commands.run()` does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)), so that the DAG shows a refusal at the node, the link or the point where it opened the menu ([Drawing the DAG](Rewrite-1.3.2#gestures)).
+Both take a `notifier`, which gets the notifications of a refused batch of the board action that they open, with that board action, in place of core raising them, as `commands.run()` does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
+So the DAG shows a refusal at the node, the link or the point where it opened the menu ([Drawing the DAG](Rewrite-1.3.2#gestures)), and the Edit board plugin heads a refusal with a sentence that names the edit that failed ([The Edit board plugin](Rewrite-1.1.15#each-edit-at-once)).
 Both take an `advanced` too, of the shape of the frontend's `advanced` member (What a frontend gives), which core calls in place of the frontend's member for every advanced action that the menu or the trigger opens.
 So the package that opens a menu may show the menu's advanced actions in room of its own.
 The Edit board plugin does so for the menu of a row, so that the row turns into Edit link's form, as a row turns into its form today ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)).
