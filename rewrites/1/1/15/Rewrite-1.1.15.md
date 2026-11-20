@@ -90,12 +90,13 @@ Staging the block edits as well, as [blockr.dock#199](https://github.com/Bristol
 The plugin keeps nothing in its state, and nothing staged in its module.
 That is this plugin's choice, not the API's: another plugin may stage edits and apply them later as one delta, which holds any number of blocks, links and stacks, through `core.store.apply()` or a command of its own, as one step that one undo takes back ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 
-Where the store or the command registry refuses one of its edits, the plugin shows why close to the form or the button that made it, in the colour of an error, until the user's next edit there, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
+Where the store or the command registry refuses one of its edits, the plugin shows why close to the form or the button that made it, in a banner in the colour of an error, until the user's next edit there, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 Close means near the control, not as near as can be.
 A form that adds a block, a link or a stack shows why below its buttons.
 A table shows why below itself for an edit in any of its rows, made with a row's buttons or with the form that changes the row.
 A line below the row would break up the table, and the row's buttons sit in a column too narrow for a sentence.
-The table's reason starts with a sentence that names the edit, such as `Could not remove the stack "Input".`, because the store names links and stacks by ids that the table does not show.
+Each reason starts with a sentence that names the edit, such as `Could not add the link.` or `Could not remove the stack "Input".`, which a table needs most, because the store names links and stacks by ids that the table does not show.
+The failures that the store or the command registry gives follow it, as a list where there are several, without the line that heads the error's message, which names the command or the delta rather than the edit.
 At a form, the user's next edit is its next submit, also one that the form's own checks stop, since those checks then say what to change.
 In a table, it is the next edit in any of its rows, opening the form that changes a row among them.
 So the user reads why near where they made the edit, rather than in a toast that names no form, as every plugin with a UI shows what fails of what the user did in it ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
