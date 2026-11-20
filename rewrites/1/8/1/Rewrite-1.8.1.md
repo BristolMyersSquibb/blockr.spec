@@ -59,7 +59,7 @@ The review then holds up to 40 texts of up to 2,000 characters each, in one tool
 A review of the blocks one link away would drop What must hold 2 of [The assistant's tools](Rewrite-1.4.2#what-must-hold).
 That condition has the edit tool return only once every block downstream of the change is current.
 
-Two decisions on the message of the app's are ones to look into, since that message is new input at every call ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
+Four decisions on the message of the app's are ones to look into, since that message is new input at every call ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
 It comes after the conversation's last message, behind the mark of Anthropic's cache, so no call reads it from the cache.
 Its Board section holds the board within one cap, `assistant_board_section_max_chars`, 3000 characters by default, the blocks that a call most likely needs first, while the app's plugins, the board options and the fixed text of the message go in the system prompt, which the cache serves ([The sections](Rewrite-1.4.5#the-sections)).
 On a board of 100 blocks, the message then holds at most 3,500 characters, about 875 tokens at four characters a token, where cutting each part of the section on its own held 6,561 characters and none of the blocks that failed ([The system prompt](Rewrite-1.4.5#what-must-hold)).
@@ -74,6 +74,16 @@ The tools and the system prompt before it take some 5,000 tokens, which the cach
   The version to compare writes each link out, as in `keen_finch from flights to input x`, which the model may read more surely, but which takes more of the cap.
   On a board of 20 blocks with the classes of blockr.dplyr and blockr.ggplot, the short form holds the whole board in 2,872 characters.
   The written-out form takes some 3,200, and the cap leaves out two of the board's four stacks and its three views.
+- How the cap is shared between the parts of the Board section.
+  The section fills its cap in order, so on a board of 100 blocks the blocks take nearly all of it.
+  The stacks then show only the line that counts them, and the views show only the active one ([blockr.assistant#308](https://github.com/BristolMyersSquibb/blockr.assistant/pull/308)).
+  The version to compare keeps room for the stacks and the views, listed by name and count, as a prototype in the notes of [The system prompt](Rewrite-1.4.5) did.
+  It lists fewer blocks.
+- Whether the blocks one link from the block that has focus come before the blocks on screen.
+  The blocks one link downstream of the block that has focus hold the links out of it.
+  An edit that adds a block after the block that has focus rewires those links.
+  On a board past the cap, the section may leave those blocks out.
+  On a board within the cap, the order changes nothing, since the section lists every block.
 
 A version is a ref of each package that the comparison changes, with every other package at one ref for both versions.
 Besides blockr.assistant, whose tools and template the model reads, any package can change what the model reads: core or a plugin's package through the descriptions of its commands, a package of block classes through their guidance and arg specs, and any of them through its skills, as the dock's `layout` skill does.
