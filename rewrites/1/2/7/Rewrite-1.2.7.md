@@ -183,11 +183,11 @@ A block whose card is not on screen keeps its notifications in `CoreApi` until i
 ### The menu
 
 The "…" button opens the block's menu of board actions on a click, or on ArrowDown while it has the keyboard's focus, as today ([inst/assets/js/block-menu.js#L93-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-menu.js#L93-L99)).
-Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and the dock draws it as the design system's menus are drawn ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
+Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and draws it as the design system draws the block's menu, in the look that blockr.ui gives core's theme ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
 
 1. Rename shows a field with the block's name in the menu, while a double click on the title renames the block in place ([The header](#the-header)).
-2. Append block, Prepend block, Create link and Create stack show their quick actions in the menu, Append block's as the dock's "+" menu is drawn today, and their advanced actions in the dock's sidebar, where Edit inputs, which has no quick action, opens at once.
-3. Copy block ID shows the id as monospaced meta text, and puts it on the clipboard.
+2. Append block, Prepend block, Create link and Create stack show their quick actions in the menu, Append block's as the dock's "+" menu shows it today, and their advanced actions in the dock's sidebar, where Edit inputs, which has no quick action, opens at once.
+3. Copy block ID shows the id as meta text, and puts it on the clipboard.
 4. Remove block, in the last category, after a divider, shows the bin icon and the danger colour, and runs `blockr.core-remove_block`.
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.

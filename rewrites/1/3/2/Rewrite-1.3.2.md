@@ -119,10 +119,10 @@ Paste reads the clipboard before it returns its command, so its `run` returns a 
 The toolbar floats in a column at the canvas's top left, as today, and holds, in this order:
 
 1. The DAG's own controls: search, zoom in, zoom out and fit.
-2. A button for each board action on the board: core's Add block and Create stack, and the DAG's Paste and Layout.
+2. A button for each board action on the board: core's Add block, Create link and Create stack, and the DAG's Paste and Layout.
 3. While the user has selected something, a button for each board action on the selection, such as core's Remove and Create stack and the DAG's Copy and Cut.
 
-Each button shows its board action's icon, has the board action's label as its tooltip, and opens its quick action below it, or runs it where it asks nothing ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+Each button shows its board action's icon, has the board action's label as its tooltip, and opens its quick action below it, or its advanced action where it has no quick action on the board, as Create link, or runs it where it asks nothing ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 A board action that another package registers on the board or on a selection gets a button too, as it gets a row in the DAG's menus.
 A block, or a stack that holds no block, that the toolbar's Add block or Create stack adds starts from the middle of the view, where the DAG runs the placement strategy for it ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
 
@@ -160,7 +160,7 @@ Right-click to add one.", in the design system's style for an empty place, as to
 The DAG takes the design system's colours from core's tokens, without blockr.ui's code for now ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)): the category and status tokens for its nodes, and the theme's tokens for surfaces, text and borders, from which it sets React Flow's own styles.
 It follows the theme that core's board option `dark_mode` switches the page to.
 It draws its tooltips with the `Tooltip` of core's React SDK, as the dock does, and the block's mark and status dot itself, until blockr.ui offers them in one module ([UI modules in JS](Rewrite-1.1.7#react), [UI kit and design system for the client](Rewrite-1.7)).
-Core or the frontend draws its menus and quick actions ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
+Core draws its menus and quick actions, in the look of core's theme ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 
 ### On a locked board
 

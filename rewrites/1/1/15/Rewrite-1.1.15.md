@@ -3,17 +3,18 @@ Status: settled on 2026-11-11. Design for [Client-owned board state](Rewrite-1.1
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): the plugin in blockr.core that adds, changes and removes the board's blocks, links and stacks, which every frontend places as it places any plugin.
 It replaces the toolbar's dialogs for adding a block and for links and stacks that [blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441) built into core's basic frontend, and the port of the dock's Edit board extension that [The Edit board extension in React](Rewrite-1.2.8) planned.
-It shapes the plugin itself ([blockr.core#565](https://github.com/BristolMyersSquibb/blockr.core/issues/565)), an item in the Work list of the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503), showing a refused edit close to the control that made it ([blockr.core#711](https://github.com/BristolMyersSquibb/blockr.core/issues/711)), the picker and the forms that it mounts as advanced actions ([blockr.core#745](https://github.com/BristolMyersSquibb/blockr.core/issues/745), [blockr.core#746](https://github.com/BristolMyersSquibb/blockr.core/issues/746)), and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
-What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, the commands it runs are [Board updates](Rewrite-1.1.2#commands)'s, and the rest of core's basic frontend, its card's menu among it, is [Drawing the board](Rewrite-1.1.8#cores-basic-frontend)'s.
+It shapes the plugin itself ([blockr.core#565](https://github.com/BristolMyersSquibb/blockr.core/issues/565)), an item in the Work list of the spec [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503), showing a refused edit close to the control that made it ([blockr.core#711](https://github.com/BristolMyersSquibb/blockr.core/issues/711)), the picker and the forms that it mounts as advanced actions ([blockr.core#745](https://github.com/BristolMyersSquibb/blockr.core/issues/745), [blockr.core#746](https://github.com/BristolMyersSquibb/blockr.core/issues/746)), the menus of its rows and of its selection ([blockr.core#NEW](https://github.com/BristolMyersSquibb/blockr.core/issues/NEW)), and the migration notes for app scripts ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)).
+What a plugin is and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, the board actions that its rows and forms offer are [Board actions](Rewrite-1.1.16)'s, the commands that those run are [Board updates](Rewrite-1.1.2#commands)'s, and the rest of core's basic frontend, its card's menu among it, is [Drawing the board](Rewrite-1.1.8#cores-basic-frontend)'s.
 
 ## What must hold
 
 1. It adds a block of any class in the block registry, under an id and a name that the user may give, renames and removes blocks, and adds, changes and removes links and stacks.
-   That covers every edit that today's `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack` and the dock's Edit board extension make, but for giving a new link or stack an id, which the commands mint.
+   That covers every edit that today's `manage_blocks`, `manage_links`, `manage_stacks` and `edit_stack` and the dock's Edit board extension make, but for giving a new link or stack an id, which core mints.
 2. It works on the board through `CoreApi` alone, and every frontend places it as it places any plugin whose class has a `ui`, as condition 2 of [Plugins](Rewrite-1.1.12#what-must-hold) asks of every plugin.
-3. Each edit is one of core's commands, applied as the user makes it, so that undo takes back each one and the user learns at once, close to the control that made it, why the store refused one.
+3. Each edit is one batch of a board action, applied as the user makes it, so that undo takes back each one and the user learns at once, close to the control that made it, why the store refused one.
 4. An app script that gives `serve()` no plugins gets this one, as it gets a plugin of each class that an available package lists, so that the user can add the first block to the board that `serve(new_board())` draws, and edit a board that `serve()` is given as a file, as today's `manage_blocks` lets them.
-5. Under the board lock, it draws no control, as condition 3 of [Locked boards and the properties of blocks](Rewrite-1.1.11#what-must-hold) asks for what a lock fixes.
+5. Under the board lock, it draws no control for what the lock fixes, as condition 3 of [Locked boards and the properties of blocks](Rewrite-1.1.11#what-must-hold) asks.
+6. Each row offers the menu of its block, link or stack, so that the row offers every board action that applies to its object, a package's among them, as every other menu of the object does ([Board actions](Rewrite-1.1.16#what-must-hold)).
 
 ## Today
 
@@ -36,6 +37,8 @@ Each edit in them runs one of core's commands at once.
 The links dialog adds and removes a link, but does not change one.
 The card's menu renames or removes a block, and adds one before or after it with the same picker ([card.tsx#L111-L138](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/srcts/modules/basic/card.tsx#L111-L138)).
 The group that draws a stack holds no control ([card.tsx#L173-L187](https://github.com/BristolMyersSquibb/blockr.core/blob/1776bf174cec20d8534965fccd514a8e600b20c1/srcts/modules/basic/card.tsx#L173-L187)).
+Since [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569), the plugin is on `js-state`, and at `6805109` its rows rename and remove a block, and edit and remove a link or a stack, with buttons of their own that run core's commands ([blocks.tsx#L76-L124](https://github.com/BristolMyersSquibb/blockr.core/blob/6805109b4fa67e8899b956620e9b2faca6a12a99/srcts/modules/edit-board/blocks.tsx#L76-L124), [links.tsx#L107-L175](https://github.com/BristolMyersSquibb/blockr.core/blob/6805109b4fa67e8899b956620e9b2faca6a12a99/srcts/modules/edit-board/links.tsx#L107-L175), [stacks.tsx#L104-L169](https://github.com/BristolMyersSquibb/blockr.core/blob/6805109b4fa67e8899b956620e9b2faca6a12a99/srcts/modules/edit-board/stacks.tsx#L104-L169)).
+So the plugin makes the edits of core's board actions a second way, and offers none of another package's.
 
 ## Proposal
 
@@ -63,18 +66,29 @@ core.plugins.register({ id: "blockr.core-edit_board_plugin", ui: "blockr.core-ed
 ### What it shows
 
 Its UI shows three sections.
-Each section lists what the board holds in a table that searches its rows and shows them ten to a page, so that it stays usable on a large board, with the controls that edit it, and each control runs one of core's commands as one of the user's steps ([Board updates](Rewrite-1.1.2#commands), [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)):
+Each section lists what the board holds in a table that searches its rows and shows them ten to a page, so that it stays usable on a large board, below a form that adds one ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+Each form is the advanced action of one of core's board actions on the board, which the plugin mounts through `mountAdvanced()`, so that the plugin and the menus share it ([Board actions](Rewrite-1.1.16#the-advanced-action)):
 
-- Blocks: a form with a picker of the block registry's entries, which searches their names, descriptions and keywords and groups them by category, and fields for the new block's id and name, which adds nothing as the user picks a class, but only once the user submits it, so that the id and the name go in first ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
-  The command `blockr.core-add_block` adds the block.
-  Where the user leaves a field empty, the command mints the id, or takes the name from the block's class.
-  Below the form, each of the board's blocks shows with its name, which `blockr.core-rename_block` changes, and a button that removes the block with `blockr.core-remove_block`.
-- Links: each link with the block it comes from, the block it goes to and the input it feeds, which a form in its row changes with `blockr.core-change_link` once the user saves it, and `blockr.core-remove_link` removes.
-  A form adds a link with `blockr.core-add_link`, and offers as its target only a block that takes a link, and none that would close a cycle, as the dock's menus do today, and of that block the inputs that no link feeds, or for a variadic block an optional name for the link, as `b2` in `rbind(a, b2 = b)`, which no other link into the block gives ([Block classes in R](Rewrite-1.1.5#expressions), [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
-- Stacks: each stack with its name, its colour and its blocks, which a form in its row changes once the user saves it, through `blockr.core-rename_stack` for the name and `blockr.core-change_stack` for the rest, each where it changed, and with a button for `blockr.core-remove_stack`, which leaves the stack's blocks on the board.
-  A form adds a stack with one `blockr.core-add_stack`, taking its name, its colour and its blocks first, and suggests a name and a colour that no other stack has, as the dock gives its stacks colours today ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+- Blocks: the advanced action of Add block, the block picker, which searches the block registry's entries by their names, descriptions and keywords and groups them by category, with fields for the new block's id and name, and which adds nothing as the user picks a class, but only once the user submits it, so that the id and the name go in first ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+  Where the user leaves a field empty, the picker mints the id, or takes the name from the block's class.
+  Each row shows a block: its name, its id and its class.
+- Links: the advanced action of Create link, a form that starts from no block, and offers as its target only a block that takes a link, and none that would close a cycle, as the dock's menus do today, and of that block the inputs that no link feeds, or for a variadic block an optional name for the link, as `b2` in `rbind(a, b2 = b)`, which no other link into the block gives ([Block classes in R](Rewrite-1.1.5#expressions), [blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+  Each row shows a link: the block it comes from, the block it goes to and the input it feeds.
+- Stacks: the advanced action of Create stack, a form that takes a new stack's name, its colour and its blocks first, and suggests a name and a colour that no other stack has, as the dock gives its stacks colours today ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+  Each row shows a stack: its name, its colour and its blocks.
 
-The forms for a link and for a stack ask for no id, and the command mints one.
+The plugin mounts a form only where `core.boardActions.on()` offers the form's board action on the board.
+Every other edit is a board action that a row's menu offers.
+Each row ends in a "…" button, which opens the menu of the row's block, link or stack through `core.boardActions.menu()`, as every menu of a board object opens ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+So a row offers what every menu of its object offers, such as Rename and Remove block on a block, Edit link and Remove link on a link, and Rename, Edit stack and Remove stack on a stack, and the board actions of other packages too, such as blockr.md's Add to document on a block ([Board actions](Rewrite-1.1.16#a-board-action)).
+A row shows the button only where `core.boardActions.on()` gives its object a board action.
+The forms of Edit link and Edit stack open from the menu in the frontend's place for advanced actions, as from every other menu, rather than in the row ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+
+Each row also holds a checkbox, which adds the row's object to `core.selection` or takes it out.
+The checkbox shows whether the selection holds the object, whatever set the selection, such as the DAG as the user selects nodes ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+While the selection holds a board object, a bar above the sections says how many it holds, with a "…" button that opens the menu of the selection, which offers Remove and Create stack among core's board actions, and a button that clears the selection.
+
+The forms for a link and for a stack ask for no id, and the board action mints one.
 Today's tables take an id for a new link or stack, but nothing that the user reads shows either id.
 A block's id differs: an exported script assigns the block's result to it, so the picker asks for it.
 
@@ -82,23 +96,24 @@ It draws nothing of a block's state, which the block's own UI sets, nor the boar
 
 ### Each edit at once
 
-Each edit applies as the user makes it, by submitting a form or pressing a button, while the tables of today's Edit board extension hold their edits until "Apply changes".
-Each edit is one command, so undo takes back each one, and the user learns at once why the store refused one ([Board updates](Rewrite-1.1.2#undo)), so that saving a stack whose name and blocks both changed makes two steps, which undo takes back one at a time ([blockr.core#569](https://github.com/BristolMyersSquibb/blockr.core/pull/569)).
+Each edit applies as the user makes it, by submitting a form or picking a row of a menu, while the tables of today's Edit board extension hold their edits until "Apply changes".
+Each edit is one batch of a board action, so undo takes back each one, and the user learns at once why the store refused one ([Board updates](Rewrite-1.1.2#undo)), so that renaming a stack and then changing its blocks makes two steps, which undo takes back one at a time.
 A block that the user adds is on the board at once, so the next edit can link it or put it in a stack.
 The forms therefore read the board as it is.
 Staging the block edits as well, as [blockr.dock#199](https://github.com/BristolMyersSquibb/blockr.dock/issues/199) asked, would have them read a staged copy of the board, in which a link can name a block that the board does not hold yet.
 The plugin keeps nothing in its state, and nothing staged in its module.
 That is this plugin's choice, not the API's: another plugin may stage edits and apply them later as one delta, which holds any number of blocks, links and stacks, through `core.store.apply()` or a command of its own, as one step that one undo takes back ([Board updates](Rewrite-1.1.2#applying-a-delta)).
 
-Where the store or the command registry refuses one of its edits, the plugin shows why close to the form or the button that made it, in a banner in the colour of an error, until the user's next edit there, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
+Where the store or the command registry refuses one of its edits, the plugin shows why close to the control that made it, in a banner in the colour of an error, until the user's next edit there, and takes the notifications through a `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 Close means near the control, not as near as can be.
-A form that adds a block, a link or a stack shows why below its buttons.
-A table shows why below itself for an edit in any of its rows, made with a row's buttons or with the form that changes the row.
-A line below the row would break up the table, and the row's buttons sit in a column too narrow for a sentence.
+A form that adds a block, a link or a stack shows why below its buttons, through the `notifier` of its `done()`, as every advanced action that adds does ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+A table shows why below itself for a board action that the menu of one of its rows ran, through the `notifier` of `menu()`, and the bar of the selection shows why below itself for one that the menu of the selection ran.
+A line below the row would break up the table, and the row's button sits in a column too narrow for a sentence.
 Each reason starts with a sentence that names the edit, such as `Could not add the link.` or `Could not remove the stack "Input".`, which a table needs most, because the store names links and stacks by ids that the table does not show.
+For a board action that a menu ran, the `notifier` of `menu()` hands the plugin the board action with the notifications, and the plugin names the edit by it: in its own words for core's board actions, as `Could not remove the stack "Input".`, and by its label for another package's, as `Add to document failed for the block "Filter".` ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 The failures that the store or the command registry gives follow it, as a list where there are several, without the line that heads the error's message, which names the command or the delta rather than the edit.
 At a form, the user's next edit is its next submit, also one that the form's own checks stop, since those checks then say what to change.
-In a table, it is the next edit in any of its rows, opening the form that changes a row among them.
+In a table or the bar, it is the next board action that one of its menus runs.
 So the user reads why near where they made the edit, rather than in a toast that names no form, as every plugin with a UI shows what fails of what the user did in it ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)).
 
 ### Where it shows
@@ -106,13 +121,13 @@ So the user reads why near where they made the edit, rather than in a toast that
 Every frontend places it as it places any plugin whose class has a `ui`, without knowing its class by id ([Plugins](Rewrite-1.1.12#plugin-classes)).
 Core's basic frontend shows it in a section of its own beside the board, as it shows every plugin, and its toolbar draws no control for blocks, links or stacks ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 The card's menu offers the board actions on its block, renaming and removing it and appending or prepending a block among them, since those edits act on one card ([Board actions](Rewrite-1.1.16#cores-board-actions)).
-The plugin's forms are the advanced actions of Add block, Create link, Edit link, Create stack and Edit stack, which it mounts in its sections through `mountAdvanced()`, so that the menu and the plugin share the picker and the forms.
-Under core's basic frontend, renaming and removing a stack, which today's `edit_stack` does from the stack's own UI, is the plugin's alone, since the group that draws a stack holds no control.
+The plugin's rows open the same menus, so that the card's menu and a block's row offer the same board actions, and its three forms are advanced actions that the menus open too (What it shows).
+Under core's basic frontend, only the menu of a stack's row offers Rename and Remove stack for the stack, which today's `edit_stack` offers in the stack's own UI, since the group that draws a stack holds no control.
 The DAG's menu of a stack offers both as well, as core's Rename and Remove stack ([Board actions](Rewrite-1.1.16#cores-board-actions)).
 The dock shows the plugin in a panel wherever the app holds it, as it shows any plugin, so that a dock app without the DAG still edits its links and stacks ([Client-drawn dock](Rewrite-1.2#proposal)).
 
-Under the board lock, the store refuses every edit that the plugin makes ([Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
-So the plugin draws no control there, and only lists the board's links and stacks.
+Under the board lock, the store refuses what every one of core's board actions but Copy block ID runs, so they fail their `offers` ([Board actions](Rewrite-1.1.16#cores-board-actions), [Locked boards and the properties of blocks](Rewrite-1.1.11#three-locks)).
+So the plugin mounts no form there, its rows and its bar show no "…" unless another package's board action applies, and it lists only the board's links and stacks.
 A frontend draws the blocks on their cards, but the dock draws no link and no stack without the DAG ([Client-drawn dock](Rewrite-1.2#proposal)).
 It reads the lock from `core.lock.board` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 
@@ -152,6 +167,9 @@ The dialogs to move, at `1776bf1`, are `picker.tsx`, `links.tsx` and `stacks.tsx
 They draw through the basic frontend's context, `useFrontEnd()` and `runCommand()`, which the plugin's module replaces with the `CoreApi` that its `render()` gets and with a notification of its own for a refused edit.
 The card's menu keeps opening the picker in its `after` and `before` modes, so the picker stays a component that both share, while the plugin opens it in its `add` mode, with fields for the `id` and `name` that `blockr.core-add_block` takes.
 Changing a link through `blockr.core-change_link` is new, since the dialog on `js-state` only adds and removes links.
+On `js-state`, at `6805109`, the rows' own buttons are in `BlockRow`, `LinkRow` and `StackRow` in `srcts/modules/edit-board/`, and the form that a row turns into is `LinkForm` or `StackForm` in its editing mode.
+Both go once the rows open menus, while the forms that add become advanced actions ([blockr.core#746](https://github.com/BristolMyersSquibb/blockr.core/issues/746)).
+React Aria's `Table`, which [blockr.core#757](https://github.com/BristolMyersSquibb/blockr.core/issues/757) adds to the React SDK, draws a row's checkbox where its `selectionMode` is `"multiple"`, and the plugin binds its `selectedKeys` and `onSelectionChange` to `core.selection`.
 
 Core registers the class in `srcts/core/start.ts`, beside its own board options, before the store opens a board.
 In R, the constructor goes beside `new_plugin()` in `R/plugin-class.R`, and core lists the class beside those of its basic frontend and its storage plugin, so that `available_plugins()` gives it a row, while `new_board()` keeps `plugins = list()`, since a board holds only the state of its plugins.

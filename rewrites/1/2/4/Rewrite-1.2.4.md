@@ -111,7 +111,7 @@ Today's sidebar shows only the code export on a locked board ([R/board-options.R
 ### Places besides the panel
 
 Besides the panel, the dock gives plugins what every frontend gives them: it draws the notifications of `CoreApi` ([Notifications, logging and tracing](Rewrite-1.1.14#where-a-notification-shows)), and the controls of the app's storage plugin in its navbar ([The dock's navbar](Rewrite-1.2.5#the-storage-plugins-controls)).
-It draws the menus and quick actions of board actions with its own menus, and shows their advanced actions in its sidebar, which the user may pin, through the two members that core's `FrontendModule` offers every frontend ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
+It shows the advanced actions of board actions in its sidebar, which the user may pin, through the `advanced` member that core's `FrontendModule` offers every frontend, while core draws their menus and quick actions in the design system's look, which blockr.ui gives core's theme ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 What those controls cannot hold, the storage plugin draws in a dialog of its own, an overlay of core's React SDK, which the dock does not place, as it places no plugin's dialog ([A plugin's panel](#a-plugins-panel)).
 The dock offers plugins no other place, so it declares no member of its own on core's `PluginClass`, and reads no member of a plugin's class beyond core's, as core's basic frontend reads none ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 A place that the dock comes to offer later is a member of its own, which TypeScript's module augmentation declares ([TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation)), and which changes nothing for the plugins that do not set it.
@@ -124,7 +124,7 @@ Such a toast goes once the active view holds the panel, since the dot then shows
 A plugin without a `ui`, such as the storage plugin, has no panel, so the dock shows its notifications as toasts, as it shows those about the board, a link, a stack or a board option ([Block cards in the dock](Rewrite-1.2.7#notifications)).
 
 The dock draws no picker or editor of its own for a plugin, since a plugin triggers board actions, whose UI the package that registers each one writes ([Board actions](Rewrite-1.1.16#a-board-action)).
-So the DAG's menus offer core's board actions, with the block picker and the editors of links, inputs and stacks, which the dock draws in its menus and its sidebar, where today the DAG opens the dock's through the dock's actions ([Client-drawn DAG](Rewrite-1.3)).
+So the DAG's menus offer core's board actions, with the block picker and the editors of links, inputs and stacks, which the dock shows in its sidebar, where today the DAG opens the dock's through the dock's actions ([Client-drawn DAG](Rewrite-1.3)).
 Where the user pins the sidebar, it stays open once `done()` ends its advanced action, and the dock mounts the advanced action again through the `mount()` that core hands its `advanced` ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)):
 
 1. Once `done()` has run a batch, the dock mounts the advanced action on the one board object that the batch added of a kind that the board action's `on` names, so that a pinned Append block moves on to the block that it appended, and otherwise on the same target, so that a pinned Add block stays on the board.
