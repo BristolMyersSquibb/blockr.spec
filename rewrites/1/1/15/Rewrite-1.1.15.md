@@ -82,11 +82,13 @@ Every other edit is a board action that a row's menu offers.
 Each row ends in a "…" button, which opens the menu of the row's block, link or stack through `core.boardActions.menu()`, as every menu of a board object opens ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 So a row offers what every menu of its object offers, such as Rename and Remove block on a block, Edit link and Remove link on a link, and Rename, Edit stack and Remove stack on a stack, and the board actions of other packages too, such as blockr.md's Add to document on a block ([Board actions](Rewrite-1.1.16#a-board-action)).
 A row shows the button only where `core.boardActions.on()` gives its object a board action.
-The forms of Edit link and Edit stack open from the menu in the frontend's place for advanced actions, as from every other menu, rather than in the row ([Board actions](Rewrite-1.1.16#the-advanced-action)).
+An advanced action that a row's menu opens, such as the form of Edit link or of Edit stack, shows in the row, which turns into the form, as a row turns into its form today.
+The plugin hands `menu()` an `advanced` that mounts the form in a cell across the row, and closes the form once `done()` ends the advanced action ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 
 Each row also holds a checkbox, which adds the row's object to `core.selection` or takes it out.
 The checkbox shows whether the selection holds the object, whatever set the selection, such as the DAG as the user selects nodes ([Board actions](Rewrite-1.1.16#the-advanced-action)).
 While the selection holds a board object, a bar above the sections says how many it holds, with a "…" button that opens the menu of the selection, which offers Remove and Create stack among core's board actions, and a button that clears the selection.
+An advanced action that the menu of the selection opens shows below the bar, as Create stack's form with the selected blocks given.
 
 The forms for a link and for a stack ask for no id, and the board action mints one.
 Today's tables take an id for a new link or stack, but nothing that the user reads shows either id.

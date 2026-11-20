@@ -91,3 +91,26 @@ What it would cost: the member, the open menu as an API that core keeps stable f
 No board action would change, since a quick action is data, and core already runs every menu in logic that draws nothing ([Board actions](Rewrite-1.1.16#the-quick-action)).
 
 What would settle it: a frontend whose menus cannot take their look from core's theme, such as one that draws with components other than those of core's React SDK.
+
+## Inputs of board actions that each host lays out
+
+A board action's quick action is a set of rows, which core runs and draws, and its advanced action is a module, which draws a form of its own ([Board actions](Rewrite-1.1.16#a-board-action)).
+A package that opens a menu chooses where such a form shows, as the Edit board plugin shows Edit link's form in the link's row, but not how the form lays out its fields ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+A board action could instead describe its inputs as data: each input's kind, label, choices and check, with choices that depend on another input, as the inputs that a new link may feed depend on the block that it goes into.
+Each host would then lay the inputs out itself:
+
+- Core's menu would show them one at a time at the trigger.
+- Core's dialog and the dock's sidebar would show them all at once, as a form.
+- The Edit board plugin would show them as editable cells of its tables, one column for each input, in every row at once.
+
+Blender draws the properties of an operator in this way, in a popup, a dialog or the Adjust Last Operation panel ([Operator](https://docs.blender.org/api/current/bpy.types.Operator.html)).
+Figma draws a plugin's parameters in Quick Actions ([plugin parameters](https://developers.figma.com/docs/plugins/plugin-parameters/)).
+Django's admin draws a model's fields as a form, and as editable cells of its list through `list_editable` ([ModelAdmin.list_editable](https://docs.djangoproject.com/en/stable/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_editable)).
+Each of them keeps a custom UI for what its inputs cannot describe, as Blender's `draw()` and Figma's `showUI` do, and the block picker and the drag of Edit inputs would need one too.
+Raised in the review of [Board actions](Rewrite-1.1.16) on 2026-11-20.
+
+What it would remove: the forms that each board action writes, which core would draw from the inputs instead, and the second description of one edit that a board action with both a quick action and an advanced action gives today.
+
+What it would cost: a description of inputs, with their kinds, choices that depend on other inputs or wait for R, such as a block's columns, and checks, which would replace both quick actions and advanced modules, with a custom UI beside them; a layout of each kind in every host that draws inputs; and moving the board actions and forms that core has built by then onto it.
+
+What would settle it: whether users edit many blocks, links or stacks at once in the Edit board plugin's tables, where cells would save opening a form for each row, and how many of the board actions of packages beyond core fit inputs that core can draw.

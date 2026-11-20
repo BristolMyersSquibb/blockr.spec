@@ -20,7 +20,7 @@ The edits themselves are commands, which stay [Board updates](Rewrite-1.1.2#comm
 4. Every board action works the same way from every trigger: its quick action shows at the trigger, and its advanced action shows in a place with enough room, opened from the quick action, or at once where the board action has no quick action.
 5. The UI of a board action is written once, by the package that registers it, and every trigger reuses it, as core's block picker serves both the card's menu of core's basic frontend and the Edit board plugin today ([The Edit board plugin](Rewrite-1.1.15#where-it-shows)).
 6. A frontend needs to draw nothing for board actions to work: core draws every menu and quick action, and shows advanced actions in a dialog of its own.
-   Core's menus take their look from core's theme, which blockr.ui sets under the dock ([UI kit and design system for the client](Rewrite-1.7#proposal)), and a frontend may show advanced actions in a place of its own.
+   Core's menus take their look from core's theme, which blockr.ui sets under the dock ([UI kit and design system for the client](Rewrite-1.7#proposal)), and a frontend may show advanced actions in a place of its own, as may the package that opens a menu, for the advanced actions that the menu opens.
 7. A frontend may let the user pin its place for advanced actions, as the dock lets the user pin its actions sidebar today.
    A pinned place stays open once an advanced action ends, and may move on to another target by the frontend's own rules, as the pinned sidebar follows the DAG's selection today ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162)).
 8. Under a lock, a menu offers no board action whose commands the lock refuses, as a frontend draws no control for what a lock fixes ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
@@ -146,9 +146,11 @@ A package that opens a menu of a board object asks core to open it at the point 
 boardActions: {                                                 // in CoreApi
   on(target: Target): BoardAction[];                            // what a menu offers for the target, core's board actions first, then each package's
   menu(target: Target, opts: { el: HTMLElement; anchor: DOMRect;
-       extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void }): void;             // opens the target's menu at the anchor
+       extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void;
+       advanced?: FrontendModule["advanced"] }): void;                                                        // opens the target's menu at the anchor
   trigger(id: string, target: Target, opts: { el: HTMLElement; anchor?: DOMRect;
-          extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void }): Promise<void>;          // opens its quick action or its advanced action, or runs it
+          extend?(deltas: Delta[]): CommandCall[]; notifier?(n: readonly Notification[]): void;
+          advanced?: FrontendModule["advanced"] }): Promise<void>;                                            // opens its quick action or its advanced action, or runs it
   mountAdvanced(el: HTMLElement, id: string, target: Target, picked?: Json): () => void;   // an advanced action, in room that a plugin gives
 };
 ```
@@ -156,6 +158,10 @@ boardActions: {                                                 // in CoreApi
 In both `menu()` and `trigger()`, `el` is the element that the user triggered from, to which the keyboard's focus returns as the menu closes, and `anchor` is where the menu opens, such as the pointer of a right click, or the box of `el` where `trigger()` is given none.
 The promise that `trigger()` returns resolves once the board action ends, as its batch has run or its menu or advanced action has closed without one, and rejects with the refusal where a command of the batch fails.
 Both take a `notifier`, which gets the notifications of a refused batch of the board action that they open, in place of core raising them, as `commands.run()` does ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)), so that the DAG shows a refusal at the node, the link or the point where it opened the menu ([Drawing the DAG](Rewrite-1.3.2#gestures)).
+Both take an `advanced` too, of the shape of the frontend's `advanced` member (What a frontend gives), which core calls in place of the frontend's member for every advanced action that the menu or the trigger opens.
+So the package that opens a menu may show the menu's advanced actions in room of its own.
+The Edit board plugin does so for the menu of a row, so that the row turns into Edit link's form, as a row turns into its form today ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)).
+A caller that gives no `advanced` leaves the advanced action to the frontend's place.
 
 The card's menu of core's basic frontend, the "…" menu of the dock's card, the DAG's menus of a node, a link, a stack, its canvas and its selection, the rows of the Edit board plugin and its selection ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)), and the rows of blockr.outline all open their menus through core.
 The package that opens a menu adds no row to it and leaves none out, since either would make its menu differ from every other menu of the same target.
@@ -227,6 +233,7 @@ So it needs no Update button, and each drop that reorders a block's inputs is on
 The frontend shows an advanced action in a place with enough room: at least 420 px wide, or as wide as the window where the window is narrower, as the dock's sidebar is by default ([blockr.dock inst/assets/css/sidebar-server.css#L5-L6](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/css/sidebar-server.css#L5-L6)).
 Where that place is, and whether the user may pin it, is the frontend's choice.
 The dock shows an advanced action in its sidebar, which the user may pin, and core shows one in a modal dialog, as core's basic frontend shows its picker today.
+The package that opens a menu may show the menu's advanced actions in room of its own instead, through the `advanced` of `menu()` (The menus of board objects).
 A place shows one advanced action for one target at a time, and core keeps no rules of pinning a place or of following the selection.
 A frontend that pins its place follows the selection by rules of its own, through what its `advanced` member gets (What a frontend gives).
 So the dock's pinned sidebar follows the DAG's selection, as a pinned form of today's actions sidebar does ([blockr.dag#162](https://github.com/BristolMyersSquibb/blockr.dag/issues/162), [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).
@@ -253,6 +260,7 @@ The `advanced` member returns a function, which core calls once `done()` ends th
 The frontend then closes its place, or keeps it open and mounts the advanced action again, as a place that the user pinned does.
 It may pass `mount()` another target, on which core renders the same board action where the target's menu would offer it, as `trigger()` checks, so that a pinned place may move on to a block that the batch added, or follow `core.selection`.
 A `mount()` on another target renders the module afresh, so that a module never sees its target change.
+A package that opens a menu may hand `menu()` or `trigger()` a function of the same shape, which core then calls in place of the frontend's (The menus of board objects).
 
 Core's menu and dialog build on Tailwind CSS and take their colours, fonts and radii from Tailwind's theme variables, so that a frontend restyles them as it restyles core's other UIs ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 So do the advanced actions of core's board actions, which show under every frontend, in the dock's sidebar too.
