@@ -87,14 +87,14 @@ None.
 - Make the DAG a plugin in R, with `new_dag_plugin()` and `dag_layout()`, the class listed in `._BLOCKR_MODULES_` and the JSON Schema of its state, in place of `new_dag_extension()`, in blockr.dag
 - Build the DAG plugin's class in the client, with its state, its `update`, its `afterStep`, which places added blocks and stacks through the strategies Repulsion and Beside, and its commands for positions, layouts, snapping, collapsed stacks, which make room through Repulsion, and copy and paste, tested on core's `CoreApi` for tests, in blockr.dag
 - Draw the board in the DAG, with blocks, their marks, ports and status badges, links, stacks that collapse and expand, zoom, pan, dragging, a selection that shows a block, search and the outline, in blockr.dag
-- Open core's menus of board actions from the DAG's nodes, links, stacks, canvas and selection, register the DAG's board actions for copy, cut, paste and layout, draw its toolbar with the board actions on the board and on the selection, and bind its shortcuts, in blockr.dag
+- Open core's menus of board actions from the DAG's nodes, links, stacks, canvas and selection, show the advanced actions that they open in a panel beside their object, or in the frontend's place where that panel does not hold up, register the DAG's board actions for copy, cut, paste and layout, draw its toolbar with the board actions on the board and on the selection, and bind its shortcuts, in blockr.dag
 - Remove the extension, its R UI and server, g6R and the hooks of its menus, and rewrite the user guide for the plugin, in blockr.dag
 - Write the migration notes for app scripts that use the DAG as a vignette, which lists each change that such a script needs, for an AI to apply, in blockr.dag
 
 ## Design pages
 
 - [The DAG's state, commands and placement](Rewrite-1.3.1): the DAG plugin's state, its commands, its class's `update`, `afterStep` and `start`, how it moves blocks, placing added blocks, laying the board out again, collapsing and expanding a stack, snapping, pasting, the state in R, boards saved today, and the DAG's commands on a locked board
-- [Drawing the DAG: nodes, links, stacks, menus and the toolbar](Rewrite-1.3.2): the canvas, nodes, links, stacks and how they collapse, gestures, the DAG's board actions, the toolbar, search and the outline, keys, the empty board, its look and the locked board
+- [Drawing the DAG: nodes, links, stacks, menus and the toolbar](Rewrite-1.3.2): the canvas, nodes, links, stacks and how they collapse, gestures, the DAG's board actions, the toolbar, where its advanced actions show, search and the outline, keys, the empty board, its look and the locked board
 
 <details><summary>Notes for implementers</summary>
 

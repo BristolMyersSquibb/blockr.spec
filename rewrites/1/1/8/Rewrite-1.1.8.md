@@ -10,7 +10,7 @@ The plugin that adds, changes and removes blocks, links and stacks under every f
 ## What must hold
 
 1. Core ships a basic frontend that draws any board, so a board serves without blockr.dock, and a frontend replaces it entirely, so that none of it runs underneath another, as core's stack generics run underneath the dock today.
-2. A frontend draws everything around a block, its card, panel and status, and opens the block's menu of board actions, which core draws or the frontend through its hook ([Board actions](Rewrite-1.1.16)), while core mounts the block's UI and output, so a block class works in every frontend.
+2. A frontend draws everything around a block, its card, panel and status, and opens the block's menu of board actions, which core draws ([Board actions](Rewrite-1.1.16)), while core mounts the block's UI and output, so a block class works in every frontend.
 3. A frontend and every other plugin work on the board only through core's JS API: the store, commands, demand, statuses and requests.
 4. Nothing in R draws or redraws UI.
 5. Any package can supply a renderer for an output class or a board option.
