@@ -255,7 +255,8 @@ The rings of `waiting` and `unevaluated` are 1.5px wide, inside an 8px dot.
 Today's card reads each token with its light value as the fallback, as `var(--blockr-color-border-danger, #dc2626)`, so the dot draws on a page without blockr.ui's token sheet too ([R/plugin-block.R#L678-L680](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L678-L680)).
 
 Today's card renders a condition's message with `cli::ansi_html()`, which turns cli's ANSI styling into HTML ([R/plugin-block.R#L518-L538](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L518-L538)).
-Whether a message still reaches the client with that styling is to be checked on `js-state`, and the card removes any escapes before it shows the text.
+On `js-state`, R sends each message as plain text, without ANSI escapes ([blockr.core#790](https://github.com/BristolMyersSquibb/blockr.core/pull/790)).
+So the card shows a message as it comes.
 
 A block whose UI draws nothing keeps its padlock, though opening it gives readers no control, since no input shows for it, while a plugin's command could then change its state on a locked board.
 
