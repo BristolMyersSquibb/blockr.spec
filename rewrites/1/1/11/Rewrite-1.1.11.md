@@ -122,7 +122,7 @@ R sends the locks with its reply to `hello`, as `{ "board": true, "load": true }
 What a plugin keeps about a block lives in the plugin's state, keyed by the block's id, as the DAG keeps a block's position, so core adds nothing to blocks for it ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 The dock keeps in its state which sections of each card show, as `visible: { a: ["outputs"] }`.
 The store checks that state against the plugin class's schema after every change, a JSON board saves it, undo takes it back, and the plugin's `update` drops a removed block's entry in the same step, while changing it bumps no revision, since it is not the block's state.
-A block that a command copies gets what each plugin's `update` gives a new block, or what the command adds itself, as the DAG's paste adds the pasted blocks' positions in the same delta ([Board updates](Rewrite-1.1.2#plugins)).
+A block that a board action or a command copies gets what each plugin's `update` gives a new block, or what its batch adds itself, as the DAG's Paste adds the pasted blocks' positions in the same step ([Board updates](Rewrite-1.1.2#plugins)).
 
 ### Block properties in R
 
