@@ -16,7 +16,9 @@ Conditions 2 and 7 rest on this page and on [The DAG's state, commands and place
 3. A node's mark and status dot show the same colours as the dock's card shows for the same block.
 4. What today's DAG lets a user do carries over, but for what [Client-drawn DAG](Rewrite-1.3#today) drops: zoom, pan and fit, dragging blocks, selecting by a click and by a rectangle, drawing a link by dragging, dropping a link on the canvas to add a block, a link's label on hover, collapsing and expanding stacks, the menus, the toolbar, search and the outline, copy, cut and paste, and the keys.
 5. The DAG's keys act only while the keyboard's focus is within the DAG, and never while the user types in a field.
-6. On a locked board, the DAG offers no control for what the lock fixes.
+6. Under the board lock, the DAG offers no control that adds, removes or renames a block or a stack, links two blocks, or changes which stack a block is in.
+   Zoom, pan, fit, selection, search, the outline, moving blocks, collapsing and expanding stacks, laying the board out again and Copy work as on any board.
+   The load lock and a block's lock change nothing in the DAG.
 
 ## Proposal
 
@@ -50,8 +52,10 @@ Each block is a node:
   So the dot reads `failed` where an error about the block's output concerns the block, as the card's dot does.
   It follows `scheduler.subscribe()` and the notifications of `CoreApi`, and the DAG demands no block for it ([Evaluation in the client](Rewrite-1.1.10#demand)).
 - It has a handle for each data input of its class, named after the input, or one for a variadic block, which takes any number of links, and one handle for its result.
-  From top to bottom, the inputs sit on top of the mark and the result below the block's name, as today's ports do.
-  From left to right, the inputs sit on the mark's left and the result on its right, as today's layout menu turns the ports.
+  A handle sits on the side of the mark that faces the block at the other end of its link, and moves as either block moves, so that the link stays short (Links).
+  A handle with several links, as a result often has, shows on each side that one of them uses, and several handles on one side spread along it.
+  A handle that no link uses sits on the side that the layout's direction gives, as today's ports do: from top to bottom, an input on top of the mark and the result below it, and from left to right, an input on the mark's left and the result on its right.
+  A handle on the bottom sits below the block's name, so that no link crosses the name.
 
 A node's box is its mark, and the block's name hangs below the box, as G6 draws today's label outside the node.
 React Flow places the node at the block's position in the DAG's state ([The DAG's state, commands and placement](Rewrite-1.3.1#the-state)).
@@ -60,7 +64,10 @@ For a node in a stack, the DAG gives React Flow that position relative to the st
 ### Links
 
 Each link is an edge from the result of the block that it comes from into the handle of the input that it feeds.
-It is a curve with an arrow at its end, which runs downwards from top to bottom and sideways from left to right, as today's.
+It leaves the mark of the block that it comes from and enters the mark of the block that it feeds on the sides that face each other, so that it stays short wherever the user moves either block (Nodes).
+So where block `b` reads from block `a` and the user drags `b` above `a`, the link leaves the top of `a` and enters the bottom of `b`.
+Today's link would loop around both blocks there.
+It is a curve with an arrow at its end, as today's.
 The input's name shows on the edge while the pointer is over it, as today's label does.
 
 ### Stacks
@@ -222,6 +229,8 @@ Under the board lock, the DAG draws no link from a drag and drops no block into 
 Everything else works as on any board, so that a reader can explore the board: dragging nodes, the arrow keys, zoom, pan, fit, selection, search, the outline, and collapsing and expanding a stack, which makes room as anywhere ([The DAG's state, commands and placement](Rewrite-1.3.1#on-a-locked-board)).
 Its menus and toolbar offer only the board actions that the lock leaves ([Board actions](Rewrite-1.1.16#cores-board-actions)).
 Of the DAG's own, Copy and Layout stay, while Cut and Paste fail their `offers`, since the store refuses what they run.
+The load lock and a block's lock change nothing in the DAG.
+The load lock fixes only which board the app shows, and a block's lock fixes only the block's state, which the DAG never changes.
 
 ### Testing
 
@@ -252,6 +261,11 @@ React Flow 13.0.0 drops the rule that a group come before its nodes, which the p
 Core's basic frontend makes a plugin's section as tall as what the section holds, on `js-state` at `7ee6968` ([srcts/modules/basic/plugins.tsx#L141-L142](https://github.com/BristolMyersSquibb/blockr.core/blob/7ee69688488a140917cad5863101aeaf168a06e6/srcts/modules/basic/plugins.tsx#L141-L142)).
 React Flow needs an element with a height to draw in ([packages/system/src/utils/constants.ts#L9](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/utils/constants.ts#L9)).
 So where the DAG's element has no height, the canvas takes one of its own, such as half the window's, which the issue that draws the board settles.
+
+React Flow's free example Simple Floating Edges sticks each link to the top, right, bottom or left side of each node ([Simple Floating Edges](https://reactflow.dev/examples/edges/simple-floating-edges)).
+Its Floating Edges example works out where each link ends from the positions of the link's two nodes, in an edge type of its own ([examples/react/src/examples/FloatingEdges/utils.ts](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/examples/react/src/examples/FloatingEdges/utils.ts)).
+That edge reads both nodes through `useInternalNode`, which renders the edge again whenever any node changes ([useInternalNode](https://reactflow.dev/api-reference/hooks/use-internal-node)), so the issue that draws the board checks that a drag stays smooth on the spike's board.
+A node whose handles move or change in number has React Flow measure them again through `useUpdateNodeInternals` ([useUpdateNodeInternals](https://reactflow.dev/api-reference/hooks/use-update-node-internals)).
 
 React Flow 13.0.0 binds keys of its own: Backspace removes what is selected, Shift with a drag draws the selection's rectangle, and Cmd on a Mac or Ctrl elsewhere adds to a selection ([src/container/ReactFlow/index.tsx#L67-L73](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/container/ReactFlow/index.tsx#L67-L73)).
 So the DAG sets `deleteKeyCode` to `null`, `selectionKeyCode` to `"Alt"` and `multiSelectionKeyCode` to `"Shift"`.
