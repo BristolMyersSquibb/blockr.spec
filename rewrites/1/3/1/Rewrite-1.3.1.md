@@ -1,5 +1,5 @@
 # The DAG's state, commands and placement
-Status: review. Design for [Client-drawn DAG](Rewrite-1.3).
+Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places the blocks and stacks that someone adds, pastes a copied board, makes room around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
 It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R and build its class in the client, and the spike that decides between dagre and elkjs.
