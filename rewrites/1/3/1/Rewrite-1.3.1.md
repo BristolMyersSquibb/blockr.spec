@@ -1,7 +1,7 @@
 # The DAG's state, commands and placement
 Status: review. Design for [Client-drawn DAG](Rewrite-1.3).
 
-One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places the blocks and stacks that someone adds, makes room around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
+One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places the blocks and stacks that someone adds, pastes a copied board, makes room around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
 It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R and build its class in the client, and the spike that decides between dagre and elkjs.
 What the DAG draws, its menus, its own board actions and its toolbar are [Drawing the DAG](Rewrite-1.3.2)'s, and what a plugin's state is and how the store keeps it are [Plugins](Rewrite-1.1.12#a-plugins-state)'s.
 
@@ -15,8 +15,8 @@ Conditions 2, 4, 6 and 7 of [Client-drawn DAG](Rewrite-1.3#what-must-hold) rest 
 4. The class's `update` reads only the change and the board, and its `afterStep` only the boards before and after the step, so that both give the same patches wherever they run ([Board updates](Rewrite-1.1.2#plugins)).
 5. A board saved today opens with its positions and its layout's direction and spacing, and a position keeps its meaning across the switch.
 6. On a locked board, the DAG's commands move no block unless the deployment leaves rearranging to readers, while collapsing a stack stays open.
-7. Collapsing or expanding a stack moves the blocks around it, the most next to the stack and less further away, so that the blocks close up on a stack that collapses and clear the box of one that expands, while blocks far from the stack stay where they are.
-8. Whatever the DAG places, lays out or moves to make room overlaps no other node, with the spacing's gap around it, and comes out the same for the same board wherever it runs, but for a place that someone gives, which the block takes as given.
+7. Collapsing or expanding a stack moves the blocks around it, the most next to the stack and less further away, so that the blocks close up on a stack that collapses and clear the box of one that expands, while blocks far from the stack stay where they are and each other stack keeps its shape.
+8. Whatever the DAG places, pastes, lays out or moves to make room overlaps no other node, with the spacing's gap around it, and comes out the same for the same board wherever it runs, but for a place that someone gives, which the block takes as given.
 
 ## Today
 
@@ -75,15 +75,18 @@ Laying the board out again moves every block, so the assistant runs it before it
 
 | Command | Args | Undo step | What it does |
 |---|---|---|---|
-| `blockr.dag-change_position` | `positions`, points by block id, and `stack_positions`, points by stack id, each optional | Yes | Sets the positions given, as a drag ends with every block and every stack without blocks that it moved, or as a step puts an added block or stack at the place given (Placing added blocks) |
+| `blockr.dag-change_position` | `positions`, points by block id, and `stack_positions`, points by stack id, each optional | Yes | Sets the positions given, as a drag or a run of presses of the arrow keys ends with every block and every stack without blocks that it moved, or as a step puts an added block or stack at the place given (Placing added blocks) |
 | `blockr.dag-relayout` | `direction` and `spacing`, each optional | Yes | Sets the settings given and lays the whole board out again with them (Laying the board out again) |
-| `blockr.dag-set_placement` | `placement` | Yes | Sets how added blocks get their place, and moves no block |
-| `blockr.dag-set_snap` | `snap` and `snap_size`, each optional | Yes | Sets whether the DAG snaps the positions that it sets, and to what size, and moves no block, so that the next operation or drag snaps (How the DAG moves blocks) |
+| `blockr.dag-set_placement` | `placement` | No | Sets how added blocks get their place, and moves no block |
+| `blockr.dag-set_snap` | `snap` and `snap_size`, each optional | No | Sets whether the DAG snaps the positions that it sets, and to what size, and moves no block, so that the next operation or drag snaps (How the DAG moves blocks) |
 | `blockr.dag-collapse_stack` | `stack`, `collapsed` | Yes | Collapses a stack or expands it, and moves the blocks around it (Collapsing and expanding a stack) |
 | `blockr.dag-paste` | `board`, the text of a JSON board, and `at`, a point | Yes | Adds the blocks, links and stacks of a copied board under new ids, with their positions (Pasting) |
 
 The commands that name a block or a stack fail their preflight where the board lacks it, so that the state keys nothing by an id that the board does not hold.
 The preflight of `blockr.dag-change_position` also refuses a position for a stack that holds a block, since the box of such a stack fits its blocks.
+The preflight of `blockr.dag-collapse_stack` refuses a stack that holds no block, since such a stack shows as a collapsed one does already.
+The commands `blockr.dag-set_placement` and `blockr.dag-set_snap` have `undo: false`, since they move no block.
+So a user who drags a block, then turns snapping on, and then presses Undo takes back the drag, while the store still saves the settings with the board ([Board updates](Rewrite-1.1.2#undo)).
 Each command's `description` and `args` describe it to the assistant's tools ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 The commands declare no `shortcut`, since the DAG binds its keys within its own element ([Drawing the DAG](Rewrite-1.3.2#keys)).
 Copying and cutting are no commands of the DAG's: Copy changes nothing on the board, and Cut is Copy followed by core's commands that remove, so both are board actions ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
@@ -91,14 +94,19 @@ Copying and cutting are no commands of the DAG's: Copy changes nothing on the bo
 ### The class's `update` and `afterStep`
 
 With every delta that the store applies, the class's `update` drops the position of each block that the delta removes, and the entry in `collapsed` and the position of each stack that the delta removes ([Board updates](Rewrite-1.1.2#plugins)).
-Once the last delta of the step is in, its `afterStep` brings the positions in line with the board that the step leaves:
+Once the last delta of the step is in, its `afterStep` brings the state in line with the board that the step leaves:
 
 1. It places each block that has no position yet, and each stack that holds no block and has none, through the strategy (Placing added blocks).
 2. A stack that the step leaves without blocks takes the centre of the box that its blocks spanned on the board before the step, rather than a place from the strategy.
 3. It drops the position of each stack that holds a block.
+4. It drops from `collapsed` each stack that holds no block, which shows as a collapsed stack does already, so that a block that joins the stack later shows.
 
 So a batch that adds a block and then links it places the block by its link, which `update` would not see yet as it is given the block's delta, and a batch that empties a stack and fills it again leaves the stack with no position.
 Both read nothing on the page, so that they give the same patches wherever they run.
+
+The `afterStep` leaves alone a block that had no position before the step either, and a stack that held no block and had no position before the step either.
+Only a board that has just opened holds such a block or stack, and the class's `start` gives each a position (Starting on a board).
+So where the frontend takes a step before `start` runs, as the dock does when it adds its first view, `start` still lays out a board that opened without positions.
 
 ### Starting on a board
 
@@ -107,20 +115,25 @@ As a board opens, the class's `start` gives a position to every block that lacks
 1. Where the board holds no position for any block or stack, as a board that a script builds without positions or a converted file that holds none, it lays the whole board out (Laying the board out again).
 2. Where it lacks the positions of some blocks or stacks only, it places those through the strategy, as it places added blocks.
 
-In the same delta, it drops each position and each entry in `collapsed` that names a block or a stack that the board lacks, as an app script may give one, and the position of each stack that holds a block.
+In the same delta, it drops each position and each entry in `collapsed` that names a block or a stack that the board lacks, as an app script may give one, the position of each stack that holds a block, and the entry in `collapsed` of each stack that holds no block.
+It names every entry that it drops in one warning about the DAG, of the code `dag_state_dropped`, which holds until the next board opens, as core's note of what the store dropped does, and it logs the same at warn ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A board that the DAG saved holds no such entry, since `update` and `afterStep` keep the state in line with the board, so only a mistake in an app script or a file written elsewhere raises the warning.
 The delta has the origin `blockr.dag-dag_plugin` and `undo: false`, as the dock adds its first view, so that undo never takes the board back to blocks without positions ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
+Core calls `start` once the frontend's `render()` has returned ([Plugins](Rewrite-1.1.12#running-a-plugin)).
+So a step that the frontend takes as it starts, such as the dock's step that adds its first view, comes before `start`, and `afterStep` leaves to `start` what lacked a position as the board opened (The class's `update` and `afterStep`).
 A fresh start of the same app takes the same step on the same board, since both the layout and the strategies give the same positions for the same board ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 
 ### How the DAG moves blocks
 
-Four operations move blocks, each with a mechanism of its own:
+Five operations give blocks their positions, each with a mechanism of its own:
 
 | Operation | When it runs | What it moves | How |
 |---|---|---|---|
 | Laying the board out | Someone runs `blockr.dag-relayout`, or `start` opens a board that holds no positions | Every block, and every stack without blocks | dagre or elkjs, as the spike decides (Laying the board out again) |
 | Placing what is added | `afterStep` and `start`, for whatever has no position and no place given | Only the added blocks and stacks | Repulsion by default, or Beside (Placing added blocks) |
 | Making room around a stack | `blockr.dag-collapse_stack` | The blocks around the stack, less the further away they are | Repulsion (Collapsing and expanding a stack) |
-| Snapping | After any of the three, and with every `blockr.dag-change_position`, while `snap` is on | Only what the operation or the command moved | Rounds each position to a multiple of `snap_size` |
+| Pasting | `blockr.dag-paste` | Only the pasted blocks and stacks | Moved together to the point, and on together where they would overlap another node (Pasting) |
+| Snapping | After any of the others, and with every `blockr.dag-change_position`, while `snap` is on | Only what the operation or the command moved | Rounds each position to a multiple of `snap_size` |
 
 Each of them gives the same positions for the same board wherever it runs, since it reads nothing on the page.
 Each leaves no two nodes closer than the spacing's gap, but for a place that the user or the assistant gives, which the block takes as given, snapped where `snap` is on.
@@ -128,10 +141,15 @@ What each cannot do:
 
 - Placing never moves another block, so on a crowded board a new block can land further from the blocks that it reads from.
 - Making room keeps the arrangement around the stack, but not the ranks of a board that was laid out, which laying out again restores.
-- Snapping moves a node by up to half of `snap_size`, and where two nodes would snap to one point, the second moves to the nearest free point.
+- Pasting keeps the arrangement that the blocks were copied in, so on a crowded board the pasted blocks can land further from the point.
+- Snapping moves a node by up to half of `snap_size`.
+  Where that brings a node that one of the other operations moved closer to another node than the gap, the node moves on to the nearest multiple of `snap_size` that keeps the gap, while a place that someone gives only rounds.
 - All of them work from a node's nominal size, so a long name can still overlap the name of a block beside it (notes).
 
-Turning `snap` on moves no block until the next operation or drag.
+How these rules feel is judged in an app once the DAG draws the board, and they are settled again where they feel wrong ([Client-drawn DAG](Rewrite-1.3#work)).
+
+Turning `snap` on, or changing `snap_size`, moves no block until the next operation or drag, as picking another placement moves none.
+Laying the board out again snaps every block at once while `snap` is on, since the DAG snaps every position that the layout gives (Laying the board out again).
 During a drag, the DAG snaps the centre of each node that moves, so that the drag ends on the point that `blockr.dag-change_position` keeps ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 The pages call this snapping, and its size the snap size, since a grid is how the dock arranges a view's panels, while a label on the page may still say "Snap to grid".
 
@@ -141,6 +159,7 @@ A block, or a stack that holds no block, that someone adds lands at the place gi
 
 - A place is given where the user right-clicks the canvas and adds a block or a stack from its menu, and where the user drops a link on the canvas, which triggers Append block or Prepend block at the drop ([Drawing the DAG](Rewrite-1.3.2#gestures)).
   The DAG adds `blockr.dag-change_position` with that point to the step of the board action, through the `extend` of `core.boardActions.menu()` or `trigger()`, and the block lands exactly there ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+  Where the board action adds several blocks, as a template that a package's command adds would, the point goes to the first of them in the order of their links, and `afterStep` places the others against it, so that they do not land on one another.
 - The assistant gives a place by adding `blockr.dag-change_position` to the edit that adds the block, or leaves the place to the strategy, as the schema's `description` keywords tell it.
 - No place is given where a board action adds a block from the menu of a block or a link, as Append block on a block does, nor where another plugin adds one, as the dock's "+" on a tab group does.
 - The toolbar's Add block and Create stack give no place either, but the DAG runs the strategy for what they add from the middle of the view, and adds `blockr.dag-change_position` with the result through `trigger()`'s `extend`, since what they add is linked to none and would otherwise start after the last block of the first rank, which may be out of view.
@@ -167,17 +186,17 @@ interface Placement {
 - A strategy works from a node's nominal size, its mark with room for its label, rather than from what the page measures, since `afterStep` reads nothing on the page (notes).
 - A strategy places a block by the links of the board that the step leaves, so that a batch that adds a block and then links it places the block by that link, as Append block does ([Board actions](Rewrite-1.1.16#cores-board-actions)).
   A block that one step adds and a later step links stays where it landed, as where the assistant edits through a tool for each command ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
-  So the description of `blockr.core-add_block`, which the assistant's model reads, tells it to link a block that reads from another in the same batch.
+  So the description of `blockr.core-add_block`, which the assistant's model reads, tells it to link a block that reads from another in the same batch ([blockr.core#750](https://github.com/BristolMyersSquibb/blockr.core/pull/750)).
 - Several blocks that one step adds are placed in the order of their links, each against the blocks placed before it, so that a new chain comes out as a chain ([blockr.dag#117](https://github.com/BristolMyersSquibb/blockr.dag/issues/117)).
 - A strategy starts a block from the point that `preferred` gives it, where there is one, as for the toolbar's Add block, and moves it from there off what it would overlap.
-- An inserted block starts between the two ends of the link that it splits, and no block moves to make room for it, unlike today's.
+- An inserted block, which reads from one block and feeds another, starts between the two, and no block moves to make room for it, unlike today's.
 
 ### Laying the board out again
 
 The command `blockr.dag-relayout` lays every block out with dagre or elkjs, whichever the spike picks ([Client-drawn DAG](Rewrite-1.3#proposal)):
 
 1. In `prepare()`, it loads the layout's library where it has not loaded yet, and lays the board out with the direction and the spacing that the state holds or that its args give, each stack as a cluster that holds its blocks, a stack that holds no block as one node of its box's size, and a collapsed stack as one node of its collapsed size, whose hidden blocks move with it and keep their places in the stack, so that the board stays compact while the stack is collapsed, and expanding it makes room later (Collapsing and expanding a stack).
-2. Its `run()` returns the positions that the layout gave the blocks still on the board and the stacks that hold no block, and the settings that it was given, as patches to the DAG's state, so that one undo puts every block back ([Board updates](Rewrite-1.1.2#commands)).
+2. Its `run()` returns the positions that the layout gave the blocks still on the board and the stacks that hold no block, snapped while `snap` is on, and the settings that it was given, as patches to the DAG's state, so that one undo puts every block back ([Board updates](Rewrite-1.1.2#commands)).
    A block that someone added while the layout ran keeps the place that `afterStep` gave it.
 
 The DAG draws a stack's box with the padding that the layout gives a cluster, so the spacing needs no tuning around a padding that the layout does not know, as today's presets do.
@@ -192,9 +211,10 @@ The command `blockr.dag-collapse_stack` changes `collapsed` and moves the blocks
 
 - Collapsing shrinks the box to its collapsed size, and the blocks around it move towards its centre, so that they close up on it.
 - Expanding grows the box back around its blocks, and the blocks around it move away from its centre until none overlaps the box with the spacing's gap around it.
-- A block next to the stack moves the most, and a block further away less, so that blocks far from the stack stay where they are and the board around them keeps its shape.
+- A block or another stack next to the stack moves the most, and one further away less, so that blocks far from the stack stay where they are and the board around them keeps its shape.
 
 Repulsion makes the room: the blocks next to the stack move freely, blocks further away are held to their places the more firmly the further they sit, and the stack's box pushes them apart.
+Each other stack moves as one node of its box's size, so that it keeps its shape, and its blocks, hidden or not, move with it by one distance, as laying the board out moves the hidden blocks of a collapsed stack.
 The spike checks it against criteria fixed before it runs, on the largest real board with stacks added ([Client-drawn DAG](Rewrite-1.3#work)).
 
 The command takes an undo step, since it moves blocks, so that one undo expands or collapses the stack again and puts every block back exactly where it was, which expanding a collapsed stack does not, as the moves taper off.
@@ -206,10 +226,13 @@ The command `blockr.dag-paste` takes the text of a JSON board, as the DAG's Copy
 
 1. In `prepare()`, it reads the board through `core.store.read()`, which gives the board that opening the text would give, its blocks migrated by the versions that it records, and what opening it would drop, holding nothing, as `check()` does for opening ([Board updates](Rewrite-1.1.2#the-store)).
 2. In `run()`, it mints a new id for each block, link and stack, and points the pasted links and stacks at the new ids.
-3. It moves the pasted positions together, so that their middle lands at the point, and then each block off what it would overlap, as the strategy that the state names does.
+   The blocks keep their names, and the name of each stack gains " (copy)", as today's paste has it ([R/subboard.R#L119-L158](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/subboard.R#L119-L158)).
+3. It moves the pasted positions together, so that their middle lands at the point.
+   Where a pasted block would then overlap another node, with the spacing's gap around it, it moves them all on together, to the nearest spot where none does, so that they keep the arrangement that they were copied in (notes).
 4. It returns one delta with the blocks, links and stacks, the positions of the blocks and those of the stacks that hold no block, so that one undo takes the paste back ([Board updates](Rewrite-1.1.2#plugins)).
 
 A block whose class the app lacks is left out of the paste, with a notification that names it, as opening a board drops such a block ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A pasted block that the copied board gives no position, as a board copied without the DAG's state would, gets its place from `afterStep`, as any added block does.
 
 ### Defining the state in R
 
@@ -242,6 +265,7 @@ An app script that gives the DAG a state passes the plugin in the board's `plugi
 ### Boards saved today
 
 The method of blockr.convert for the DAG's extension makes the plugin with `new_dag_plugin()` from the extension's `positions` and `layout`, whose `placement`, `snap` and `snap_size` take their defaults, and with no stack collapsed and no position for a stack, since today's files keep neither, so that `start` places each stack that holds no block ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+It passes on the positions as the file holds them, so that a position of a block that the file lacks reaches `start`, which names it as it drops it.
 A file of blockr.dock 0.1.2 holds no state of the DAG, since the dock wrote every extension's state empty then, so the board opens with the default state, and `start` lays it out ([Saved boards and app scripts across the switch](Rewrite-1.2.2)).
 
 ### On a locked board
@@ -269,6 +293,7 @@ The nominal size of a node is to settle in the issue that builds the strategies:
 
 Version 3.0.1 of d3-force (ISC, 5.7 KB gzipped) keeps a node with `fx` and `fy` where they say, takes a seeded `randomSource()` and steps through `tick()` without timers ([d3-force](https://d3js.org/d3-force/simulation)).
 Its `forceX` and `forceY` take a strength for each node, which holds a block to its place the more firmly the further it sits from a stack that makes room, and `forceCollide` keeps nodes apart ([forceX and forceY](https://d3js.org/d3-force/position), [forceCollide](https://d3js.org/d3-force/collide)).
+That force treats each node as a circle, so a stack's box, which is no circle, pushes blocks off through a force of the DAG's own.
 
 React Flow's own snapping rounds the top left corner of a node that the user drags rather than its centre, so the DAG snaps a drag itself ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 
@@ -277,8 +302,13 @@ Today's code, at `898a097`: the state and its external control are `new_dag_exte
 The method of blockr.convert reads today's `layout` as `dag_layout()` writes it, with `direction` and `spacing`, and today's `positions` as block ids to points.
 
 Between the deltas of a step, an added block has no position yet, since `afterStep` places it as the step ends, so the DAG draws from `core.store.board()` once the store has announced a change, rather than from the board that comes with each delta.
+Between the opening of a board and the delta of `start`, a block may have no position either, so the DAG draws no node for a block without one ([Drawing the DAG](Rewrite-1.3.2#the-canvas)).
 
-A command is given only the board and its args, so the class keeps the `CoreApi` and the value of `lock_rearrange` that its `start` reads for the board that is open, for the paste's `core.store.read()` and for the preflights under the board lock.
+On `js-state`, core hands each command a context beside the board and its args, with the locks and `mintId()`, and with `blockrOption()`, which returns a promise ([srcts/commands/commands.ts#L63-L85](https://github.com/BristolMyersSquibb/blockr.core/blob/7ee69688488a140917cad5863101aeaf168a06e6/srcts/commands/commands.ts#L63-L85)).
+So the preflights read the board lock from the context, and the paste mints its ids with the context's `mintId()`.
+A preflight cannot wait for a promise, so the class keeps the value of `lock_rearrange` that its `start` reads for the board that is open, and it keeps the `CoreApi` for the paste's `core.store.read()`.
+
+The paste looks for the nearest spot in rings around the point, one gap apart, and takes the first spot where no pasted block overlaps another node, so that the same paste on the same board lands in the same place.
 
 The layout is given the blocks and links in the order that the board holds them, since dagre's result depends on the order in which it is given nodes and edges, and the same board has to give the same positions.
 

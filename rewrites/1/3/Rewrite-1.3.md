@@ -48,7 +48,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)) and 
 
 ## Proposal
 
-- The DAG is a plugin of class `blockr.dag-dag_plugin`, named "Workflow", as today's extension is, whose class sets `state`, `update`, `start`, `ui`, `commands` and `boardActions`, and which works on the board through `CoreApi` alone ([Plugins](Rewrite-1.1.12#a-plugin)).
+- The DAG is a plugin of class `blockr.dag-dag_plugin`, named "Workflow", as today's extension is, whose class sets `state`, `update`, `afterStep`, `start`, `ui`, `commands` and `boardActions`, and which works on the board through `CoreApi` alone ([Plugins](Rewrite-1.1.12#a-plugin)).
   It asks nothing of a frontend beyond what core's `PluginClass` holds, so every frontend places it as it places any plugin with a `ui`, the dock in a panel and core's basic frontend in a section ([Plugins](Rewrite-1.1.12#plugin-classes)).
   It gives R no requests, since it lives in the browser alone ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 - Its state holds a position for every block and for every stack that holds no block, its layout's direction, spacing, placement and snapping, and which stacks are collapsed, so that a board reopens as the user left it, and app scripts write it through `new_dag_plugin()` and `dag_layout()` ([The DAG's state, commands and placement](Rewrite-1.3.1#the-state)).
@@ -83,7 +83,6 @@ None.
 
 - Lay out the largest real board with dagre and with elkjs, draw it in React Flow with stacks that collapse, and make room around each stack through Repulsion as it collapses and expands, against the criteria in the notes, to decide between the two layouts and to check Repulsion, in blockr.dag
 - Add `afterStep` to plugin classes, which the store calls once the last delta of a step is in and whose patches join the step, and name the parameter of `commands.run()` and `commands.plan()` `batch`, in blockr.core
-- Have the description of `blockr.core-add_block` tell the assistant to link a block that reads from another in the same batch, so that the DAG places the block by its link, in blockr.core ([blockr.core#695](https://github.com/BristolMyersSquibb/blockr.core/issues/695))
 - Let an item of a quick action show a check, through an optional `checked`, which core's menu draws at the end of its row, as the design system marks the current pick and a toggle that is on, so that the DAG's Layout checks its current settings, in blockr.core
 - Make the DAG a plugin in R, with `new_dag_plugin()` and `dag_layout()`, the class listed in `._BLOCKR_MODULES_` and the JSON Schema of its state, in place of `new_dag_extension()`, in blockr.dag
 - Build the DAG plugin's class in the client, with its state, its `update`, its `afterStep`, which places added blocks and stacks through the strategies Repulsion and Beside, and its commands for positions, layouts, snapping, collapsed stacks, which make room through Repulsion, and copy and paste, tested on core's `CoreApi` for tests, in blockr.dag
@@ -117,9 +116,10 @@ As the spike collapses and expands each of the five stacks, Repulsion makes room
 
 1. After any stack expands, no block overlaps another block, or the box of a stack that it is not in, with the spacing's gap.
 2. No two blocks swap sides: a block that sat left of another, or above it, still does.
-3. The further a block sits from the stack, the less it moves, and blocks beyond the reach of the moves stay where they are.
-4. Collapsing a stack and expanding it again puts every block back within one gap of where it was.
-5. The moves take less than 50 ms, on the machine that the result names.
+3. The blocks of each other stack move by one distance, so that its box keeps its shape.
+4. The further a block sits from the stack, the less it moves, and blocks beyond the reach of the moves stay where they are.
+5. Collapsing a stack and expanding it again puts every block back within one gap of where it was.
+6. The moves take less than 50 ms, on the machine that the result names.
 
 Where Repulsion fails one, the result says which, and how the blocks move is settled again before the DAG's class is built.
 

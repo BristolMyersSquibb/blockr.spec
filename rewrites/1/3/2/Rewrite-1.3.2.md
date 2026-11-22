@@ -28,12 +28,14 @@ Core's basic frontend gives a plugin's section no height of its own, so there th
 A drag on the canvas pans it, the wheel zooms it, and the toolbar zooms and fits it (The toolbar).
 
 The DAG fits the view to the board as it first mounts on a board, at most at 100%, so that no block shows larger than its size.
+On a board that opened without positions, it fits once the DAG's `start` has placed the blocks, since `start` runs after the DAG mounts ([The DAG's state, commands and placement](Rewrite-1.3.1#starting-on-a-board)).
 It fits the view again once the user lays the board out again through Layout (The DAG's board actions), as today's DAG fits after each layout.
 It fits on no other change, since fitting on every change of the nodes moved the view under the user in the prototype (notes).
 The DAG keeps the zoom and the pan for the page, by the board's id, and restores them when it mounts again on the same board, as when the dock redraws a view ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
 They stay out of the DAG's state, since what one user looks at is no part of the board.
 
 The nodes, links and group nodes that React Flow draws are made from the board and the DAG's state on every change.
+A block that has no position yet gets no node until it has one.
 While the user drags a node, React Flow reports each move through `onNodesChange`, and the DAG keeps the new positions in its component alone.
 As the drag ends, the DAG runs `blockr.dag-change_position` once, so that a drag is one step (Gestures).
 
@@ -106,7 +108,7 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   So the blocks that the user ticks in the Edit board plugin show as selected in the DAG, and the DAG's toolbar and keys act on them.
 - A right click on a node, a link, a stack or the canvas opens that object's menu through `core.boardActions.menu()`, at the pointer ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
   Where the object belongs to a selection of several, the right click opens the selection's menu instead, and so does a right click on the box that React Flow draws around a selection.
-  For the canvas, the DAG passes `menu()` an `extend` that puts each block, or stack that holds no block, that the board action adds where the user right-clicked, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
+  For the canvas, the DAG passes `menu()` an `extend` that puts the block, or the stack that holds no block, that the board action adds where the user right-clicked, or the first of several, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   The DAG passes `menu()` and `trigger()` a `notifier` as well, and shows a refused batch at the node, the link or the point where it opened the menu or triggered the board action, as it shows a refused link where the user dropped it ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 
 ### The DAG's board actions
@@ -118,7 +120,7 @@ The DAG registers four board actions, beside core's, which every menu of their o
 | Copy | A block, a stack or a selection | Clipboard | Puts on the clipboard, at once, a JSON board of the blocks and stacks that it acts on, the blocks of those stacks, the links between those blocks, any other stack that holds a block and whose blocks are all copied, and their positions, as today's copy does |
 | Cut | A block, a stack or a selection | Clipboard | Copies, then runs core's commands that remove them, as one step |
 | Paste | The board | Clipboard | Reads the clipboard and runs `blockr.dag-paste` with what it holds, at the point where the menu opened, or at the middle of the view from the toolbar or a key |
-| Layout | The board | Edit | Its quick action offers Lay out again, the two directions and the three spacings, which run `blockr.dag-relayout`, the two placements, Repulsion and Beside, which run `blockr.dag-set_placement`, and Snap to grid, which turns snapping on or off, and the snap size, which run `blockr.dag-set_snap` ([The DAG's state, commands and placement](Rewrite-1.3.1#commands)). It checks the current direction, spacing and placement, and Snap to grid while snapping is on, as today's menu shows the current direction and spacing ([Board actions](Rewrite-1.1.16#the-quick-action)) |
+| Layout | The board | Edit | Its quick action offers Lay out again, the two directions and the three spacings, which run `blockr.dag-relayout`, the two placements of new blocks, Repulsion and Beside, which run `blockr.dag-set_placement`, and Snap to grid, which turns snapping on or off, and the snap size, which run `blockr.dag-set_snap` ([The DAG's state, commands and placement](Rewrite-1.3.1#commands)). It checks the current direction, spacing and placement, and Snap to grid while snapping is on, as today's menu shows the current direction and spacing ([Board actions](Rewrite-1.1.16#the-quick-action)) |
 
 Copy writes to the system's clipboard within the user's gesture, as Safari requires.
 The selection is at hand in the client, so Copy writes it at once, where today's copy starts a write that waits for R to send the board ([inst/assets/js/copy-paste.js](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/copy-paste.js)).
