@@ -132,7 +132,7 @@ What each cannot do:
 - All of them work from a node's nominal size, so a long name can still overlap the name of a block beside it (notes).
 
 Turning `snap` on moves no block until the next operation or drag.
-A drag snaps as it moves, through React Flow's `snapToGrid` and `snapGrid`, so that it ends on the point that `blockr.dag-change_position` keeps ([Drawing the DAG](Rewrite-1.3.2#gestures)).
+During a drag, the DAG snaps the centre of each node that moves, so that the drag ends on the point that `blockr.dag-change_position` keeps ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 The pages call this snapping, and its size the snap size, since a grid is how the dock arranges a view's panels, while a label on the page may still say "Snap to grid".
 
 ### Placing added blocks
@@ -270,7 +270,7 @@ The nominal size of a node is to settle in the issue that builds the strategies:
 Version 3.0.1 of d3-force (ISC, 5.7 KB gzipped) keeps a node with `fx` and `fy` where they say, takes a seeded `randomSource()` and steps through `tick()` without timers ([d3-force](https://d3js.org/d3-force/simulation)).
 Its `forceX` and `forceY` take a strength for each node, which holds a block to its place the more firmly the further it sits from a stack that makes room, and `forceCollide` keeps nodes apart ([forceX and forceY](https://d3js.org/d3-force/position), [forceCollide](https://d3js.org/d3-force/collide)).
 
-React Flow snaps a node that the user drags while its `snapToGrid` is on, to multiples of `snapGrid`, which the DAG gives as `[snap_size, snap_size]` ([React Flow](https://reactflow.dev/api-reference/react-flow#snaptogrid)).
+React Flow's own snapping rounds the top left corner of a node that the user drags rather than its centre, so the DAG snaps a drag itself ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 
 Today's code, at `898a097`: the state and its external control are `new_dag_extension()`, `dag_ext_meta()` and `dag_positions_description()` in `R/ext.R` and `setup_layout_ctrl()`, `push_layout()` and `setup_positions_ctrl()` in `R/srv.R`; the layout is `R/layout.R`; placing is `add_nodes()` and `space_spliced_node()` in `R/g6r.R`; and copy and paste are `R/subboard.R` and `R/action.R`.
 
