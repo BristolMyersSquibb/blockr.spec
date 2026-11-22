@@ -2,7 +2,7 @@
 Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens and where their advanced actions show, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
-It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, open its menus, register its board actions and draw its toolbar, the item that lets a row of a quick action show a check, and the spike's drawing of stacks that collapse.
+It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, open its menus, register its board actions and draw its toolbar, and the item that lets a row of a quick action show a check.
 What the DAG keeps and the commands that change it are [The DAG's state, commands and placement](Rewrite-1.3.1)'s, and what a board action is, with the menus that offer one, is [Board actions](Rewrite-1.1.16)'s.
 
 ## What must hold
@@ -82,7 +82,7 @@ A stack whose entry in the DAG's state holds `collapsed` shrinks to a box that h
 Its blocks hide.
 A link between one of them and a block outside the stack ends on the box, and a link between two of them hides with them.
 Dragging the small box moves the stack's hidden blocks by the same distance, in one `blockr.dag-change_position`, so that the stack expands around where the box sits.
-Expanding it brings its blocks back where they were in the stack, while the blocks around the stack move to make room, as they close up on a stack that collapses ([The DAG's state, commands and placement](Rewrite-1.3.1#collapsing-and-expanding-a-stack)).
+Expanding it brings its blocks back where they were in the stack, and the blocks around it back where they were before it collapsed, as they close up on a stack that collapses ([The DAG's state, commands and placement](Rewrite-1.3.1#collapsing-and-expanding-a-stack)).
 A double click on the stack's box, or the collapse button on the box, as today's stack has, runs `blockr.dag-collapse_stack`.
 It takes an undo step, since it moves the blocks around the stack, so one undo collapses or expands the stack again and puts every block back ([The DAG's state, commands and placement](Rewrite-1.3.1#collapsing-and-expanding-a-stack)).
 React Flow collapses nothing itself, and its example of it is one of its paid examples, so this is the DAG's own code ([Expand and Collapse](https://reactflow.dev/examples/layout/expand-collapse)).
@@ -105,8 +105,8 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   The DAG adds `blockr.dag-change_position` with the drop to the board action's step, through `trigger()`'s `extend`, so that the new block starts at the drop ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   A link dropped on a node or on a stack's box, away from its handles, adds nothing, as today's does.
 - A click selects a node, a link or a stack, and a click on the canvas clears the selection.
-  A click with Shift adds to the selection, as today.
-  A drag with Alt held selects what its rectangle covers, as today.
+  A click with Cmd on a Mac, or with Ctrl elsewhere, adds to the selection, as React Flow has it, where today's DAG takes Shift.
+  A drag on the canvas with Shift held selects what its rectangle covers, as React Flow has it, where today's DAG takes Alt.
 - Where the user selects one block alone in the DAG, by a click, a rectangle, the keyboard or a pick in search, the DAG shows the block through `core.show()`, which every frontend carries out in its own way, the dock in the active view ([Plugins](Rewrite-1.1.12#showing-a-block-or-a-plugin)).
   A selection of several shows none, as today, and neither does a selection of a link or a stack.
 - The DAG puts every selection that the user makes in it into `core.selection`, which the dock's pinned sidebar follows, and so does the DAG's own pinned panel (Its advanced actions, [Board actions](Rewrite-1.1.16#the-advanced-action)).
@@ -197,13 +197,14 @@ The toolbar's search button opens the panel beside the toolbar, and Escape, a cl
 The DAG binds its keys on its own element rather than on the whole document.
 So they never fire while the user types in a block's UI, as the prototype's listeners on the whole document did (notes).
 Within its element, the DAG leaves alone a key that the user presses in a field, such as its search field or a form in its panel of advanced actions, as today's copy and paste do.
+Where today's DAG and React Flow bind a key or a gesture differently, the DAG follows React Flow, whose conventions users know from other editors.
 The keys act on the selection that `core.selection` holds (Gestures):
 
-- Cmd or Ctrl with Backspace triggers Remove on the selection.
-  Today only Ctrl with Backspace does, and Cmd joins it, as it does for copying.
+- Backspace triggers Remove on the selection, as React Flow binds it, where today's DAG takes Ctrl with Backspace.
 - Cmd or Ctrl with C, X and V triggers Copy, Cut and Paste, but for C and X while the user has selected text, which the browser copies as usual, as today's copy does.
 - While a selected block has the keyboard's focus, each arrow key moves every selected block and stack, 5 px a press or 20 px with Shift, or by the snap size while snapping is on, as React Flow moves them (notes).
   The user reaches a block with Tab and selects it with Enter or Space, so that the keyboard alone can arrange the board, which today's DAG does not allow.
+  Links take no focus, so that the first Tab reaches a block rather than every link of the board first, while a click still selects a link and a right click opens its menu (notes).
   The DAG runs `blockr.dag-change_position` once the user pauses, or once the focus leaves the block, so that a run of presses is one step, as [Board updates](Rewrite-1.1.2#undo) asks of every input that changes with each key press.
 
 Undo and redo are the frontend's keys, since the store keeps one history for the page ([Board updates](Rewrite-1.1.2#undo)).
@@ -250,7 +251,7 @@ The context menu's entries by target, which board actions take over: on a block,
 The toolbar's items: search, zoom in, zoom out, fit, the layout menu, add a block, add a stack and remove the selection ([R/ext.R#L422-L517](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L422-L517)).
 Today's layout menu turns a node's ports to its sides from left to right, and draws links as horizontal curves ([inst/assets/js/layout-menu.js](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/layout-menu.js)).
 Search and the outline are one panel today, which the toolbar's "Search blocks" opens beside the toolbar, since `g6_outline()` hangs under `g6_search(collapsed = TRUE)` ([R/g6r.R#L426-L447](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/g6r.R#L426-L447), [inst/assets/css/dag.css#L116-L130](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/css/dag.css#L116-L130)).
-Search expands a collapsed stack as today's does, although expanding now moves the blocks around the stack, so the issue that builds search tries it on the spike's board, with the stacks that the spike adds to it ([Client-drawn DAG](Rewrite-1.3#work)).
+Search expands a collapsed stack as today's does, although expanding now moves the blocks around the stack, so the issue that builds search tries it on the spike's board, with the stacks that the spike added to it ([Client-drawn DAG](Rewrite-1.3), notes).
 Today's keys listen on the whole document.
 Ctrl with Backspace removes the selection, even while the user types in a field ([inst/assets/js/rm-sel.js](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/rm-sel.js)).
 Ctrl or Cmd with C, X and V copy, cut and paste outside fields, but for C and X while the page holds selected text ([inst/assets/js/copy-paste.js](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/copy-paste.js)).
@@ -268,10 +269,13 @@ That edge reads both nodes through `useInternalNode`, which renders the edge aga
 A node whose handles move or change in number has React Flow measure them again through `useUpdateNodeInternals` ([useUpdateNodeInternals](https://reactflow.dev/api-reference/hooks/use-update-node-internals)).
 
 React Flow 13.0.0 binds keys of its own: Backspace removes what is selected, Shift with a drag draws the selection's rectangle, and Cmd on a Mac or Ctrl elsewhere adds to a selection ([src/container/ReactFlow/index.tsx#L67-L73](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/container/ReactFlow/index.tsx#L67-L73)).
-So the DAG sets `deleteKeyCode` to `null`, `selectionKeyCode` to `"Alt"` and `multiSelectionKeyCode` to `"Shift"`.
+The DAG keeps `selectionKeyCode` and `multiSelectionKeyCode` as React Flow sets them, and sets `deleteKeyCode` to `null`, binding Backspace itself, so that it triggers core's board action Remove on `core.selection`, which the store can undo, rather than React Flow's removal of the nodes that it draws.
 React Flow makes each node focusable, but not the canvas around the nodes ([src/components/NodeWrapper/index.tsx#L212-L213](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/NodeWrapper/index.tsx#L212-L213)).
 So the DAG's element takes the keyboard's focus as the user presses on the canvas.
 The DAG's keys then act after a click on the canvas or a drawn rectangle, as they do after a click on a node.
+React Flow makes each link focusable as well, and draws the links before the nodes, so Tab reaches every link before the first block ([src/container/GraphView/index.tsx#L156-L181](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/container/GraphView/index.tsx#L156-L181), [src/components/EdgeWrapper/index.tsx#L57](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/EdgeWrapper/index.tsx#L57)).
+On the spike's board, the first block came after 108 links, so the DAG sets `edgesFocusable` to `false`, after which the first Tab reached a block ([Client-drawn DAG](Rewrite-1.3), notes).
+Whether a click selects a link, and whether a right click opens its menu, does not depend on its focus ([src/components/EdgeWrapper/index.tsx#L61](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/EdgeWrapper/index.tsx#L61)).
 
 React Flow selects a node as the user starts to drag it, since its `selectNodesOnDrag` is `true` by default ([src/store/initialState.ts#L139](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/store/initialState.ts#L139)).
 The DAG would then show every block that the user moves.
@@ -279,7 +283,8 @@ So the DAG sets `selectNodesOnDrag` to `false`.
 React Flow then drags a node that is not selected alone, and clears the selection as the drag starts ([packages/system/src/xydrag/XYDrag.ts#L294-L306](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/XYDrag.ts#L294-L306)).
 React Flow's own snapping, through its props `snapToGrid` and `snapGrid`, rounds the position of the first node that a drag moves, and moves every other node of the drag by as much ([packages/system/src/xydrag/XYDrag.ts#L165-L191](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/XYDrag.ts#L165-L191), [packages/system/src/xydrag/utils.ts#L134-L161](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/utils.ts#L134-L161)).
 A node that sat off the grid, as one placed before the user turned snapping on, would then end off it, and `blockr.dag-change_position` would move it as the drag ends.
-So the DAG snaps a drag itself: it rounds the position of each node that moves as it applies the moves that `onNodesChange` reports.
+So the DAG snaps a drag itself: it rounds the position of each node that moves as it applies the moves that `onNodesChange` reports, which React Flow 13 hands it as a `NodeChangeset`, read through `toArray()`.
+In the spike, a drag of several selected blocks, one of them in a stack, moved that block by React Flow's drag threshold, 5 px, more than the others, so the DAG moves every node of a drag by the move of the node under the pointer ([Client-drawn DAG](Rewrite-1.3), notes).
 React Flow moves the selected nodes with the arrow keys while one of them has the keyboard's focus, 5 px a press or 20 px with Shift, and by `snapGrid` instead while `snapToGrid` is on ([src/components/NodeWrapper/index.tsx#L119-L153](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/NodeWrapper/index.tsx#L119-L153), [src/hooks/useMoveSelectedNodes.ts#L28-L29](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/hooks/useMoveSelectedNodes.ts#L28-L29)).
 It reports those moves through `onNodesChange`, as it reports a drag's, but outside any drag ([src/store/index.ts#L212-L233](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/store/index.ts#L212-L233)).
 So the DAG keeps them in its component, as it keeps a drag's, until the user pauses.

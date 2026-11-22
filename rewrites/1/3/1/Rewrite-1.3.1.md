@@ -2,24 +2,25 @@
 Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places whatever a step adds, one block or many, makes room around what it places and around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
-It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R and build its class in the client, and the spike that decides between dagre and elkjs.
+It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R and build its class in the client.
 What the DAG draws, its menus, its own board actions and its toolbar are [Drawing the DAG](Rewrite-1.3.2)'s, and what a plugin's state is and how the store keeps it are [Plugins](Rewrite-1.1.12#a-plugins-state)'s.
 
 ## What must hold
 
 Conditions 2, 4, 6 and 7 of [Client-drawn DAG](Rewrite-1.3#what-must-hold) rest on this page.
 
-1. The state holds a position for every block of the board and for every stack that holds no block, the layout's direction, spacing, placement and snapping, and the stacks that the DAG shows collapsed, in the shape of one JSON Schema, which describes each part for the assistant.
+1. The state holds a position for every block of the board and for every stack that holds no block, the layout's direction, spacing, placement and snapping, and the stacks that the DAG shows collapsed, with what collapsing each moved, in the shape of one JSON Schema, which describes each part for the assistant.
 2. Whatever a step adds, blocks and stacks that hold no block, one or many, gets its positions in the same step, so that undo takes back the objects and their positions together.
    Under Beside, adding moves no other block, and under Repulsion it moves only the blocks near what it adds, in the same step.
 3. A block moves only when someone moves it, runs `blockr.dag-relayout`, collapses or expands a stack near it, or adds a block or a stack near it under Repulsion.
 4. The class's `update` reads only the change and the board, and its `afterStep` only the boards before and after the step, so that both give the same patches wherever they run ([Board updates](Rewrite-1.1.2#plugins)).
 5. A board saved today opens through blockr.convert with its blocks arranged as they were saved, and with its layout's direction and spacing.
 6. On a locked board, the DAG locks nothing of its own, so that a reader moves blocks, lays the board out and collapses stacks as on any board, while the store refuses what the board lock fixes.
-7. Where the DAG makes room, for what Repulsion places or around a stack that collapses or expands, the blocks next to it move the most and those further away less, and blocks far from it stay where they are.
+7. Where the DAG makes room, for what Repulsion places or around a stack that collapses or expands, the blocks next to it move the most and those further away less, with a reach that grows with the stack, but for blocks lined up a gap apart in the way of what it places, which move on together.
    So the blocks clear what Repulsion places and the box of a stack that expands, and close up on a stack that collapses.
-   No two blocks swap sides, and each other stack keeps its shape.
-8. Whatever the DAG places, lays out or moves to make room overlaps no other node, with the spacing's gap around it, and comes out the same for the same board wherever it runs, but for a block that someone moves to a place of their own, which it takes as given.
+   No two blocks within two gaps of each other swap sides, a collapsed stack moves as one, and the blocks of an expanded stack move one by one, as blocks in no stack do.
+8. Whatever the DAG places, lays out or moves to make room overlaps no other node, with the spacing's gap around it, and comes out the same for the same board wherever it runs, but for a block that someone moves to a place of their own, which it takes as given, and two nodes that sat closer than the gap before the DAG made room, which keep what they had.
+9. Expanding a stack puts the board back as if the stack had never collapsed, whatever stacks collapsed or expanded since, but for what someone moved or added meanwhile, which stays where it is unless it lies in the stack's box, out of which it moves.
 
 ## Today
 
@@ -41,7 +42,7 @@ interface DagState {                                     // the state of blockr.
   positions: Record<BlockId, { x: number; y: number }>;  // where React Flow places each block's node, in pixels of the canvas
   stacks: Record<StackId,                                // what the DAG keeps about a stack, where it keeps anything
     | { x: number; y: number }                           // a stack that holds no block: where its box sits
-    | { collapsed: true }>;                              // a stack with blocks that the DAG shows collapsed
+    | { collapsed: number; moved: Moved }>;              // a stack with blocks that the DAG shows collapsed: its place among the collapses, and what its collapse moved
   layout: {
     direction: "TB" | "LR";                              // top to bottom, or left to right
     spacing: "compact" | "normal" | "loose";             // the gaps between blocks and between ranks
@@ -50,6 +51,11 @@ interface DagState {                                     // the state of blockr.
     snap_size: number;                                   // in pixels of the canvas
   };
 }
+
+type Moved = {                                           // what a collapse moved, by id, from where to where
+  positions: Record<BlockId, { from: { x: number; y: number }; to: { x: number; y: number } }>;
+  stacks: Record<StackId, { from: { x: number; y: number }; to: { x: number; y: number } }>;   // stacks that hold no block
+};
 ```
 
 Its default is `{ "positions": {}, "stacks": {}, "layout": { "direction": "TB", "spacing": "normal", "placement": "repulsion", "snap": false, "snap_size": 20 } }`, and a board holds it under the class's id:
@@ -57,7 +63,10 @@ Its default is `{ "positions": {}, "stacks": {}, "layout": { "direction": "TB", 
 ```json
 "blockr.dag-dag_plugin": {
   "positions": { "a": { "x": 120, "y": 80 }, "b": { "x": 120, "y": 200 } },
-  "stacks": { "s1": { "collapsed": true }, "s2": { "x": 360, "y": 80 } },
+  "stacks": {
+    "s1": { "collapsed": 1, "moved": { "positions": { "b": { "from": { "x": 120, "y": 240 }, "to": { "x": 120, "y": 200 } } }, "stacks": {} } },
+    "s2": { "x": 360, "y": 80 }
+  },
   "layout": { "direction": "TB", "spacing": "normal", "placement": "repulsion", "snap": false, "snap_size": 20 }
 }
 ```
@@ -66,10 +75,10 @@ A position is where React Flow places the block's node on the canvas ([Drawing t
 A stack has an entry in `stacks` only where the DAG keeps something about it, which is one of two things that never meet:
 
 - A stack that holds no block has a position, where its box sits, since the box of a stack with blocks fits them ([Drawing the DAG](Rewrite-1.3.2#stacks)).
-- A stack with blocks that the DAG shows collapsed has `collapsed`, since a stack that holds no block shows as a collapsed stack does already.
+- A stack with blocks that the DAG shows collapsed has `collapsed`, its place among the collapses in the order they were made, and `moved`, what its collapse moved, since a stack that holds no block shows as a collapsed stack does already (Collapsing and expanding a stack).
 
 The entries of stacks are kept apart from the positions of blocks, since an id is unique only within its collection ([Board objects](Rewrite-1.1.1#ids)).
-Each part keeps what one use needs: the positions, so that a board reopens as the user arranged it; the position of a stack, so that a stack that holds no block stays where the user put it, for blocks to be dropped on it; `collapsed`, so that a board reopens with its stacks as the user left them; and the layout, so that a layout run later, the place of an added block, the snapping of positions and the sides of the handles that no link uses follow what the user picked.
+Each part keeps what one use needs: the positions, so that a board reopens as the user arranged it; the position of a stack, so that a stack that holds no block stays where the user put it, for blocks to be dropped on it; `collapsed`, so that a board reopens with its stacks as the user left them; `moved`, so that expanding a stack puts back what its collapse moved, on a board that has reopened since too; and the layout, so that a layout run later, the place of an added block, the snapping of positions and the sides of the handles that no link uses follow what the user picked.
 Both `positions` and `stacks` are keyed by the ids of what they describe, as a plugin keeps what it knows about core's objects ([Plugins](Rewrite-1.1.12#a-plugins-state)), so that a patch names a block or a stack rather than an index of an array, which may hold another by the time undo or redo applies the patch ([Board updates](Rewrite-1.1.2#undo)).
 
 The schema's `description` keywords say what `dag_ext_meta()` says today, so that the assistant needs no code of its own for the DAG ([R/ext.R#L54-L109](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/ext.R#L54-L109), [Board updates](Rewrite-1.1.2#plugins)).
@@ -84,11 +93,12 @@ Laying the board out again moves every block, so the assistant runs it before it
 | `blockr.dag-relayout` | `direction` and `spacing`, each optional | Yes | Sets the settings given and lays the whole board out again with them (Laying the board out again) |
 | `blockr.dag-set_placement` | `placement` | No | Sets how added blocks get their place, and moves no block |
 | `blockr.dag-set_snap` | `snap` and `snap_size`, each optional | No | Sets whether the DAG snaps the positions that it sets, and to what size, and moves no block, so that the next operation or drag snaps (How the DAG moves blocks) |
-| `blockr.dag-collapse_stack` | `stack`, `collapsed` | Yes | Collapses a stack or expands it, and makes room around it (Collapsing and expanding a stack) |
+| `blockr.dag-collapse_stack` | `stack`, `collapsed` | Yes | Collapses a stack, as the blocks around it close up on it, or expands it, putting back what its collapse moved (Collapsing and expanding a stack) |
 
 The commands that name a block or a stack fail their preflight where the board lacks it, so that the state keys nothing by an id that the board does not hold.
 The preflight of `blockr.dag-change_position` also refuses a position for a stack that holds a block, since the box of such a stack fits its blocks.
 The preflight of `blockr.dag-collapse_stack` refuses a stack that holds no block, since such a stack shows as a collapsed one does already.
+The commands `blockr.dag-change_position` and `blockr.dag-relayout` drop each block and stack that they move from what collapses moved, so that no expand puts it back (Collapsing and expanding a stack).
 The commands `blockr.dag-set_placement` and `blockr.dag-set_snap` have `undo: false`, since they move no block.
 So a user who drags a block, then turns snapping on, and then presses Undo takes back the drag, while the store still saves the settings with the board ([Board updates](Rewrite-1.1.2#undo)).
 Each command's `description` and `args` describe it to the assistant's tools ([The assistant's tools](Rewrite-1.4.2#the-tools)).
@@ -97,12 +107,13 @@ Copying, cutting and pasting are no commands of the DAG's: Copy changes nothing 
 
 ### The class's `update` and `afterStep`
 
-With every delta that the store applies, the class's `update` drops the position of each block that the delta removes, and the entry in `stacks` of each stack that the delta removes ([Board updates](Rewrite-1.1.2#plugins)).
+With every delta that the store applies, the class's `update` drops the position of each block that the delta removes, the entry in `stacks` of each stack that the delta removes, and what each collapse moved of either ([Board updates](Rewrite-1.1.2#plugins)).
 Once the last delta of the step is in, its `afterStep` brings the state in line with the board that the step leaves:
 
 1. It places every block and every stack without blocks that the step adds, from where the step puts it, through the strategy, which under Repulsion makes room around them (Placing added blocks).
+   It drops each block and stack that making room moves from what collapses moved, so that no expand puts it back (Collapsing and expanding a stack).
 2. A stack that the step leaves without blocks gets a position, its box centred where the box that its blocks spanned before the step was, rather than a place from the strategy.
-   The position takes the place of `collapsed` in its entry, since a stack that holds no block shows as a collapsed stack does already, so that a block that joins the stack later shows.
+   The position takes the place of `collapsed` and `moved` in its entry, since a stack that holds no block shows as a collapsed stack does already, so that a block that joins the stack later shows, and what the stack's collapse moved stays where it is.
 3. It drops the entry of each stack that holds a block and has a position.
 
 So a batch that adds a block and then links it places the block by its link, which `update` would not see yet as it is given the block's delta, and a batch that empties a stack and fills it again leaves the stack with no position.
@@ -119,7 +130,7 @@ As a board opens, the class's `start` gives a position to every block that lacks
 1. Where the board holds no position for any block or stack, as a board that a script builds without positions or a converted file that holds none, it lays the whole board out (Laying the board out again).
 2. Where it lacks the positions of some blocks or stacks only, it places those as Beside places what a step adds, whatever the placement, so that every block that has a position opens where it was saved.
 
-In the same delta, it drops each position and each entry in `stacks` that names a block or a stack that the board lacks, as an app script may give one, the entry of each stack that holds a block and has a position, and `collapsed` in the entry of each stack that holds no block, which then gets a position.
+In the same delta, it drops each position, each entry in `stacks` and each entry in what a collapse moved that names a block or a stack that the board lacks, as an app script may give one, the entry of each stack that holds a block and has a position, and `collapsed` and `moved` in the entry of each stack that holds no block, which then gets a position.
 It names every entry that it drops in one warning about the DAG, of the code `dag_state_dropped`, which holds until the next board opens, as core's note of what the store dropped does, and it logs the same at warn ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 A board that the DAG saved holds no such entry, since `update` and `afterStep` keep the state in line with the board, so only a mistake in an app script or a file written elsewhere raises the warning.
 The delta has the origin `blockr.dag-dag_plugin` and `undo: false`, as the dock adds its first view, so that undo never takes the board back to blocks without positions ([The dock's state](Rewrite-1.2.1#starting-on-a-board)).
@@ -133,17 +144,19 @@ Four operations give blocks their positions, each with a mechanism of its own:
 
 | Operation | When it runs | What it moves | How |
 |---|---|---|---|
-| Laying the board out | Someone runs `blockr.dag-relayout`, or `start` opens a board that holds no positions | Every block, and every stack without blocks | dagre or elkjs, as the spike decides (Laying the board out again) |
+| Laying the board out | Someone runs `blockr.dag-relayout`, or `start` opens a board that holds no positions | Every block, and every stack without blocks | dagre (Laying the board out again) |
 | Placing what is added | `afterStep`, for whatever a step adds, and `start`, for what a board opens without, as Beside places it | The added blocks and stacks, and under Repulsion the blocks around them | Repulsion by default, which makes room around them, or Beside, which moves no other block (Placing added blocks) |
-| Making room | Placing under Repulsion, and `blockr.dag-collapse_stack` | The blocks around what is placed or around the stack, less the further away they are | d3-force (Making room) |
+| Making room | Placing under Repulsion, and `blockr.dag-collapse_stack` | The blocks around what is placed or around the stack, less the further away they are | A projection that keeps every two neighbours in their order and apart (Making room) |
 | Snapping | After any of the others, and with every `blockr.dag-change_position`, while `snap` is on | Only what the operation or the command moved | Rounds each position to a multiple of `snap_size` |
 
 Each of them gives the same positions for the same board wherever it runs, since it reads nothing on the page.
-Each leaves no two nodes closer than the spacing's gap, but for a block that the user or the assistant moves to a place of their own, which it takes as given, snapped where `snap` is on.
+Each leaves no two nodes closer than the spacing's gap, but for a block that the user or the assistant moves to a place of their own, which it takes as given, snapped where `snap` is on, and two nodes that sat closer before the DAG made room, which keep what they had.
 What each cannot do:
 
 - Placing under Beside moves no other block, so on a crowded board a new block can land further from the blocks that it reads from, and pasted blocks further from the point.
 - Making room keeps the arrangement around what it makes room for, but not the ranks of a board that was laid out, which laying out again restores.
+- Making room keeps every two neighbours in their order, so a stack's place closes only as far as that lets it: the blocks beside a tall stack keep their rows, and leave room above and below its collapsed box.
+  And a block inserted among blocks lined up a gap apart, as in a column of a board that was laid out, pushes on the blocks lined up beyond it, as far as the line runs.
 - Snapping moves a node by up to half of `snap_size`.
   Where that brings a node that one of the other operations moved closer to another node than the gap, the node moves on to the nearest multiple of `snap_size` that keeps the gap, while a block that someone moves only rounds.
 - All of them work from a node's nominal size, so a long name can still overlap the name of a block beside it (notes).
@@ -208,47 +221,61 @@ Then each strategy fits in what the step adds:
 
 ### Laying the board out again
 
-The command `blockr.dag-relayout` lays every block out with dagre or elkjs, whichever the spike picks ([Client-drawn DAG](Rewrite-1.3#proposal)):
+The command `blockr.dag-relayout` lays every block out with dagre, which the spike picked ([Client-drawn DAG](Rewrite-1.3#proposal)):
 
-1. In `prepare()`, it loads the layout's library where it has not loaded yet, and lays the board out with the direction and the spacing that the state holds or that its args give, each stack as a cluster that holds its blocks, a stack that holds no block as one node of its box's size, and a collapsed stack as one node of its collapsed size, whose hidden blocks move with it and keep their places in the stack, so that the board stays compact while the stack is collapsed, and expanding it makes room later (Collapsing and expanding a stack).
+1. In `prepare()`, it loads dagre where it has not loaded yet, and lays the board out with the direction and the spacing that the state holds or that its args give, each stack as a cluster that holds its blocks, a stack that holds no block as one node of its box's size, and a collapsed stack as one node of its collapsed size, whose hidden blocks move with it and keep their places in the stack, so that the board stays compact while the stack is collapsed, and expanding it makes room later (Collapsing and expanding a stack).
 2. Its `run()` returns the positions that the layout gave the blocks still on the board and the stacks that hold no block, snapped while `snap` is on, and the settings that it was given, as patches to the DAG's state, so that one undo puts every block back ([Board updates](Rewrite-1.1.2#commands)).
    A block that someone added while the layout ran keeps the place that `afterStep` gave it.
+   It empties what each collapse moved, since every block moves, so that expanding a stack later makes room around its box (Collapsing and expanding a stack).
 
 The DAG draws a stack's box with the padding that the layout gives a cluster, so the spacing needs no tuning around a padding that the layout does not know, as today's presets do.
 The DAG's board action Layout runs the command, and so may the assistant ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
 
 ### Making room
 
-The DAG makes room for what Repulsion places, and around a stack that collapses or expands, through d3-force:
+The DAG makes room for what Repulsion places, and around a stack that collapses or expands, through one projection: each node has a target, and the DAG finds the places nearest the targets that keep what the board held (notes).
 
-- What it makes room for stays where it is: the blocks and stacks that a step adds, or the stack's box.
-  A block that the same step moves stays where the step puts it too, as where the assistant moves a block in the edit that adds another beside it.
-- The nodes around it move off it, or towards a stack that collapses.
-  The blocks next to it move freely, and blocks further away are held to their places the more firmly the further they sit, so that blocks far from it stay where they are.
-- Each other stack moves as one node of its box's size, so that it keeps its shape, and its blocks, hidden or not, move with it by one distance, as laying the board out moves the hidden blocks of a collapsed stack.
-- It starts from a seeded random source and runs a fixed number of ticks without timers, so that it gives the same positions for the same board each time (notes).
+- Every two nodes within two gaps of each other keep their order along each axis along which they sit at least half a gap apart, by at least half a gap, and stay apart along the axis along which they sit apart, by the spacing's gap, or by what they had where they sat closer.
+- What the DAG makes room for stays where it is: the blocks and stacks that a step adds, with a block that the same step moves, as where the assistant moves a block in the edit that adds another beside it, or the stack's box.
+  The nodes within the gap of what a step adds move off it, and so do the nodes that lie in the box of a stack that expands, each taking along the nodes in its way.
+- No node comes into the box of a stack that it is not in.
+- A collapsed stack moves as one node of its collapsed size, whose hidden blocks move with it by one distance, as laying the board out moves them, while the blocks of an expanded stack move one by one, as blocks in no stack do.
 
-The spike checks it against criteria fixed before it runs, on the largest real board with stacks added, as it collapses and expands each stack and as Repulsion adds blocks to the board's most crowded part ([Client-drawn DAG](Rewrite-1.3#work)).
+Each node's target is where it sits, so that only what is in the way moves, but around a stack that collapses, where the targets close up on the stack (Collapsing and expanding a stack).
+Once the nodes have their places, the DAG averages each node's move with the mean move of the nodes within two gaps of it, and runs the projection once more from there, so that the moves taper off rather than stop at the last node that had to move.
+Each axis is one quadratic programme, which VPSC solves exactly, so making room gives the same positions for the same board wherever it runs (notes).
+
+The spike checked it against criteria fixed before it ran, on the largest real board with stacks added and on generated boards, as stacks collapse and expand in any order and as Repulsion adds blocks to the board's most crowded part, and the notes of [Client-drawn DAG](Rewrite-1.3) give the results.
 
 ### Collapsing and expanding a stack
 
 A collapsed stack's box is centred where its expanded box is, around its blocks, which keep their positions while they hide.
 Dragging the small box moves the stack's hidden blocks by the same distance, in one `blockr.dag-change_position`, so that the stack expands around where the box sits ([Drawing the DAG](Rewrite-1.3.2#stacks)).
-The state holds no position for a collapsed stack, only `collapsed` in its entry, so its blocks stay the one source of where it is.
-The command `blockr.dag-collapse_stack` sets the stack's `collapsed` or drops it, and makes room around the stack in the same delta (Making room):
+The state holds no position for a collapsed stack, so its blocks stay the one source of where it is.
+Its entry holds `collapsed`, its place among the collapses, and `moved`, what its collapse moved, from where and to where.
+The command `blockr.dag-collapse_stack` sets the entry or drops it, and makes room around the stack in the same delta (Making room):
 
-- Collapsing shrinks the box to its collapsed size, and the blocks around it move towards its centre, so that they close up on it.
-- Expanding grows the box back around its blocks, and the blocks around it move away from its centre until none overlaps the box with the spacing's gap around it.
-- A block or another stack next to the stack moves the most, and one further away less, so that blocks far from the stack stay where they are and the board around them keeps its shape.
+- Collapsing shrinks the box to its collapsed size, and gives each node around it a target that closes up on it.
+  The target lies on the line from the stack's centre through the node, nearer the centre by a share of how far the box's edge moves along that line, exp(-s² / 2σ²), where s is how far the node sits beyond the expanded box's edge, and σ is three times the furthest that the box's edge moves, or the gap where that is more.
+  So the blocks next to the stack close up on it the most, those further away less, and the larger the stack, the further the moves reach.
+  The collapse takes the place after the last collapse, and keeps in `moved` each block, and each stack that holds no block, that it moved, from where and to where.
+- Expanding a stack undoes the collapses made after it, latest first, then its own, putting back each block and stack that still sits where a collapse moved it.
+  It then grows the box back around its blocks and makes room around it, so that whatever lies in it moves out, and collapses the stacks that collapsed after it again, in their order, each keeping its moves anew.
+  So the board ends as if the stack had never collapsed, in whatever order the stacks collapse and expand, and once every stack is expanded, every block is back where it was, but for what someone moved meanwhile.
+- A block, or a stack that holds no block, that someone moves through `blockr.dag-change_position` drops out of what each collapse moved, and so does one that Repulsion moves to make room, so that no expand puts it back.
+  Laying the board out again empties what each collapse moved, so that expanding a stack after it makes room around the stack's box alone.
 
-The command takes an undo step, since it moves blocks, so that one undo expands or collapses the stack again and puts every block back exactly where it was, which expanding a collapsed stack does not, as the moves taper off.
+The command takes an undo step, since it moves blocks, so that one undo takes back a collapse or an expand with all that it moved.
 So it differs from the dock's `blockr.dock-collapse_rail`, which changes only what the user looks at and takes none ([The dock's state](Rewrite-1.2.1#commands)).
 
 ### Defining the state in R
 
 ```r
 new_dag_plugin <- function(positions = list(), layout = dag_layout(), collapsed = character()) {   # in blockr.dag
-  stacks <- stats::setNames(rep(list(list(collapsed = TRUE)), length(collapsed)), collapsed)   # an entry for each collapsed stack, by its id
+  stacks <- stats::setNames(   # an entry for each collapsed stack, by its id, in the order given, with nothing moved
+    lapply(seq_along(collapsed), function(i) list(collapsed = i, moved = list(positions = list(), stacks = list()))),
+    collapsed
+  )
   new_plugin(
     list(positions = positions, stacks = stacks, layout = unclass(layout)),
     "dag_plugin"
@@ -266,9 +293,9 @@ dag_layout <- function(direction = c("TB", "LR"), spacing = c("normal", "compact
 ```
 
 The package lists the class in its `._BLOCKR_MODULES_` with the id `dag_plugin`, the constructor `new_dag_plugin()`, the name "Workflow" and its module ([Plugins](Rewrite-1.1.12#a-plugin)).
-An app script names the collapsed stacks as a character vector, as `collapsed = "s1"`, which the constructor turns into an entry for each stack, by its id.
+An app script names the collapsed stacks as a character vector, as `collapsed = "s1"`, which the constructor turns into an entry for each stack, by its id, in the vector's order and with nothing moved, so that expanding such a stack makes room around its box alone.
 The constructor takes no position for a stack, since `start` places each stack that holds no block.
-R writes the state by the JSON Schema that the package ships beside the module, so that an empty `positions` or `stacks` stays a JSON object, where R would otherwise write the empty array that it writes for an empty list.
+R writes the state by the JSON Schema that the package ships beside the module, so that an empty `positions`, `stacks` or part of `moved` stays a JSON object, where R would otherwise write the empty array that it writes for an empty list.
 The class has no method of `plugin_version()`, so its state is at version 1.
 An app script that gives the DAG a state passes the plugin in the board's `plugins`, as `new_board(blocks, plugins = list(new_dag_plugin(positions = pos)))`, and one that passes none gets the default state, which `start` lays out.
 
@@ -299,9 +326,12 @@ None.
 
 The nominal size of a node is to settle in the issue that builds the strategies: the mark is 32 px across, as today's node is, and the label below it needs a width from its length, such as the width that the label's font gives its characters, capped where today's labels break.
 
-Version 3.0.1 of d3-force (ISC, 5.7 KB gzipped) keeps a node with `fx` and `fy` where they say, takes a seeded `randomSource()` and steps through `tick()` without timers ([d3-force](https://d3js.org/d3-force/simulation)).
-Its `forceX` and `forceY` take a strength for each node, which holds a block to its place the more firmly the further it sits from what the DAG makes room for, and `forceCollide` keeps nodes apart ([forceX and forceY](https://d3js.org/d3-force/position), [forceCollide](https://d3js.org/d3-force/collide)).
-That force treats each node as a circle, so a stack's box, which is no circle, pushes blocks off through a force of the DAG's own.
+VPSC finds, along one axis, the places nearest the nodes' targets, each weighted, under constraints that each keep one node at least a given distance after another, and solves that exactly (Dwyer, Marriott and Stuckey, "Fast Node Overlap Removal", Graph Drawing 2005).
+WebCola 3.4.0 (MIT) ships it as `Variable`, `Constraint` and `Solver`, in 554 lines of TypeScript, which the DAG can import or copy ([src/vpsc.ts#L345](https://github.com/tgdwyer/WebCola/blob/39539f2dccb04cb321fa9e2ee9532f9e1a9b456d/src/vpsc.ts#L345)).
+What the DAG makes room for keeps its place through a weight far above a node's.
+Each constraint orders its two nodes as they sat, so the constraints of an axis never form a cycle, and the projection always finds places.
+After it, the DAG adds a constraint for each two nodes that have come within the gap of each other, along the axis along which they sat apart, and solves again, up to eight times.
+In the spike, the DAG compared every two nodes to find those within two gaps of each other, and a collapse took up to 53 ms on boards of up to 100 blocks, and 139 ms on one of 281 ([Client-drawn DAG](Rewrite-1.3), notes).
 
 React Flow's own snapping rounds only the first node of a drag that moves several, and moves the others by as much, so the DAG snaps a drag itself ([Drawing the DAG](Rewrite-1.3.2#gestures)).
 

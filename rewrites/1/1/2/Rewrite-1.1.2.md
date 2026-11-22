@@ -206,7 +206,7 @@ interface Command<A extends Json = Json, P = A> {
   shortcut?: string;                           // "Mod+Backspace"
   preflight?(board: Board, args: A): boolean;    // whether the command has what it needs on the board as it is, checked before any work
   undo?: false;                                // its deltas take no undo step, as switching the dock's views takes none (Undo)
-  prepare?(board: Board, args: A): Promise<P>; // what has to wait, such as a layout that elkjs returns as a promise
+  prepare?(board: Board, args: A): Promise<P>; // what has to wait, such as a library that a command loads before it runs
   run(board: Board, args: P): Delta | Delta[]; // reads the board, returns deltas, changes nothing itself
 }
 
@@ -247,7 +247,7 @@ Every edit runs through a command, whoever makes it, and the command registry ap
 Before a command does any work, the command registry runs its preflight, `preflight()`, which checks the board as it is and the args, as `blockr.core-remove_block` checks that its block is on the board.
 The command registry refuses a command that fails its preflight, and a menu leaves out what would run it rather than greying it out ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 A pass promises nothing beyond itself, since the command's `run()` and the store's checks of its deltas can still refuse.
-A command that has to wait, as the DAG's relayout waits for elkjs, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to.
+A command that has to wait, as the DAG's relayout waits for dagre to load, does so in `prepare()`, after which the command registry calls `run()` with what it prepared and the current board, and the store applies the deltas at once, so that a delta is always built on the board it applies to.
 The assistant edits through commands as well, each named by its id, and its edit tool runs a batch of them as one step of its origin ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 Its tools give the model each command's `description` and `args`, the schema of a block class's state, which the class's UI ships and its arg specs describe, and the schema of a plugin class's state.
 A batch runs as one step: the command registry plans each command on the board that the deltas of those before it leave, which the store works out without committing them, so that a command finds the block that an earlier one adds, as `blockr.core-add_link` needs both of its blocks on the board.
