@@ -1,5 +1,5 @@
 # Drawing the DAG: nodes, links, stacks, menus and the toolbar
-Status: review. Design for [Client-drawn DAG](Rewrite-1.3).
+Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens and where their advanced actions show, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
 It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, open its menus, register its board actions and draw its toolbar, the item that lets a row of a quick action show a check, and the spike's drawing of stacks that collapse.
