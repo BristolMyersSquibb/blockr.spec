@@ -123,7 +123,7 @@ The dot shows no evaluation that is running, as today's shows none, while the ca
 
 The dot takes its colours from core's status tokens, as `--bc-color-status-stale`, whose defaults are the colours of the table, and which the dock sets from blockr.ui's tokens ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 The dock's client holds the rest of the spec as one function, which takes a block's status and its notifications and gives whether the dot is filled or a ring, the token of its colour and its tooltip.
-The DAG keeps a copy of the function for its node's badge, and a test in each package checks its copy against the table above, while the colours have one home, core's tokens ([Client-drawn DAG](Rewrite-1.3#proposal)).
+The DAG keeps a copy of the function for its node's status dot, and a test in each package checks its copy against the table above, while the colours have one home, core's tokens ([Client-drawn DAG](Rewrite-1.3#proposal)).
 
 ### Sections
 

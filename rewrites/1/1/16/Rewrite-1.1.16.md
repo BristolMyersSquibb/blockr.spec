@@ -188,13 +188,16 @@ The rows come in kinds that core defines, as it defines the kinds of the storage
 type QuickLevel = { title?: string; filter?: boolean; picked?: Json; rows: QuickRow[] };   // filter: a field that narrows the rows as the user types; picked: what was picked so far, which the level's open icon hands the advanced action
 
 type QuickRow =
-  | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"];
-      pick(): CommandCall[] | QuickLevel | Promise<CommandCall[] | QuickLevel>; advanced?: Json }   // runs, or opens the next level, either of which may wait; category: its board action's, in a menu of a board object; advanced: what its open icon hands the advanced action
+  | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"]; checked?: boolean;
+      pick(): CommandCall[] | QuickLevel | Promise<CommandCall[] | QuickLevel>; advanced?: Json }   // runs, or opens the next level, either of which may wait; category: its board action's, in a menu of a board object; checked: the current pick, or a toggle that is on; advanced: what its open icon hands the advanced action
   | { kind: "multi"; label: string; choices: { id: string; label: string; picked: boolean }[];
       apply(picked: string[]): CommandCall[] }      // ticks rows, and applies them as the menu closes
   | { kind: "text"; label: string; value?: string; check?(value: string): string | undefined;
       submit(value: string): CommandCall[] };       // a field, as for a name
 ```
+
+An item with `checked` shows a check at the end of its row, as the design system marks the current pick and a toggle that is on ([design-system.Rmd#L1096-L1112](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1096-L1112)).
+So the DAG's Layout checks the current direction, spacing and placement, and Snap to grid while snapping is on ([Drawing the DAG](Rewrite-1.3.2#the-dags-board-actions)).
 
 Core runs every menu by these rules, in logic that draws nothing, which core's menu draws and the `CoreApi` for tests drives, so that the rules are written once and a test needs no browser (Testing).
 They come from the menus that [blockr.dock#544](https://github.com/BristolMyersSquibb/blockr.dock/issues/544) planned:
