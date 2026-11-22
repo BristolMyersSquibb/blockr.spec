@@ -70,7 +70,7 @@ In the workspace, two apps use it, and both chat with OpenAI's models through el
   Its license is MIT, and what it brings into the bundle is under MIT, Apache-2.0 or the Unlicense, so blockr.assistant may ship all of it under its own GPL (>= 3) (notes).
   The bundle keeps no license text, so the plugin's build writes the texts beside it, and DESCRIPTION names each holder as `cph`, as blockr.core's names Meta for React.
   The chat builds on assistant-ui, which the PR that drew the chat kept, rather than components of the plugin's own ([The assistant's chat](Rewrite-1.4.4#the-panel)).
-  Beside the library it builds on, the chat draws its other controls and overlays with the components of core's React SDK ([The assistant's chat](Rewrite-1.4.4#the-panel)).
+  Beside the library it builds on, the chat draws its other controls and overlays with blockr.ui's components ([The assistant's chat](Rewrite-1.4.4#the-panel)).
 - The assistant needs no hosted service: a deployment may send its calls through a gateway, such as OpenRouter or Vercel's AI Gateway ([Model access](Rewrite-1.4.1)), but no part of the assistant runs on one, such as assistant-ui's Assistant Cloud.
   Should the loop move to the AI SDK, it reaches Vercel's AI Gateway only where a deployment names it, never through a model named by a bare id, which the AI SDK sends there by default (notes).
 - The board options `llm_model`, which core defines today, and `chat_compact_tokens` and `chat_compact_keep` go, with the blockr option `chat_function`, since all four were shaped for ellmer's chat functions (Today), while the blockr option `chat_save_turns` carries over, bounding the state rather than a save ([The assistant's state](Rewrite-1.4.3#how-much-of-a-conversation-the-state-keeps)).

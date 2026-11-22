@@ -1,7 +1,7 @@
 # Input elements for block UIs written in R
 Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7).
 
-A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block class could compose its UI from in R, without writing TSX, which would draw with the components of core's React SDK on core's module contract ([UI modules in JS](Rewrite-1.1.7#react)).
+A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block class could compose its UI from in R, without writing TSX, which would draw with blockr.ui's components on core's module contract ([UI modules in JS](Rewrite-1.1.7#react)).
 Core ships none of it, and it shapes no issue yet.
 How a block class names its UI and its requests is the block classes proposal ([Block classes in R](Rewrite-1.1.5)).
 A board option's UI is the UI module in the board option's definition in the client ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
@@ -66,7 +66,7 @@ A block class whose input and state arg share a name is rejected when `new_block
 
 ### Inside modules
 
-A module that draws its UI itself draws with the same components of core's React SDK, so that a select looks and behaves the same in every block, whether R composed it or not.
+A module that draws its UI itself draws with the same components of blockr.ui's, so that a select looks and behaves the same in every block, whether R composed it or not.
 
 ## Open questions
 

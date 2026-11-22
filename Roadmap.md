@@ -38,7 +38,7 @@ It waits for CRAN as well as for the code: eight of the packages are on CRAN and
 ## Block packages
 
 The block packages port to block classes beside the parts from week 46, once core's block classes, outputs and UI modules are implemented and its guide for porting a block from `new_block()` is written.
-Their UIs follow from week 48, once blockr.ui's spec has settled what it offers block UIs beside core's React SDK, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#open-questions)).
+Their UIs follow from week 48, once blockr.ui's spec has settled the components that block UIs draw with, so that no UI is ported twice ([UI kit and design system for the client](Rewrite-1.7#block-uis)).
 Each ports after the packages it builds on.
 The first are blockr.dplyr, blockr.io and blockr.ggplot, by week 5, for the fully functional POC, and blockr.dplyr starts in week 46 with its hardest blocks, which test core's block classes before the dock is built on them.
 The rest follow for the board of the clinical data explorer, which lives in the private blockr.sandbox ([blockr#493](https://github.com/orgs/BristolMyersSquibb/discussions/493)) and needs all of them but blockr.ggplot.

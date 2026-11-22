@@ -113,6 +113,7 @@ interface PluginClass {
   storage?: Storage;                                // a storage plugin's: the controls that every frontend draws
   commands?: Command[];                             // the commands that change its plugins' state, which core registers with the class
   boardActions?: BoardAction[];                     // what users trigger from menus, buttons and gestures, which core registers with the class, from Board actions
+  roles?: Role[];                                   // the edits that callers rely on and that one board action plays in each app, which core registers with the class, from Board actions
   start?({ core, plugin, signal }: { core: CoreApi; plugin: PluginClassId; signal: AbortSignal }): void | (() => void);   // runs from the opening of each board to the next
 }
 
@@ -176,9 +177,8 @@ export default {
 
 So one module draws the plugin of its class, from the plugin's state, which core names by the class's id.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
-A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui's design system ([UI kit and design system for the client](Rewrite-1.7)), through the tokens of core's theme, named after blockr.ui's, until blockr.ui's own reach the page ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
-Core's own Edit board plugin cannot, since blockr.ui builds on blockr.core.
-It builds on Tailwind CSS instead, as core's other UIs do ([The Edit board plugin](Rewrite-1.1.15#its-look)).
+A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui, drawing with blockr.ui's components in blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7)).
+So does core's own Edit board plugin, since core builds on blockr.ui ([The Edit board plugin](Rewrite-1.1.15#its-look)).
 
 ### The frontend
 

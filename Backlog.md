@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-20.
+Revised on 2026-11-22.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -36,62 +36,6 @@ The board options of a class that an app takes in while it runs need nothing mor
 
 What would settle it: the size of the block registry in the reply to `hello` with every available package offered, measured beside the time to the first draw, and whether apps want to take in packages installed while they run.
 
-## A frontend's own menus of board actions
-
-Core draws every menu and quick action of board actions, and a frontend restyles them through core's theme ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
-A frontend could instead draw them with components of its own, while core keeps the rules that they follow, through a member of its module beside `advanced`.
-[Board actions](Rewrite-1.1.16) held this member until 2026-11-20, and left it out then, since only the dock would give it, and the dock draws its menus with the `Menu` of core's React SDK, as core's menu does.
-With illustrative names:
-
-```ts
-interface FrontendModule {
-  // render(), show() and advanced(), as on Board actions
-  menu?(args: { menu: OpenMenu; el: HTMLElement; anchor: DOMRect }): () => void;   // draws an open menu in the frontend's look, and returns what core calls as the menu closes
-}
-
-interface OpenMenu {                                            // a menu that core runs by the rules of a quick action, and that draws nothing
-  get(): ShownLevel;                                            // the level that the menu shows now
-  subscribe(fn: () => void): () => void;                        // calls fn whenever that changes
-  pick(row?: number): void;                                     // a click or Enter on a row, by its index, or with none, Enter in the filter
-  openAdvanced(row?: number): void;                             // a click on an item's open icon, by its index, or with none, on the level's
-  tick(row: number, choice: string): void;                      // a click on a choice of a multi
-  type(value: string, row?: number): void;                      // the filter's text, or a text row's value, as the user types
-  escape(): void;                                               // Escape
-  close(): void;                                                // a click outside the menu, or Tab
-}
-
-type ShownLevel = {                                             // a level as the menu shows it
-  title?: string;
-  filter?: string;                                              // the filter's text, where the level has a filter
-  advanced: boolean;                                            // whether the level shows the open icon, as it does where the board action has an advanced action
-  back: boolean;                                                // whether Escape goes back a level, rather than closing the menu
-  loading: boolean;                                             // while a promise of quick or pick is pending
-  error?: string;                                               // the message that it rejected with
-  rows: (                                                       // the rows that the filter leaves, without their functions
-    | { kind: "item"; label: string; heading?: string; icon?: string; detail?: string; category?: BoardAction["category"]; advanced: boolean }   // advanced: whether it shows the open icon
-    | { kind: "multi"; label: string; choices: { id: string; label: string; picked: boolean }[] }
-    | { kind: "text"; label: string; value: string; refusal?: string }   // refusal: what check returns for the value
-  )[];
-};
-```
-
-Core would call `menu` as a menu of a board object or a quick action opens, and hand it the open menu, which holds the levels, the filter's text, the ticks of a multi and the value of a text row.
-The frontend would draw the level that `get()` returns, draw it again whenever `subscribe()` calls it, and call a member of the open menu for each thing that the user does, while it keeps its own keys for moving between rows.
-It could show the rows of a level in any order, as by their categories, and pass `pick()` a row's index in `rows`, whatever the order it shows.
-Core would call the functions of the board action's rows, `pick()`, `apply()`, `check()` and `submit()`, and run the batch that they return, with the caller's `extend`, as one step.
-For a click on an open icon, the level's or an item's, core would close the menu and open the advanced action with the level's `picked` or the item's `advanced`, and with the filter's text.
-So a frontend would never see a board action's functions, never run a command and write none of the rules of a quick action, only its look.
-Core would call the function that `menu` returned as the menu closes, whatever closed it, and return the keyboard's focus to `el`.
-The open menu's members would not rely on `this`, and `get()` would return the same object until the menu changes, so that a frontend in React reads it with `useSyncExternalStore(menu.subscribe, menu.get)`.
-Core would ship tests that a frontend runs against its `menu`, which open a menu through it and pick rows by their ARIA roles and labels, as a user would, to check that the frontend passes on what the user does.
-
-What it would remove: core's own menu under such a frontend, so that the frontend draws its menus of board actions with the code that draws its other menus.
-
-What it would cost: the member, the open menu as an API that core keeps stable for frontends, and the tests that each frontend with the member runs against its `menu`.
-No board action would change, since a quick action is data, and core already runs every menu in logic that draws nothing ([Board actions](Rewrite-1.1.16#the-quick-action)).
-
-What would settle it: a frontend whose menus cannot take their look from core's theme, such as one that draws with components other than those of core's React SDK.
-
 ## Inputs of board actions that each host lays out
 
 A board action's quick action is a set of rows, which core runs and draws, and its advanced action is a module, which draws a form of its own ([Board actions](Rewrite-1.1.16#a-board-action)).
@@ -112,5 +56,6 @@ Raised in the review of [Board actions](Rewrite-1.1.16) on 2026-11-20.
 What it would remove: the forms that each board action writes, which core would draw from the inputs instead, and the second description of one edit that a board action with both a quick action and an advanced action gives today.
 
 What it would cost: a description of inputs, with their kinds, choices that depend on other inputs or wait for R, such as a block's columns, and checks, which would replace both quick actions and advanced modules, with a custom UI beside them; a layout of each kind in every host that draws inputs; and moving the board actions and forms that core has built by then onto it.
+A role names part of that description already: the commands of a board action and the args of theirs that the target fixes, so that the JSON Schemas of the other args give the kinds and checks of the role's inputs, while their labels and their choices, those that depend on other inputs and those that wait for R, would be new ([Board actions](Rewrite-1.1.16#roles)).
 
 What would settle it: whether users edit many blocks, links or stacks at once in the Edit board plugin's tables, where cells would save opening a form for each row, and how many of the board actions of packages beyond core fit inputs that core can draw.
