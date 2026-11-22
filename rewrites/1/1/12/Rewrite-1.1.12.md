@@ -136,7 +136,7 @@ Every other contract of core's client has this shape too, the module contract th
 
 A plugin class holds the commands that change its plugins' state, which core registers with the class, and a package lists the board options of its plugin classes as it lists any others, and gives their requests in R ([A plugin's requests](#a-plugins-requests), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 A plugin class names the board options it requires in `options`, and core puts each on the board, with its default where the board holds no value, before it starts the plugin or mounts its UI ([Which board options a board holds](Rewrite-1.1.13#which-board-options-a-board-holds)).
-A plugin works on the board through `CoreApi` alone ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), so the DAG adds a link by running core's command and draws its status badges from `scheduler.status()`, with no per-block callback.
+A plugin works on the board through `CoreApi` alone ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), so the DAG adds a link by running core's command and draws its status dots from `scheduler.status()`, with no per-block callback.
 
 A plugin class comes from a package, since only a package exports the object that lists it ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 So an app script defines no plugin class, unlike a block class, which a script may define outside a package ([Board objects](Rewrite-1.1.1#block-classes-outside-a-package)), and `new_plugin()` raises an error where the constructor that calls it lives outside a package.
