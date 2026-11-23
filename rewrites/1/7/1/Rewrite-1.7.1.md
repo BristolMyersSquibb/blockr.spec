@@ -1,5 +1,5 @@
 # Input elements for block UIs written in R
-Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7).
+Status: dropped on 2026-11-23, because it moved to the [Backlog](Backlog#block-uis-composed-in-r) as a later project that the rewrite does not need. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 A design for a later project of [UI kit and design system for the client](Rewrite-1.7), still to be decided: the input elements a block class could compose its UI from in R, without writing TSX, which would draw with blockr.ui's components on core's module contract ([UI modules in JS](Rewrite-1.1.7#react)).
 Core ships none of it, and it shapes no issue yet.

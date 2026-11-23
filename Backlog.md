@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-22.
+Revised on 2026-11-23.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -59,3 +59,36 @@ What it would cost: a description of inputs, with their kinds, choices that depe
 A role names part of that description already: the commands of a board action and the args of theirs that the target fixes, so that the JSON Schemas of the other args give the kinds and checks of the role's inputs, while their labels and their choices, those that depend on other inputs and those that wait for R, would be new ([Board actions](Rewrite-1.1.16#roles)).
 
 What would settle it: whether users edit many blocks, links or stacks at once in the Edit board plugin's tables, where cells would save opening a form for each row, and how many of the board actions of packages beyond core fit inputs that core can draw.
+
+## Block UIs composed in R
+
+A block class's UI is a module in JS, which its author writes in TSX or in plain JS ([UI modules in JS](Rewrite-1.1.7#packaging)).
+Most block UIs today are Shiny inputs that their authors compose in R instead, as core's head block draws `numericInput()` ([R/transform-head.R#L45](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-head.R#L45)).
+Composing a UI in R from blockr.ui's components would keep that way of writing a block for an author who writes no JS.
+An earlier draft of the R side, with its elements, its layout and its attributes that depend on the data, is [Input elements for block UIs written in R](Rewrite-1.7.1), which this item replaces.
+
+The kit holds nothing that knows a block ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)), so the work splits in two:
+
+1. The R constructors of blockr.ui build a UI as data, as `number_field("n", "Number of rows", min = 1)` within `stack()` or `row()`.
+   The first argument is the key of the value that the input binds, which blockr.ui does not know to be a state arg.
+2. An attribute given as an R function, as `max = \(data) nrow(data)`, becomes a dynamic attribute with a key, `n.max`.
+   The description keeps the function for whoever uses it, and blockr.ui never reads its arguments.
+3. The JS of blockr.ui draws a description with its components.
+   Whoever mounts it hands it two functions: one that gives the `Bound` for a key ([The components of blockr.ui](Rewrite-1.7.3#the-interface-bound)), and one that gives a dynamic attribute's current value.
+4. A package above core ties a description to a block class.
+   Its UI module mounts blockr.ui's drawing and binds each key with core's `useValue()`.
+   Each dynamic attribute becomes a request of the block class, which the module asks again whenever an input or a state arg that the function names changes, as core's `follow()` asks a request again whenever what it reads changes ([srcts/binding/binding.ts#L44-L46](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/binding/binding.ts#L44-L46)).
+
+The tie needs nothing new from core: the module contract, `useValue()`, `follow()` and requests are there.
+Its module gets the description of a block's class through a request of the class, whose answer core keeps for every block of the class ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+One module serves every class that the package ties, as blockr.ggplot draws its four block classes with one module from a declarative schema of fields ([inst/js/gg-blocks.js#L85-L102](https://github.com/BristolMyersSquibb/blockr.ggplot/blob/289cb60f03d10caf13d143d06562f7eb663763d9/inst/js/gg-blocks.js#L85-L102)).
+
+What it would remove: the JS that a block package writes for a UI of common inputs, and the need for its author to write any.
+
+What it would cost: an R constructor and its drawing in blockr.ui for each component that a form uses, with containers for the layout, and the package that ties descriptions to block classes, with its R function, which makes a block class's UI and requests from a description, and its module.
+
+What would settle it: a spike that builds the tie and ports two of core's built-in blocks whose UIs read the data, head and merge ([R/transform-merge.R#L67](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/transform-merge.R#L67)), with the project built if both work with no change to core.
+The spike also settles two questions that the draft left open:
+
+- Which containers the first set has besides rows and gear trays, such as tabs or sections that collapse.
+- Whether an attribute that reads only state, such as whether to show a field, is worked out in the client without asking R, since R runs one request at a time, and a UI with several dynamic attributes waits on each ([UI modules in JS](Rewrite-1.1.7#the-contract)).

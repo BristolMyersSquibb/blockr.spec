@@ -1,7 +1,7 @@
 # Drawing the board: `CoreApi`, the page, core's basic frontend and renderers
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what core gives every plugin through `CoreApi`, how the page starts and opens a board, core's basic frontend, and renderers.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): what core gives every plugin through `CoreApi`, how the page starts and opens a board, core's basic frontend, the block's mark and status dot, and renderers.
 It builds on the [board objects proposal](Rewrite-1.1.1) and on the [board updates](Rewrite-1.1.2), evaluation ([Evaluation in the client](Rewrite-1.1.10)), UI modules ([UI modules in JS](Rewrite-1.1.7)) and plugins ([Plugins](Rewrite-1.1.12)) proposals, and shapes removing the generics that draw UI from R ([blockr.core#418](https://github.com/BristolMyersSquibb/blockr.core/issues/418)), the toolchain of core's client ([blockr.core#419](https://github.com/BristolMyersSquibb/blockr.core/issues/419)), what a package declares in R ([blockr.core#424](https://github.com/BristolMyersSquibb/blockr.core/issues/424)), renderers ([blockr.core#425](https://github.com/BristolMyersSquibb/blockr.core/issues/425)), the requests of the per-session evaluator ([blockr.core#430](https://github.com/BristolMyersSquibb/blockr.core/issues/430)), the UIs of core's built-in blocks ([blockr.core#438](https://github.com/BristolMyersSquibb/blockr.core/issues/438)), core's renderers and board options ([blockr.core#439](https://github.com/BristolMyersSquibb/blockr.core/issues/439)), `CoreApi` and starting the page ([blockr.core#440](https://github.com/BristolMyersSquibb/blockr.core/issues/440)), core's basic frontend ([blockr.core#441](https://github.com/BristolMyersSquibb/blockr.core/issues/441)), serving a board ([blockr.core#442](https://github.com/BristolMyersSquibb/blockr.core/issues/442)), what core exports for end-to-end tests ([blockr.core#443](https://github.com/BristolMyersSquibb/blockr.core/issues/443)), starting core again as a board opens ([blockr.core#497](https://github.com/BristolMyersSquibb/blockr.core/issues/497)), filling the block registry from the block classes that the app offers ([blockr.core#498](https://github.com/BristolMyersSquibb/blockr.core/issues/498)), a plugin's requests ([blockr.core#505](https://github.com/BristolMyersSquibb/blockr.core/issues/505)), making the frontend a plugin and running the board's plugins ([blockr.core#506](https://github.com/BristolMyersSquibb/blockr.core/issues/506)), saving, opening and placing plugins in core's basic frontend ([blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507)), keeping the defaults of board options beside the board ([blockr.core#508](https://github.com/BristolMyersSquibb/blockr.core/issues/508)) and showing a block or a plugin under every frontend ([blockr.core#617](https://github.com/BristolMyersSquibb/blockr.core/issues/617)), each an item in the Work list of [Client-owned board state](Rewrite-1.1#work).
 It shapes the `mintId()` of `CoreApi` too ([blockr.core#695](https://github.com/BristolMyersSquibb/blockr.core/issues/695)), the `notifier` of its calls ([blockr.core#709](https://github.com/BristolMyersSquibb/blockr.core/issues/709)), the pills of a plugin's section in core's basic frontend ([blockr.core#710](https://github.com/BristolMyersSquibb/blockr.core/issues/710)) and the selection of `CoreApi` ([blockr.core#740](https://github.com/BristolMyersSquibb/blockr.core/issues/740)).
 What a plugin is, the frontend and the storage plugin among them, and which plugins a board has are [Plugins](Rewrite-1.1.12)'s, and the places the dock offers plugins, such as its panels, are [Places the dock offers plugins](Rewrite-1.2.4)'s.
@@ -153,8 +153,46 @@ It sets `onScreen` to the blocks whose cards and the plugins whose sections show
 It is written in React, as TSX, as core's built-in block UIs and renderers are, on the one copy of React that blockr.ui ships, and it mounts a block's UI and a plugin's as any frontend does, whatever the module is written in ([UI modules in JS](Rewrite-1.1.7#react)).
 It draws with blockr.ui's components, in blockr.ui's theme, as the dock does ([State in JS](Rewrite-1#what-must-hold)), and so do the UIs of core's built-in blocks and its renderers, which show under every frontend.
 Their stylesheets keep Tailwind's utilities under core's prefix, outside any cascade layer, so that a page's other CSS, such as Bootstrap, does not win over them ([blockr.core#448](https://github.com/BristolMyersSquibb/blockr.core/pull/448)), and leave out its reset of the whole page, so that nothing core loads styles another package's elements, the dock's included once the page has switched to it ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)), and they take their colours, fonts and radii from the variables of blockr.ui's theme, which core's build reads through blockr.ui's build preset, so that a frontend or an app restyles them by setting those variables ([UI kit and design system for the client](Rewrite-1.7)).
-The theme of blockr.ui also holds a colour for each status of a block and for each category of block classes, under core's names, as today's design tokens hold one for each category, such as `--blockr-category-input` ([inst/assets/css/blockr-tokens.css#L234-L242](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L234-L242), [The theme's variables](Rewrite-1.7.2#the-defaults)).
-So every plugin that draws a block's status or the mark of its class draws them in the same colours, the dock's cards and the DAG's nodes among them, which a frontend or an app sets as it sets the rest of the theme, and core's basic frontend draws its status badge in them too ([Block cards in the dock](Rewrite-1.2.7#the-status-dot), [Client-drawn DAG](Rewrite-1.3)).
+Its cards draw a block's status with the status dot that core's React SDK offers every plugin ([The block's mark and the status dot](#the-blocks-mark-and-the-status-dot)).
+
+### The block's mark and the status dot
+
+Core's React SDK offers the mark of a block's class and the block's status dot to every plugin that draws a block, core's basic frontend, the dock's cards and the DAG's nodes among them, so that each draws a block alike under every frontend ([Block cards in the dock](Rewrite-1.2.7#the-header), [Drawing the DAG](Rewrite-1.3.2#nodes)).
+They are core's rather than blockr.ui's, since they read what core owns: the block's status, the notifications about it and its class's category ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)).
+They draw with blockr.ui's components, such as its `Tooltip`.
+Each plugin places them itself, as the dock's card puts the dot on the mark's upper right corner ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
+
+The mark is a square in the colour of the class's category, tinted behind the class's icon, which the class's entry in the block registry holds as SVG ([Block classes in R](Rewrite-1.1.5#registration)).
+It comes in the sizes that the design system gives it: 32px in a card's header, 24px in a row of a list, 20px in a compact header and 16px in a tab ([R/block-mark.R#L1-L7](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/R/block-mark.R#L1-L7)).
+A class that the registry lacks takes the colour of `uncategorized`, and no icon.
+
+The colours of the categories are core's, outside every theme, since core owns the categories, and the colours stay the same under every theme and in both modes, as today's tokens keep them ([inst/assets/css/blockr-tokens.css#L230-L242](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L230-L242)).
+Core's defaults are today's colours, one for each category that `suggested_categories()` lists, as `#0072b2` for `input` and `#999999` for `uncategorized`.
+An app sets its own through the blockr option `category_colors`, which holds a colour for each category that the app changes:
+
+```r
+options(blockr.category_colors = c(input = "#1f77b4", plot = "#ff7f0e"))
+```
+
+Only an R option sets it, as only one sets `renderers`, since its value is a named vector ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
+R writes the colours into the page's head as core's CSS variables, as `--bc-color-category-input`, beside an app's theme, so that every mark draws in them from the first paint ([An app's theme](Rewrite-1.1.17#the-rules-that-r-writes)).
+A category outside `suggested_categories()` takes the colour of `uncategorized`, unless `category_colors` names it.
+
+The status dot shows a block's status, from `scheduler.status()`, filled or as a ring, in the job of blockr.ui's theme that core maps the status onto, with a tooltip ([Evaluation in the client](Rewrite-1.1.10#statuses)):
+
+| Status | Dot | Tooltip |
+|---|---|---|
+| `stale` | Filled with `text-muted` | Inputs changed since this block last ran |
+| `waiting` | A ring of `border-warning` | Waiting for a data input |
+| `invalid` | Filled with `border-warning` | Set this block's inputs |
+| `failed` | Filled with `border-danger` | Evaluation failed |
+| `ready` | Filled with `border-success` | Up to date |
+| `unevaluated` | A ring of `text-muted` | Not evaluated yet |
+
+The two grey dots differ by shape, as the two amber ones do: `stale` is solid, for a block whose result is out of date, and `unevaluated` is a ring, for one that has no result yet.
+The dot reads `failed` while an error about the block's output concerns the block, R's of the request `output` or core's of the code `output_unanswered`, even where the block's status is `ready`, so that it catches an output that R could not make ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
+A `stale` block is the exception, as today, since its errors were raised for inputs that it no longer has.
+The statuses have no colours of their own, so an app's theme restyles them through the jobs, and a new status is a change to core alone: a row of the table, on a job that blockr.ui's theme already names.
 
 ### Renderers
 
@@ -237,3 +275,12 @@ R exports each block's latest result through `exportTestValues()`, as `blockr_te
 ## Open questions
 
 None.
+
+<details><summary>Notes for implementers</summary>
+
+The status dot's fills are the design system's meaning tokens, with these light values, as `block_status_style()` gives them today: `text-muted` `#6b7280`, `border-warning` `#d97706`, `border-danger` `#dc2626`, and the ring `bg-surface` `#ffffff`, with `border-success` `#16a34a` for `ready` from the design system's palette ([design-system.Rmd#L78](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L78), [#L137](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L137)).
+The rings of `waiting` and `unevaluated` are 1.5px wide, inside an 8px dot.
+Today's card reads each token with its light value as the fallback, as `var(--blockr-color-border-danger, #dc2626)`, so the dot draws on a page without blockr.ui's token sheet too ([R/plugin-block.R#L678-L680](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L678-L680)).
+On `js-state`, the dock draws the mark in `srcts/modules/dock/card/mark.tsx` and works the dot out in `statusDot()` of `srcts/modules/dock/card/status-dot.ts`, at `5d9a476`, which core's take the place of.
+
+</details>

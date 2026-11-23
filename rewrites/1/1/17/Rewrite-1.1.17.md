@@ -2,7 +2,7 @@
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how an app gives the page a theme of its own, which `new_theme()` makes in R and `serve()` takes, and how R writes the theme into the page, so that its values win over the frontend's and over blockr.ui's defaults from the first paint.
-Which variables a theme sets, what each is for, their defaults, how a frontend sets values of its own and which defaults a frontend keeps belong to [The theme's variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [UI kit and design system for the client](Rewrite-1.7#on-the-page).
+Which variables a theme sets, what each is for, their defaults, how a frontend sets values of its own and which defaults a frontend keeps belong to [The theme's variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
 ## What must hold
@@ -37,6 +37,7 @@ A theme sets values, never parts, so a company's logo, an image, is the frontend
 A theme holds for the whole page, since its rules set `:root`, from which every overlay inherits, while blockr.theme can scope its tokens to a part of the page today, so that two boards on one page look apart.
 React Aria's `UNSAFE_PortalProvider`, which draws overlays into an element of one's choosing, leaves room for a theme of each board later.
 What reads no variable of blockr.ui's theme keeps its colours under any theme, such as a block's UI that writes its colours as literals ([Colours](Rewrite-1.7.2#colours)).
+An app sets the colours of block categories apart from its theme, through a blockr option of core's, `category_colors` ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 
 ### Where an app gives it
 
@@ -61,7 +62,7 @@ new_theme(
 
 Its `light` and `dark` hold the values of each mode, each under its variable's full name, as [The theme's variables](Rewrite-1.7.2) and the browser's tools show it, and each value holds in its own mode alone.
 A name that blockr.ui's theme lacks stops the app as it starts, since `new_theme()` refuses it, naming it, so that a misspelt name, or one that a later blockr.ui drops, never does nothing in silence.
-The function checks each name against the list of the theme's variables that blockr.ui exports ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)).
+The function checks each name against the list of the theme's variables that blockr.ui exports ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 A value is any CSS value, which R writes into the page as it is.
 Its `fonts` hold a face for each file of a font, under the names that blockr.theme's `bundled_font()` gives them today, `family`, `file`, `weight` and `style`, of which the last two default to those of CSS's `@font-face` ([R/theme.R#L214-L234](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L214-L234)).
 It takes nothing but values and fonts, so a theme sets values alone, as condition 1 has it.
@@ -71,7 +72,7 @@ Then blockr.theme's `blockr_theme()` makes its theme with `new_theme()`, from it
 
 ### The rules that R writes
 
-R writes the theme into the page that it serves, in the page's head, beside blockr.ui's stylesheet, so that the page draws in it from its first paint, core's loading note included, and every board that the app opens draws in it, since the page keeps it ([UI kit and design system for the client](Rewrite-1.7#on-the-page)).
+R writes the theme into the page that it serves, in the page's head, beside blockr.ui's stylesheet, so that the page draws in it from its first paint, core's loading note included, and every board that the app opens draws in it, since the page keeps it ([Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page)).
 The theme never changes while the page runs, so nothing else carries it.
 For the theme above, R writes two rules:
 

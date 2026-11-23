@@ -3,13 +3,14 @@ Status: draft. Design for [UI kit and design system for the client](Rewrite-1.7)
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): which variables blockr.ui's theme names, what each is for, the defaults that blockr.ui gives them in both modes, how a frontend sets values of its own and where, and draws its own parts with them, and which defaults a frontend keeps.
 It takes the place of the fix that [blockr.core#789](https://github.com/BristolMyersSquibb/blockr.core/issues/789) asks for.
-The prefix, the mode's attribute and what the theme's list promises other packages belong to [UI kit and design system for the client](Rewrite-1.7#prefixes), how an app's theme sets values over the frontend's to [An app's theme](Rewrite-1.1.17), what a frontend is to [Plugins](Rewrite-1.1.12#the-frontend), and how a stylesheet loads with its module and where overlays sit to [UI modules in JS](Rewrite-1.1.7).
+The prefix, the mode's attribute, what the theme's list promises other packages and how the build preset writes the theme belong to [Building on blockr.ui](Rewrite-1.7.4), how an app's theme sets values over the frontend's to [An app's theme](Rewrite-1.1.17), what a frontend is to [Plugins](Rewrite-1.1.12#the-frontend), and how a stylesheet loads with its module and where overlays sit to [UI modules in JS](Rewrite-1.1.7).
 
 ## What must hold
 
 1. The stylesheet of blockr.ui gives every variable of its theme a default, for light mode and for dark mode, so that every page draws whole, whatever its frontend sets, a block that `serve()` serves alone included.
 2. A frontend restyles the page by setting variables of blockr.ui's theme alone, and a value that it sets wins over blockr.ui's default, whichever stylesheet loads first.
 3. Every colour that blockr.ui's components, core's UIs and the frontend's own parts draw comes from a variable of blockr.ui's theme, so that a frontend restyles them by setting those variables, and an app's theme restyles all of them.
+   The colours of block categories are the exception, since they are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 4. The defaults take no colour from what surrounds an element: they are fixed values for each mode, and blockr.ui measures nothing and mixes no colour of the page into another.
 5. In dark mode, a menu that opens from a block's card draws in blockr.ui's raised background, `#1e242e`, over its surface, `#161b23`, as under today's dock.
 6. A frontend's tests tell, for each mode, which variables of blockr.ui's theme the frontend leaves at blockr.ui's defaults, and for dark mode which keep the frontend's value for light mode, so that a frontend keeps a default, or one value for both modes, only by choice.
@@ -37,8 +38,8 @@ The tokens of today's blockr.ui hold the look that the dock wears, such as a sur
 
 A theme is the values of a set of variables, and blockr.ui's theme is the set through which any frontend gives the page the look it likes, and an app's theme gives the whole page the app's: blockr.ui's components, core's UIs, the frontend's own parts and the UIs of blocks and plugins all draw with it.
 The set is as big as that needs and as small as it can be, so it holds the colours, fonts, sizes of text, radii, shadows and spacing that a frontend may want its own, and leaves the rest of how components look to blockr.ui.
-Each is a variable that Tailwind CSS 4 keeps its theme in, under the prefix `bk`, as `--bk-color-bg-raised` and `--bk-spacing`, which every package's classes read through `@theme inline`, as core's `bc:bg-bg-raised` and `bc:px-2` do ([UI kit and design system for the client](Rewrite-1.7#prefixes)).
-The stylesheet of blockr.ui declares the variables and gives each a default for both modes, its documentation says what each is for, and it exports their list ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)).
+Each is a variable that Tailwind CSS 4 keeps its theme in, under the prefix `bk`, as `--bk-color-bg-raised` and `--bk-spacing`, which every package's classes read through `@theme inline`, as core's `bc:bg-bg-raised` and `bc:px-2` do ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
+The stylesheet of blockr.ui declares the variables and gives each a default for both modes, its documentation says what each is for, and it exports their list ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 A frontend sets the variables whose values it wants its own, and keeps blockr.ui's defaults for the rest ([The defaults](#the-defaults)), and an app's theme sets those whose values the app wants its own, over the frontend's ([An app's theme](Rewrite-1.1.17)).
 
 #### Colours
@@ -64,6 +65,7 @@ Each colour is named after the token of today's blockr.ui that does the same job
 | `--bk-color-border-field` | The edge of a field, such as a text, number, search or token field, a select, a combo box, a date field or picker, or a colour field, and the outline of a checkbox, a radio button, a switch or a drop zone |
 | `--bk-color-border-accent` | The focus ring, the edge of what is selected or current, and the edge of a message |
 | `--bk-color-border-danger`, `--bk-color-border-warning` | The edge of an invalid field, and the mark of an error or a warning |
+| `--bk-color-border-success` | The mark of a success, such as the status dot of a block that is `ready` ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)) |
 | `--bk-color-border-danger-subtle`, `--bk-color-border-warning-subtle` | The edge of an error's or a warning's banner and toast, and of the destructive button |
 
 A field's edge stands out more than an outline or a divider does, since it alone marks a field, and the outline of a checkbox, a radio button, a switch or a drop zone alone marks one that is unchecked, off or empty.
@@ -73,14 +75,14 @@ That lies between the soft border of today's blockr.ui, about 1.2:1, and the 3:1
 
 The theme names a colour for the page, which none of blockr.ui's components draws, so that an app's theme reaches the page under every frontend, which draws it in `bg-page` ([The frontend's own parts](#the-frontends-own-parts)).
 A plugin's UI leaves its own background transparent, so that it shows the page or the panel that the frontend puts it in.
-The theme names no fill for a field, since the fields that move from core's React SDK have none, and no colour for success, since nothing on the page draws one but a block's status ([The defaults](#the-defaults)).
+The theme names no fill for a field, since the fields that move from core's React SDK have none.
 A hover has a name of its own, apart from `bg-subtle`, since the two differ once their values are solid colours, as blockr.ui's defaults are: the subtle fill of today's blockr.ui, `#f9fafb`, differs from a white menu by 1.05:1, which nobody sees, while its hover, `#f3f4f6`, reaches 1.10:1.
 
 Two things draw in black and white of their own, since each must stand out on any colour: the backdrop behind a modal, black at 40%, which dims whatever page lies below it, and the rings of a colour field's thumbs and swatches, which show on any colour that the user picks.
 
 The theme holds no other colour, since Tailwind's palette, whose colours follow neither a theme nor the mode, is no part of it ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
 So every UI that draws with classes built by blockr.ui's preset, blockr.ui's components, core's UIs and those of plugins and blocks, takes its colours from the variables above.
-Tailwind skips a class that it does not know without a word, so blockr.ui's build preset fails a build whose code names a colour of Tailwind's palette, under any prefix, as it fails one that imports React Aria ([UI kit and design system for the client](Rewrite-1.7#work)), which core's preset fails today ([srcts/build/preset.ts#L1-L17](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/build/preset.ts#L1-L17)).
+The build preset fails a build whose code names a colour of Tailwind's palette, under any prefix ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 A UI that needs a shade between two variables derives it from them in its own stylesheet, as `color-mix(in oklab, var(--bk-color-bg-accent) 15%, var(--bk-color-bg-surface))`, or tints one with Tailwind's opacity modifier, as `bc:bg-bg-accent/20`, and both follow the theme and the mode.
 A colour that must stay fixed it writes on purpose, as `bc:bg-[#0072b2]`, and the colours of data, such as a chart's series, come from blockr.theme's palettes or the board's scale map rather than from the theme.
 Where several packages need a colour that no variable gives, the theme takes it in a later version of blockr.ui, with defaults ([Which defaults a frontend keeps](#which-defaults-a-frontend-keeps)).
@@ -106,7 +108,7 @@ The weights of the faces, the line heights and letter spacing that the classes n
 
 A frontend thus sets the type and the density of every UI, as today's blockr.ui draws its text at 13 pixels where core's fields on `js-state` draw 14.
 So blockr.ui's components take every size from the set: the few fixed sizes that they hold on `js-state`, such as a field's height of 30 pixels, become multiples of the spacing or follow the line height of their text, so that a frontend's spacing and sizes of text reach them too.
-Tailwind writes a shadow into each class that draws it, rather than reading a variable, as `shadow-md` holds its offsets and colours itself, so blockr.ui's preset defines classes of its own that read `--bk-shadow-md` and the others, which every package's build writes under its prefix.
+The build preset defines the classes of shadows anew, so that they read these variables ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 
 ### Where the frontend sets the values
 
@@ -151,7 +153,7 @@ The dock gives dockview's variables their values from the theme as well, as it g
 ### Light mode and dark mode
 
 A theme has two modes, light mode and dark mode, and gives each variable that it sets a value for both, whether it is blockr.ui's defaults, a frontend's values or an app's theme.
-Core's board option `dark_mode` switches the page between the two, through the attribute `data-bk-mode` on the page's root, as the user picks one or as the user's system prefers ([UI kit and design system for the client](Rewrite-1.7#prefixes), [Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
+Core's board option `dark_mode` switches the page between the two, through the attribute `data-bk-mode` on the page's root, as the user picks one or as the user's system prefers ([Building on blockr.ui](Rewrite-1.7.4#prefixes), [Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
 So no theme is light or dark alone.
 In VS Code and JupyterLab a colour theme is one or the other, and the user picks one theme among many, since a theme is a plugin of its own there.
 Here a theme comes with the page's one frontend, or with the app, so it holds both modes, and `dark_mode` stays the only switch.
@@ -171,17 +173,14 @@ Core's basic frontend and the dock keep every one of blockr.ui's defaults, since
 The basic frontend draws its page in `bg-page` and its cards in `bg-surface`, so it needs no stylesheet of its own, as today.
 A block that `serve()` serves alone draws in blockr.ui's defaults, since its page has no frontend ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)), or in the app's theme where the app gives one ([An app's theme](Rewrite-1.1.17)).
 
-The colours of the statuses and the categories, and the layer of the overlays, take these defaults:
+The layer of the overlays takes this default:
 
 | Variable | What reads it | Default |
 |---|---|---|
-| `--bk-color-status-unevaluated`, `-stale`, `-waiting`, `-invalid`, `-ready` and `-failed` | Every plugin that draws a block's status, such as the dock's cards, the DAG's nodes and the basic frontend's badge | The value of the token of today's blockr.ui that the table of the dock's status dot names for each status, as `ready` takes that of `--blockr-color-border-success`, with lighter values in dark mode ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)) |
-| `--bk-color-category-input` and one for each other category that `suggested_categories()` lists, with `--bk-color-category-uncategorized` | Every plugin that draws the mark of a block's class, such as the dock's cards and the DAG's nodes | The value of the token of today's blockr.ui for the category, as `--blockr-category-input` |
 | `--bk-z-index-overlay` | Every overlay, which stacks above everything else on the page ([UI modules in JS](Rewrite-1.1.7#react)) | 1100 |
 
-A status and a category are core's: the scheduler gives a block its status, and core's `suggested_categories()` lists the categories that block classes take, so the theme holds them under core's names ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
-So every plugin draws one status and one category in one colour on a page, under every frontend.
-A frontend may set its own values for them, or keep blockr.ui's, as the basic frontend and the dock do, so that these colours have one home.
+The theme holds no colour for a block's status or for a category of block classes, since both are core's.
+Core maps each status onto a job of the theme, as `ready` onto `border-success`, and holds the colours of the categories itself, outside every theme ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 
 ### Which defaults a frontend keeps
 
@@ -189,7 +188,7 @@ Beside the theme's list, blockr.ui exports for tests a function that takes the t
 It returns as well each rule that sets a variable of the theme under another selector than the two that a frontend uses ([Where the frontend sets the values](#where-the-frontend-sets-the-values)).
 A frontend's tests check that it returns exactly what the frontend keeps on purpose, and no such rule, as the tests of core's basic frontend and of the dock list every variable, since both keep every default.
 So a default that a frontend keeps, and a value that it keeps for both modes, is a choice that its tests write down, and a colour that it sets for light mode alone shows up in its list for dark mode.
-When blockr.ui adds a variable, in a minor release ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)):
+When blockr.ui adds a variable, in a minor release ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)):
 
 1. Every page draws the new variable in blockr.ui's default, so nothing breaks for users.
 2. The next time a frontend's tests run against that blockr.ui, they fail and name the new variable.
