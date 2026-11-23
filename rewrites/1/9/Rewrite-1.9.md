@@ -59,7 +59,7 @@ Core's method for a constructor leaves a closure unread, rather than unserialize
 
 The methods of the other packages that wrote today's files move into blockr.convert as well, so that none of those packages keeps code for today's files (condition 3).
 On main, those are blockr.dplyr's 16, blockr.assistant's one and blockr.dock's 7, which build the dock plugin's state and the plugins that take the place of today's extensions ([Saved boards and app scripts across the switch](Rewrite-1.2.2#the-dock-board)).
-The method for each extension that a plugin takes the place of makes the plugin from the extension's state, with the constructor of the plugin's class: that of blockr.dag for the DAG, of blockr.assistant for the assistant, which takes none of the conversations, as [The assistant's state](Rewrite-1.4.3#boards-saved-today) has it, and of blockr.md for its documents ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+The method for each extension that a plugin takes the place of makes the plugin from the extension's state, with the constructor of the plugin's class: that of blockr.graph for the DAG, of blockr.assistant for the assistant, which takes none of the conversations, as [The assistant's state](Rewrite-1.4.3#boards-saved-today) has it, and of blockr.md for its documents ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### What a session cannot rebuild
 
@@ -80,7 +80,7 @@ So blockr.session imports blockr.convert, and every app that may open a record s
 ### The migration notes
 
 Each package whose functions app scripts call, and which the switch changes, writes migration notes, a vignette, which list each change of a script, with what takes the place of each function that goes, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
-They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.dag's ([Client-drawn DAG](Rewrite-1.3#work)), blockr.assistant's ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)), blockr.code's ([Code export as a plugin](Rewrite-1.5#work)) and blockr.session's ([Session management as a storage plugin](Rewrite-1.6#work)), and each block package's as it is ported.
+They are Work on the part of each package: blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)), blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)), blockr.graph's ([Client-drawn DAG](Rewrite-1.3#work)), blockr.assistant's ([blockr.assistant#240](https://github.com/BristolMyersSquibb/blockr.assistant/issues/240)), blockr.code's ([Code export as a plugin](Rewrite-1.5#work)) and blockr.session's ([Session management as a storage plugin](Rewrite-1.6#work)), and each block package's as it is ported.
 The package blockr.md has no part yet, so its notes wait for one, and the notes of blockr.outline and blockr.viz, outside the workspace, are their maintainers' to write.
 
 ### Testing

@@ -127,9 +127,9 @@ export default {                                       // the dock's, from dock.
 ```
 
 A change inside a plugin's state is a patch at a path under it, as `{ "op": "remove", "path": "/plugins/blockr.dock-dock_plugin/views/main/grid/children/0/panels/1" }` removes one panel, which the store applies without knowing the state's structure, while core's objects change by core's `add`, `mod` and `rm`.
-A patch changes the state of the board's plugins and never one of core's objects: a patch at or below `/plugins/{id}` changes a plugin's state, while the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.dag-dag_plugin` would, since the app sets which plugins run and their classes name them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
+A patch changes the state of the board's plugins and never one of core's objects: a patch at or below `/plugins/{id}` changes a plugin's state, while the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.graph-graph_plugin` would, since the app sets which plugins run and their classes name them ([Plugins](Rewrite-1.1.12#which-plugins-a-board-has)).
 The store checks the patched state against its class's schema, keeps the inverse patches for undo, and tells followers of the patches, so the DAG's Paste adds blocks, their links and their positions in one step, which one undo takes back.
-A plugin class holds the commands for the operations on its plugins' state, which core registers with the class, such as `blockr.dock-add_view` and `blockr.dag-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
+A plugin class holds the commands for the operations on its plugins' state, which core registers with the class, such as `blockr.dock-add_view` and `blockr.graph-change_position`, each checking its args and returning patches, while core's `blockr.core-set_plugin_state` sets any part of any plugin's state ([Plugins](Rewrite-1.1.12#a-plugins-state)).
 Everything else, menus, shortcuts and the assistant, changes a plugin's state through those commands, which is external control (below).
 No part of a plugin's state is closed to others, as `external_ctrl` closes an extension's other variables today: the class's commands are open to anyone, and so is core's command on a board that is not locked, and the class's schema keeps the state valid whoever runs them.
 
@@ -167,7 +167,7 @@ It names each such plugin with its class's package, and reads nothing more of it
 Then it runs the `migrate` of each remaining plugin's class whose version the board records below the one R gives, the migration of each block's class where the block records a version below its class's, and the `migrate` of each board option whose value the board records at a version below the one R gives, each given what it migrates frozen, and the board opens with what they return, so that what a migration leaves out is gone, as a part of a plugin's state that its class renamed is.
 A version above the one R gives refuses the board, since no migration converts back, while a class that the board records no version of keeps what the board holds, since its writer knew no version of it.
 A plugin's state that the store dropped refuses nothing, whatever version of its class the board records, since the store drops a plugin's state for its id or its class, never for its version.
-So a board saved with the DAG's plugin at version 2 opens without the DAG in an app without blockr.dag, where the DAG's class has no method of `plugin_version()` and so is at version 1 ([Plugins](Rewrite-1.1.12#a-plugin)).
+So a board saved with the DAG's plugin at version 2 opens without the DAG in an app without blockr.graph, where the DAG's class has no method of `plugin_version()` and so is at version 1 ([Plugins](Rewrite-1.1.12#a-plugin)).
 What a board reads where nothing set a value comes from what packages define, the `default` of a plugin class's state and a board option's `default`, rather than from a migration, which only a JSON board's opening runs.
 Only then does the store drop every block whose class the block registry lacks, since dropping a block calls the `update` of each plugin's class, which reads the plugin's state in the latest shape of its class.
 It also drops then every board option value that no package that the app uses registers, such as that of a board option whose module failed to load ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)), naming each by its id, so a board saved afterwards is written without them ([Board objects](Rewrite-1.1.1#objects-that-cannot-be-rebuilt)).
@@ -221,7 +221,7 @@ interface Commands {
 }
 
 await commands.run("blockr.core-remove_block", { id: "b" });      // one step of "user"
-await commands.plan("blockr.dag-relayout", { direction: "LR" });
+await commands.plan("blockr.graph-relayout", { direction: "LR" });
 await commands.run([                                              // one step of "assistant": a block, its link and its panel
   { id: "blockr.core-add_block", args: { registry_id: "blockr.dplyr-filter_block", id: "f" } },
   { id: "blockr.core-add_link", args: { from: "data", to: "f" } },
@@ -241,7 +241,7 @@ A batch hands no value from one command to the next, so its caller fixes the new
 The version of the assistant's tools with a tool per command makes every command a step of its own ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
 Should the benchmark keep that version, appending a block in one step needs a command again.
 
-Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's relayout and `blockr.dag-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
+Every package registers its own, such as the dock's view commands, among them `blockr.dock-add_view`, and the DAG's relayout and `blockr.graph-change_position`, and anything else changes a plugin's state through those of its owner or core's `blockr.core-set_plugin_state`, while any package runs another's.
 What a user triggers from a menu, a button or a gesture is a board action, which gathers what its commands need from the user and then runs them, each batch as one step of the user ([Board actions](Rewrite-1.1.16#a-board-action)), while a command asks the user nothing.
 Every edit runs through a command, whoever makes it, and the command registry applies what the command returns with the origin `commands.run()` is given.
 Before a command does any work, the command registry runs its preflight, `preflight()`, which checks the board as it is and the args, as `blockr.core-remove_block` checks that its block is on the board.

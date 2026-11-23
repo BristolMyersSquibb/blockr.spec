@@ -56,8 +56,8 @@ Its args are the state it gives the board an app script builds, such as the DAG'
 The constructor passes `new_plugin()` the state as a list of its args by name, then the id of its class, and the plugin holds that list as its state:
 
 ```r
-new_dag_plugin <- function(positions = list()) {   # in blockr.dag
-  new_plugin(list(positions = positions), "dag_plugin")
+new_graph_plugin <- function(positions = list()) {   # in blockr.graph
+  new_plugin(list(positions = positions), "graph_plugin")
 }
 ```
 
@@ -65,20 +65,20 @@ So a constructor may check or convert its args before it passes them, and may ca
 A `new_plugin()` that read the state off the constructor would instead store every arg of the constructor, and would work only where the constructor calls it itself.
 The class's id is the one that its package declares, and it alone identifies the class, in R and in JS, whatever class vector or object stands for the class on either side, as a block class's id identifies a block class ([Block classes in R](Rewrite-1.1.5#the-block-class)).
 The `class` of `new_plugin()`, the class vector without `plugin`, defaults to the id and serves S3 dispatch alone, as core's basic frontend passes `c("basic_frontend_plugin", "frontend_plugin")`.
-The id's full form is `{pkg}-{id}`, as `blockr.dag-dag_plugin`, which joins the class to its package, the one its constructor lives in, as a registry id carries its package ([Board objects](Rewrite-1.1.1#registry-ids)).
+The id's full form is `{pkg}-{id}`, as `blockr.graph-graph_plugin`, which joins the class to its package, the one its constructor lives in, as a registry id carries its package ([Board objects](Rewrite-1.1.1#registry-ids)).
 The class also has a name, the human-readable form of its id, such as "Document" for blockr.md's `md_plugin`, which its package lists beside the id, and which every plugin of the class bears.
 The version of its state's shape is what its class's method of `plugin_version()` returns, 1 where it has none, in place of `board_version()`.
 
 An app runs at most one plugin of each class, so a plugin is identified by its class's id, and a plugin that keeps several of something, such as blockr.md's documents, keeps them in its own state, as the dock keeps its views.
 The app's plugins are the rows that `serve()` takes in `plugins`, each a plugin class by `package` and `id`, while the board constructor takes the state of the board's plugins in `plugins`, as `new_dock_board(extensions = ...)` takes extensions today ([Which plugins a board has](#which-plugins-a-board-has)).
-Here, where blockr.dock, blockr.dag and blockr.md are installed beside core, the script passes no plugins:
+Here, where blockr.dock, blockr.graph and blockr.md are installed beside core, the script passes no plugins:
 
 ```r
 serve(
   new_board(
     blocks = blks,
     plugins = list(
-      new_dag_plugin(positions = pos),
+      new_graph_plugin(positions = pos),
       new_md_plugin(content = "# Notes")
     )
   )
@@ -102,7 +102,7 @@ Core, the store or every frontend reads each member, while the board holds the s
 
 ```ts
 interface PluginClass {
-  id: PluginClassId;                                // "blockr.dag-dag_plugin", as R names it
+  id: PluginClassId;                                // "blockr.graph-graph_plugin", as R names it
   options?: OptionId[];                             // the board options it requires, put on the board as a board opens with one of its plugins
   state?: { schema: JsonSchema; default: Json };    // what each of its plugins keeps in the board, which holds nothing for a class without it, and which the store reads, as it reads the next two
   update?(delta: Delta, board: Board, plugin: PluginClassId): Patch[];   // patches to the state of its plugin that follow from a change
@@ -121,7 +121,7 @@ interface Plugin {                                  // one of the app's plugins,
   name: string;                                     // "Document", its class's name, which titles its panel
 }
 
-export default {                                   // blockr.dag's, from dag.js, the module that it lists for blockr.dag-dag_plugin
+export default {                                   // blockr.graph's, from graph.js, the module that it lists for blockr.graph-graph_plugin
   state: { schema: dagState, default: { positions: {} } },
   update: (delta, board, plugin) => dropPositions(delta.blocks?.rm ?? [], board, plugin),   // a removed block's position goes with it
   afterStep: (board, before, plugin) => placeAdded(board, before, plugin),                // a block that the step adds gets its place by the step's links
@@ -161,7 +161,7 @@ So the dock draws the controls of the app's storage plugin, whichever package th
 A frontend places every plugin whose class has a `ui`, each in a place of its own.
 It gives `mountPlugin()` an element of its choosing, such as a panel in the dock or a section in core's basic frontend, and core mounts the module there, as `mountBlock()` mounts a block's UI ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
 So every plugin with a UI works under every frontend.
-A frontend may know a plugin class by its id too, as the dock might know `blockr.dag-dag_plugin` to give the DAG a place of its own, but it needs nothing beyond core's members to place a plugin.
+A frontend may know a plugin class by its id too, as the dock might know `blockr.graph-graph_plugin` to give the DAG a place of its own, but it needs nothing beyond core's members to place a plugin.
 A plugin without a UI module, such as blockr.viz's control bridge, runs from its class's `start` alone, with no place on the screen ([Running a plugin](#running-a-plugin)).
 
 A plugin's module, the `ui` or the `frontend` of its class, meets the contract a block's UI module meets ([UI modules in JS](Rewrite-1.1.7#the-contract)), with `CoreApi` in place of a host: it exports the JS API major it was built against and a default whose `render()` core calls with an element, the id of the plugin it draws and a signal, and which returns the cleanup, so it never names its own id.
@@ -311,7 +311,7 @@ So the app sets the plugins that run on every board that it opens, and the page 
 - A board that the app's storage plugin names in place of the opening board, through its class's `storage.load()`, runs the app's plugins too, so a record that session management opens from a URL as the page starts runs the plugins that the app script passed to `serve()`, each with the state that the record holds for it.
 - A dock board opened in an app without blockr.dock drops the dock's state, which the client names, and draws with the app's frontend, as in a core app.
 
-No change adds a plugin or removes one, since the app sets the plugins: a patch changes a plugin's state at or below `/plugins/{id}`, as `/plugins/blockr.dag-dag_plugin/positions/a`, and the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.dag-dag_plugin` would ([Board updates](Rewrite-1.1.2#plugins)).
+No change adds a plugin or removes one, since the app sets the plugins: a patch changes a plugin's state at or below `/plugins/{id}`, as `/plugins/blockr.graph-graph_plugin/positions/a`, and the store refuses one that adds or removes what the board holds for a plugin, as an `add` or a `remove` at `/plugins/blockr.graph-graph_plugin` would ([Board updates](Rewrite-1.1.2#plugins)).
 So the app alone decides which plugins run, what draws the page and where it saves, as `serve(plugins = ...)` does today, with no union of the board's plugins and the app's that would need a rule for each clash.
 An app runs a plugin through the rows of `plugins`, and what a user adds more of while the app runs, such as another document, lives in the state of one plugin, as the dock's views do.
 On a locked board, each plugin locks what it alone governs in its state, as the dock does the arrangement of its panels, while the board lock fixes no plugin's name, since each is its class's ([Locked boards and the properties of blocks](Rewrite-1.1.11#plugins-on-a-locked-board)).
@@ -376,7 +376,7 @@ const file = await core.request("report", "html", { content },        // the boa
 
 A plugin's state takes the place of a board class's properties, and the store keeps it as [Board updates](Rewrite-1.1.2#plugins) has it:
 
-- A change inside it is a patch at a path under the plugin's state, as `/plugins/blockr.dag-dag_plugin/positions/a`.
+- A change inside it is a patch at a path under the plugin's state, as `/plugins/blockr.graph-graph_plugin/positions/a`.
 - The store keeps an edit id for each plugin, as it kept one for each property, which a patch to the plugin names, so that the store refuses the patch where another edit to the plugin came first ([Board updates](Rewrite-1.1.2#deltas)).
 - The store checks the state against its class's schema after every change, keeps the inverse patches for undo, but for those of a command with `undo: false`, and saves the state with the board.
 - The store calls the `update` of each plugin's class with every change it applies, in the same step, and refuses a patch that an `update` returns outside the state of its own plugin ([Board updates](Rewrite-1.1.2#applying-a-delta)).
@@ -389,8 +389,8 @@ It takes a plugin's class's id and patches at paths within the plugin's state, a
 
 ```ts
 await core.commands.run("blockr.core-set_plugin_state", {    // the assistant, moving a block in the DAG
-  plugin: "blockr.dag-dag_plugin",
-  patches: [{ op: "replace", path: "/positions/a", value: { x: 40, y: 80 } }],   // applied at /plugins/blockr.dag-dag_plugin/positions/a
+  plugin: "blockr.graph-graph_plugin",
+  patches: [{ op: "replace", path: "/positions/a", value: { x: 40, y: 80 } }],   // applied at /plugins/blockr.graph-graph_plugin/positions/a
 }, "assistant");
 ```
 
@@ -411,10 +411,10 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
 ```json
 {
   "format": 1,
-  "packages": { "blockr.core": "0.2.0", "blockr.dock": "0.2.1", "blockr.dag": "0.2.0", "blockr.md": "0.2.0" },
+  "packages": { "blockr.core": "0.2.0", "blockr.dock": "0.2.1", "blockr.graph": "0.2.0", "blockr.md": "0.2.0" },
   "board": {
     "id": "curious_otter",
-    "versions": { "blockr.dock-dock_plugin": 1, "blockr.dag-dag_plugin": 1, "blockr.md-md_plugin": 1 },
+    "versions": { "blockr.dock-dock_plugin": 1, "blockr.graph-graph_plugin": 1, "blockr.md-md_plugin": 1 },
     "name": "Sales review",
     "blocks": {
       "a": { "registry_id": "blockr.core-dataset_block", "version": 1, "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris", "locked": null }
@@ -424,7 +424,7 @@ A board with the dock, the DAG and blockr.md's plugin, with illustrative states:
     "options": {},
     "plugins": {
       "blockr.dock-dock_plugin": { "views": { "main": { "name": "Main", "folder": null, "index": "a0", "grid": { "orientation": "horizontal", "children": [{ "panels": [{ "block": "a" }, { "plugin": "blockr.md-md_plugin" }], "active": { "block": "a" } }], "sizes": [1] } } }, "folders": {}, "active": "main", "visible": {} },
-      "blockr.dag-dag_plugin": { "positions": { "a": { "x": 120, "y": 80 } } },
+      "blockr.graph-graph_plugin": { "positions": { "a": { "x": 120, "y": 80 } } },
       "blockr.md-md_plugin": { "content": "# Notes\n\n![Iris](blockr://a)" }
     }
   }

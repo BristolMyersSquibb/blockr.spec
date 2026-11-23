@@ -82,7 +82,7 @@ A board with two views, one of them in a folder:
         ],
         "sizes": [0.3, 0.7],
         "rails": {
-          "left": { "panels": [{ "plugin": "blockr.dag-dag_plugin" }], "active": { "plugin": "blockr.dag-dag_plugin" },
+          "left": { "panels": [{ "plugin": "blockr.graph-graph_plugin" }], "active": { "plugin": "blockr.graph-graph_plugin" },
                     "collapsed": false, "size": 260, "collapsed_size": 35 }
         }
       }
@@ -173,7 +173,7 @@ So a rail that loses its last panel forgets its width and whether it was collaps
 Today's dock keeps an empty rail where the user changed its width or collapsed it ([R/dock-rail.R#L239-L244](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L239-L244)).
 Top and bottom rails stay out, as today, since the top edge is where every tab group's tabs sit ([R/dock-rail.R#L24-L30](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-rail.R#L24-L30)), and so do dockview's floating groups and popout windows, which today's dock does not offer either.
 
-A panel shows the card of a block that the board holds, as `{ "block": "a" }`, or the `ui` of a plugin of the app, as `{ "plugin": "blockr.dag-dag_plugin" }`, which the dock mounts with `mountPlugin()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and its tab shows the block's name or the plugin's.
+A panel shows the card of a block that the board holds, as `{ "block": "a" }`, or the `ui` of a plugin of the app, as `{ "plugin": "blockr.graph-graph_plugin" }`, which the dock mounts with `mountPlugin()` ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)), and its tab shows the block's name or the plugin's.
 A grid names a panel by an object, in place of today's strings `block_panel-<id>` and `ext_panel-<key>`, since an object needs no parsing.
 An object also leaves room for a plugin's panel per block, which [Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel) leaves for later.
 A string could join the two ids only with a separator, and a block id may hold any character ([Board objects](Rewrite-1.1.1#ids)).
@@ -275,7 +275,7 @@ It hands them to the dock plugin's constructor:
 new_dock_board(
   blocks = c(a = new_dataset_block(), b = new_head_block(), d = new_head_block()),
   views = list(
-    overview = dock_view(dock_grid(c("a", "b"), plg("blockr.dag-dag_plugin"), sizes = c(0.3, 0.7)), name = "Overview"),
+    overview = dock_view(dock_grid(c("a", "b"), plg("blockr.graph-graph_plugin"), sizes = c(0.3, 0.7)), name = "Overview"),
     ae = dock_view("d", name = "Adverse events", folder = "safety")
   ),
   folders = list(safety = dock_folder("Safety")),

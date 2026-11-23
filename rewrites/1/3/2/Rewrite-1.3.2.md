@@ -2,8 +2,8 @@
 Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens and where their advanced actions show, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
-It shapes the issues of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, [blockr.dag#203](https://github.com/BristolMyersSquibb/blockr.dag/issues/203), and open its menus, register its board actions and draw its toolbar, [blockr.dag#204](https://github.com/BristolMyersSquibb/blockr.dag/issues/204), and the issue that lets a row of a quick action show a check, [blockr.core#837](https://github.com/BristolMyersSquibb/blockr.core/issues/837).
-The issues that add `store.read()` and write the DAG's user guide rely on it too: [blockr.core#835](https://github.com/BristolMyersSquibb/blockr.core/issues/835) and [blockr.dag#205](https://github.com/BristolMyersSquibb/blockr.dag/issues/205).
+It shapes the issues of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, [blockr.graph#4](https://github.com/BristolMyersSquibb/blockr.graph/issues/4), and open its menus, register its board actions and draw its toolbar, [blockr.graph#5](https://github.com/BristolMyersSquibb/blockr.graph/issues/5), and the issue that lets a row of a quick action show a check, [blockr.core#837](https://github.com/BristolMyersSquibb/blockr.core/issues/837).
+The issues that add `store.read()` and write the DAG's user guide rely on it too: [blockr.core#835](https://github.com/BristolMyersSquibb/blockr.core/issues/835) and [blockr.graph#6](https://github.com/BristolMyersSquibb/blockr.graph/issues/6).
 What the DAG keeps and the commands that change it are [The DAG's state, commands and placement](Rewrite-1.3.1)'s, and what a board action is, with the menus that offer one, is [Board actions](Rewrite-1.1.16)'s.
 
 ## What must hold
@@ -40,7 +40,7 @@ They stay out of the DAG's state, since what one user looks at is no part of the
 The nodes, links and group nodes that React Flow draws are made from the board and the DAG's state on every change.
 A block that has no position yet gets no node until it has one.
 While the user drags a node, React Flow reports each move through `onNodesChange`, and the DAG keeps the new positions in its component alone.
-As the drag ends, the DAG runs `blockr.dag-change_position` once, so that a drag is one step (Gestures).
+As the drag ends, the DAG runs `blockr.graph-change_position` once, so that a drag is one step (Gestures).
 
 ### Nodes
 
@@ -85,9 +85,9 @@ A block dropped on that box joins the stack, whose box then fits the block.
 A stack whose entry in the DAG's state holds `collapsed` shrinks to a box that holds its name and the number of its blocks, centred where its expanded box is.
 Its blocks hide.
 A link between one of them and a block outside the stack ends on the box, and a link between two of them hides with them.
-Dragging the small box moves the stack's hidden blocks by the same distance, in one `blockr.dag-change_position`, so that the stack expands around where the box sits.
+Dragging the small box moves the stack's hidden blocks by the same distance, in one `blockr.graph-change_position`, so that the stack expands around where the box sits.
 Expanding it brings its blocks back where they were in the stack, and the blocks around it back where they were before it collapsed, as they close up on a stack that collapses ([The DAG's state, commands and placement](Rewrite-1.3.1#collapsing-and-expanding-a-stack)).
-A double click on the stack's box, or the collapse button on the box, as today's stack has, runs `blockr.dag-collapse_stack`.
+A double click on the stack's box, or the collapse button on the box, as today's stack has, runs `blockr.graph-collapse_stack`.
 It takes an undo step, since it moves the blocks around the stack, so one undo collapses or expands the stack again and puts every block back ([The DAG's state, commands and placement](Rewrite-1.3.1#collapsing-and-expanding-a-stack)).
 React Flow collapses nothing itself, and its example of it is one of its paid examples, so this is the DAG's own code ([Expand and Collapse](https://reactflow.dev/examples/layout/expand-collapse)).
 
@@ -97,8 +97,8 @@ A block that the user drags out of its stack's box stays in the stack, whose box
 ### Gestures
 
 - Dragging a node, the selected nodes or a stack's box moves them, a stack with its blocks, as today.
-  While snapping is on, the drag snaps each node that it moves to a multiple of the snap size as it moves, so that the drag ends where `blockr.dag-change_position` keeps the node (notes).
-  As the drag ends, the DAG runs `blockr.dag-change_position` with every block that moved, and with a stack without blocks that moved, as one step.
+  While snapping is on, the drag snaps each node that it moves to a multiple of the snap size as it moves, so that the drag ends where `blockr.graph-change_position` keeps the node (notes).
+  As the drag ends, the DAG runs `blockr.graph-change_position` with every block that moved, and with a stack without blocks that moved, as one step.
   A drag selects nothing, as today, so that moving blocks around shows none of them (notes).
 - Dragging from a block's result to another block's input, or from an input to another block's result, draws a link, as today's ports do.
   The DAG checks nothing while the user drags.
@@ -108,7 +108,7 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   The DAG then shows the user why where the link was dropped, with the reason that the refusal gives, as every plugin with a UI shows what fails of what the user did in it, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
 - Dropping a link on the canvas, away from every node and stack, triggers Append block from a block's result, or Prepend block on the input that the link came from, at the drop.
   The DAG triggers them through their roles, `append_block_role` and `prepend_block_role`, so that a board action that the app picks for either plays it here too ([Board actions](Rewrite-1.1.16#roles)).
-  The DAG adds `blockr.dag-change_position` with the drop to the board action's step, through `trigger()`'s `extend`, so that the new block starts at the drop ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
+  The DAG adds `blockr.graph-change_position` with the drop to the board action's step, through `trigger()`'s `extend`, so that the new block starts at the drop ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   A link dropped on a node or on a stack's box, away from its handles, adds nothing, as today's does.
 - A click selects a node, a link or a stack, and a click on the canvas clears the selection.
   A click with Cmd on a Mac, or with Ctrl elsewhere, adds to the selection, as React Flow has it, where today's DAG takes Shift.
@@ -122,7 +122,7 @@ A block that the user drags out of its stack's box stays in the stack, whose box
   Where core offers a target nothing, as on the canvas under the board lock, the right click opens no menu.
   Where the object belongs to a selection of several, the right click opens the selection's menu instead, and so does a right click on the box that React Flow draws around a selection.
   A right click on a handle opens the handle's own menu whatever the selection holds, since no selection holds an input, and the handle's look under the pointer says that the click lands on it (Nodes).
-  For the canvas, the DAG passes `menu()` an `extend` that starts the block, or the stack that holds no block, that the board action adds where the user right-clicked, or the first of several, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
+  For the canvas, the DAG passes `menu()` an `extend` that starts the block, or the stack that holds no block, that the board action adds where the user right-clicked, or the first of several, through `blockr.graph-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   The DAG passes `menu()` and `trigger()` a `notifier` as well, and shows a refused batch at the node, the link or the point where it opened the menu or triggered the board action, as it shows a refused link where the user dropped it ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 
 ### The DAG's board actions
@@ -134,7 +134,7 @@ The DAG registers four board actions, beside core's, which every menu of their o
 | Copy | A block, a stack or a selection | Clipboard | Puts on the clipboard, at once, a JSON board of the blocks and stacks that it acts on, the blocks of those stacks, the links between those blocks, any other stack that holds a block and whose blocks are all copied, and their positions, as today's copy does |
 | Cut | A block, a stack or a selection | Clipboard | Copies, then runs core's commands that remove them, as one step |
 | Paste | The board | Clipboard | Reads the clipboard and adds the blocks, links and stacks that it holds under new ids, through core's commands, where they sat as they were copied, moved to the point where the menu opened, or to the middle of the view from the toolbar or a key |
-| Layout | The board | Edit | Its quick action offers Lay out again, the two directions and the three spacings, which run `blockr.dag-relayout`, the two placements of new blocks, Repulsion and Beside, which run `blockr.dag-set_placement`, and Snap to grid, which turns snapping on or off, and the snap size, which run `blockr.dag-set_snap` ([The DAG's state, commands and placement](Rewrite-1.3.1#commands)). It checks the current direction, spacing and placement, and Snap to grid while snapping is on, as today's menu shows the current direction and spacing ([Board actions](Rewrite-1.1.16#the-quick-action)) |
+| Layout | The board | Edit | Its quick action offers Lay out again, the two directions and the three spacings, which run `blockr.graph-relayout`, the two placements of new blocks, Repulsion and Beside, which run `blockr.graph-set_placement`, and Snap to grid, which turns snapping on or off, and the snap size, which run `blockr.graph-set_snap` ([The DAG's state, commands and placement](Rewrite-1.3.1#commands)). It checks the current direction, spacing and placement, and Snap to grid while snapping is on, as today's menu shows the current direction and spacing ([Board actions](Rewrite-1.1.16#the-quick-action)) |
 
 Copy writes to the system's clipboard within the user's gesture, as Safari requires.
 The selection is at hand in the client, so Copy writes it at once, where today's copy starts a write that waits for R to send the board ([inst/assets/js/copy-paste.js](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/copy-paste.js)).
@@ -149,7 +149,7 @@ From the text that it reads, as the DAG's Copy writes one, Paste's `run` builds 
 1. It reads the board through `core.store.read()`, which gives the board that opening the text would give, its blocks migrated by the versions that it records, and what opening it would drop, holding nothing, as `check()` does for opening ([Board updates](Rewrite-1.1.2#the-store)).
 2. It mints a new id for each block, link and stack with `core.mintId()`, and points the pasted links and stacks at the new ids ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
    The blocks keep their names, and the name of each stack gains " (copy)", as today's paste has it ([R/subboard.R#L119-L158](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/subboard.R#L119-L158)).
-3. It returns core's commands that add the blocks, links and stacks, and then `blockr.dag-change_position` with the positions that the copied board gives them, moved together so that their middle lands at the point.
+3. It returns core's commands that add the blocks, links and stacks, and then `blockr.graph-change_position` with the positions that the copied board gives them, moved together so that their middle lands at the point.
 
 The DAG's `afterStep` places what the batch adds from there, as it places whatever a step adds, so that one undo takes the paste back ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
 A block whose class the app lacks is left out of the paste, with a notification that names it, as opening a board drops such a block ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
@@ -196,7 +196,7 @@ The toolbar's search button opens the panel beside the toolbar, and Escape, a cl
 - A field at the top narrows the panel to the blocks and stacks whose name or id holds what the user types, the stacks first.
 - Below the field, the outline, "Board contents", lists each stack as a row that folds, with its blocks in the order of their links and the number of its blocks, and then the blocks in no stack.
 - Picking a row moves the view to the block or the stack and selects it, so that picking a block shows it, as a click on its node does.
-  Picking a block of a collapsed stack expands the stack first, through `blockr.dag-collapse_stack`, as today's search does.
+  Picking a block of a collapsed stack expands the stack first, through `blockr.graph-collapse_stack`, as today's search does.
   The expand moves the blocks around the stack and takes an undo step, as any expand does (Stacks).
 - A stack that is collapsed on the canvas shows folded in the outline, while folding a row leaves the canvas alone, as today.
 
@@ -213,7 +213,7 @@ The keys act on the selection that `core.selection` holds (Gestures):
 - While a selected block has the keyboard's focus, each arrow key moves every selected block and stack, 5 px a press or 20 px with Shift, or by the snap size while snapping is on, as React Flow moves them (notes).
   The user reaches a block with Tab and selects it with Enter or Space, so that the keyboard alone can arrange the board, which today's DAG does not allow.
   Links take no focus, so that the first Tab reaches a block rather than every link of the board first, while a click still selects a link and a right click opens its menu (notes).
-  The DAG runs `blockr.dag-change_position` once the user pauses, or once the focus leaves the block, so that a run of presses is one step, as [Board updates](Rewrite-1.1.2#undo) asks of every input that changes with each key press.
+  The DAG runs `blockr.graph-change_position` once the user pauses, or once the focus leaves the block, so that a run of presses is one step, as [Board updates](Rewrite-1.1.2#undo) asks of every input that changes with each key press.
 
 Undo and redo are the frontend's keys, since the store keeps one history for the page ([Board updates](Rewrite-1.1.2#undo)).
 
@@ -291,7 +291,7 @@ The DAG would then show every block that the user moves.
 So the DAG sets `selectNodesOnDrag` to `false`.
 React Flow then drags a node that is not selected alone, and clears the selection as the drag starts ([packages/system/src/xydrag/XYDrag.ts#L294-L306](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/XYDrag.ts#L294-L306)).
 React Flow's own snapping, through its props `snapToGrid` and `snapGrid`, rounds the position of the first node that a drag moves, and moves every other node of the drag by as much ([packages/system/src/xydrag/XYDrag.ts#L165-L191](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/XYDrag.ts#L165-L191), [packages/system/src/xydrag/utils.ts#L134-L161](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/xydrag/utils.ts#L134-L161)).
-A node that sat off the grid, as one placed before the user turned snapping on, would then end off it, and `blockr.dag-change_position` would move it as the drag ends.
+A node that sat off the grid, as one placed before the user turned snapping on, would then end off it, and `blockr.graph-change_position` would move it as the drag ends.
 So the DAG snaps a drag itself: it rounds the position of each node that moves as it applies the moves that `onNodesChange` reports, which React Flow 13 hands it as a `NodeChangeset`, read through `toArray()`.
 In the spike, a drag of several selected blocks, one of them in a stack, moved that block by React Flow's drag threshold, 5 px, more than the others, so the DAG moves every node of a drag by the move of the node under the pointer ([Client-drawn DAG](Rewrite-1.3), notes).
 React Flow moves the selected nodes with the arrow keys while one of them has the keyboard's focus, 5 px a press or 20 px with Shift, and by `snapGrid` instead while `snapToGrid` is on ([src/components/NodeWrapper/index.tsx#L119-L153](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/NodeWrapper/index.tsx#L119-L153), [src/hooks/useMoveSelectedNodes.ts#L28-L29](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/hooks/useMoveSelectedNodes.ts#L28-L29)).

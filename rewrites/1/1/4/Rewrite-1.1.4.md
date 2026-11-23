@@ -39,10 +39,10 @@ A board with two blocks, one of them of a class defined outside a package, a lin
 ```json
 {
   "format": 1,
-  "packages": { "blockr.core": "0.2.0", "blockr.dag": "0.2.0" },
+  "packages": { "blockr.core": "0.2.0", "blockr.graph": "0.2.0" },
   "board": {
     "id": "curious_otter",
-    "versions": { "blockr.dag-dag_plugin": 1 },
+    "versions": { "blockr.graph-graph_plugin": 1 },
     "name": "Sales review",
     "blocks": {
       "a": { "registry_id": "blockr.core-dataset_block", "version": 1, "state": { "dataset": "iris", "package": "datasets" }, "name": "Iris", "locked": null },
@@ -51,7 +51,7 @@ A board with two blocks, one of them of a class defined outside a package, a lin
     "links": { "ab": { "from": "a", "to": "b", "input": "data" } },
     "stacks": {},
     "options": { "n_rows": { "value": 50, "version": 1 } },
-    "plugins": { "dag": { "class": "blockr.dag-dag_plugin", "state": { "positions": { "a": { "x": 120, "y": 80 } } } } }
+    "plugins": { "dag": { "class": "blockr.graph-graph_plugin", "state": { "positions": { "a": { "x": 120, "y": 80 } } } } }
   }
 }
 ```

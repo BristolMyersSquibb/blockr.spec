@@ -61,7 +61,7 @@ The methods write the dock plugin's state from what the dock board holds of its 
    A panel that a rail holds leaves the tree, as today's `canonicalize_grid()` has it.
    A rail without panels goes, and so does `focus`, which only one person's screen needs ([Client-drawn dock](Rewrite-1.2#proposal)).
 2. They name each panel by an object, by the prefix of its id, as `block_panel-a` becomes `{ "block": "a" }`.
-   An extension's panel becomes the panel of the plugin that takes the extension's place, by the id of the plugin's class, as `{ "plugin": "blockr.dag-dag_plugin" }`, since no extension's key reaches the new stack (condition 2).
+   An extension's panel becomes the panel of the plugin that takes the extension's place, by the id of the plugin's class, as `{ "plugin": "blockr.graph-graph_plugin" }`, since no extension's key reaches the new stack (condition 2).
    A rail drops its `position`, which the rail's edge gives.
 3. They put every view at the top, in the order of the views, with the keys in `index` that R writes for an app script's views ([The dock's state](Rewrite-1.2.1#defining-the-state-in-r)), and give the state no folders.
 4. They name a view without a name after its id, as today's views menu labels one ([R/dock-view.R#L355-L366](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/dock-view.R#L355-L366)), and keep the active view.
@@ -109,7 +109,7 @@ A board with two views, the DAG on a rail of the first, a stack, and a card that
               "orientation": "horizontal",
               "children": [{ "children": [{ "panels": [{ "block": "a" }], "active": { "block": "a" } }, { "panels": [{ "block": "b" }], "active": { "block": "b" } }], "sizes": [0.5, 0.5] }],
               "sizes": [1],
-              "rails": { "right": { "panels": [{ "plugin": "blockr.dag-dag_plugin" }], "active": { "plugin": "blockr.dag-dag_plugin" }, "collapsed": true, "size": 300, "collapsed_size": 35 } }
+              "rails": { "right": { "panels": [{ "plugin": "blockr.graph-graph_plugin" }], "active": { "plugin": "blockr.graph-graph_plugin" }, "collapsed": true, "size": 300, "collapsed_size": 35 } }
             }
           },
           "side": {
@@ -132,7 +132,7 @@ The DAG kept no state in this file, so the board holds none for its plugin, whic
 
 The state of each of today's extensions becomes the state of the plugin of the class that takes its place, at version 1 and taken from the args of the extension's constructor ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 The conversion gives it through a method for the extension's class, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
-That method returns the plugin, which it makes with the constructor of the plugin's class, as `new_dag_plugin()`, from the extension's state as the file holds it.
+That method returns the plugin, which it makes with the constructor of the plugin's class, as `new_graph_plugin()`, from the extension's state as the file holds it.
 So the conversion learns the class's id even where the state is empty, and the board holds nothing for a plugin whose extension kept no state.
 
 The method for the Edit board extension, blockr.dock's own, returns core's Edit board plugin, so that the extension's panels become the panels of that plugin, which keeps no state ([The Edit board plugin](Rewrite-1.1.15#boards-and-app-scripts-from-today)).
@@ -159,13 +159,13 @@ new_dock_board(blocks = list(), links = list(), stacks = list(), plugins = list(
 Its arguments are these:
 
 - Its `blocks`, `links`, `stacks` and `options` are those that `new_board()` takes, with no board option by default, since a board holds only the values that a script sets ([Board options and blockr options](Rewrite-1.1.13#board-option-values-in-r)).
-- Its `plugins` are those that `new_board()` takes too, the plugins whose state the board holds, each made by a plugin's constructor, as `new_dag_plugin()` makes the DAG's, in place of today's `extensions` ([Plugins](Rewrite-1.1.12#a-plugin)).
-  A script may give a plugin a name there, as `list(analysis = new_dag_plugin())`, by which its views place the plugin's panel without the id of the plugin's class, as a script names an extension in its `extensions` today, and `new_dock_board()` hands the list to `new_board()` without its names, which `new_board()` refuses ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
+- Its `plugins` are those that `new_board()` takes too, the plugins whose state the board holds, each made by a plugin's constructor, as `new_graph_plugin()` makes the DAG's, in place of today's `extensions` ([Plugins](Rewrite-1.1.12#a-plugin)).
+  A script may give a plugin a name there, as `list(analysis = new_graph_plugin())`, by which its views place the plugin's panel without the id of the plugin's class, as a script names an extension in its `extensions` today, and `new_dock_board()` hands the list to `new_board()` without its names, which `new_board()` refuses ([blockr.core#566](https://github.com/BristolMyersSquibb/blockr.core/pull/566)).
 - Its `views`, `folders` and `active` are written as [The dock's state](Rewrite-1.2.1#defining-the-state-in-r) has them, each view with its grid, and it hands them to `new_dock_plugin()` with each name that the script gives a plugin turned into the id of the plugin's class, so that the dock plugin's state names each plugin by its class alone.
   A view takes its grid, or the panels of its default grid, in place of today's members beside a grid in a separate `grids`, since the dock plugin's state holds a view's grid alone, so that R reconciles no members with a grid, which only the conversion of a file does ([The dock board](#the-dock-board)).
   So today's `views = list(main = dock_view(c("a", "b")))` with `grids = list(main = dock_grid("a", "b"))` becomes `views = list(main = dock_view(dock_grid("a", "b")))`, and the clinical data explorer's board, which writes its grids and derives each view's members from them with `layout_panel_ids()`, gives each view its grid instead.
-  A reference to a plugin's panel, written with `plg()`, names the plugin by the name that the script gives it or by the id of its class, so the `views` example's `ext("analysis")` ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)) becomes `plg("analysis")`, with `analysis = new_dag_plugin()` in the example's `plugins`.
-  A plugin that a script leaves unnamed has no name, where today's dock names an extension after its class, as blockr.dm's `duckdb-remote-dm` example relies on with `ext("dag")` ([inst/examples/duckdb-remote-dm.R#L227-L247](https://github.com/BristolMyersSquibb/blockr.dm/blob/9a02bd76b2f39595aa656bf21257216ab345b4fb/inst/examples/duckdb-remote-dm.R#L227-L247)), so the migration notes have such a script name the plugin, as `list(dag = new_dag_plugin())`.
+  A reference to a plugin's panel, written with `plg()`, names the plugin by the name that the script gives it or by the id of its class, so the `views` example's `ext("analysis")` ([inst/examples/views/app.R#L10-L23](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/examples/views/app.R#L10-L23)) becomes `plg("analysis")`, with `analysis = new_graph_plugin()` in the example's `plugins`.
+  A plugin that a script leaves unnamed has no name, where today's dock names an extension after its class, as blockr.dm's `duckdb-remote-dm` example relies on with `ext("dag")` ([inst/examples/duckdb-remote-dm.R#L227-L247](https://github.com/BristolMyersSquibb/blockr.dm/blob/9a02bd76b2f39595aa656bf21257216ab345b4fb/inst/examples/duckdb-remote-dm.R#L227-L247)), so the migration notes have such a script name the plugin, as `list(dag = new_graph_plugin())`.
 - Its `visible` gives the sections that each card shows, by block id, as `list(a = "outputs")`, and it hands that to `new_dock_plugin()` too.
   The argument takes the place of a block's `visible` attribute, which no longer reaches the board, since a block holds nothing beside its state, its name and its `locked` now ([Locked boards and the properties of blocks](Rewrite-1.1.11#block-properties-in-r)).
   So the migration notes move what a script such as the clinical data explorer's sets on its blocks into this argument, and the test of condition 5 fails for a script that still sets the attribute.

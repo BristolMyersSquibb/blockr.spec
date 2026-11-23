@@ -196,7 +196,7 @@ Besides its block classes, a package declares in R the rest of its client that R
 With illustrative names:
 
 ```r
-plugin_version.dag_plugin <- function(x, ...) 2L                  # in blockr.dag, once its plugin's state has changed shape, as an exported S3 method
+plugin_version.graph_plugin <- function(x, ...) 2L                  # in blockr.graph, once its plugin's state has changed shape, as an exported S3 method
 chart_output <- new_output_family(                                                             # in blockr.viz, the family of its chart outputs,
   function(result, options, info, params) UseMethod("chart_output"), "chart_output",           # with their renderer,
   renderer = new_renderer("chart_output", js_module("chart.js"))
