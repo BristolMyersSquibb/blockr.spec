@@ -2,6 +2,7 @@
 Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): which variables blockr.ui's theme names, what each is for, the defaults that blockr.ui gives them in both modes, how a frontend sets values of its own and where, and draws its own parts with them, and which defaults a frontend keeps.
+It shapes the items of 1.7's Work list that write the theme, export the helper that tells which defaults a frontend keeps, and draw the dock's own parts from the theme ([UI kit and design system for the client](Rewrite-1.7#work)).
 It takes the place of the fix that [blockr.core#789](https://github.com/BristolMyersSquibb/blockr.core/issues/789) asks for.
 The prefix, the mode's attribute, what the theme's list promises other packages and how the build preset writes the theme belong to [Building on blockr.ui](Rewrite-1.7.4), how an app's theme sets values over the frontend's to [An app's theme](Rewrite-1.1.17), what a frontend is to [Plugins](Rewrite-1.1.12#the-frontend), and how a stylesheet loads with its module and where overlays sit to [UI modules in JS](Rewrite-1.1.7).
 
@@ -10,17 +11,20 @@ The prefix, the mode's attribute, what the theme's list promises other packages 
 1. The stylesheet of blockr.ui gives every variable of its theme a default, for light mode and for dark mode, so that every page draws whole, whatever its frontend sets, a block that `serve()` serves alone included.
 2. A frontend restyles the page by setting variables of blockr.ui's theme alone, and a value that it sets wins over blockr.ui's default, whichever stylesheet loads first.
 3. Every colour that blockr.ui's components, core's UIs and the frontend's own parts draw comes from a variable of blockr.ui's theme, so that a frontend restyles them by setting those variables, and an app's theme restyles all of them.
-   The colours of block categories are the exception, since they are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+   The colours of block categories are one exception, since they are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+   The black of a modal's backdrop and the black and white rings of a colour field are the other, since they must stand out on any colour ([Colours](#colours)).
 4. The defaults take no colour from what surrounds an element: they are fixed values for each mode, and blockr.ui measures nothing and mixes no colour of the page into another.
 5. In dark mode, the default of `popover` is lighter than that of `card` by at least 1.10:1, so that a menu that opens from a block's card stands out from it, as today's pair, `#1e242e` over `#161b23`, does at 1.109:1.
 6. A frontend's tests tell, for each mode, which variables of blockr.ui's theme the frontend leaves at blockr.ui's defaults, so that a frontend keeps a default only by choice.
+7. No page paints in one mode first and then switches to the other as its board opens: until core sets the page's mode, the page draws in neutral greys.
 
 ## Today
 
 On `js-state`, core's runtime stylesheet, which loads on every page, holds the values of core's theme, which moves to blockr.ui ([srcts/runtime/index.css#L86-L180](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/runtime/index.css#L86-L180), [UI kit and design system for the client](Rewrite-1.7#what-blockrui-holds)).
 Those values are the basic frontend's look: the page is the browser's `Canvas`, a card is `bg-subtle`, 5% of the text over the page, and a menu or a dialog is `bg-raised`, the page's colour mixed with 10% of the text in dark mode.
 The basic frontend has no stylesheet of its own.
-Core's UIs also draw 32 colours of Tailwind's palette under core's prefix, in 8 files, most of them with a variant for dark mode, as a popover's `bc:text-gray-900` and `bc:dark:text-gray-100` in place of `text-default` ([srcts/overlays/popover.tsx#L20](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/overlays/popover.tsx#L20)), and the tints of a card's messages, `bc:bg-red-500/10`, `bc:bg-amber-500/10` and `bc:bg-blue-500/10`, in place of `bg-danger`, `bg-warning` and `bg-accent-subtle` ([srcts/card/footer.tsx#L211-L225](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/card/footer.tsx#L211-L225)).
+Core's UIs also name 10 colours of Tailwind's palette under core's prefix, 32 times in 8 files, most of them with a variant for dark mode, as a popover's `bc:text-gray-900` and `bc:dark:text-gray-100` in place of `text-default` ([srcts/overlays/popover.tsx#L20](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/overlays/popover.tsx#L20)).
+So do the tints of a card's notifications, `bc:bg-red-500/10`, `bc:bg-amber-500/10` and `bc:bg-blue-500/10`, although core's theme holds `bg-danger` and `bg-warning` for the first two ([srcts/card/footer.tsx#L211-L225](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/card/footer.tsx#L211-L225)).
 
 The dock draws its panels and cards from copies of blockr.ui's tokens, such as `--blockr-dock-bg-surface: var(--blockr-color-bg-surface, #ffffff)`, and sets none of core's variables ([srcts/modules/dock/index.css#L88-L186](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/index.css#L88-L186)).
 So core's menus, select lists, dialogs and fields inside the dock wear the basic frontend's colours.
@@ -41,6 +45,7 @@ The set is as big as that needs and as small as it can be, so it holds the colou
 Each is a variable that Tailwind CSS 4 keeps its theme in, under the prefix `bk`, as `--bk-color-popover` and `--bk-spacing`, which every package's classes read through `@theme inline`, as core's `bc:bg-popover` and `bc:px-2` do ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
 The stylesheet of blockr.ui declares the variables and gives each a default for both modes, its documentation says what each is for, and it exports their list ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 A frontend sets the variables whose values it wants its own, and keeps blockr.ui's defaults for the rest ([The defaults](#the-defaults)), and an app's theme sets those whose values the app wants its own, over the frontend's ([An app's theme](Rewrite-1.1.17)).
+Beside them, the theme names the layer that every overlay stacks on, `--bk-z-index-overlay`, whose default [The defaults](#the-defaults) gives.
 
 #### Colours
 
@@ -52,33 +57,44 @@ A UI reads the colour whose use it shares:
 
 | Variable | What reads it |
 |---|---|
-| `--bk-color-background`, `--bk-color-foreground` | The page, which the frontend draws behind its panels and cards, as the dock does behind dockview's panels, and the text of every UI, its overlays included |
+| `--bk-color-background`, `--bk-color-foreground` | The page, which the frontend draws behind its panels and cards, as the dock does behind dockview's panels, and the text on it |
 | `--bk-color-card`, `--bk-color-card-foreground` | A card or a node that a plugin draws on the page or in a panel, such as the DAG's nodes, the dock's cards and the basic frontend's cards, and its text. The card is opaque, since a node covers the links below it |
 | `--bk-color-popover`, `--bk-color-popover-foreground` | Every overlay, such as a menu, a select's list, a popover, a dialog, a sheet, a tooltip or a toast, and a slider's thumb, and its text. The popover is opaque, since an overlay covers the page |
-| `--bk-color-primary`, `--bk-color-primary-foreground` | The brand colour: what is picked or checked, such as a checked checkbox or a picked day, the primary button, a link, the check of a picked option and the edge of what is selected or current, and the text and icons on it, while its tints mark a message's banner, pill and toast |
-| `--bk-color-secondary`, `--bk-color-secondary-foreground` | A filled control of lower emphasis, such as a secondary button, and its text |
+| `--bk-color-primary`, `--bk-color-primary-foreground`, `--bk-color-primary-text` | The brand colour: what is picked or checked, such as a checked checkbox or a picked day, the primary button, the check of a picked option, the edge of what is selected or current, and the tints of a message's banner, pill and toast; the text and icons on it; and the text of a link and of a message |
+| `--bk-color-secondary`, `--bk-color-secondary-foreground` | A filled control of lower emphasis, and its text |
 | `--bk-color-muted`, `--bk-color-muted-foreground` | A quiet fill inside a surface, such as a tag or a block of code, and secondary text, such as a hint, a placeholder, a count or a block's summary |
 | `--bk-color-accent`, `--bk-color-accent-foreground` | A row or a button that is hovered, pressed or focused from the keyboard, and its text |
-| `--bk-color-destructive` | An error and what removes: the text and the mark of an error, the edge of an invalid field, the row of a menu that removes and the destructive button, while its tints mark an error's banner, pill and toast |
-| `--bk-color-warning` | A warning: its text and its mark, while its tints mark its banner, pill and toast |
-| `--bk-color-success` | The mark of a success, such as the status dot of a block that is `ready` ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)) |
+| `--bk-color-destructive`, `--bk-color-destructive-foreground`, `--bk-color-destructive-text` | An error and what removes: the mark of an error, the edge of an invalid field, the destructive button, and the tints of an error's banner, pill and toast and of the row of a menu that removes; the text on the destructive button; and the text of an error and of that row |
+| `--bk-color-warning`, `--bk-color-warning-foreground`, `--bk-color-warning-text` | A warning: its mark and the tints of its banner, pill and toast; the text on a fill of it; and its text |
+| `--bk-color-success`, `--bk-color-success-foreground`, `--bk-color-success-text` | A success: its mark, such as the status dot of a block that is `ready` ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)), and its tints; the text on a fill of it; and its text |
 | `--bk-color-border` | Outlines and dividers: the edge of a card or an overlay, the rules of a table, a menu's divider and a slider's track |
 | `--bk-color-input` | The edge of a field, such as a text, number, search or token field, a select, a combo box, a date field or picker, or a colour field, and the outline of a checkbox, a radio button, a switch or a drop zone |
 | `--bk-color-ring` | The focus ring |
 
-An error, a warning and a success each have a colour, as the building blocks of every page that tells the user how things stand: `destructive`, which shadcn/ui names, and `warning` and `success`, which the theme adds beside it, while a message takes the tints of `primary`.
+An error, a warning and a success each have a colour, as the building blocks of every page that tells the user how things stand: `destructive`, which shadcn/ui names, and `warning` and `success`, which the theme adds beside it, while a message takes the colours of `primary`.
 The page draws all three: a block raises warnings as well as errors, which its card tints apart, and the status dot draws `waiting` and `invalid` in the colour of a warning and `ready` in that of a success ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 The set of shadcn/ui stops at `destructive` only because its own components draw no warning or success: its alert comes in `default` and `destructive` alone, and its toasts mark a success or a warning with an icon, in the popover's colours ([alert.tsx#L8-L16](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/registry/new-york-v4/ui/alert.tsx#L8-L16), [sonner.tsx#L21-L31](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/registry/new-york-v4/ui/sonner.tsx#L21-L31)).
-So the theme adds the two as shadcn/ui's documentation adds a colour, under `:root` and for dark mode, through `@theme inline`, which takes a warning as its example ([theming.mdx#L118-L138](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/content/docs/%28root%29/theming.mdx?plain=1#L118-L138)).
-Each is one colour without a `-foreground`, as shadcn/ui's own `destructive` is, since nothing draws text on either, so that the three colours of a state work alike.
+So the theme adds the two as shadcn/ui's documentation adds a colour, with its `-foreground`, under `:root` and for dark mode, through `@theme inline`, which takes a warning as its example ([theming.mdx#L118-L138](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/content/docs/%28root%29/theming.mdx?plain=1#L118-L138)).
+
+The colours `primary`, `destructive`, `warning` and `success` do the same jobs, so each comes with the same three variables:
+
+1. The colour itself gives the mark, the edge and the fill, and the tints of a banner, a pill and a toast, which come from it through the opacity modifier, as `bg-warning/10`.
+2. Its `-foreground` gives the text on a fill of the colour, as on the destructive button.
+3. Its `-text` gives text in the colour, on any surface and on the colour's own tints, as an error's message does.
+
+One colour cannot do all three in both modes.
+White text on the red of the destructive button reaches 4.8:1 in light mode, but 2.8:1 on the red of dark mode, `#f87171`.
+In light mode, the shade of a mark is too light for text on its own tint, and so are some of today's texts: red-600 reaches 4.0:1 there, and today's amber text, amber-700, 4.3:1.
+Today's blockr.ui names a text apart from a fill and a border for each state for the same reason ([blockr-tokens.css#L14-L15](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L14-L15)).
+A state that nothing of blockr's fills yet, such as a warning, still has its `-foreground`, so that a block's UI can draw every state in each of the three ways.
+
 The theme names no `danger` beside `destructive`, since `destructive` marks an error as well as what removes, as shadcn/ui's form draws an error's message in `text-destructive` ([form.tsx#L150](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/registry/new-york-v4/ui/form.tsx#L150)).
 A second name for that job would have every theme set it twice, and the two could drift apart.
-Each of `destructive`, `warning` and `success` does every job of its kind, its text, its mark and its edge, and the tints of its banner and toast come from it through the opacity modifier, as `bg-warning/10`, where today's blockr.ui names a fill, a text and a border for each.
-The set leaves out shadcn/ui's colours of charts, since the colours of data come from blockr.theme's palettes or the board's scale map, and those of its sidebar, since a frontend's sidebar draws with the colours above.
+The set leaves out shadcn/ui's colours of charts, since the colours of data come from blockr.theme's palettes or its scale map, and those of its sidebar, since a frontend's sidebar draws with the colours above.
 
 A field's edge stands out more than an outline or a divider does, since it alone marks a field, and the outline of a checkbox, a radio button, a switch or a drop zone alone marks one that is unchecked, off or empty.
 So `input` is stronger than `border`.
-Its default is Tailwind's gray-400, and gray-600 in dark mode, about 2.3:1 to 2.6:1 against what it sits on.
+Its default is Tailwind's gray-400, and gray-600 in dark mode, about 2.1:1 to 2.6:1 against what it sits on, the least on a dialog in dark mode.
 That lies between the soft border of today's blockr.ui, about 1.2:1, and the 3:1 that [WCAG 2.2's success criterion 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html) asks of what marks a control, at which a full frame looked too heavy.
 
 The theme names a colour for the page, `background`, so that an app's theme reaches the page under every frontend, which draws it behind its panels and cards ([The frontend's own parts](#the-frontends-own-parts)).
@@ -86,13 +102,17 @@ A plugin's UI leaves its own background transparent, so that it shows the page o
 The theme names no fill for a field, since the fields that move from core's React SDK have none.
 The hover, `accent`, has a name of its own, apart from `muted`, since the two differ once their values are solid colours, as blockr.ui's defaults are: the subtle fill of today's blockr.ui, `#f9fafb`, differs from a white menu by 1.05:1, which nobody sees, while its hover, `#f3f4f6`, reaches 1.10:1.
 
+The secondary button keeps its frame, as today's design system and core's SDK on `js-state` draw it, so it reads `border`, and `accent` under the pointer ([design-system.Rmd#L851](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L851)).
+No component of blockr.ui fills with `secondary` yet.
+The theme keeps it, with its `-foreground`, for a UI that draws a filled control of lower emphasis, as one written after shadcn/ui does.
+
 Two things draw in black and white of their own, since each must stand out on any colour: the backdrop behind a modal, black at 40%, which dims whatever page lies below it, and the rings of a colour field's thumbs and swatches, which show on any colour that the user picks.
 
 The theme holds no other colour, since Tailwind's palette, whose colours follow neither a theme nor the mode, is no part of it ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
 So every UI that draws with classes built by blockr.ui's preset, blockr.ui's components, core's UIs and those of plugins and blocks, takes its colours from the variables above.
 The build preset fails a build whose code names a colour of Tailwind's palette, under any prefix ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 A UI that needs a shade between two variables derives it from them in its own stylesheet, as `color-mix(in oklab, var(--bk-color-primary) 15%, var(--bk-color-card))`, or tints one with Tailwind's opacity modifier, as `bc:bg-primary/20`, and both follow the theme and the mode.
-A colour that must stay fixed it writes on purpose, as `bc:bg-[#0072b2]`, and the colours of data, such as a chart's series, come from blockr.theme's palettes or the board's scale map rather than from the theme.
+A colour that must stay fixed it writes on purpose, as `bc:bg-[#0072b2]`, and the colours of data, such as a chart's series, come from blockr.theme's palettes or its scale map rather than from the theme.
 Where several packages need a colour that no variable gives, the theme takes it in a later version of blockr.ui, with defaults ([Which defaults a frontend keeps](#which-defaults-a-frontend-keeps)), so that the set grows by what its users show they need, as it grows by `warning` and `success` beside shadcn/ui's.
 
 #### Fonts, sizes, radii, shadows and spacing
@@ -141,9 +161,20 @@ For two of the variables, a frontend's stylesheet would hold:
 }
 ```
 
-Only the frontend's stylesheet and an app's theme set variables of blockr.ui's theme, and nothing else of a package's styles `:root`, beside blockr.ui's own stylesheet, which sets there its defaults and the browser's `color-scheme` for each mode.
-A frontend sets them on `:root` alone and under those two selectors alone, since the rules of an app's theme win over them by specificity, a value set on an element below `:root` would win there over the app's by inheritance ([The rules that R writes](Rewrite-1.1.17#the-rules-that-r-writes)), and a value on `:root` that names no mode would paint before core sets the mode.
-The stylesheet of blockr.ui sets its defaults inside a cascade layer, and the frontend's sets its values outside one, so that the frontend's win whichever stylesheet loads first, while the rules of an app's theme win over both.
+Beside blockr.ui's own stylesheet, only the frontend's stylesheet and an app's theme set variables of blockr.ui's theme, and no other stylesheet of a package styles `:root`.
+A frontend sets them under those two selectors alone, for three reasons:
+
+1. The rules of an app's theme win over them by specificity ([The rules that R writes](Rewrite-1.1.17#the-rules-that-r-writes)).
+2. A value set on an element below `:root` would win there over the app's by inheritance.
+3. A value on `:root` that names no mode would paint before core sets the mode.
+
+The stylesheet of blockr.ui sets its defaults inside a cascade layer, under three selectors:
+
+1. Under `:root`, it sets the defaults that are the same in both modes, such as the fonts, the sizes of text, the radius, the spacing and the layer of the overlays, and the neutral greys of a page whose mode core has not set yet ([Light mode and dark mode](#light-mode-and-dark-mode)).
+2. Under `:root[data-bk-mode="light"]`, it sets the colours and the shadows of light mode, and the browser's `color-scheme`, `light`.
+3. Under `:root[data-bk-mode="dark"]`, it sets those of dark mode, and `color-scheme: dark`.
+
+The frontend sets its values outside any layer, so that they win over blockr.ui's defaults whichever stylesheet loads first, while the rules of an app's theme win over both.
 The values outlive the opening of another board, since the page keeps the stylesheets that it loaded and never switches to another frontend ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 Today the dock sets its own variables on its own elements, and on the block's menu through that menu's class, so that an overlay without that class, such as a select's list in a block's UI, gets none of them, while a value on `:root` reaches every overlay.
 
@@ -174,20 +205,40 @@ Core sets the mode only as the board opens, once it has read `dark_mode`, so the
 A page could paint the wrong mode first, as a saved board or a blockr option may fix the mode that the user's system does not prefer.
 So until core sets the mode, the page's root holds no `data-bk-mode`, and blockr.ui's stylesheet draws the page in neutral greys, which suit either mode:
 
-1. The page draws with `background` in Tailwind's gray-500, `#6b7280`, midway in lightness between a white page and a near-black one, and with `foreground` and `muted-foreground` in its gray-50, `#f9fafb`, which reads on it at 4.6:1.
+1. The page draws with `background` in Tailwind's gray-500, about `#6a7282`, midway in lightness between a white page and a near-black one, and with `foreground` and `muted-foreground` in its gray-50, `#f9fafb`, which reads on it at 4.6:1.
 2. Core opens the board, reads `dark_mode`, and sets `data-bk-mode` to `light` or `dark`.
 3. The page draws in that mode.
 
-The rules of light mode, a frontend's as an app's theme's, hold under `data-bk-mode="light"` alone, so that the greys hold until core sets the mode under every frontend ([Where the frontend sets the values](#where-the-frontend-sets-the-values), [The rules that R writes](Rewrite-1.1.17#the-rules-that-r-writes)).
+The rules of light mode, blockr.ui's, a frontend's and an app's theme's, hold under `data-bk-mode="light"` alone, so that the greys hold until core sets the mode under every frontend ([Where the frontend sets the values](#where-the-frontend-sets-the-values), [The rules that R writes](Rewrite-1.1.17#the-rules-that-r-writes)).
 So the page never paints the wrong mode, while every page starts grey.
-A later version may have R write the mode on the page wherever R knows it, from the blockr option `dark_mode` or from the value that the opening board holds where no storage plugin can open another board first, so that those pages skip the greys.
+R writes no mode into the page, neither as `data-bk-mode` nor in the page's `color-scheme` tag, which takes `light dark`.
+As R serves the page, it cannot know the mode for sure: the app's storage plugin may open another board first, and R may serve a board from JSON that it does not parse.
 
 ### The defaults
 
 The defaults are fixed values, one for light mode and one for dark mode, since blockr.ui takes no colour from what surrounds an element.
 For the look, each colour's default is the value that the token of today's blockr.ui with the same job takes in that mode, as `popover` is `#ffffff` in light mode and `#1e242e` in dark mode, and `card` is `#ffffff` and `#161b23` ([inst/assets/css/blockr-tokens.css#L94-L98](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L94-L98), [blockr-tokens-dark.css#L40-L42](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L40-L42)), so that the look roughly keeps today's ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
-A token that mixes others, as today's hover in dark mode lays 6% of the text over what lies below ([blockr-tokens-dark.css#L46](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L46)), gives `accent` the fixed value that its mix comes to, and a job that no token does takes a value of Tailwind's palette, as `input` and `secondary` do ([Colours](#colours)).
-Where the set gives one colour to jobs that today's tokens split, the default is the value of the token that serves them all: `destructive` takes today's red border, `#dc2626`, which reads as text on white at 4.8:1, and `warning` takes today's amber text, `#b45309`, at 5.0:1, since the amber border, `#d97706`, reaches 3.2:1 alone ([blockr-tokens.css#L84-L85](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L84-L85), [#L119-L120](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L119-L120)).
+A token that mixes others gives its job the fixed value that its mix comes to.
+Today's hover in dark mode lays 6% of the text over what lies below ([blockr-tokens-dark.css#L46](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L46)), so `accent` takes that mix over `popover`, `#2b303a`, the lighter of the two surfaces that a hover sits on.
+It stands out from a menu at 1.18:1 and from a card at 1.31:1, while the mix over `card`, `#232830`, would differ from a menu by 1.05:1.
+A job that no token does takes a value of Tailwind's palette, as `input` does ([Colours](#colours)).
+The colours `secondary` and `secondary-foreground` take the defaults of `accent` and `accent-foreground`, as shadcn/ui gives the two pairs one value in each mode ([theming.mdx#L214-L219](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/content/docs/%28root%29/theming.mdx?plain=1#L214-L219), [#L248-L253](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/content/docs/%28root%29/theming.mdx?plain=1#L248-L253)).
+The colours of the states take today's borders: `destructive` takes `#dc2626`, `warning` takes `#d97706`, and `success` takes `#16a34a`, which the status dot of a `ready` block draws today ([blockr-tokens.css#L119-L121](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L119-L121)).
+The colour `primary` takes today's accent fill, `#2563eb` ([#L108](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L108)).
+Each `-text` takes the lightest of Tailwind's shades of its hue that reaches 4.5:1 on every surface of light mode, and on the colour's own tint over it:
+
+| Variable | Default in light mode | On the tint, at least |
+|---|---|---|
+| `--bk-color-destructive-text` | Red-700, `#b91c1c`, today's red text | 5.3:1 |
+| `--bk-color-warning-text` | Amber-800, `#92400e` | 6.1:1 |
+| `--bk-color-success-text` | Green-800, `#166534` | 6.1:1 |
+| `--bk-color-primary-text` | Blue-700, `#1d4ed8` | 5.6:1 |
+
+Today's amber and green texts, the 700 shades, reach 4.3:1 on the tint, so the two take the 800 shades, as core's stylesheet on `js-state` takes amber-800 for its warnings ([blockr-tokens.css#L84-L86](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L84-L86), [srcts/runtime/index.css#L89-L90](https://github.com/BristolMyersSquibb/blockr.core/blob/e59b17104009684c9d15fb56c0f38ad53d523fa7/srcts/runtime/index.css#L89-L90)).
+In dark mode, each `-text` takes today's text of its state, which reads at 4.9:1 or more on every dark surface and tint, as `primary-text` takes `#60a5fa` where `primary` is `#3b82f6` ([blockr-tokens-dark.css#L50-L55](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L50-L55)).
+Each `-foreground` takes white where white reaches 4.5:1 on the colour, as on `destructive` at 4.8:1 and on `primary` at 5.2:1.
+On `warning` and `success`, where white reaches only 3.2:1 and 3.3:1, it takes today's dark text, `#111827`.
+In dark mode, every `-foreground` takes `#0e1219`, as today's text on the accent fill does ([blockr-tokens-dark.css#L49](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L49)).
 The fonts, the sizes of text, the radii, the shadows and the spacing take Tailwind's own scales, from which blockr.ui's look starts, and today's values where that look departs from them, as today's blockr.ui draws its small text at `0.8125rem`, 13 pixels, where Tailwind's is 14 ([blockr-tokens.css#L152-L156](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L152-L156)).
 So the page keeps the look of today's blockr.ui wherever its frontend sets nothing, and a variable that a later version of blockr.ui adds draws at once under every frontend that does not know it yet, as VS Code registers a default for each of its colours, for light and for dark themes, and takes the default wherever a theme leaves a colour out ([colorUtils.ts#L70-L75](https://github.com/microsoft/vscode/blob/817607ae52b88ef6021bb456e5995b6367e1b481/src/vs/platform/theme/common/colorUtils.ts#L70-L75), [#L222-L223](https://github.com/microsoft/vscode/blob/817607ae52b88ef6021bb456e5995b6367e1b481/src/vs/platform/theme/common/colorUtils.ts#L222-L223)).
 
@@ -228,5 +279,39 @@ None.
 - The DAG and core's Edit board plugin take their colours from the theme already ([Drawing the DAG](Rewrite-1.3.2#its-look), [The Edit board plugin](Rewrite-1.1.15#its-look)), so an app's theme reaches them with no change but the names under `bk` and the move off Tailwind's palette.
 - Core loads a frontend's stylesheet, and waits for it, before it opens the board, so a frontend's rules paint as soon as the mode they name is set, and not before.
 - The CSS of shadcn/ui sets its variables without a prefix, as `--card`, and maps them through `@theme inline` onto `--color-card`, while blockr.ui's carry the prefix, as `--bk-color-card`, so a theme made for shadcn/ui maps onto blockr.ui's name by name ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
+
+The defaults that [The defaults](#the-defaults) gives, from the tokens of today's blockr.ui at `e14e831`, with each variable named without `--bk-` and, for a colour, without `color-`, as `background` for `--bk-color-background`:
+
+| Variables | Light mode | Dark mode | From |
+|---|---|---|---|
+| `background`, `foreground` | `#f9fafb`, `#111827` | `#0e1219`, `#f0f3f7` | Today's page and text |
+| `card`, `card-foreground` | `#ffffff`, `#111827` | `#161b23`, `#f0f3f7` | Today's surface and text |
+| `popover`, `popover-foreground` | `#ffffff`, `#111827` | `#1e242e`, `#f0f3f7` | Today's raised background and text |
+| `primary`, `primary-foreground`, `primary-text` | `#2563eb`, `#ffffff`, `#1d4ed8` | `#3b82f6`, `#0e1219`, `#60a5fa` | Today's accent fill, the text on it, and its strong accent text, in dark mode its accent text |
+| `secondary`, `secondary-foreground` | `#f3f4f6`, `#111827` | `#2b303a`, `#f0f3f7` | Those of `accent` |
+| `muted`, `muted-foreground` | `#f9fafb`, `#6b7280` | `#14181f`, `#8a94a3` | Today's subtle fill and muted text |
+| `accent`, `accent-foreground` | `#f3f4f6`, `#111827` | `#2b303a`, `#f0f3f7` | Today's hover and text, in dark mode 6% of the text over `popover` |
+| `destructive`, `destructive-foreground`, `destructive-text` | `#dc2626`, `#ffffff`, `#b91c1c` | `#f87171`, `#0e1219`, `#f87171` | Today's red border and red text |
+| `warning`, `warning-foreground`, `warning-text` | `#d97706`, `#111827`, `#92400e` | `#fbbf24`, `#0e1219`, `#fbbf24` | Today's amber border, and amber-800 for text |
+| `success`, `success-foreground`, `success-text` | `#16a34a`, `#111827`, `#166534` | `#4ade80`, `#0e1219`, `#4ade80` | Today's green border, and green-800 for text |
+| `border` | `#e5e7eb` | `#232932` | Today's border |
+| `input` | `#99a1af` | `#4a5565` | Tailwind's gray-400, `oklch(70.7% 0.022 261.325)`, and gray-600, `oklch(44.6% 0.03 256.802)` |
+| `ring` | `#2563eb` | `#3b82f6` | Today's accent border, which draws the focus outline |
+| `font-sans` | `"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif` | The same | Today's body face, whose files blockr.ui ships ([blockr-base.css#L35-L36](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-base.css#L35-L36)) |
+| `font-mono` | `'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace` | The same | Today's ([blockr-tokens.css#L162](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L162)) |
+| `text-xs`, `text-sm`, `text-base`, `text-lg` | `0.75rem`, `0.8125rem`, `0.875rem`, `1rem` | The same | Today's sizes ([#L152-L155](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L152-L155)) |
+| `radius` | `0.5rem` | The same | Today's large radius, 8 pixels ([#L174](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L174)) |
+| `shadow-sm`, `shadow-md`, `shadow-lg` | Today's three, at 10% to 25% black | Today's three of dark mode, at 50% to 70% black | Today's ([blockr-tokens.css#L184-L186](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L184-L186), [blockr-tokens-dark.css#L67-L69](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens-dark.css#L67-L69)) |
+| `spacing` | `0.25rem` | The same | Tailwind's |
+| `z-index-overlay` | `1100` | The same | Core's on `js-state` |
+
+Before core sets the mode, `background` is Tailwind's gray-500, `oklch(55.1% 0.027 264.364)`, and `foreground` and `muted-foreground` are its gray-50, `#f9fafb` ([Light mode and dark mode](#light-mode-and-dark-mode)).
+From `0.5rem`, the radius scale gives corners of 4.8, 6.4, 8 and 11.2 pixels, where today's are 4, 6, 8 and 12.
+
+Muted text reaches 4.4:1 on `accent` in light mode and 4.3:1 in dark mode, below the 4.5:1 that text needs.
+So a hovered row draws its muted text in `accent-foreground`, as today's design system keeps muted text off a hover ([blockr-tokens.css#L72-L75](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css#L72-L75)).
+
+On `js-state`, R's `page_color_scheme()` writes into the page's `color-scheme` tag the mode that it works out from the opening board's `dark_mode` or else from the blockr option, and `light dark` only where it knows neither ([R/utils-serve.R#L600-L637](https://github.com/BristolMyersSquibb/blockr.core/blob/35971d0b134948285d8ea8c6157f1a2a01aacc6f/R/utils-serve.R#L600-L637)).
+It writes `light dark` on every page instead ([Light mode and dark mode](#light-mode-and-dark-mode)).
 
 </details>
