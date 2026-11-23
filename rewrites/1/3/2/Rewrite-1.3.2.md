@@ -58,7 +58,7 @@ Each block is a node:
   A handle with several links, as a result often has, shows on each side that one of them uses, and several handles on one side spread along it, those of a variadic block in the order of their links.
   A handle that no link uses, a variadic block's placeholder among them, sits on the side that the layout's direction gives, as today's ports do: from top to bottom, an input on top of the mark and the result below it, and from left to right, an input on the mark's left and the result on its right.
   A handle on the bottom sits below the block's name, so that no link crosses the name.
-  While the pointer is over a handle, the handle grows and takes the theme's accent colour, the link that feeds it shows as it does while the pointer is over the link (Links), and after a moment blockr.ui's `Tooltip` names the input, as `data`, with its source where a link feeds it, as `data, from Filter`, or "Next input" on a variadic block's placeholder.
+  While the pointer is over a handle, the handle grows and takes the colour of the theme's `primary`, the link that feeds it shows as it does while the pointer is over the link (Links), and after a moment blockr.ui's `Tooltip` names the input, as `data`, with its source where a link feeds it, as `data, from Filter`, or "Next input" on a variadic block's placeholder.
   A handle takes the pointer only within its own size and a small margin around it, never over the node's body, so that a press on the node lands on the node, and a press on a handle is one that the user saw coming.
 
 A node's box is its mark, and the block's name hangs below the box, as G6 draws today's label outside the node.

@@ -65,8 +65,8 @@ Its components draw with the jobs of the theme alone, such as a raised backgroun
 So the classes of the palette in React Aria's starter kit, such as its button's `bg-blue-600` ([Button.tsx#L21-L23](https://github.com/adobe/react-spectrum/blob/6be3466d87cc628ee69461230c1b5f4e3b64c6e3/starters/tailwind/src/Button.tsx#L21-L23)), are rewritten onto jobs as each component is copied in, while the jobs' defaults may take their values from the palette as fixed values, and the palette itself is no part of the theme.
 Which variables the theme holds, what each is for and their defaults belong to [The theme's variables](Rewrite-1.7.2).
 
-The theme's jobs are general, such as danger and success, and none is named after something of core's.
-Core maps each status of a block onto a job, as `failed` onto the danger border, and holds the colours of the categories of block classes itself, outside every theme, which an app sets through a blockr option ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+The theme's jobs are general, such as `destructive` and `success`, and none is named after something of core's.
+Core maps each status of a block onto a job, as `failed` onto `destructive`, and holds the colours of the categories of block classes itself, outside every theme, which an app sets through a blockr option ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 So a new status or category is a change to core alone.
 
 ### Building on blockr.ui
