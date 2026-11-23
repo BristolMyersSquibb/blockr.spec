@@ -106,7 +106,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, and the Tailwind theme with its build preset, in roughly today's look, needing nothing from core, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | blockr.ui |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
-| blockr.dag | A plugin drawn in the browser | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
+| blockr.graph | New: the DAG plugin, drawn in the browser with React Flow, in the place of blockr.dag | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
@@ -117,7 +117,8 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr | Kept, attaching the packages of the new stack | None | The packages it attaches |
 | blockr.cdex, the clinical data explorer, blockr.sandbox, where its boards are developed, both private, and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |
 | dockViewR | No longer used, since blockr.dock draws dockview in the browser | [Client-drawn dock](Rewrite-1.2) | |
-| g6R | No longer used, since blockr.dag draws the DAG in the browser | [Client-drawn DAG](Rewrite-1.3) | |
+| blockr.dag | Left to its maintainer, who may retire it or rewrite it for the new stack, while blockr.graph draws the new stack's DAG | [Client-drawn DAG](Rewrite-1.3) | |
+| g6R | Not used by blockr.graph, which draws the DAG with React Flow | [Client-drawn DAG](Rewrite-1.3) | |
 | typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.9#the-package) | |
 
 ## Conventions

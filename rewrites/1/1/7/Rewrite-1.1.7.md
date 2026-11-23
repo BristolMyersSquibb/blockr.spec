@@ -198,7 +198,7 @@ Each module exports the JS API major too:
 ```ts
 export const api = 1;                                // the JS API major it was built against
 
-export default {                                     // blockr.dag's plugin class, from dag.js, whose id R gives as blockr.dag-dag_plugin
+export default {                                     // blockr.graph's plugin class, from graph.js, whose id R gives as blockr.graph-graph_plugin
   state: { schema: dagState, default: { positions: {} } },
   update: (delta, board, plugin) => dropPositions(delta.blocks?.rm ?? [], board, plugin),   // a removed block's position goes with it
   ui: dagUi,                                         // what every frontend places for its plugin
@@ -268,7 +268,7 @@ Core's utilities sit in one stylesheet of their own, `blockr-core.css`, beside i
 Every package that writes classes builds them so, under a prefix of its own, while blockr.ui alone writes those under `bk:`, the prefix of its theme's variables, `--bk-*`, which every package reads ([UI kit and design system for the client](Rewrite-1.7)).
 A block class's module ships the JSON Schema of the block's state beside it, which a package that builds from TypeScript can write once, such as with Zod, whose `z.infer` gives the module its type and `z.toJSONSchema()` the schema ([Zod](https://zod.dev/json-schema)).
 R reads the schema when it registers the class, writes the state of the blocks it builds by it ([Serialization](Rewrite-1.1.4#state-values-between-the-client-and-r)), and sends it with the class's entry in the block registry, so the client has it before the module loads.
-The JSON Schema of a plugin class's state, or of a board option's value, sits beside the class's or the board option's module in the same way, as `dag.schema.json` beside `dag.js` ([Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+The JSON Schema of a plugin class's state, or of a board option's value, sits beside the class's or the board option's module in the same way, as `graph.schema.json` beside `graph.js` ([Board updates](Rewrite-1.1.2#plugins), [Board options and blockr options](Rewrite-1.1.13#defining-a-board-option), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 R writes a plugin's state by the schema beside its class's module, and a board option's value by the one beside the board option's module.
 Core ships its own plugin classes and board options as any package does, each with a module and a schema of its own ([blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
 

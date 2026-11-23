@@ -23,7 +23,7 @@ Weeks are ISO weeks.
 | 50–51 | 2026-12-07 | Spec and implement blockr.assistant | [Assistant as a plugin](Rewrite-1.4) |
 | 52–53 | 2026-12-21 | Holidays | |
 | 1–2 | 2027-01-04 | Spec and implement blockr.session | [Session management as a storage plugin](Rewrite-1.6) |
-| 3 | 2027-01-18 | Spec and implement blockr.dag | [Client-drawn DAG](Rewrite-1.3) |
+| 3 | 2027-01-18 | Spec and implement blockr.graph | [Client-drawn DAG](Rewrite-1.3) |
 | 4 | 2027-01-25 | Spec and implement blockr.code | [Code export as a plugin](Rewrite-1.5) |
 | 5 | 2027-02-01 | Buffer, the parity list the switch waits for, and the fully functional POC at the week's end | [Migration](Rewrite-1#migration) |
 | 6–13 | 2027-02-08 | Run down the tail of problems against the parity list, aiming at light BMS deployments by the end of Q1 | |
