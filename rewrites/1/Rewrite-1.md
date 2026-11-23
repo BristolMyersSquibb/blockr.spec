@@ -110,7 +110,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
-| blockr.theme | Makes an app's theme with core's `new_theme()`, from its chrome under the names of blockr.ui's theme and from its font, while its palettes for plots, its scale map and its templates stay its own | [An app's theme](Rewrite-1.1.17) | blockr.core |
+| blockr.theme | Makes an app's theme with core's `new_blockr_theme()`, from its chrome under the names of blockr.ui's theme and from its font, while its palettes for plots, its scale map and its templates stay its own | [An app's theme](Rewrite-1.1.17) | blockr.core |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with blockr.ui's components | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
