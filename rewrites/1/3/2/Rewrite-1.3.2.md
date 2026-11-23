@@ -226,7 +226,7 @@ Under the board lock, it says only "No blocks yet.", since the lock leaves nothi
 ### Its look
 
 The DAG takes its colours from the variables of blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)): those of statuses and categories for its nodes, and the theme's jobs for surfaces, text and borders, from which it sets React Flow's own styles.
-It follows the theme that core's board option `dark_mode` switches the page to.
+It follows the mode that core's board option `dark_mode` switches the page to.
 It draws its own controls, such as the toolbar's buttons, the search field and the outline, and its tooltips with blockr.ui's components wherever blockr.ui has one, as every UI of blockr's packages does ([State in JS](Rewrite-1#what-must-hold), [UI modules in JS](Rewrite-1.1.7#react)).
 It draws the block's mark and status dot itself, until blockr.ui offers them in one module ([UI kit and design system for the client](Rewrite-1.7)).
 Core draws its menus and quick actions, with blockr.ui's components, in blockr.ui's look ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
@@ -314,8 +314,8 @@ The DAG's class and its UI are one package's code, which can share that point:
 2. Before it calls `trigger()` from the toolbar or a key, it notes the middle of its view.
 3. Paste's `run` reads the point that the UI noted last.
 
-React Flow 13.0.0 sets `color-scheme: light dark` on its root, so that it follows the system's theme unless an ancestor carries `data-theme` or the class `dark` or `light`, or its prop `forceColorMode` sets one ([packages/system/src/styles/init.css#L3-L48](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/styles/init.css#L3-L48)).
-Core switches the theme through the attribute `data-bc-theme` on the page's root instead, in `setTheme()` of `srcts/options/options.ts` on blockr.core's `js-state` at `7fd739c`.
+React Flow 13.0.0 sets `color-scheme: light dark` on its root, so that it follows the system's mode unless an ancestor carries `data-theme` or the class `dark` or `light`, or its prop `forceColorMode` sets one ([packages/system/src/styles/init.css#L3-L48](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/styles/init.css#L3-L48)).
+Core switches the mode through the attribute `data-bc-theme` on the page's root instead, in `setTheme()` of `srcts/options/options.ts` on blockr.core's `js-state` at `7fd739c`.
 In the rewrite the attribute is blockr.ui's `data-bk-mode`, which core's board option `dark_mode` sets ([UI kit and design system for the client](Rewrite-1.7#prefixes)), so the DAG's stylesheet sets the canvas's `color-scheme` from that one.
 The stylesheet's rules win over React Flow's, which 13.0.0 puts in the cascade layer `xyflow` ([xyflow#5844](https://github.com/xyflow/xyflow/pull/5844)).
 

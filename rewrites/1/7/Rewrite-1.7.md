@@ -56,7 +56,7 @@ The new blockr.ui is designed against Tailwind CSS and the conventions of the ki
 Its look roughly keeps today's, tweaked where that is warranted, and its theme starts from Tailwind's own scales, of spacing, text, radii and shadows, and from values of Tailwind's palette.
 Its components draw with the jobs of the theme alone, such as a raised background or a muted text, and never with a colour of Tailwind's palette, so that an app's theme reaches every component and each job carries both modes, with no `dark:` variant.
 So the classes of the palette in React Aria's starter kit, such as its button's `bg-blue-600` ([Button.tsx#L21-L23](https://github.com/adobe/react-spectrum/blob/6be3466d87cc628ee69461230c1b5f4e3b64c6e3/starters/tailwind/src/Button.tsx#L21-L23)), are rewritten onto jobs as each component is copied in, while the jobs' defaults may take their values from the palette as fixed values, and the palette itself is no part of the theme.
-Which variables the theme holds, what each is for and their defaults is the theme's design page, 1.7.2, which is still to be written.
+Which variables the theme holds, what each is for and their defaults belong to [The theme's variables](Rewrite-1.7.2).
 
 The theme holds a colour for each status of a block and for each category of block classes, under core's names, as GitHub's Primer, the design system of one product, holds that product's states, such as `open` and `done`, beside its accent and its danger ([bgColor.json5#L410](https://github.com/primer/primitives/blob/47736486bf67b2a14ba1ada61fa0f57af29bb875/src/tokens/functional/color/bgColor.json5#L410), [#L782](https://github.com/primer/primitives/blob/47736486bf67b2a14ba1ada61fa0f57af29bb875/src/tokens/functional/color/bgColor.json5#L782)).
 That is a coupling, which a new status or suggested category meets with a release of blockr.ui first, with its colour and its dot, since blockr.ui draws the block's mark and the status dot too (Work).
@@ -85,7 +85,7 @@ So the theme's variables, its keyframes and fonts, and the mode attribute, are a
 
 R puts blockr.ui's stylesheet, with its theme, the app's theme and the font faces, on every page from the start, beside core's, so that everything that reads the theme finds it, core's loading note included, which R's page holds from the start.
 A part that loaded later would save a page nothing that it would notice, since core's compiled stylesheet takes 10.5 KB gzipped today and a font downloads only once something uses it.
-How an app's theme sets its values over those of the frontend is the page on theming's, 1.1.17, which is still in review.
+How an app's theme sets its values over those of the frontend belongs to [An app's theme](Rewrite-1.1.17).
 The JS of blockr.ui, its copy of React, React Aria and its components, loads with the first module that draws with blockr.ui, which under core's basic frontend or the dock is as the page opens, so that a page that draws with none loads no React Aria ([UI modules in JS](Rewrite-1.1.7#react)).
 
 ### Block UIs
@@ -113,6 +113,7 @@ None.
 
 ## Design pages
 
+- [The theme's variables: their jobs, their defaults and a frontend's values](Rewrite-1.7.2): which variables blockr.ui's theme names, what each is for and their defaults, how a frontend sets values of its own and draws its own parts with them, light mode and dark mode, and which defaults a frontend keeps
 - [Input elements for block UIs written in R](Rewrite-1.7.1): input elements composed in R, with data-dependent attributes as requests of the block class, drawn with blockr.ui's components, for the later project
 
 <details><summary>Notes for implementers</summary>

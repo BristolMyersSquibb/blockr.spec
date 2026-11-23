@@ -247,7 +247,7 @@ Core's hooks and blockr.ui's inputs keep the contract's rules for a value that a
 What needs more room than a module's element, such as a menu, a dialog or a select's list, opens in an overlay of blockr.ui's components, which React Aria draws in a portal at the end of the page's body, where no panel clips it ([blockr.core#752](https://github.com/BristolMyersSquibb/blockr.core/pull/752)).
 Nothing on the page opens in the browser's top layer, such as a `<dialog>` that `showModal()` opens or a popover, since whatever the top layer holds covers every portal, so that a select's list opened inside such a dialog would show beneath it and take no clicks.
 The page then has one mechanism for overlays, React Aria's, and should React Aria move its overlays into the top layer, blockr.ui follows in its components alone.
-An overlay sits outside its module's element, so a module whose overlays read CSS variables of its own sets them where the overlay reads them, while blockr.ui's theme reaches every overlay from `:root` ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)), and a module that tells a press inside its UI from one outside counts a press in one of its overlays as inside.
+An overlay sits outside its module's element, so a module whose overlays read CSS variables of its own sets them where the overlay reads them, while blockr.ui's theme reaches every overlay from `:root` ([The theme's variables](Rewrite-1.7.2#where-the-frontend-sets-the-values)), and a module that tells a press inside its UI from one outside counts a press in one of its overlays as inside.
 The overlays stack above everything else on the page, at the `z-index` that blockr.ui's theme gives them, and no package gives an element of its own a higher one.
 
 ### Packaging
