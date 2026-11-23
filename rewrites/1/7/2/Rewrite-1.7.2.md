@@ -137,7 +137,7 @@ The weights of the faces, the line heights and letter spacing that the classes n
 
 A frontend thus sets the type and the density of every UI, as today's blockr.ui draws its text at 13 pixels where core's fields on `js-state` draw 14.
 So blockr.ui's components take every size from the set: the few fixed sizes that they hold on `js-state`, such as a field's height of 30 pixels, become multiples of the spacing or follow the line height of their text, so that a frontend's spacing and sizes of text reach them too.
-The build preset defines the classes of shadows anew, so that they read these variables ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
+The build preset maps the classes of shadows onto these variables, as it maps the rest of the set, so that they read them ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 
 ### Where the frontend sets the values
 

@@ -60,12 +60,14 @@ In blockr, a stack is a group of blocks ([Board objects](Rewrite-1.1.1#stacks)),
 It pairs with `Form` without being it: `Form` is React Aria's form element with its validation, while `FormLayout` only arranges controls, so a block's UI uses it without a form.
 The overlays stack at the theme's `--bk-z-index-overlay` ([The theme's variables](Rewrite-1.7.2#the-defaults)).
 
-Core keeps what binds a value or reads core's own types, and draws it with blockr.ui's components:
+Core keeps what binds a value or reads core's own types, in three entries of its own:
 
-- Its hooks, and the helpers `reactModule()` and `outputRenderer()` ([UI modules in JS](Rewrite-1.1.7#react)).
-- The function `controls()`, which draws bound inputs for a module written without React.
-- The component `NotificationList`, which draws core's notifications.
-- The block's mark and status dot ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+- Its hooks, and the helpers `reactModule()` and `outputRenderer()`, in `@blockr/core/react` ([UI modules in JS](Rewrite-1.1.7#react)).
+- The function `controls()`, which draws bound inputs for a module written without React, in `@blockr/core/controls`.
+- The component `NotificationList`, which draws core's notifications, and the block's mark and status dot, in `@blockr/core/components` ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+
+The last two draw with blockr.ui's components.
+The first imports nothing of blockr.ui, so that a UI that binds its values with core's hooks and draws with another kit loads no React Aria ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 
 The components bring along what they use of the rest of core, as blockr.ui's own: the type `Json`, the classes of `srcts/styles` under `bk:`, and the helpers `jsonEqual()`, `own()` and `strings()`.
 Core keeps its own copies for its own code.
