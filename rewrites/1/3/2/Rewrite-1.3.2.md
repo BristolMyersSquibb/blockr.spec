@@ -2,7 +2,8 @@
 Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): how the DAG draws the board with React Flow, its nodes, links and stacks, the gestures on them, the menus of board actions that it opens and where their advanced actions show, its own board actions, its toolbar, search and the outline, its keys, its look and the DAG on a locked board.
-It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, open its menus, register its board actions and draw its toolbar, and the item that lets a row of a quick action show a check.
+It shapes the issues of [Client-drawn DAG](Rewrite-1.3#work) that draw the board, [blockr.dag#203](https://github.com/BristolMyersSquibb/blockr.dag/issues/203), and open its menus, register its board actions and draw its toolbar, [blockr.dag#204](https://github.com/BristolMyersSquibb/blockr.dag/issues/204), and the issue that lets a row of a quick action show a check, [blockr.core#837](https://github.com/BristolMyersSquibb/blockr.core/issues/837).
+The issues that add `store.read()` and write the DAG's user guide rely on it too: [blockr.core#835](https://github.com/BristolMyersSquibb/blockr.core/issues/835) and [blockr.dag#205](https://github.com/BristolMyersSquibb/blockr.dag/issues/205).
 What the DAG keeps and the commands that change it are [The DAG's state, commands and placement](Rewrite-1.3.1)'s, and what a board action is, with the menus that offer one, is [Board actions](Rewrite-1.1.16)'s.
 
 ## What must hold
