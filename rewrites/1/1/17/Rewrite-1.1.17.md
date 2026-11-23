@@ -62,7 +62,7 @@ new_blockr_theme(
 
 Its `light` and `dark` hold the values of each mode, each under its variable's full name, as [The theme's variables](Rewrite-1.7.2) and the browser's tools show it, and each value holds in its own mode alone.
 A name that blockr.ui's theme lacks stops the app as it starts, since `new_blockr_theme()` refuses it, naming it, so that a misspelt name, or one that a later blockr.ui drops, never does nothing in silence.
-The function checks each name against the list of the theme's variables that blockr.ui exports ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
+The function checks each name against blockr.ui's `theme_variables()`, which returns the full name of each of the theme's variables ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 A value is any CSS value, which R writes into the page as it is.
 Its `fonts` hold a face for each file of a font, under the names that blockr.theme's `bundled_font()` gives them today: `family`, `file`, `weight` and `style` ([R/theme.R#L214-L234](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L214-L234)).
 Here `file` is the path of the font's file, where `bundled_font()` takes the name of a file in a package's `inst/fonts`.
@@ -117,7 +117,7 @@ None.
 - The function `new_blockr_theme()` returns an object of class `blockr_theme`, and core exports `is_blockr_theme()` beside it, as it exports `is_plugin()` beside `new_plugin()`.
   The class is not `theme`, which ggplot2's themes carry, as ggplot2 4.0.3's `class(theme_grey())` begins with it, so that neither package's methods dispatch on the other's objects.
   The object that blockr.theme makes carries the class `blockr_theme` today, with the functions `blockr_theme()` and `is_blockr_theme()`, so blockr.theme gives them other names.
-- The function `new_blockr_theme()` reads the theme's list from the installed blockr.ui in R, so blockr.ui exports the list in R as well as in JS.
+- The function `new_blockr_theme()` reads the theme's list from the installed blockr.ui, through its `theme_variables()`, which reads the file that blockr.ui's build writes from the list in TypeScript, so that the lists in R and in JS never disagree ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 - R writes each value as it is, so `new_blockr_theme()` refuses a value that holds `}` or `<`, which would end the rule or the element that holds it.
   The check goes no further, so a value that is malformed in another way, such as one with an unclosed parenthesis, can break the theme, which is then its author's to fix.
 - A frontend that set a variable of the theme on an element below `:root` would win over the app's theme there by inheritance, whatever the selectors, which is why a frontend sets its values on `:root` alone ([Where the frontend sets the values](Rewrite-1.7.2#where-the-frontend-sets-the-values)).
