@@ -2,7 +2,8 @@
 Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places whatever a step adds, one block or many, makes room around what it places and around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
-It shapes the Work items of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R and build its class in the client.
+It shapes the issues of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R, [blockr.dag#201](https://github.com/BristolMyersSquibb/blockr.dag/issues/201), and build its class in the client, [blockr.dag#202](https://github.com/BristolMyersSquibb/blockr.dag/issues/202).
+The issues that draw the board, open its menus, and write its user guide and its migration notes rely on it too: [blockr.dag#203](https://github.com/BristolMyersSquibb/blockr.dag/issues/203), [blockr.dag#204](https://github.com/BristolMyersSquibb/blockr.dag/issues/204), [blockr.dag#205](https://github.com/BristolMyersSquibb/blockr.dag/issues/205) and [blockr.dag#206](https://github.com/BristolMyersSquibb/blockr.dag/issues/206).
 What the DAG draws, its menus, its own board actions and its toolbar are [Drawing the DAG](Rewrite-1.3.2)'s, and what a plugin's state is and how the store keeps it are [Plugins](Rewrite-1.1.12#a-plugins-state)'s.
 
 ## What must hold
