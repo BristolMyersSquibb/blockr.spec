@@ -1,14 +1,14 @@
 # An app's theme: `new_theme()`, the argument `theme` of `serve()` and the rules that R writes
 Status: review. Design for [Client-owned board state](Rewrite-1.1).
 
-One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how an app gives the page a theme of its own, which `new_theme()` makes in R and `serve()` takes, and how R writes the theme into the page, so that its values win over the frontend's and over blockr.ui's defaults from the first paint.
+One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how an app gives the page a theme of its own, which `new_theme()` makes in R and `serve()` takes, and how R writes the theme into the page, so that its values win over the frontend's and over blockr.ui's defaults from the moment core sets the page's mode.
 Which variables a theme sets, what each is for, their defaults, how a frontend sets values of its own and which defaults a frontend keeps belong to [The theme's variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
 ## What must hold
 
 1. An app restyles the whole page with a theme of its own, the frontend's own parts included, by setting variables of blockr.ui's theme alone, and a value that the app's theme sets wins over the frontend's and over blockr.ui's default, whichever stylesheet loads first.
-2. The page draws in the app's theme from its first paint, core's loading note included.
+2. The page draws in the app's theme from the first paint after core sets the page's mode, core's loading note included, and in blockr.ui's neutral greys before that.
 3. Each value of an app's theme holds in its own mode alone, so that a theme with values for light mode alone leaves dark mode to the frontend.
 4. A name that blockr.ui's theme lacks stops the app as it starts, naming it.
 5. A deployment sets one theme for all of its apps, and an app's script sets another where it wants its own.
@@ -72,12 +72,12 @@ Then blockr.theme's `blockr_theme()` makes its theme with `new_theme()`, from it
 
 ### The rules that R writes
 
-R writes the theme into the page that it serves, in the page's head, beside blockr.ui's stylesheet, so that the page draws in it from its first paint, core's loading note included, and every board that the app opens draws in it, since the page keeps it ([Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page)).
+R writes the theme into the page that it serves, in the page's head, beside blockr.ui's stylesheet, so that the theme holds from the first paint after core sets the page's mode, with no request between, core's loading note included, and every board that the app opens draws in it, since the page keeps it ([Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page)).
 The theme never changes while the page runs, so nothing else carries it.
 For the theme above, R writes two rules:
 
 ```css
-:root:root:not([data-bk-mode="dark"]) {
+:root:root[data-bk-mode="light"] {
   --bk-color-primary: #be2bbb;
   --bk-font-sans: Inter, sans-serif;
 }
@@ -88,11 +88,12 @@ For the theme above, R writes two rules:
 }
 ```
 
-The rule of light mode holds wherever the page is not in dark mode, as before core first sets the page's mode, and the rule of dark mode holds in dark mode, so each value holds in its own mode alone.
+The rule of light mode holds in light mode and the rule of dark mode in dark mode, so each value holds in its own mode alone.
+Before core first sets the page's mode, neither holds, so that the page draws in the neutral greys of blockr.ui's stylesheet until core knows the mode ([The theme's variables](Rewrite-1.7.2#light-mode-and-dark-mode)).
 As `dark_mode` switches the attribute `data-bk-mode`, the browser applies the rule of the new mode, with nothing for core to do ([Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
-Each rule names `:root` twice, which gives it a specificity of (0,3,0), while a frontend sets its values under `:root`, of (0,1,0), and under `:root[data-bk-mode="dark"]`, of (0,2,0) ([Where the frontend sets the values](Rewrite-1.7.2#where-the-frontend-sets-the-values)).
+Each rule names `:root` twice beside the mode's attribute, which gives it a specificity of (0,3,0), while a frontend sets its values under `:root[data-bk-mode="light"]` and `:root[data-bk-mode="dark"]`, each of (0,2,0) ([Where the frontend sets the values](Rewrite-1.7.2#where-the-frontend-sets-the-values)).
 So the app's values win over the frontend's whichever stylesheet loads first, although the frontend's loads with its module, after the page's head ([UI modules in JS](Rewrite-1.1.7#packaging)), and over blockr.ui's defaults, which sit in a cascade layer, over which every rule outside one wins.
-The rule of light mode names the mode that it holds in, through `:not()`, since a rule of `:root:root` alone would hold in dark mode too, where it would win over a value that the frontend sets on `:root` for both modes.
+The rule of light mode names the mode that it holds in, since a rule of `:root:root` alone would hold in dark mode too, where it would win over blockr.ui's defaults of dark mode, and before core sets the mode, where it would paint the app's light values over the greys.
 
 For each of the theme's fonts, R writes a face with `@font-face`, at the URL at which R serves its file, so that the browser downloads the file once something uses the face.
 
