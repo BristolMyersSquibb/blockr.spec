@@ -27,7 +27,7 @@ It sets variables of blockr.ui's theme, as a frontend does, so that one theme fi
 So blockr.theme makes such a theme from its values, where today it sets blockr.ui's tokens ([Today](#today)).
 
 The theme names jobs rather than the steps of a palette ([The theme's variables](Rewrite-1.7.2#colours)), and a frontend sets each job's value itself, so an app's theme sets every job whose look it changes.
-A company's accent is thus `bg-accent`, `text-accent`, `border-accent` and `bg-accent-subtle`, each in both modes, where blockr.theme sets two of blockr.ui's tokens today, and no shade of a theme is derived behind its author's back.
+A company's brand colour is thus `primary`, with `primary-foreground` for the text on it and `ring` for the focus ring, each in both modes, where blockr.theme sets two of blockr.ui's tokens today, and no other job of a theme is derived from it behind its author's back.
 
 A theme that starts from a few colours, such as a company's brand colour, gets the values of the rest as it is made, from whatever makes it, such as blockr.theme, which computes colours for its palettes of plots already ([R/palettes.R#L26-L40](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/palettes.R#L26-L40)), so that the theme holds every value that the page draws, where its author sees and checks it.
 Nothing derives them as the page draws, since a derived colour can fall below a readable contrast for a colour that nobody tried, unseen, and a value that the frontend sets for a variable would win over one derived from the theme's colour.
@@ -52,8 +52,8 @@ A theme is values for variables of blockr.ui's theme, with the files of any font
 
 ```r
 new_theme(
-  light = list("--bk-color-bg-accent" = "#be2bbb", "--bk-font-sans" = "Inter, sans-serif"),
-  dark = list("--bk-color-bg-accent" = "#d66bd3", "--bk-font-sans" = "Inter, sans-serif"),
+  light = list("--bk-color-primary" = "#be2bbb", "--bk-font-sans" = "Inter, sans-serif"),
+  dark = list("--bk-color-primary" = "#d66bd3", "--bk-font-sans" = "Inter, sans-serif"),
   fonts = list(
     list(family = "Inter", file = system.file("fonts", "inter-latin.woff2", package = "blockr.theme"), weight = "100 900")
   )
@@ -78,12 +78,12 @@ For the theme above, R writes two rules:
 
 ```css
 :root:root:not([data-bk-mode="dark"]) {
-  --bk-color-bg-accent: #be2bbb;
+  --bk-color-primary: #be2bbb;
   --bk-font-sans: Inter, sans-serif;
 }
 
 :root:root[data-bk-mode="dark"] {
-  --bk-color-bg-accent: #d66bd3;
+  --bk-color-primary: #d66bd3;
   --bk-font-sans: Inter, sans-serif;
 }
 ```

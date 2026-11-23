@@ -135,7 +135,7 @@ A block whose card is on screen is demanded, so a `stale` block is about to run,
 The card hides the output of a block that cannot run, as core clears it today, so that no output stands for inputs that the block no longer has.
 A failed block's output takes no room, as the `inputs` section of a block whose UI draws nothing takes none, so that the card leaves no blank where the output was, while the status note of a `waiting` or `invalid` block takes the output's place.
 
-The status note says what the block lacks, in one line of italic `text-muted` text at 13px where the output would be, with no icon, as the design system has a block with nothing to draw say what is missing ([design-system.Rmd#L1348-L1356](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1348-L1356)):
+The status note says what the block lacks, in one line of italic `muted-foreground` text at 13px where the output would be, with no icon, as the design system has a block with nothing to draw say what is missing ([design-system.Rmd#L1348-L1356](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1348-L1356)):
 
 - For a `waiting` block, it holds the block's `reason`: the message that the scheduler writes, which names each unlinked input or each upstream block that keeps the block waiting, or the message of the `blockr_waiting()` that the class signalled, such as "Save to write the file." ([Evaluation in the client](Rewrite-1.1.10#statuses)).
 - For an `invalid` block, it holds the block's `reason`: the message of the `blockr_invalid()` that the class signalled, such as "Choose a dataset.", or of R's error for the arg that is unset.
@@ -171,7 +171,7 @@ Core gives the menu, with core's board actions on a block and those that other p
 1. Rename shows a field with the block's name in the menu, while a double click on the title renames the block in place ([The header](#the-header)).
 2. Append block, Prepend block, Create link and Create stack show their quick actions in the menu, Append block's as the dock's "+" menu shows it today, and their advanced actions in the dock's sidebar, where Edit inputs, which has no quick action, opens at once.
 3. Copy block ID shows the id as meta text, and puts it on the clipboard.
-4. Remove block, in the last category, after a divider, shows the bin icon and the danger colour, and runs `blockr.core-remove_block`.
+4. Remove block, in the last category, after a divider, shows the bin icon and the colour of `destructive`, and runs `blockr.core-remove_block`.
 
 Controls leaves the menu for the header, together with the divider after it, as [blockr#492](https://github.com/orgs/BristolMyersSquibb/discussions/492) proposes.
 So the menu offers what every menu of a block offers, the DAG's included ([Places the dock offers plugins](Rewrite-1.2.4#places-besides-the-panel)).

@@ -70,7 +70,7 @@ The Tailwind half:
    ```
 
 2. The preset's stylesheet maps every job of the theme onto blockr.ui's variable for it through `@theme inline`.
-   So a package's classes compile to reads of blockr.ui's variables, whatever the package's prefix: core's `bc:bg-bg-raised` writes `background-color: var(--bk-color-bg-raised)`.
+   So a package's classes compile to reads of blockr.ui's variables, whatever the package's prefix: core's `bc:bg-popover` writes `background-color: var(--bk-color-popover)`.
 3. It drops Tailwind's palette, so that a class of the palette, such as `bc:bg-blue-600`, writes nothing.
    Tailwind skips a class that it does not know without a word, so the check fails a build whose code names a colour of the palette, under any prefix ([The theme's variables](Rewrite-1.7.2#colours)).
 4. It keys the dark variant on `data-bk-mode="dark"` on the page's root, which core's board option `dark_mode` sets ([Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
@@ -87,7 +87,7 @@ Tailwind writes CSS only for the classes that it finds in the files it scans.
 So each package that writes classes builds them itself, under a prefix of its own.
 The rest of Tailwind is blockr.ui's: the theme, the dark variant and the choices above, which hold for every package.
 
-The theme's variables and the classes that blockr.ui writes take the prefix `bk`, for all of blockr rather than one package, as `--bk-color-bg-raised` and `bk:flex`.
+The theme's variables and the classes that blockr.ui writes take the prefix `bk`, for all of blockr rather than one package, as `--bk-color-popover` and `bk:flex`.
 Every other package writes its classes under a prefix of its own, as core writes `bc:flex`, since stylesheets built apart that share a class override each other by load order ([UI modules in JS](Rewrite-1.1.7#packaging)).
 The mode attribute takes the prefix too: `data-bk-mode`, which holds `light` or `dark`.
 A package that writes no classes of its own, as the dock writes plain CSS today, runs no Tailwind, reads the theme's variables in its CSS, and runs the check on that CSS.

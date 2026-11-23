@@ -144,8 +144,8 @@ Of the board actions that name a role, a menu offers only the one that plays the
 The menu's row for a board action is an item with the board action's label, icon, `detail` for the target and `category`, as an entry of the block registry carries its block class's category ([Block classes in R](Rewrite-1.1.5#cores-classes-and-hooks)).
 Core draws every menu of the board, so that the menus of an app look and order alike, whichever package opens one.
 Core's menu shows the rows of each category together, with a divider between two categories: those that add, those that edit and those of the clipboard, then those of the categories that packages name, in the order in which they first come, and those that remove last, so that the rows that remove end the menu.
-It draws them as the design system draws the block's menu, with each row's icon, its `detail` as meta text at its end, and the rows that remove in the danger colour ([design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)).
-So a package's board action that removes something takes the category "remove", and its row then ends the menu in the danger colour, as core's rows that remove do.
+It draws them as the design system draws the block's menu, with each row's icon, its `detail` as meta text at its end, and the rows that remove in the colour of `destructive` ([design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)).
+So a package's board action that removes something takes the category "remove", and its row then ends the menu in the colour of `destructive`, as core's rows that remove do.
 Picking a board action's row opens its quick action as the menu's next level, or its advanced action where it has no quick action for the target, or runs it where it has `run`.
 
 A package that opens a menu of a board object asks core to open it at the point of its trigger, rather than drawing a list of its own:

@@ -182,12 +182,12 @@ The status dot shows a block's status, from `scheduler.status()`, filled or as a
 
 | Status | Dot | Tooltip |
 |---|---|---|
-| `stale` | Filled with `text-muted` | Inputs changed since this block last ran |
-| `waiting` | A ring of `border-warning` | Waiting for a data input |
-| `invalid` | Filled with `border-warning` | Set this block's inputs |
-| `failed` | Filled with `border-danger` | Evaluation failed |
-| `ready` | Filled with `border-success` | Up to date |
-| `unevaluated` | A ring of `text-muted` | Not evaluated yet |
+| `stale` | Filled with `muted-foreground` | Inputs changed since this block last ran |
+| `waiting` | A ring of `warning` | Waiting for a data input |
+| `invalid` | Filled with `warning` | Set this block's inputs |
+| `failed` | Filled with `destructive` | Evaluation failed |
+| `ready` | Filled with `success` | Up to date |
+| `unevaluated` | A ring of `muted-foreground` | Not evaluated yet |
 
 The two grey dots differ by shape, as the two amber ones do: `stale` is solid, for a block whose result is out of date, and `unevaluated` is a ring, for one that has no result yet.
 The dot reads `failed` while an error about the block's output concerns the block, R's of the request `output` or core's of the code `output_unanswered`, even where the block's status is `ready`, so that it catches an output that R could not make ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
