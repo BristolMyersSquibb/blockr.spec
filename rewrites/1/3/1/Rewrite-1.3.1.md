@@ -1,5 +1,5 @@
 # The DAG's state, commands and placement
-Status: settled on 2026-11-22. Design for [Client-drawn DAG](Rewrite-1.3).
+Status: settled on 2026-11-23. Design for [Client-drawn DAG](Rewrite-1.3).
 
 One of the design pages of the client-drawn DAG ([Client-drawn DAG](Rewrite-1.3)): what the DAG plugin keeps in its state, the commands that change it, its class's `update`, `afterStep` and `start`, how it places whatever a step adds, one block or many, makes room around what it places and around a stack that collapses or expands, snaps positions and lays the whole board out again, how an app script writes its state in R, how boards saved today cross, and what the DAG does on a locked board.
 It shapes the issues of [Client-drawn DAG](Rewrite-1.3#work) that make the DAG a plugin in R, [blockr.graph#2](https://github.com/BristolMyersSquibb/blockr.graph/issues/2), and build its class in the client, [blockr.graph#3](https://github.com/BristolMyersSquibb/blockr.graph/issues/3).
@@ -199,12 +199,17 @@ interface Placement {
 }
 ```
 
-Where the step gives an added block no place, both strategies start it alike, by the layout's direction, so that the direction decides where a block starts and the placement only what gives way:
+Where the step gives an added block no place, both strategies start it alike, so that it joins the blocks around it in the way their links already run, and the placement decides only what gives way:
 
-- A block starts one rank after the blocks it reads from, below them from top to bottom or to their right from left to right, across from their middle.
-  A block that reads from none but feeds others starts one rank before the blocks that it feeds, and a block linked to none starts after the last block of the first rank, the blocks level with the topmost block from top to bottom, or with the leftmost from left to right.
+- Where the blocks that it reads from already feed other blocks, a block starts one gap past the last of those, level with it: to the right of the rightmost of them where their links run up or down, and below the lowest of them where their links run across.
+  So where block A feeds block B below it, a block appended to A starts to the right of B, rather than on B's spot, which B would have to leave.
+- Where the blocks that it reads from feed no other block yet, a block starts one rank past them, across from their middle, in the way that the links into them run, and by the layout's direction where no link runs into them: below them from top to bottom, or to their right from left to right.
+  So where the user has dragged block A to the right of block X, which feeds it, a block appended to A starts to the right of A, even on a board laid out from top to bottom.
+- The DAG reads the way that links run from where their blocks sit, as today's DAG reads the axis of a link from where its two ends sit as it inserts a block ([R/g6r.R#L870-L872](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/R/g6r.R#L870-L872)), so that a new block follows how the user arranged the blocks around it (notes).
+- A block that reads from none but feeds others starts in the same way upstream: one gap past the last of the other blocks that feed the blocks it feeds, level with it, and where none does, one rank before the blocks it feeds, against the way that the links out of them run, or by the layout's direction where no link runs out of them.
+- A block linked to none starts after the last block of the first rank, the blocks level with the topmost block from top to bottom, or with the leftmost from left to right.
 - An inserted block, which reads from one block and feeds another, starts between the two.
-- A stack that holds no block starts as a block that reads from none, with the size of its box, which holds the stack's name and the number of its blocks, as a collapsed stack's box does ([Drawing the DAG](Rewrite-1.3.2#stacks)).
+- A stack that holds no block starts as a block linked to none, with the size of its box, which holds the stack's name and the number of its blocks, as a collapsed stack's box does ([Drawing the DAG](Rewrite-1.3.2#stacks)).
 - Several blocks that one step adds start in the order of their links, each against those that start before it and off the ones that it would overlap, so that a new chain comes out as a chain ([blockr.dag#117](https://github.com/BristolMyersSquibb/blockr.dag/issues/117)).
 - A strategy starts a block by the links of the board that the step leaves, so that a batch that adds a block and then links it places the block by that link, as Append block does ([Board actions](Rewrite-1.1.16#cores-board-actions)).
   A block that one step adds and a later step links stays where it landed, as where the assistant edits through a tool for each command ([The assistant's tools](Rewrite-1.4.2#the-edit-tool)).
@@ -344,6 +349,11 @@ Between the deltas of a step, an added block has no position yet, since `afterSt
 Between the opening of a board and the delta of `start`, a block may have no position either, so the DAG draws no node for a block without one ([Drawing the DAG](Rewrite-1.3.2#the-canvas)).
 
 Beside looks for the nearest spot in rings around where what a step adds starts, one gap apart, and takes the first spot where no added node overlaps another node, so that the same step on the same board lands in the same place.
+
+The DAG reads the way that links run from the mean offset between the positions of their two blocks, over the links that a rule of Placing added blocks names.
+Their axis is the layout's direction's, unless that mean is less than half a rank along it, as for blocks that the user put in a row across a board laid out from top to bottom, where the axis is the other one.
+Their way along the axis is the sign of the mean along it, and the layout's direction's where that is zero, as for two links that run opposite ways.
+So a link to a block one rank below and far to the side still runs down, as the links to blocks spread across a rank do, where comparing the two offsets of one link, as today's DAG does, would read it as running across and start the next block of a chain beside it.
 
 The layout is given the blocks and links in the order that the board holds them, since dagre's result depends on the order in which it is given nodes and edges, and the same board has to give the same positions.
 
