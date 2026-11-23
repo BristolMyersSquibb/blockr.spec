@@ -69,7 +69,7 @@ The header is one row, as the design system's "Dock header" has it ([design-syst
 4. The "…" button, which opens the block's menu ([The menu](#the-menu)).
 
 The mark takes its icon and category from the entry of the block's class in the block registry, which `core.blockRegistry()` gives by the block's registry id ([Block classes in R](Rewrite-1.1.5#registration)).
-It takes the colour of the category from core's token for it, as `--bc-color-category-input`, which the dock sets from blockr.ui's tokens, so that the DAG's nodes draw the same colours ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+It takes the colour of the category from blockr.ui's theme, which holds one for each category under core's names, so that the DAG's nodes draw the same colours ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 Its tooltip is the entry's name, with the package of the registry id as its badge, as "head/tail block · blockr.core".
 Today's tooltip is the block's first class in R with spaces for underscores, which no longer reaches the client, since class vectors stay in R ([State in JS](Rewrite-1#principles)).
 
@@ -121,7 +121,7 @@ That carries over: the dot reads `failed` while an error about the block's outpu
 A `stale` block is the exception, as today, since its errors were raised for inputs it no longer has.
 The dot shows no evaluation that is running, as today's shows none, while the card fades the output ([The output](#the-output)).
 
-The dot takes its colours from core's status tokens, as `--bc-color-status-stale`, whose defaults are the colours of the table, and which the dock sets from blockr.ui's tokens ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+The dot takes its colours from blockr.ui's theme, which holds one for each status under core's names, whose defaults are the colours of the table ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 The dock's client holds the rest of the spec as one function, which takes a block's status and its notifications and gives whether the dot is filled or a ring, the token of its colour and its tooltip.
 The DAG keeps a copy of the function for its node's status dot, and a test in each package checks its copy against the table above, while the colours have one home, core's tokens ([Client-drawn DAG](Rewrite-1.3#proposal)).
 
@@ -183,7 +183,7 @@ A block whose card is not on screen keeps its notifications in `CoreApi` until i
 ### The menu
 
 The "…" button opens the block's menu of board actions on a click, or on ArrowDown while it has the keyboard's focus, as today ([inst/assets/js/block-menu.js#L93-L99](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/inst/assets/js/block-menu.js#L93-L99)).
-Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and draws it as the design system draws the block's menu, in the look that blockr.ui gives core's theme ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
+Core gives the menu, with core's board actions on a block and those that other plugins register, such as the DAG's Copy and Cut, and draws it as the design system draws the block's menu, with blockr.ui's components, in blockr.ui's look ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects), [design-system.Rmd#L1160-L1165](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L1160-L1165)):
 
 1. Rename shows a field with the block's name in the menu, while a double click on the title renames the block in place ([The header](#the-header)).
 2. Append block, Prepend block, Create link and Create stack show their quick actions in the menu, Append block's as the dock's "+" menu shows it today, and their advanced actions in the dock's sidebar, where Edit inputs, which has no quick action, opens at once.

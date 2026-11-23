@@ -139,7 +139,7 @@ An output class's request, or a renderer's, carries the board options and parame
   "options": {}, "params": {}, "body": { "type": "image/png" } }
 { "id": "22", "status": "ok", "body": { "type": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "name": "chart.pptx" }, "conditions": [] }
 
-{ "id": "35", "kind": "request", "type": "renderer", "output": { "block": "a", "revision": 3 }, "renderer": "blockr.ui-table_preview", "name": "labels",
+{ "id": "35", "kind": "request", "type": "renderer", "output": { "block": "a", "revision": 3 }, "renderer": "mykit-table_preview", "name": "labels",
   "args": {}, "options": { "n_rows": 50 }, "params": {} }
 { "id": "35", "status": "ok", "value": { "USUBJID": ["Unique Subject Identifier"], "AGE": ["Age"] }, "conditions": [] }
 ```

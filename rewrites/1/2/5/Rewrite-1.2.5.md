@@ -133,7 +133,7 @@ So every module on the bar comes from a package, which R serves as it serves eve
 The module meets the contract of a UI module, with `CoreApi` in place of a host: the dock calls its `render()` with the item's element, `CoreApi` and a signal that it aborts when it takes the bar down, and runs the cleanup that `render()` returns ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Where the module fails to load, declares another `api` major or throws in `render()`, the dock leaves a warning icon in the item's place, whose tooltip names the module, as core leaves an error in the element of a module that fails, and the rest of the bar works (condition 8).
 A module may be written in TSX, which its package's build compiles ([UI modules in JS](Rewrite-1.1.7#packaging)).
-A module draws itself, so it looks like the rest of the bar only where its author builds it from the components of core's React SDK, which blockr.ui's design system restyles under the dock, as a plugin's `ui` does in a panel.
+A module draws itself, so it looks like the rest of the bar only where its author builds it from blockr.ui's components, in blockr.ui's theme, as a plugin's `ui` does in a panel.
 It keeps its width on a narrow bar, as the dock's own parts other than the board's name do.
 Nothing on the bar runs in R, so a module that needs R calls the requests of a plugin class of its package with `core.request()`, as a button that files an issue through R would ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
@@ -145,10 +145,10 @@ Such an item names a control at the top of the storage plugin's list, since one 
 Each kind looks as follows:
 
 - A button is a quiet 30px button with its label, greyed out while it is `disabled`, with its tooltip where it has one.
-- A menu is a quiet 30px button with its label and blockr.ui's chevron, which opens a menu of core's React SDK that holds its items, and a menu among those opens beside it.
+- A menu is a quiet 30px button with its label and blockr.ui's chevron, which opens a menu of blockr.ui's that holds its items, and a menu among those opens beside it.
 - A status is text in the muted color, with its tooltip where it has one.
 
-They take their look from blockr.ui's design system for the bar, as the dock's own parts do: 30px controls, tokens only and no field labels, as [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) settled, with the menus of core's React SDK in place of blockr.ui's.
+They take their look from blockr.ui's design system for the bar, as the dock's own parts do: 30px controls, tokens only and no field labels, as [blockr#494](https://github.com/orgs/BristolMyersSquibb/discussions/494) settled, with the menus of blockr.ui's components in place of today's blockr.ui menus.
 The dock calls `controls()` as it draws the bar, and again whenever the storage plugin's `subscribe()` calls back.
 It binds the `shortcut` of every button among the controls, those in menus included.
 Where a `run()` rejects, the dock logs it as a fault of the storage plugin, which tells the user why through a notification of its own, and the dock shows that notification as a toast, as it shows every notification about a plugin without a panel ([Plugins](Rewrite-1.1.12#storage), [Client-drawn dock](Rewrite-1.2#proposal)).

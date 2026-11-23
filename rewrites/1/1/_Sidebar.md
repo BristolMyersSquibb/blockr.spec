@@ -9,15 +9,15 @@
 - [Defining a board in R for the client-owned board](Rewrite-1.1.3), settled
 - [Serialization of the client-owned board](Rewrite-1.1.4), settled
 - [Block classes in R for the client-owned board](Rewrite-1.1.5), settled
-- [UI modules in JS: the host, React and packaging](Rewrite-1.1.7), settled
-- [Drawing the board: `CoreApi`, the page, core's basic frontend and renderers](Rewrite-1.1.8), settled
+- [UI modules in JS: the host, React and packaging](Rewrite-1.1.7), review
+- [Drawing the board: `CoreApi`, the page, core's basic frontend and renderers](Rewrite-1.1.8), review
 - [Wire protocol between the client and R](Rewrite-1.1.9), settled
 - [Evaluation in the client: revisions, demand and statuses](Rewrite-1.1.10), settled
 - [Locked boards and the properties of blocks](Rewrite-1.1.11), settled
 - [Plugins for the client-owned board](Rewrite-1.1.12), settled
 - [Board options and blockr options](Rewrite-1.1.13), settled
 - [Notifications, logging and tracing: what the user is told and what is recorded where](Rewrite-1.1.14), settled
-- [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15), settled
-- [Board actions: menus, quick actions and advanced actions](Rewrite-1.1.16), settled
+- [The Edit board plugin for blocks, links and stacks](Rewrite-1.1.15), review
+- [Board actions: menus, quick actions and advanced actions](Rewrite-1.1.16), review
 
 <!-- dropped: Rewrite-1.1.6 -->

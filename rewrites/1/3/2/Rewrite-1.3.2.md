@@ -24,7 +24,7 @@ Conditions 2 and 7 rest on this page and on [The DAG's state, commands and place
 
 ### The canvas
 
-The DAG's `ui` module draws React Flow in a React root of its own, on the one copy of React that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
+The DAG's `ui` module draws React Flow in a React root of its own, on the one copy of React that blockr.ui ships ([UI modules in JS](Rewrite-1.1.7#react)).
 The canvas fills the element that the frontend gives the module, and sizes itself from it ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)).
 Core's basic frontend gives a plugin's section no height of its own, so there the canvas takes a height of its own (notes).
 A drag on the canvas pans it, the wheel zooms it, and the toolbar zooms and fits it (The toolbar).
@@ -45,17 +45,20 @@ As the drag ends, the DAG runs `blockr.dag-change_position` once, so that a drag
 
 Each block is a node:
 
-- Its mark, 32 px across, is the icon of its class's entry in the block registry on a tint of its category's colour, from core's token, as `--bc-color-category-input` ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+- Its mark, 32 px across, is the icon of its class's entry in the block registry on a tint of its category's colour, from blockr.ui's theme, which holds one for each category ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
   The block's name shows below the mark, as today.
-- The status dot sits on the mark's upper right corner, filled or a ring as the table of [Block cards in the dock](Rewrite-1.2.7#the-status-dot) says, in the colour of core's token for the status, as `--bc-color-status-failed`, with the table's tooltip.
+- The status dot sits on the mark's upper right corner, filled or a ring as the table of [Block cards in the dock](Rewrite-1.2.7#the-status-dot) says, in the colour of blockr.ui's theme for the status, with the table's tooltip.
   The DAG works the dot out from the block's status and the notifications that concern the block, through its copy of the dock's function, which a test checks against that table.
   So the dot reads `failed` where an error about the block's output concerns the block, as the card's dot does.
   It follows `scheduler.subscribe()` and the notifications of `CoreApi`, and the DAG demands no block for it ([Evaluation in the client](Rewrite-1.1.10#demand)).
-- It has a handle for each data input of its class, named after the input, or one for a variadic block, which takes any number of links, and one handle for its result.
+- It has a handle for each data input of its class, named after the input, and one handle for its result.
+  A variadic block, which takes any number of links, has a handle for each link into it instead, labelled with the link's name where it has one, as `b2` in `rbind(a, b2 = b)`, or else with its place, and a placeholder handle for its next place.
   A handle sits on the side of the mark that faces the block at the other end of its link, and moves as either block moves, so that the link stays short (Links).
-  A handle with several links, as a result often has, shows on each side that one of them uses, and several handles on one side spread along it.
-  A handle that no link uses sits on the side that the layout's direction gives, as today's ports do: from top to bottom, an input on top of the mark and the result below it, and from left to right, an input on the mark's left and the result on its right.
+  A handle with several links, as a result often has, shows on each side that one of them uses, and several handles on one side spread along it, those of a variadic block in the order of their links.
+  A handle that no link uses, a variadic block's placeholder among them, sits on the side that the layout's direction gives, as today's ports do: from top to bottom, an input on top of the mark and the result below it, and from left to right, an input on the mark's left and the result on its right.
   A handle on the bottom sits below the block's name, so that no link crosses the name.
+  While the pointer is over a handle, the handle grows and takes the theme's accent colour, the link that feeds it shows as it does while the pointer is over the link (Links), and after a moment blockr.ui's `Tooltip` names the input, as `data`, with its source where a link feeds it, as `data, from Filter`, or "Next input" on a variadic block's placeholder.
+  A handle takes the pointer only within its own size and a small margin around it, never over the node's body, so that a press on the node lands on the node, and a press on a handle is one that the user saw coming.
 
 A node's box is its mark, and the block's name hangs below the box, as G6 draws today's label outside the node.
 React Flow places the node at the block's position in the DAG's state ([The DAG's state, commands and placement](Rewrite-1.3.1#the-state)).
@@ -63,7 +66,7 @@ For a node in a stack, the DAG gives React Flow that position relative to the st
 
 ### Links
 
-Each link is an edge from the result of the block that it comes from into the handle of the input that it feeds.
+Each link is an edge from the result of the block that it comes from into the handle of the input that it feeds, or into its own handle on a variadic block.
 It leaves the mark of the block that it comes from and enters the mark of the block that it feeds on the sides that face each other, so that it stays short wherever the user moves either block (Nodes).
 So where block `b` reads from block `a` and the user drags `b` above `a`, the link leaves the top of `a` and enters the bottom of `b`.
 Today's link would loop around both blocks there.
@@ -99,9 +102,11 @@ A block that the user drags out of its stack's box stays in the stack, whose box
 - Dragging from a block's result to another block's input, or from an input to another block's result, draws a link, as today's ports do.
   The DAG checks nothing while the user drags.
   As the user drops the link on a handle, the DAG runs `blockr.core-add_link`, whose preflight refuses a link that would close a cycle, join a block to itself or feed an input that a link feeds already ([Board actions](Rewrite-1.1.16#cores-board-actions)).
+  A link dropped on a variadic block's placeholder takes the block's next place, through an empty input, while one dropped on a handle that a link holds adds nothing, and the DAG says at the drop that the place is taken, as the preflight says of an input that a link feeds.
   Where the command is refused, the board gains no link, so the DAG draws none.
   The DAG then shows the user why where the link was dropped, with the reason that the refusal gives, as every plugin with a UI shows what fails of what the user did in it, and takes the command's notifications through its `notifier`, so that core raises none ([Notifications, logging and tracing](Rewrite-1.1.14#taking-a-calls-notifications)).
-- Dropping a link on the canvas, away from every node and stack, triggers Append block from a block's result, or Prepend block from an input, at the drop.
+- Dropping a link on the canvas, away from every node and stack, triggers Append block from a block's result, or Prepend block on the input that the link came from, at the drop.
+  The DAG triggers them through their roles, `append_block_role` and `prepend_block_role`, so that a board action that the app picks for either plays it here too ([Board actions](Rewrite-1.1.16#roles)).
   The DAG adds `blockr.dag-change_position` with the drop to the board action's step, through `trigger()`'s `extend`, so that the new block starts at the drop ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   A link dropped on a node or on a stack's box, away from its handles, adds nothing, as today's does.
 - A click selects a node, a link or a stack, and a click on the canvas clears the selection.
@@ -112,8 +117,10 @@ A block that the user drags out of its stack's box stays in the stack, whose box
 - The DAG puts every selection that the user makes in it into `core.selection`, which the dock's pinned sidebar follows, and so does the DAG's own pinned panel (Its advanced actions, [Board actions](Rewrite-1.1.16#the-advanced-action)).
   It also draws the selection that `core.selection` holds, whoever set it, as the checkboxes of the Edit board plugin do ([The Edit board plugin](Rewrite-1.1.15#what-it-shows)).
   So the blocks that the user ticks in the Edit board plugin show as selected in the DAG, and the DAG's toolbar and keys act on them.
-- A right click on a node, a link, a stack or the canvas opens that object's menu through `core.boardActions.menu()`, at the pointer ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+- A right click on a node, a link, a stack or the canvas opens that object's menu through `core.boardActions.menu()`, at the pointer, and a right click on a node's input handle opens the menu of the link that feeds it, or where no link feeds it, the menu of the input, as `{ block: "b", input: "y" }`, or for a variadic block's placeholder `{ block: "b", input: "" }` ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
+  Where core offers a target nothing, as on the canvas under the board lock, the right click opens no menu.
   Where the object belongs to a selection of several, the right click opens the selection's menu instead, and so does a right click on the box that React Flow draws around a selection.
+  A right click on a handle opens the handle's own menu whatever the selection holds, since no selection holds an input, and the handle's look under the pointer says that the click lands on it (Nodes).
   For the canvas, the DAG passes `menu()` an `extend` that starts the block, or the stack that holds no block, that the board action adds where the user right-clicked, or the first of several, through `blockr.dag-change_position` ([The DAG's state, commands and placement](Rewrite-1.3.1#placing-added-blocks)).
   The DAG passes `menu()` and `trigger()` a `notifier` as well, and shows a refused batch at the node, the link or the point where it opened the menu or triggered the board action, as it shows a refused link where the user dropped it ([Board actions](Rewrite-1.1.16#the-menus-of-board-objects)).
 
@@ -200,7 +207,7 @@ Within its element, the DAG leaves alone a key that the user presses in a field,
 Where today's DAG and React Flow bind a key or a gesture differently, the DAG follows React Flow, whose conventions users know from other editors.
 The keys act on the selection that `core.selection` holds (Gestures):
 
-- Backspace triggers Remove on the selection, as React Flow binds it, where today's DAG takes Ctrl with Backspace.
+- Backspace triggers Remove on the selection, through its role, `remove_selected_role`, as React Flow binds it, where today's DAG takes Ctrl with Backspace.
 - Cmd or Ctrl with C, X and V triggers Copy, Cut and Paste, but for C and X while the user has selected text, which the browser copies as usual, as today's copy does.
 - While a selected block has the keyboard's focus, each arrow key moves every selected block and stack, 5 px a press or 20 px with Shift, or by the snap size while snapping is on, as React Flow moves them (notes).
   The user reaches a block with Tab and selects it with Enter or Space, so that the keyboard alone can arrange the board, which today's DAG does not allow.
@@ -217,11 +224,11 @@ Under the board lock, it says only "No blocks yet.", since the lock leaves nothi
 
 ### Its look
 
-The DAG takes the design system's colours from core's tokens, without blockr.ui's code for now ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)): the category and status tokens for its nodes, and the theme's tokens for surfaces, text and borders, from which it sets React Flow's own styles.
+The DAG takes its colours from the variables of blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)): those of statuses and categories for its nodes, and the theme's jobs for surfaces, text and borders, from which it sets React Flow's own styles.
 It follows the theme that core's board option `dark_mode` switches the page to.
-It draws its own controls, such as the toolbar's buttons, the search field and the outline, and its tooltips with the components of core's React SDK wherever the SDK has one, as every UI on the page does ([State in JS](Rewrite-1#what-must-hold), [UI modules in JS](Rewrite-1.1.7#react)).
+It draws its own controls, such as the toolbar's buttons, the search field and the outline, and its tooltips with blockr.ui's components wherever blockr.ui has one, as every UI of blockr's packages does ([State in JS](Rewrite-1#what-must-hold), [UI modules in JS](Rewrite-1.1.7#react)).
 It draws the block's mark and status dot itself, until blockr.ui offers them in one module ([UI kit and design system for the client](Rewrite-1.7)).
-Core draws its menus and quick actions, in the look of core's theme ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
+Core draws its menus and quick actions, with blockr.ui's components, in blockr.ui's look ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 The canvas keeps React Flow's link to its website in a corner, as React Flow asks of those who do not subscribe to React Flow Pro (notes).
 
 ### On a locked board
@@ -267,9 +274,10 @@ React Flow's free example Simple Floating Edges sticks each link to the top, rig
 Its Floating Edges example works out where each link ends from the positions of the link's two nodes, in an edge type of its own ([examples/react/src/examples/FloatingEdges/utils.ts](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/examples/react/src/examples/FloatingEdges/utils.ts)).
 That edge reads both nodes through `useInternalNode`, which renders the edge again whenever any node changes ([useInternalNode](https://reactflow.dev/api-reference/hooks/use-internal-node)), so the issue that draws the board checks that a drag stays smooth on the spike's board.
 A node whose handles move or change in number has React Flow measure them again through `useUpdateNodeInternals` ([useUpdateNodeInternals](https://reactflow.dev/api-reference/hooks/use-update-node-internals)).
+React Flow shows a crosshair over a handle that takes links on its own ([init.css#L249-L252](https://github.com/xyflow/xyflow/blob/29ab9e001c2ba320c9d84b00c729c745132d9145/packages/system/src/styles/init.css#L249-L252)), which the DAG keeps beside its own look of a hovered handle.
 
 React Flow 13.0.0 binds keys of its own: Backspace removes what is selected, Shift with a drag draws the selection's rectangle, and Cmd on a Mac or Ctrl elsewhere adds to a selection ([src/container/ReactFlow/index.tsx#L67-L73](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/container/ReactFlow/index.tsx#L67-L73)).
-The DAG keeps `selectionKeyCode` and `multiSelectionKeyCode` as React Flow sets them, and sets `deleteKeyCode` to `null`, binding Backspace itself, so that it triggers core's board action Remove on `core.selection`, which the store can undo, rather than React Flow's removal of the nodes that it draws.
+The DAG keeps `selectionKeyCode` and `multiSelectionKeyCode` as React Flow sets them, and sets `deleteKeyCode` to `null`, binding Backspace itself, so that it triggers Remove on `core.selection` through `remove_selected_role`, which the store can undo, rather than React Flow's removal of the nodes that it draws.
 React Flow makes each node focusable, but not the canvas around the nodes ([src/components/NodeWrapper/index.tsx#L212-L213](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/NodeWrapper/index.tsx#L212-L213)).
 So the DAG's element takes the keyboard's focus as the user presses on the canvas.
 The DAG's keys then act after a click on the canvas or a drawn rectangle, as they do after a click on a node.
@@ -307,7 +315,7 @@ The DAG's class and its UI are one package's code, which can share that point:
 
 React Flow 13.0.0 sets `color-scheme: light dark` on its root, so that it follows the system's theme unless an ancestor carries `data-theme` or the class `dark` or `light`, or its prop `forceColorMode` sets one ([packages/system/src/styles/init.css#L3-L48](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/styles/init.css#L3-L48)).
 Core switches the theme through the attribute `data-bc-theme` on the page's root instead, in `setTheme()` of `srcts/options/options.ts` on blockr.core's `js-state` at `7fd739c`.
-So the DAG's stylesheet sets the canvas's `color-scheme` from that attribute.
+In the rewrite the attribute is blockr.ui's `data-bk-mode`, which core's board option `dark_mode` sets ([UI kit and design system for the client](Rewrite-1.7#prefixes)), so the DAG's stylesheet sets the canvas's `color-scheme` from that one.
 The stylesheet's rules win over React Flow's, which 13.0.0 puts in the cascade layer `xyflow` ([xyflow#5844](https://github.com/xyflow/xyflow/pull/5844)).
 
 React Flow draws its link in the bottom right corner unless `proOptions.hideAttribution` is set, and asks that only those who subscribe to React Flow Pro hide it, while its MIT licence lets anyone do so ([src/components/Attribution/index.tsx#L17-L37](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/Attribution/index.tsx#L17-L37)).

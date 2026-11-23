@@ -7,12 +7,12 @@ It shapes how a turn runs and stops ([blockr.assistant#225](https://github.com/B
 It shapes showing the plugin's notifications above the message field too ([blockr.assistant#284](https://github.com/BristolMyersSquibb/blockr.assistant/issues/284)).
 It shapes keeping a visitor's key in the browser's local storage where a deployment opts in, too ([blockr.assistant#273](https://github.com/BristolMyersSquibb/blockr.assistant/issues/273)).
 That issue departs from "A reload asks again" (The credential), and this page changes to match once its PR merges.
-It shapes drawing the chat with core's React SDK too: its dialogs, buttons and fields ([blockr.assistant#294](https://github.com/BristolMyersSquibb/blockr.assistant/issues/294)), and its tooltips, folds, attachments and the list of the drawer ([blockr.assistant#295](https://github.com/BristolMyersSquibb/blockr.assistant/issues/295)).
+It shapes drawing the chat with the components of core's React SDK too, which move to blockr.ui ([UI kit and design system for the client](Rewrite-1.7)): its dialogs, buttons and fields ([blockr.assistant#294](https://github.com/BristolMyersSquibb/blockr.assistant/issues/294)), and its tooltips, folds, attachments and the list of the drawer ([blockr.assistant#295](https://github.com/BristolMyersSquibb/blockr.assistant/issues/295)).
 What a conversation holds is [The assistant's state](Rewrite-1.4.3)'s, what the tools do is [The assistant's tools](Rewrite-1.4.2)'s, how a call is authenticated and who picks the model is [Model access](Rewrite-1.4.1)'s, and where the panel goes is the frontend's, as [Places the dock offers plugins](Rewrite-1.2.4) has it for the dock.
 
 ## What must hold
 
-1. The chat draws only in the element that a frontend gives it and in the overlays of core's React SDK, and works at any size down to a rail's, under every frontend ([Places the dock offers plugins](Rewrite-1.2.4#what-must-hold)).
+1. The chat draws only in the element that a frontend gives it and in the overlays of blockr.ui's components, and works at any size down to a rail's, under every frontend ([Places the dock offers plugins](Rewrite-1.2.4#what-must-hold)).
 2. What today's chat offers carries over, but for what Today drops with its reason.
 3. The user can stop a turn at any point, and a stopped turn leaves applied every edit that it finished, and none half applied.
 4. The user takes back the assistant's edits with the frontend's Undo, in one history with their own, or the assistant's last undo step with `/undo`.
@@ -52,10 +52,10 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 ### The panel
 
 The assistant's class has a `ui`, a module whose `render()` core calls with the element that the frontend gives `mountPlugin()` ([Plugins](Rewrite-1.1.12#plugin-classes)).
-It draws the chat in React, on the one copy that core ships, in a root of its own, in blockr.ui's design system through the tokens of core's theme, as every plugin's UI takes its look ([UI modules in JS](Rewrite-1.1.7#react), [Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
+It draws the chat in React, on the one copy that blockr.ui ships, in a root of its own, in blockr.ui's theme, as every plugin's UI takes its look ([UI modules in JS](Rewrite-1.1.7#react), [Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
 It sizes itself from its element, as a container, so that the message field and the footer fit a rail.
-The list of models, which needs more room than the panel, opens in an overlay of core's React SDK ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)), while the drawer of conversations opens over the chat, in the chat's own element (Conversations).
-The chat's controls and overlays beside the transcript and the message field, such as the buttons of its drawer and its footer, the drawer's search and list, the field for the visitor's key and the login beside it, the dialog before a link opens another site, an attachment opened large and the pick of the model, are the components of core's React SDK ([UI modules in JS](Rewrite-1.1.7#react)).
+The list of models, which needs more room than the panel, opens in an overlay of blockr.ui's components ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)), while the drawer of conversations opens over the chat, in the chat's own element (Conversations).
+The chat's controls and overlays beside the transcript and the message field, such as the buttons of its drawer and its footer, the drawer's search and list, the field for the visitor's key and the login beside it, the dialog before a link opens another site, an attachment opened large and the pick of the model, are blockr.ui's components ([UI modules in JS](Rewrite-1.1.7#react)).
 The panel's tab shows the plugin's name, Assistant.
 
 The chat follows the assistant's state through `core.store.subscribe()`, so that a conversation shows the same whichever command changed it last (condition 6).
@@ -196,7 +196,7 @@ The footer shows the tokens that the conversation has spent, input and output, f
 
 ### The model
 
-Where the deployment offers more than one model, or names none, the footer shows the model that the open conversation's next turn talks to, beside the meter, and lists the models offered in an overlay of core's React SDK to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
+Where the deployment offers more than one model, or names none, the footer shows the model that the open conversation's next turn talks to, beside the meter, and lists the models offered in an overlay of blockr.ui's components to pick from ([Model access](Rewrite-1.4.1#who-picks-the-model)).
 A pick sets the model of the open conversation alone, through `blockr.assistant-set_model` ([The assistant's state](Rewrite-1.4.3#commands)).
 A new conversation starts on the open conversation's pick, which the chat passes to `blockr.assistant-add_conversation`.
 Where no conversation is open, the footer shows the default, and a pick made then goes to the next conversation that the chat adds, whether the first message, the drawer or `/clear` adds it ([Model access](Rewrite-1.4.1#who-picks-the-model)).
