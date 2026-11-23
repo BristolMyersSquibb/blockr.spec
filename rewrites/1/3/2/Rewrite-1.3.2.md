@@ -46,10 +46,10 @@ As the drag ends, the DAG runs `blockr.graph-change_position` once, so that a dr
 
 Each block is a node:
 
-- Its mark, 32 px across, is the icon of its class's entry in the block registry on a tint of its category's colour, from blockr.ui's theme, which holds one for each category ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+- Its mark is core's, 32 px across: the icon of its class's entry in the block registry on a tint of its category's colour, which core holds ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
   The block's name shows below the mark, as today.
-- The status dot sits on the mark's upper right corner, filled or a ring as the table of [Block cards in the dock](Rewrite-1.2.7#the-status-dot) says, in the colour of blockr.ui's theme for the status, with the table's tooltip.
-  The DAG works the dot out from the block's status and the notifications that concern the block, through its copy of the dock's function, which a test checks against that table.
+- The status dot is core's, on the mark's upper right corner, as on the dock's card ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
+  It is filled or a ring, in the job of blockr.ui's theme that core maps the block's status onto, with its tooltip, from the block's status and the notifications that concern the block ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
   So the dot reads `failed` where an error about the block's output concerns the block, as the card's dot does.
   It follows `scheduler.subscribe()` and the notifications of `CoreApi`, and the DAG demands no block for it ([Evaluation in the client](Rewrite-1.1.10#demand)).
 - It has a handle for each data input of its class, named after the input, and one handle for its result.
@@ -225,10 +225,10 @@ Under the board lock, it says only "No blocks yet.", since the lock leaves nothi
 
 ### Its look
 
-The DAG takes its colours from the variables of blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7#what-the-theme-provides)): those of statuses and categories for its nodes, and the theme's jobs for surfaces, text and borders, from which it sets React Flow's own styles.
+The DAG takes its colours from the jobs of blockr.ui's theme for surfaces, text and borders, from which it sets React Flow's own styles ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)), while its nodes draw core's mark and status dot ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 It follows the mode that core's board option `dark_mode` switches the page to.
 It draws its own controls, such as the toolbar's buttons, the search field and the outline, and its tooltips with blockr.ui's components wherever blockr.ui has one, as every UI of blockr's packages does ([State in JS](Rewrite-1#what-must-hold), [UI modules in JS](Rewrite-1.1.7#react)).
-It draws the block's mark and status dot itself, until blockr.ui offers them in one module ([UI kit and design system for the client](Rewrite-1.7)).
+It draws the block's mark and status dot itself, until core's React SDK offers them ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 Core draws its menus and quick actions, with blockr.ui's components, in blockr.ui's look ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)).
 The canvas keeps React Flow's link to its website in a corner, as React Flow asks of those who do not subscribe to React Flow Pro (notes).
 
@@ -316,7 +316,7 @@ The DAG's class and its UI are one package's code, which can share that point:
 
 React Flow 13.0.0 sets `color-scheme: light dark` on its root, so that it follows the system's mode unless an ancestor carries `data-theme` or the class `dark` or `light`, or its prop `forceColorMode` sets one ([packages/system/src/styles/init.css#L3-L48](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/system/src/styles/init.css#L3-L48)).
 Core switches the mode through the attribute `data-bc-theme` on the page's root instead, in `setTheme()` of `srcts/options/options.ts` on blockr.core's `js-state` at `7fd739c`.
-In the rewrite the attribute is blockr.ui's `data-bk-mode`, which core's board option `dark_mode` sets ([UI kit and design system for the client](Rewrite-1.7#prefixes)), so the DAG's stylesheet sets the canvas's `color-scheme` from that one.
+In the rewrite the attribute is blockr.ui's `data-bk-mode`, which core's board option `dark_mode` sets ([Building on blockr.ui](Rewrite-1.7.4#prefixes)), so the DAG's stylesheet sets the canvas's `color-scheme` from that one.
 The stylesheet's rules win over React Flow's, which 13.0.0 puts in the cascade layer `xyflow` ([xyflow#5844](https://github.com/xyflow/xyflow/pull/5844)).
 
 React Flow draws its link in the bottom right corner unless `proOptions.hideAttribution` is set, and asks that only those who subscribe to React Flow Pro hide it, while its MIT licence lets anyone do so ([src/components/Attribution/index.tsx#L17-L37](https://github.com/xyflow/xyflow/blob/998523c4e3f056d4e1273e7cec216dc69e863315/packages/react/src/components/Attribution/index.tsx#L17-L37)).

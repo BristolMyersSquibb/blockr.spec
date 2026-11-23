@@ -71,7 +71,7 @@ The client follows established JS patterns, as the module contract follows anywi
   The frontend is a plugin too: the dock is a React app on core's JS API, which places the other plugins in its panels, and core's basic frontend, which an app runs wherever no other available package gives a frontend, is another ([Client-drawn dock](Rewrite-1.2), [Plugins](Rewrite-1.1.12#the-frontend)).
 - Block UIs keep a contract free of any framework: an ES module mounted with an injected host, which React reaches through its build, from the one copy that blockr.ui puts on the page ([UI modules in JS](Rewrite-1.1.7)).
   Core draws its own UIs with that copy too, as the dock does, and with blockr.ui's components, built from React Aria's, which blockr.ui offers every package, so that they are written as the UIs of packages are, while core's React SDK holds the hooks over the hosts ([UI modules in JS](Rewrite-1.1.7#react), [UI kit and design system for the client](Rewrite-1.7)).
-  Whether blockr.ui later offers authors a way to compose a UI without writing JS, such as in R from its components, built on that contract, is still to be decided.
+  A way for authors to compose a UI in R from blockr.ui's components, without writing JS, is a later project in the [Backlog](Backlog#block-uis-composed-in-r).
 - Core has a JS API and an R API, with a versioned wire protocol between them that both sides test against shared fixtures ([Wire protocol](Rewrite-1.1.9)).
 - The code that a board's script exports is the code that ran, since R builds every block's expression from its block class's `expr`, while exporting it is a plugin's, blockr.code's, rather than core's.
   A board can run any R code, since a block may parse a string into code, so a client can read whatever the R process can, its environment variables and R options included ([Client-owned board state](Rewrite-1.1#proposal)), and limiting what the R process may do, and who may read what, is the deployment's job: core knows nothing about users, and results are never shared between sessions.
@@ -103,7 +103,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 
 | Repo or area | Change | Page | Builds on |
 |---|---|---|---|
-| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, and the Tailwind theme with its build preset, in roughly today's look, needing nothing from core, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
+| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, and the Tailwind theme with its build preset, in roughly today's look, depending on no other blockr package and holding nothing of theirs, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | blockr.ui |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
 | blockr.graph | New: the DAG plugin, drawn in the browser with React Flow, in the place of blockr.dag | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
