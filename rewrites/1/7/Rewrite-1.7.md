@@ -26,7 +26,7 @@ So the new blockr.ui takes its look from today's, roughly, and none of its code.
 3. One copy each of React and of React Aria runs on the page, both blockr.ui's ([UI modules in JS](Rewrite-1.1.7#react)).
 4. Every UI of blockr's packages, core's among them, takes its look from blockr.ui's theme under every frontend, its overlays included, and a frontend or an app restyles it by setting the theme's variables alone.
    The colours of the categories of block classes are the exception, since they are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
-5. What blockr.ui's stylesheet provides other packages is fixed and checked, so that no change to blockr.ui drops a variable, a keyframe or a font that another package reads.
+5. What blockr.ui's stylesheet provides other packages is fixed and checked, so that no change to blockr.ui drops a variable or a font that another package reads.
 6. Nothing of blockr.ui's is a page global.
 
 ## Today
@@ -49,7 +49,9 @@ The kit holds the one copy of React on the page, React Aria's components, which 
 It holds the one copy of React Aria too, the whole of it.
 A UI imports React Aria's own parts from it, as `react-aria-components`, for what no component of blockr.ui does ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 Core, the dock, the assistant and the block packages draw with its components, which they import as `@blockr/ui` ([The components of blockr.ui](Rewrite-1.7.3)).
-Core keeps its React SDK at `@blockr/core/react`: the hooks over the hosts, such as `useValue()` and `useOutput()`, the helpers `reactModule()` and `outputRenderer()`, and what reads core's own types, such as the block's mark and status dot ([UI modules in JS](Rewrite-1.1.7#react), [Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+Core keeps its React SDK in two entries, so that a UI that binds its values with core's hooks loads no React Aria ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
+The entry `@blockr/core/react` holds the hooks over the hosts, such as `useValue()` and `useOutput()`, and the helpers `reactModule()` and `outputRenderer()` ([UI modules in JS](Rewrite-1.1.7#react)).
+The entry `@blockr/core/components` holds what reads core's own types and draws with blockr.ui's components, such as the block's mark and status dot ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 An input of blockr.ui's takes `bound`, an interface that blockr.ui defines and core's `useValue()` returns, so that blockr.ui binds no value itself and core's binding keeps the contract's rules ([The components of blockr.ui](Rewrite-1.7.3#the-interface-bound)).
 The components of core's React SDK on `js-state` move to blockr.ui, and so do the parts of React Aria in core's vendor file and core's Tailwind theme (Today).
 
@@ -74,7 +76,7 @@ So a new status or category is a change to core alone.
 ### Building on blockr.ui
 
 The theme's variables and the classes that blockr.ui writes take the prefix `bk`, and every other package writes its classes under a prefix of its own, as core writes `bc:flex`.
-Through `@theme inline` in blockr.ui's build preset, a package's classes compile to reads of blockr.ui's variables ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
+Through `@theme inline reference` in blockr.ui's build preset, a package's classes compile to reads of blockr.ui's variables, blockr.ui's own included ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
 What the theme provides other packages is a list that blockr.ui declares and exports, which its stylesheet holds whole and against which the preset checks every package's build ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
 R puts blockr.ui's stylesheet on every page from the start, while its JS loads with the first module that draws with blockr.ui, with React in a file of its own, so that a page that draws with React, but neither with blockr.ui's components nor with React Aria's, loads no React Aria ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 How an app's theme sets its values over those of the frontend belongs to [An app's theme](Rewrite-1.1.17).
@@ -91,12 +93,13 @@ None.
 ## Work
 
 - Start blockr.ui's client, in blockr.ui ([Building on blockr.ui](Rewrite-1.7.4)): its build, with its preset as `@blockr/ui/build`, which maps React's entry points and `react-aria-components` and resolves the React Compiler's runtime to React's, as core's preset does until then ([Client-drawn DAG](Rewrite-1.3#work)), refuses an import of React Aria's hooks and state, and runs React Aria and Tailwind at the versions that blockr.ui is written for; its bundle, with React in a file of its own, the components in another and the whole of `react-aria-components` in a third; and the entries of the page's import map for them
-- Write the theme under the prefix `bk`, as variables on `:root` with a value for each mode and the neutral greys of a page whose mode core has not set yet, which reach Tailwind through `@theme inline`, with the dark variant on `data-bk-mode`, in blockr.ui ([The theme's variables](Rewrite-1.7.2))
-- Declare and export the theme's list, write all of it through `@theme static`, test the compiled stylesheet against it, have the preset fail a build that reads a variable that the list lacks or names a colour of Tailwind's palette, and have it define the classes of shadows anew, in blockr.ui ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list))
+- Write the theme under the prefix `bk`, as plain rules in `@layer theme` with a value for each mode and the neutral greys of a page whose mode core has not set yet, which reach Tailwind through the preset's `@theme inline reference`, with the dark variant on `data-bk-mode`, in blockr.ui ([The theme's variables](Rewrite-1.7.2), [Building on blockr.ui](Rewrite-1.7.4#the-build-preset))
+- Declare the theme's list, export it in JS and in R as `theme_variables()`, test the compiled stylesheet against it, and have the preset fail a build that reads a variable that the list lacks, names a colour of Tailwind's palette or names a class under `bk:`, in blockr.ui ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list))
 - Export, beside the theme's list, the helper for tests that tells which defaults a frontend's stylesheet keeps, in blockr.ui ([The theme's variables](Rewrite-1.7.2#which-defaults-a-frontend-keeps))
 - Move the components of core's React SDK to blockr.ui, onto the theme's jobs in place of Tailwind's palette, with `Bound` as an interface of blockr.ui's, `Stack` renamed `FormLayout`, and `@blockr/ui/stubs` for tests, with a stub of `Bound` and the helpers that act on the components, in blockr.ui and blockr.core ([The components of blockr.ui](Rewrite-1.7.3))
 - Draw core's UIs with `@blockr/ui`, build `blockr-core.css` with blockr.ui's preset under `bc:`, have core's preset extend blockr.ui's, drop core's Tailwind theme and React Aria from core's vendor file, have `dark_mode` set `data-bk-mode`, have R write `light dark` into the page's `color-scheme` tag in place of the mode that it works out, have R put blockr.ui's stylesheet on every page from the start, and list in the basic frontend's tests every default that it keeps, in blockr.core ([Building on blockr.ui](Rewrite-1.7.4))
-- Offer the block's mark and the status dot in core's React SDK, drawn with blockr.ui's components, with each status on the theme's job for it and the colours of the categories from the blockr option `category_colors`, which R writes into the page's head, in blockr.core ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot))
+- Split core's React SDK into `@blockr/core/react`, with the hooks and the helpers, and `@blockr/core/components`, with `NotificationList`, and have core's runtime load each UI that it draws as it first draws it, so that the runtime imports nothing of blockr.ui up front, in blockr.core ([Building on blockr.ui](Rewrite-1.7.4#the-bundle))
+- Offer the block's mark and the status dot in `@blockr/core/components`, drawn with blockr.ui's components, with each status on the theme's job for it and the colours of the categories from the blockr option `category_colors`, which R writes into the page's head, in blockr.core ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot))
 - Import blockr.ui's components in place of those of core's React SDK, and act on them in tests through the helpers of `@blockr/ui/stubs` in place of copies of their own, in blockr.dock and blockr.assistant
 - Draw the dock's own parts, its cards, its navbar and dockview's frame, from the theme's variables, with no colour of its own, and list in its tests every default that it keeps, in blockr.dock ([The theme's variables](Rewrite-1.7.2#the-frontends-own-parts))
 - Draw core's mark and status dot on the dock's cards and on the DAG's nodes, in place of the copies that each draws until then, in blockr.dock and blockr.graph ([Block cards in the dock](Rewrite-1.2.7#the-status-dot), [Drawing the DAG](Rewrite-1.3.2#nodes))

@@ -157,9 +157,10 @@ Its cards draw a block's status with the status dot that core's React SDK offers
 
 ### The block's mark and the status dot
 
-Core's React SDK offers the mark of a block's class and the block's status dot to every plugin that draws a block, core's basic frontend, the dock's cards and the DAG's nodes among them, so that each draws a block alike under every frontend ([Block cards in the dock](Rewrite-1.2.7#the-header), [Drawing the DAG](Rewrite-1.3.2#nodes)).
+Core's React SDK offers the mark of a block's class and the block's status dot, in its entry `@blockr/core/components`, to every plugin that draws a block, core's basic frontend, the dock's cards and the DAG's nodes among them, so that each draws a block alike under every frontend ([Block cards in the dock](Rewrite-1.2.7#the-header), [Drawing the DAG](Rewrite-1.3.2#nodes)).
 They are core's rather than blockr.ui's, since they read what core owns: the block's status, the notifications about it and its class's category ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)).
 They draw with blockr.ui's components, such as its `Tooltip`.
+So they sit apart from core's hooks, which a UI that draws with another kit imports without loading React Aria ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 Each plugin places them itself, as the dock's card puts the dot on the mark's upper right corner ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
 
 The mark is a square in the colour of the class's category, tinted behind the class's icon, which the class's entry in the block registry holds as SVG ([Block classes in R](Rewrite-1.1.5#registration)).
