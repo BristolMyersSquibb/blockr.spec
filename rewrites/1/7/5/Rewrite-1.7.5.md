@@ -1,5 +1,5 @@
 # An app's theme: `new_blockr_theme()`, the argument `theme` of `serve()` and the rules that R writes
-Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
+Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how an app gives the page a theme of its own, which blockr.ui's `new_blockr_theme()` makes in R and core's `serve()` takes, and how R writes the theme into the page.
 It shapes the items of 1.7's Work list that export `new_blockr_theme()` from blockr.ui, make blockr.theme's theme with it, and have `serve()` take the theme and write it into the page ([UI kit and design system for the client](Rewrite-1.7#work)).
