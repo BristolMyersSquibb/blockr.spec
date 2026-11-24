@@ -2,7 +2,7 @@
 
 ### Parts
 
-- [UI kit and design system for the client](Rewrite-1.7), settled
+- [UI kit and design system for the client](Rewrite-1.7), implementing
 - [Client-owned board state](Rewrite-1.1), implementing
 - [Client-drawn dock](Rewrite-1.2), implementing
 - [Client-drawn DAG](Rewrite-1.3), implementing
