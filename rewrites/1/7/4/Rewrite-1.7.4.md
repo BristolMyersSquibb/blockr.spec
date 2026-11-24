@@ -53,6 +53,7 @@ The React half:
 1. It leaves each import of React's entry points, `react`, `react/jsx-runtime`, `react-dom` and `react-dom/client`, an import, and each import of `@blockr/ui` and of React Aria's three packages as well.
    Those are `react-aria-components`, with React Aria's components, `react-aria`, with the hooks that the components are built from, and `react-stately`, with the state that the hooks keep.
    The page's import map resolves them to blockr.ui's files ([The bundle](#the-bundle)), so no package's bundle holds React, React Aria or blockr.ui's components.
+   The entry `@blockr/ui/icons` is the exception, which the preset bundles into the package's file of libraries, so that the file holds the icons that the package imports and no others ([The components of blockr.ui](Rewrite-1.7.3#the-icons)).
    A package imports React Aria's packages as any code written with React Aria does.
    Core's menu of board actions, for one, draws React Aria's `TextField`, `Input` and `Separator`, and the Edit board plugin reads its `TableStateContext`.
    React Aria's `Table` runs hooks in each of its cells.
@@ -71,6 +72,8 @@ The React half:
    A type that a module imports with `import type` passes, since esbuild drops that import before it resolves anything.
 4. It fails a build whose React Aria packages are at other versions than those in blockr.ui's files, so that a package builds against the React Aria that runs on the page.
    React Aria's major moves with blockr.ui's, as React's does ([UI modules in JS](Rewrite-1.1.7#react)).
+5. It fails a build that imports one of Lucide's packages, such as `lucide` or `lucide-react`, with an error that names `@blockr/ui/icons` instead.
+   So every package draws the icons of the Lucide that blockr.ui pins, and imports them through one entry, which keeps open serving each icon to a page once ([Backlog](Backlog#each-icon-once-on-the-page)).
 
 The Tailwind half:
 
@@ -146,6 +149,7 @@ The build of blockr.ui bundles its code and the libraries that it ships into the
    The file of the components imports `react-aria-components`, as does any module that draws with React Aria's components.
 
 The page's import map names React's entry points, `@blockr/ui` and React Aria's three packages.
+It names no entry for `@blockr/ui/icons`, whose icons each package bundles ([The build preset](#the-build-preset)).
 The build of blockr.ui writes their entries into its own `inst/js/import-map.json`, as core's build writes core's.
 R puts the entries of both packages into the one import map in the head of the page that it serves.
 So a module that imports React loads React's file alone.

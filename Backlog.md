@@ -121,3 +121,19 @@ What it would remove: the limit that the theme variables set on how far an app r
 What it would cost: a way for an app to name the kit, such as a blockr option, which R reads as it writes the page's import map from the entries of each package ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)); the kit itself, which implements every component of blockr.ui with its props and sets every theme variable, since the classes of other packages read them ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)); a stylesheet that styles the kit's components alone, as every package's does, and so not Bootstrap's own, which styles every element of the page ([Building on blockr.ui](Rewrite-1.7.4#what-must-hold)); and test helpers of its own wherever it draws a part somewhere other than where React Aria draws it, since the tests of other packages act on the components through the helpers of `@blockr/ui/stubs` ([The components of blockr.ui](Rewrite-1.7.3#testing)).
 
 What would settle it: whether an app asks for a look that the theme variables cannot give, such as the shapes of Bootstrap's components.
+
+## Each icon once on the page
+
+Each package's build bundles the icons that it imports from `@blockr/ui/icons`, so an icon that two packages import sits in the files of both, at about 300 bytes each ([The components of blockr.ui](Rewrite-1.7.3#the-icons)).
+R could serve each icon to a page once instead:
+
+1. Each package's build would list the icons that its files import, beside its `inst/js/preload.json`.
+   The preset would read the names off each import of `@blockr/ui/icons`, since esbuild reports which files a file imports but not which names it takes from them.
+2. As the app starts, R would write one module with the union of the lists of the packages whose modules the page may load, from the icons of Lucide that blockr.ui would ship as data in R.
+3. The page's import map would resolve `@blockr/ui/icons` to that module, under a URL with a hash of its content, so that the browser caches it.
+
+It would remove the copies, and put every icon on the page at one version of Lucide, where each package otherwise draws the version that it built against.
+It would cost the preset's reading of the imports, R's writing and serving of the module, and an entry of the import map that differs from app to app.
+A list that fell behind its code would also fail to load the module that imports a missing icon, as a whole.
+What would settle it is the weight of the copies on a page: on `js-state`, core and the dock both draw five icons, whose copies come to under 1 KB gzipped, while [Building on blockr.ui](Rewrite-1.7.4#the-bundle) lets a page load 16 KB of React Aria that it may not use.
+The preset keeps it open, since every package imports its icons through `@blockr/ui/icons`, so that it would change no package's code.
