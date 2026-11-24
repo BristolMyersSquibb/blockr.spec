@@ -44,7 +44,7 @@ interface CoreApi {
   options: Options;                // register(), the board options packages define, by id, and value(), the board's value, which the board holds for every board option that something on the page requires
   plugins: {                       // from Plugins
     register(def: PluginClass): () => void;        // a plugin class, as core registers each one that the reply names
-    appPlugins(): Record<PluginClassId, Plugin>;   // the app's plugins whose classes are registered, each under its class's id with its name
+    appPlugins(): Record<PluginClassId, Plugin>;   // the app's plugins, as the reply to hello names them, each under its class's id with its name
     pluginClass(plugin: PluginClassId): PluginClass;   // the definition of the class of one of the app's plugins
     storage(): Storage | undefined;                // the app's storage plugin's, or undefined where the app holds none
   };
@@ -269,6 +269,7 @@ A frontend's R side shrinks to what its object lists, its plugin class with its 
 ### Testing
 
 Core ships, beside the stubs of its hosts ([UI modules in JS](Rewrite-1.1.7#testing)), a `CoreApi` for tests whose store, commands and scheduler are core's own and whose replies from R come from fixtures, those the wire protocol's tests round-trip ([Wire protocol](Rewrite-1.1.9)), so that a plugin, a frontend among them, runs in a test runner on a board, needing neither R nor a browser, with the module of each plugin class or board option that the test gives it, by the id that a reply names it under, while the stubs bring core's basic frontend and its Edit board plugin ([Plugins](Rewrite-1.1.12#testing), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)).
+The `CoreApi` for tests starts core as the page does, so that where a module that the test gives fails, or the test leaves out one that the reply names, it rejects with why core opens no board, and the package's test fails at once ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options), [blockr.core#854](https://github.com/BristolMyersSquibb/blockr.core/pull/854)).
 
 End-to-end tests run an app with R and a browser, through shinytest2 to start with, and core exports what they check.
 R exports each block's latest result through `exportTestValues()`, as `blockr_test_exports()` does today ([R/utils-serve.R#L310-L331](https://github.com/BristolMyersSquibb/blockr.core/blob/da3fcb499549043d02d0300e05c7161f528c8729/R/utils-serve.R#L310-L331)), which Shiny does only in the test mode shinytest2 starts an app in, and the client exposes the board and each block's status, read only, for `AppDriver$get_js()` to read, since they now live in the client.
