@@ -2,7 +2,8 @@
 Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how an app gives the page a theme of its own, which blockr.ui's `new_blockr_theme()` makes in R and core's `serve()` takes, and how R writes the theme into the page.
-It shapes the items of 1.7's Work list that export `new_blockr_theme()` from blockr.ui, make blockr.theme's theme with it, and have `serve()` take the theme and write it into the page ([UI kit and design system for the client](Rewrite-1.7#work)).
+It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that export `new_blockr_theme()` from blockr.ui, [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), make blockr.theme's theme with it, [blockr.theme#10](https://github.com/BristolMyersSquibb/blockr.theme/issues/10), and have `serve()` take the theme and write it into the page, [blockr.core#868](https://github.com/BristolMyersSquibb/blockr.core/issues/868).
+The issues that write the design system's article and blockr.theme's migration notes rely on it too: [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116) and [blockr.theme#11](https://github.com/BristolMyersSquibb/blockr.theme/issues/11).
 Which theme variables there are, what each is for, their defaults, how a frontend sets values of its own, which value wins on the page and which defaults a frontend keeps belong to [The theme variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
@@ -104,6 +105,7 @@ Its palettes for plots, its scale map and its templates stay its own, and so do 
 They style data and documents rather than the page, and none of them passes through `serve()`.
 Its scale map is a board option with a Shiny editor today, and the new stack runs no such editor.
 How the scale map works in the new stack is for blockr.viz, which reads it, to work out.
+On its `js-state`, blockr.theme therefore drops the scale map's board option and its editor, which call functions of today's core that core's `js-state` lacks, and a later version may bring back a board option for the scale map.
 So what `new_blockr_theme()` returns holds what R writes into the page and nothing else, and `serve()` is the only code that takes it.
 The function is blockr.ui's, beside the variables that it sets and their list, so that a package that makes themes builds on blockr.ui alone (condition 6).
 Core only takes the theme in `serve()` and writes it into the page.
