@@ -1,5 +1,5 @@
 # The components of blockr.ui: the first set, `bound` and their tests
-Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
+Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): the components that blockr.ui offers every package, after React Aria's Tailwind starter kit, of which the first set moves from core's React SDK on `js-state`.
 It covers the interface `Bound`, through which an input takes the value that it shows and submits, and how the components are tested, in blockr.ui and in the packages that draw with them.
