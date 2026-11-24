@@ -1,5 +1,5 @@
 # The conversion and the migration notes
-Status: review. Part of [State in JS](Rewrite-1).
+Status: dropped on 2026-11-24, because it moved to [The conversion and the migration notes](Rewrite-1.8.3). Part of [State in JS](Rewrite-1).
 
 This part covers blockr.convert, a package of its own that turns each file of today's stack into a JSON board once, and the migration notes that each package writes for the app scripts that call it, which the switch waits for.
 It builds on [Serialization](Rewrite-1.1.4#files), which says what the conversion writes, and on every part whose package wrote today's files or exports what app scripts call, each of which gives its own methods and notes.

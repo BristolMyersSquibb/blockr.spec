@@ -7,7 +7,7 @@ It also covers the app scripts that call blockr.dock's constructors, through `ne
 It builds on [Serialization](Rewrite-1.1.4#files) and [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today), which settle the conversion as a whole, and on [The dock's state: views, folders, grids and card sections](Rewrite-1.2.1), which defines the state that the conversion writes, and whose R functions write a view and its grid.
 Each of today's extensions becomes a plugin, whose state the conversion takes from the extension's, as [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) has it.
 This page maps the extension's panels to that plugin's.
-It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/BristolMyersSquibb/blockr.dock/issues/568)), the dock's board options ([blockr.dock#571](https://github.com/BristolMyersSquibb/blockr.dock/issues/571)), the R functions of app scripts ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the conversion of dock boards in blockr.convert ([The conversion and the migration notes](Rewrite-1.9#work)), the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)) and the port of blockr.dock's examples ([blockr.dock#587](https://github.com/BristolMyersSquibb/blockr.dock/issues/587)).
+It shapes what blockr.dock's R drops ([blockr.dock#568](https://github.com/BristolMyersSquibb/blockr.dock/issues/568)), the dock's board options ([blockr.dock#571](https://github.com/BristolMyersSquibb/blockr.dock/issues/571)), the R functions of app scripts ([blockr.dock#574](https://github.com/BristolMyersSquibb/blockr.dock/issues/574)), the conversion of dock boards in blockr.convert ([Wrap-up](Rewrite-1.8#work)), the migration notes for dock app scripts ([blockr.dock#585](https://github.com/BristolMyersSquibb/blockr.dock/issues/585)) and the port of blockr.dock's examples ([blockr.dock#587](https://github.com/BristolMyersSquibb/blockr.dock/issues/587)).
 
 ## What must hold
 
@@ -44,7 +44,7 @@ Six of blockr.dock's examples pass `new_edit_board_extension()`, and the `rails`
 
 ### Which files cross
 
-The conversion reads what today's packages read, through the `blockr_deser()` methods that they have today, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.9#the-package)).
+The conversion reads what today's packages read, through the `blockr_deser()` methods that they have today, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.8.3#the-package)).
 So the files that cross are those that today's blockr.dock opens: the files of blockr.dock 0.1.2 and later, up to the last version on main before the switch.
 The conversion adds no reader that today's packages lack, so a file of blockr.dock 0.1.0 does not convert, as it does not open today.
 Main keeps shipping fixes until the switch ([State in JS](Rewrite-1#migration)).
@@ -52,7 +52,7 @@ So a change on main to what the dock writes comes with the same change to the do
 
 ### The dock board
 
-The methods that read a dock board for the conversion sit in blockr.convert, carried over from today's blockr.dock, as core's are, so that the new blockr.dock holds no code that reads today's files ([The conversion and the migration notes](Rewrite-1.9#the-package)).
+The methods that read a dock board for the conversion sit in blockr.convert, carried over from today's blockr.dock, as core's are, so that the new blockr.dock holds no code that reads today's files ([The conversion and the migration notes](Rewrite-1.8.3#the-package)).
 They turn a dock board into a board without a class of its own ([Board objects](Rewrite-1.1.1#the-board)).
 That board holds the dock plugin's state under `blockr.dock-dock_plugin` at version 1, in the shape that [The dock's state](Rewrite-1.2.1#the-state) defines, and the state of the plugin that takes the place of each extension that kept any ([Extensions](#extensions)).
 The methods write the dock plugin's state from what the dock board holds of its views, and from nothing of today's stack:
@@ -130,7 +130,7 @@ The DAG kept no state in this file, so the board holds none for its plugin, whic
 ### Extensions
 
 The state of each of today's extensions becomes the state of the plugin of the class that takes its place, at version 1 and taken from the args of the extension's constructor ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
-The conversion gives it through a method for the extension's class, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+The conversion gives it through a method for the extension's class, which blockr.convert holds ([The conversion and the migration notes](Rewrite-1.8.3#the-methods-of-other-packages)).
 That method returns the plugin, which it makes with the constructor of the plugin's class, as `new_graph_plugin()`, from the extension's state as the file holds it.
 So the conversion learns the class's id even where the state is empty, and the board holds nothing for a plugin whose extension kept no state.
 

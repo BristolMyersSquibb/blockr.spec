@@ -88,10 +88,10 @@ The new client and the slimmer core are built beside the current stack, on a `js
 Block packages port one at a time.
 
 Files of today's stack cross through blockr.convert, a package of its own, rather than through core ([Serialization](Rewrite-1.1.4#files)), which turns each file into a JSON board once.
-It holds the methods that read today's files for every package that wrote them, so that no other package keeps code for today's files ([The conversion and the migration notes](Rewrite-1.9)).
+It holds the methods that read today's files for every package that wrote them, so that no other package keeps code for today's files ([The conversion and the migration notes](Rewrite-1.8.3)).
 
 A function of today's that the new stack replaces goes, with no alias and no error of its own, since the blockr packages are still at 0.x.
-Each package's migration notes, a vignette, say what takes its place instead, written so that an AI can apply them to an app script, and [The conversion and the migration notes](Rewrite-1.9) checks them against the examples of every package.
+Each package's migration notes, a vignette, say what takes its place instead, written so that an AI can apply them to an app script, and [The conversion and the migration notes](Rewrite-1.8.3) checks them against the examples of every package.
 
 ## Open questions
 
@@ -113,14 +113,15 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.theme | Makes an app's theme with blockr.ui's `new_blockr_theme()`, from its chrome under the names of the theme variables and from its font, while its palettes for plots, its options for blockr.viz, its scale map and its templates stay its own | [An app's theme](Rewrite-1.7.5) | blockr.ui |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with blockr.ui's components | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
-| blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |
-| blockr.convert | New: turns each file of today's stack into a JSON board once, and checks the migration notes of every package against the files that its examples saved | [The conversion and the migration notes](Rewrite-1.9) | Every package that wrote today's files or whose functions app scripts call |
+| blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Wrap-up](Rewrite-1.8) | A proof of concept of the new stack |
+| blockr.convert | New: turns each file of today's stack into a JSON board once, and checks the migration notes of every package against the files that its examples saved | [The conversion and the migration notes](Rewrite-1.8.3) | Every package that wrote today's files or whose functions app scripts call |
+| Every package with client code | Roxygen2's R reference and TypeDoc's TypeScript reference join hand-written guides to the client internals on one pkgdown site per package | [Documentation of the new stack](Rewrite-1.8.2) | The package's client |
 | blockr | Kept, attaching the packages of the new stack | None | The packages it attaches |
-| blockr.cdex, the clinical data explorer, blockr.sandbox, where its boards are developed, both private, and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.9#the-migration-notes) | The packages they use |
+| blockr.cdex, the clinical data explorer, blockr.sandbox, where its boards are developed, both private, and blockr.uat | Kept, with their app scripts changed as the migration notes say | [The conversion and the migration notes](Rewrite-1.8.3#the-migration-notes) | The packages they use |
 | dockViewR | No longer used, since blockr.dock draws dockview in the browser | [Client-drawn dock](Rewrite-1.2) | |
 | blockr.dag | Left to its maintainer, who may retire it or rewrite it for the new stack, while blockr.graph draws the new stack's DAG | [Client-drawn DAG](Rewrite-1.3) | |
 | g6R | Not used by blockr.graph, which draws the DAG with React Flow | [Client-drawn DAG](Rewrite-1.3) | |
-| typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.9#the-package) | |
+| typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.8.3#the-package) | |
 
 ## Conventions
 

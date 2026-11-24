@@ -307,7 +307,7 @@ An app script that gives the DAG a state passes the plugin in the board's `plugi
 
 ### Boards saved today
 
-The method of blockr.convert for blockr.dag's extension makes blockr.graph's plugin with `new_graph_plugin()` from the extension's `positions` and `layout`, whose `placement`, `snap` and `snap_size` take their defaults, and with no stack collapsed and no position for a stack, since today's files keep neither, so that `start` places each stack that holds no block ([The conversion and the migration notes](Rewrite-1.9#the-methods-of-other-packages)).
+The method of blockr.convert for blockr.dag's extension makes blockr.graph's plugin with `new_graph_plugin()` from the extension's `positions` and `layout`, whose `placement`, `snap` and `snap_size` take their defaults, and with no stack collapsed and no position for a stack, since today's files keep neither, so that `start` places each stack that holds no block ([The conversion and the migration notes](Rewrite-1.8.3#the-methods-of-other-packages)).
 It passes on the positions as the file holds them, so that a position of a block that the file lacks reaches `start`, which names it as it drops it.
 A file of blockr.dock 0.1.2 holds no state of the DAG, since the dock wrote every extension's state empty then, so the board opens with the default state, and `start` lays it out ([Saved boards and app scripts across the switch](Rewrite-1.2.2)).
 

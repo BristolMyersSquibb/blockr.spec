@@ -1,7 +1,7 @@
 # The assistant's benchmark: questions, answer keys and runs
-Status: review. Design for [Benchmarks of the new stack](Rewrite-1.8).
+Status: review. Design for [Wrap-up](Rewrite-1.8).
 
-One of the design pages of the benchmarks ([Benchmarks of the new stack](Rewrite-1.8)): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
+One of the design pages of [Wrap-up](Rewrite-1.8): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, by how well the assistant then does what users ask, through questions with answer keys that a harness runs.
 It shapes the Work items of that part that build the benchmark, compare the edit tool with other versions and take its baseline, and the issues of [Assistant as a plugin](Rewrite-1.4) that settle a decision by its comparisons: the rules, the preambles and the tools' descriptions ([blockr.assistant#235](https://github.com/BristolMyersSquibb/blockr.assistant/issues/235)) and compaction ([blockr.assistant#232](https://github.com/BristolMyersSquibb/blockr.assistant/issues/232)).
 Each decision is designed on the page that The decisions it compares names, and how fast the new stack runs is the part's.
 
@@ -156,7 +156,7 @@ The models are OpenAI's and Anthropic's, whose APIs the plugin speaks ([Model ac
 
 ### Where it lives
 
-The questions, their answer keys and the harness live in blockr.bench, a repo of their own, as the part's other benchmarks do ([Benchmarks of the new stack](Rewrite-1.8#proposal)).
+The questions, their answer keys and the harness live in blockr.bench, a repo of their own, as the part's other benchmarks do ([Wrap-up](Rewrite-1.8#proposal)).
 Neither blockr.assistant nor blockr.sandbox holds them, so that neither depends on the other for the benchmark.
 A run installs each package at the ref that its comparison names, with the packages of each question's board, such as blockr.sandbox's for the clinical data explorer's, and blockr.bench holds the providers' keys as its secrets.
 After `js-state` has merged into main, a pull request of blockr.assistant that changes what the model sees or may do starts a run in blockr.bench, which shows its comparison on that pull request (What must hold 1).
