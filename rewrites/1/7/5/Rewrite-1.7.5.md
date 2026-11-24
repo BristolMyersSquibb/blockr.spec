@@ -9,16 +9,39 @@ How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1
 ## What must hold
 
 1. An app restyles the whole page with a theme of its own, the frontend's own parts included, by setting theme variables alone, and a value that the app's theme sets wins over the frontend's and over blockr.ui's default, whichever stylesheet loads first.
+   The colours of block categories are the exception, since core's blockr option `category_colors` sets them ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 2. The page draws in the app's theme from the first paint, core's loading note included.
 3. Each value of an app's theme holds in its own mode alone, so that a theme with values for light mode alone leaves dark mode to the frontend.
 4. A name that is no theme variable stops the app as it starts, naming it.
-5. A deployment sets one theme for all of its apps, and an app's script sets another where it wants its own.
+5. An app's script sets the app's theme.
+   A site-wide R profile can give one theme to every app that runs on its installation of R, and an app's script overrides it.
 6. A package that makes themes, such as blockr.theme, needs blockr.ui alone to make one.
 
 ## Today
 
-An app restyles blockr.ui's tokens today with blockr.theme, whose `use_theme()` returns a `<style>` that sets them on `:root`, one value for each whatever the mode, and that the app puts into its UI after blockr's stylesheets ([R/theme.R#L283-L357](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L283-L357), [#L597-L611](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L597-L611)).
+An app restyles blockr.ui's tokens today with blockr.theme, whose `use_theme()` returns a `<style>` that sets them on `:root` ([R/theme.R#L283-L357](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L283-L357), [#L597-L611](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L597-L611)).
+Since `serve()` takes no theme, the app's script adds the `<style>` to the page by wrapping the dock's method of `blockr_app_ui()`, as blockr.theme's demo does ([dev/theme-demo.R#L51-L67](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/dev/theme-demo.R#L51-L67)).
+There the `<style>` comes after blockr.ui's rule for dark mode, `[data-bs-theme="dark"]`, which has the same specificity, so each value that a theme sets holds in both modes.
+Nothing checks a token's name, so a misspelt one does nothing ([#L304-L310](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L304-L310)).
 The tokens of blockr.ui's accent refer to its palette, so a theme shifts the whole accent by setting two values, `blue-600` and `color-primary` ([#L43-L48](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L43-L48)).
+
+A theme may set any of the 132 tokens that blockr.ui declares ([blockr-tokens.css](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/inst/assets/css/blockr-tokens.css)).
+It reaches whatever reads them: blockr.ui's widgets, Bootstrap's elements through blockr.ui's theme stylesheet, and the stylesheets of the dock, the DAG and the block packages.
+What a theme sets today goes as follows:
+
+| What a theme sets today | Where it goes |
+|---|---|
+| The 33 steps of blockr.ui's palette, such as `blue-600`, which the colours by job refer to | Dropped, since an app's theme sets each job's colour itself ([What an app's theme sets](#what-an-apps-theme-sets)) |
+| The 50 colours by job, such as `color-primary`, `color-primary-hover` and `color-bg-surface` | The 27 colours of the theme variables, such as `--bk-color-primary` and `--bk-color-card`, while a job's hover, subtle fill and subtle border, such as `color-primary-hover`, come from the job's colour in each component ([Colours](Rewrite-1.7.2#colours)) |
+| The 9 colours of block categories | Core's blockr option `category_colors`, outside the theme ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)) |
+| The sizes of text, the radii and the shadows, such as `font-size-xl`, `radius-md` and `shadow-dropdown` | Four sizes of text, from `--bk-text-xs` to `--bk-text-lg`, one radius from which every step derives, and three shadows ([Fonts, sizes, radii, shadows and spacing](Rewrite-1.7.2#fonts-sizes-radii-shadows-and-spacing)) |
+| The focus ring | Its colour, `--bk-color-ring`, while its width and offset are the components' |
+| The weights of the faces, the heights of controls, the block's mark, the transition and eight layers | The components', since no frontend needs its own, while the heights of controls follow the spacing and the size of their text, and every overlay stacks on `--bk-z-index-overlay` ([Fonts, sizes, radii, shadows and spacing](Rewrite-1.7.2#fonts-sizes-radii-shadows-and-spacing)) |
+| The colour of the logo | The frontend's, which takes the logo through an argument or a blockr option of its own ([What an app's theme sets](#what-an-apps-theme-sets)) |
+| The face, through `font_family`, and its file, through `webfont` | The theme variable `--bk-font-sans`, and the theme's `fonts` ([A theme in R](#a-theme-in-r)) |
+| A selector that scopes the theme to a part of the page | Dropped, since a theme holds for the whole page ([What an app's theme sets](#what-an-apps-theme-sets)) |
+
+The spacing, which sets the density of every UI, has no token today, and a theme sets it as `--bk-spacing`.
 
 ## Proposal
 
@@ -43,9 +66,11 @@ An app sets the colours of block categories apart from its theme, through a bloc
 
 ### Where an app gives it
 
-An app gives its theme to `serve()`, whose argument `theme` defaults to the blockr option `theme`, so that a deployment sets one theme for all of its apps, as `options(blockr.theme = ...)` in its R profile does, and an app's script passes another where it wants its own ([Defining a board in R](Rewrite-1.1.3#the-serve-generic), [Board options and blockr options](Rewrite-1.1.13#blockr-options)).
-Where neither gives one, the blockr option falls back on `NULL`, no theme, so the page draws with its frontend as it is.
-The blockr option holds what `new_blockr_theme()` returns, an R object, so only an R option sets it, as only one sets `renderers`, and a deployment sets it in its R profile rather than in an environment variable ([A theme in R](#a-theme-in-r)).
+An app gives its theme to `serve()`, whose argument `theme` defaults to the blockr option `theme` ([Defining a board in R](Rewrite-1.1.3#the-serve-generic), [Board options and blockr options](Rewrite-1.1.13#blockr-options)).
+An app's script sets the theme in either place: it passes the theme to `serve()`, or it sets the blockr option, as `options(blockr.theme = ...)` does.
+The blockr option also lets a site-wide R profile, `Rprofile.site`, give one theme to every app that runs on its installation of R, and an app's script overrides it.
+Where nothing sets the blockr option, it falls back on a theme with no values, as `new_blockr_theme()` makes with no arguments, so the page draws with its frontend's values and blockr.ui's defaults.
+The blockr option holds what `new_blockr_theme()` returns, an R object, so only an R option sets it, as only one sets `renderers` ([A theme in R](#a-theme-in-r)).
 Each method of `serve()` takes the argument, for a board, a path or a block, so that a block that `serve()` serves alone draws in the app's theme too.
 
 #### A theme in R
@@ -63,6 +88,8 @@ new_blockr_theme(
 ```
 
 Its `light` and `dark` hold the values of each mode, each under its variable's full name, as [The theme variables](Rewrite-1.7.2) and the browser's tools show it, and each value holds in its own mode alone.
+Each may hold any of the theme variables, which [The theme variables](Rewrite-1.7.2#which-theme-variables-blockrui-declares) lists in full: the colours by job, the two faces, the sizes of text, the radius, the shadows, the spacing and the layer of the overlays.
+A value that holds in both modes, such as a face, goes into both lists.
 A name that is no theme variable stops the app as it starts, since `new_blockr_theme()` refuses it, naming it, so that a misspelt name, or one that a later blockr.ui drops, never does nothing in silence.
 The function checks each name against the list of theme variables, which `theme_variables()` returns ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
 A value is any CSS value, which R writes into the page as it is.
@@ -70,10 +97,11 @@ Its `fonts` hold a face for each file of a font, under the names that blockr.the
 Here `file` is the path of the font's file, where `bundled_font()` takes the name of a file in a package's `inst/fonts`.
 Its `weight` and `style` default to those of CSS's `@font-face`.
 It takes nothing but values and fonts, so a theme sets values alone, as condition 1 has it.
-Each method of `serve()` refuses a `theme` that is neither what `new_blockr_theme()` returns nor `NULL`, naming what it got, such as a string that an environment variable gave the blockr option.
+Each method of `serve()` refuses a `theme` that is not what `new_blockr_theme()` returns, naming what it got, such as `NULL` or a string that an environment variable gave the blockr option.
 
 So blockr.theme makes an app's theme with `new_blockr_theme()`, from its chrome under the names of the theme variables, its font's family and its bundled font, and an app passes that theme to `serve()` or sets it as the blockr option `theme`.
-Its palettes for plots, its scale map and its templates stay its own, since they style data and documents rather than the page, and none of them passes through `serve()`.
+Its palettes for plots, its scale map and its templates stay its own, and so do the options that it sets for blockr.viz, such as the fills of a table's header ([R/theme.R#L359-L382](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L359-L382)).
+They style data and documents rather than the page, and none of them passes through `serve()`.
 Its scale map is a board option with a Shiny editor today, and the new stack runs no such editor.
 How the scale map works in the new stack is for blockr.viz, which reads it, to work out.
 So what `new_blockr_theme()` returns holds what R writes into the page and nothing else, and `serve()` is the only code that takes it.
@@ -123,7 +151,10 @@ None.
 - The function `new_blockr_theme()` reads the list of theme variables through `theme_variables()`, which reads the file that blockr.ui's build writes from the list in TypeScript, so that the lists in R and in JS never disagree ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
 - R writes each value as it is, so `new_blockr_theme()` refuses a value that holds `}` or `<`, which would end the rule or the element that holds it.
   The check goes no further, so a value that is malformed in another way, such as one with an unclosed parenthesis, can break the theme, which is then its author's to fix.
-- The blockr option `theme` is the R option `blockr.theme`, which bears the name of the package blockr.theme.
-  So blockr.theme names its own R options otherwise, as it names `blockr.theme.current` today.
+- The function `blockr_option()` reads the blockr option `theme` from the R option `blockr.theme` or the environment variable `BLOCKR_THEME`.
+  The R option bears the name of the package blockr.theme, so blockr.theme names its own R options otherwise, as it names `blockr.theme.current` today.
+  The demo of blockr.theme picks a theme by `BLOCKR_THEME` today ([dev/theme-demo.R#L31](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/dev/theme-demo.R#L31)).
+  So the demo reads another variable, since `blockr_option()` would return its string for the blockr option, which `serve()` refuses.
+- For a theme with no values and no fonts, such as the blockr option's fallback, the method of `format()` returns an empty string, so the page of an app that sets no theme holds no rules of a theme.
 
 </details>
