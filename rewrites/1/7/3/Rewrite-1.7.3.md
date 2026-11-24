@@ -1,9 +1,9 @@
-# The components of blockr.ui: the first set, `bound` and their tests
+# The components of blockr.ui: the first set, the icons, `bound` and their tests
 Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): the components that blockr.ui offers every package, after React Aria's Tailwind starter kit, of which the first set moves from core's React SDK on `js-state`.
-It covers the interface `Bound`, through which an input takes the value that it shows and submits, and how the components are tested, in blockr.ui and in the packages that draw with them.
-It shapes the items of 1.7's Work list that move the components to blockr.ui and import them in the dock and the assistant ([UI kit and design system for the client](Rewrite-1.7#work)).
+It covers the icons that blockr.ui offers from Lucide's set, the interface `Bound`, through which an input takes the value that it shows and submits, and how the components are tested, in blockr.ui and in the packages that draw with them.
+It shapes the items of 1.7's Work list that offer the icons, move the components to blockr.ui and import them in the dock and the assistant ([UI kit and design system for the client](Rewrite-1.7#work)).
 How a package builds against the components and how they load belong to [Building on blockr.ui](Rewrite-1.7.4), and the jobs that they draw with belong to [The theme variables](Rewrite-1.7.2).
 The binding's rules, core's `useValue()` and where overlays open belong to [UI modules in JS](Rewrite-1.1.7).
 The block's mark and status dot, which read core's statuses and categories, belong to [Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot).
@@ -16,6 +16,7 @@ The block's mark and status dot, which read core's statuses and categories, belo
 3. An input that takes a `bound` keeps the contract's rules for the value through it: it shows the value that the `bound` gives, except while the user types, and it submits only as the user acts ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 4. Every component draws with the theme variables alone, never with a colour of Tailwind's palette, and opens its overlays in React Aria's portal, never in the browser's top layer ([UI modules in JS](Rewrite-1.1.7#react)).
 5. The components' tests run in blockr.ui, without core.
+6. A package draws any icon of the Lucide that blockr.ui pins without a change to blockr.ui, and a page loads only the icons that its packages import ([The icons](#the-icons)).
 
 ## Today
 
@@ -37,6 +38,10 @@ Besides the components' own tests, 32 of core's other test files use those helpe
 Core exports none of them, so the dock's tests write their own `type()`, `press()`, `find()` and `openMenu()`, and the assistant's write their own `type()` and `press()` ([options-sidebar.test.tsx#L317-L322](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/options-sidebar.test.tsx#L317-L322), [views-menu.test.tsx#L159-L163](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/views-menu.test.tsx#L159-L163), [chat.test.tsx#L225-L238](https://github.com/BristolMyersSquibb/blockr.assistant/blob/4a3142df3016309a8ba38776b17f221e6d70de64/srcts/chat/chat.test.tsx#L225-L238)).
 
 They draw with core's theme, and some of them with colours of Tailwind's palette, as [The theme variables](Rewrite-1.7.2#today) counts.
+
+React Aria's starter kit draws its icons from Lucide, a set of some 2,100 icons, through its package `lucide-react`, such as the chevron of its select ([Select.tsx#L2](https://github.com/adobe/react-spectrum/blob/react-aria-components%401.22.1/starters/tailwind/src/Select.tsx#L2)).
+Core's React SDK draws icons of its own in their place, such as a chevron, a tick and a cross in `inputs/icons.tsx` ([srcts/inputs/icons.tsx](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/inputs/icons.tsx)).
+The dock and the assistant draw their own as well, the dock in the shapes of blockr.ui's icons on main, since blockr.ui offers the client none ([icons.tsx#L1-L6](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/icons.tsx#L1-L6)).
 
 ## Proposal
 
@@ -82,6 +87,44 @@ It keeps the parts of React Aria that core's React SDK exports as they are, such
 A package imports React Aria's other components as `react-aria-components`, as core's menu of board actions does for its filter.
 A package imports the hooks that those components are built from as `react-aria`, and the state that the hooks keep as `react-stately`.
 A table that draws thousands of cells without hooks in each would use those.
+
+### The icons
+
+The icons of blockr's UIs are Lucide's, the set that React Aria's starter kit draws with (Today).
+They are stroked lines with round caps, as 14 of the 19 icons of blockr.ui on main are ([UI kit and design system for the client](Rewrite-1.7#today)).
+So a component keeps the starter kit's icons as it moves, in place of those that core's React SDK draws, and a package that needs an icon takes it from Lucide rather than drawing it.
+
+Through an entry of its own, `@blockr/ui/icons`, blockr.ui offers every icon of Lucide's package `lucide`, at the version that blockr.ui pins, under the names that `lucide` exports, such as `Pin` and `Trash`.
+Each is the icon's shape as data, which the component `Icon` of `@blockr/ui` draws:
+
+```tsx
+import { Icon } from "@blockr/ui";
+import { Pin } from "@blockr/ui/icons";
+
+<Icon icon={Pin} />
+```
+
+```ts
+export function Icon(props: {
+  icon: IconNode;      // the shape, from @blockr/ui/icons
+  size?: number;       // its width and height in pixels, 14 unless given
+  label?: string;      // what a screen reader says for it, which skips it unless given
+}): ReactElement;
+
+export function iconMarkup(icon: IconNode, size?: number): string;   // the same drawing as SVG markup
+```
+
+The component draws the shape in the colour of the text around it, with Lucide's round caps and joins, and a stroke of 1.875 on Lucide's grid of 24 pixels, which draws as thick as the 1.25 of today's icons on their grid of 16 (notes).
+It hides the icon from screen readers unless it is given a label, since what holds an icon names what it does, as a button's label does.
+A board action's `icon` is SVG markup, so core's board actions write theirs with `iconMarkup()` ([Board actions](Rewrite-1.1.16#a-board-action)).
+
+The preset bundles `@blockr/ui/icons` into a package's file of libraries, while it leaves `@blockr/ui` to the page's import map ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
+So each package's build keeps only the icons that the package imports, and the code that draws them is on the page once, in blockr.ui's files.
+A package draws a new icon without a change to blockr.ui, unless Lucide added it after the version that blockr.ui pins, which a release of blockr.ui then bumps.
+Where Lucide renames an icon, it keeps the old name as an alias, as `TriangleAlert` for `TriangleExclamationPoint`, so that the import of a renamed icon still builds.
+An icon that two packages import sits in the files of both, at about 300 bytes each (notes).
+Serving each icon to a page once, however many packages import it, is a later project of the [Backlog](Backlog#each-icon-once-on-the-page).
+The preset keeps it open by failing a build that imports one of Lucide's packages itself, so that every package imports its icons through `@blockr/ui/icons`.
 
 ### The interface `Bound`
 
@@ -143,7 +186,11 @@ None.
 
 - The components at `79507c4` are in `srcts/aria`, `srcts/inputs`, `srcts/overlays`, `srcts/layout`, `srcts/dnd`, `srcts/gridlist`, `srcts/table` and `srcts/tree`, with the classes that they share in `srcts/styles`, and their tests beside them as `*.test.tsx`.
 - The helpers that read a `Bound` move with the inputs: `useTyped()` in `inputs/inputs.tsx`, `useBoundDate()` in `inputs/bounddate.ts` and `useDragged()` in `inputs/colors.ts`.
-- The icons `ChevronRight` and `Tick`, in `inputs/icons.tsx`, and `DragButton`, in `dnd/dnd.tsx`, move with the components that draw them, and blockr.ui exports none of them, as `@blockr/core/react` does not.
+- The icons of `inputs/icons.tsx`, `Chevron`, `ChevronRight`, `Tick`, `Dash`, `Cross` and `Magnifier`, and the grip of `DragButton` in `dnd/dnd.tsx` give way to Lucide's `ChevronDown`, `ChevronRight`, `Check`, `Minus`, `X`, `Search` and `GripVertical`, as the starter kit's select draws `ChevronDown`, its checkbox `Check` and `Minus`, and its menu `Check` and `ChevronRight`.
+- The package `lucide` holds each icon as data of its type `IconNode`, a list of SVG elements with their attributes, while `lucide-react` wraps each in a component of its own.
+  The entry `@blockr/ui/icons` re-exports the icons of `lucide`, their aliases and the type `IconNode`, but neither `icons`, the object that holds all of them, nor the functions of `lucide`, such as `createIcons()`.
+- With esbuild 0.28.2 and Lucide 1.79.0, whose 2,104 icons take 605 KB minified and 130 KB gzipped at level 9, a file that imports three of them through an entry that re-exports them all bundles to 920 bytes minified and 471 gzipped.
+- A stroke of 1.875 on Lucide's grid of 24 pixels and one of 1.25 on a grid of 16 both draw 1.09 pixels wide at 14 pixels, while Lucide's default of 2 would draw 1.17.
 - The tests that bind through `useValue()` are all of `inputs/inputs.test.tsx` and `choices.test.tsx`, most of `colors.test.tsx`, `select.test.tsx`, `searchfield.test.tsx` and `slider.test.tsx`, and a few of `combobox.test.tsx` and `dates.test.tsx`.
 - Core's `Binding`, in `srcts/binding/binding.ts`, has `release()` beside the members of `Bound`, and `PAUSE`, the 500 ms that it waits after the last keystroke before it submits.
 - The helpers that move to `@blockr/ui/stubs` are those of `srcts/testing/inputs.ts`, `select.ts`, `overlays.ts` and `rows.ts`, and `step()` and `draw()` of `react.ts`.

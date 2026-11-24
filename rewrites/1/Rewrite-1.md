@@ -103,7 +103,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 
 | Repo or area | Change | Page | Builds on |
 |---|---|---|---|
-| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, the theme variables with their defaults, the build preset and, in R, `new_blockr_theme()` for an app's theme, in roughly today's look, depending on no other blockr package and holding nothing of theirs, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
+| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit and Lucide's icons, the theme variables with their defaults, the build preset and, in R, `new_blockr_theme()` for an app's theme, in roughly today's look, depending on no other blockr package and holding nothing of theirs, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | blockr.ui |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
 | blockr.graph | New: the DAG plugin, drawn in the browser with React Flow, in the place of blockr.dag | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
