@@ -122,7 +122,7 @@ export default {                                   // blockr.md's, from the modu
 
 Every menu of a block then offers it, whether the dock's card, the DAG's node or core's basic frontend opens the menu.
 A frontend lists its board actions as any plugin does, since a frontend is a plugin.
-Registering a class refuses the whole class where one of its board actions has the id of another board action, an empty `on`, `run` beside `quick` or `advanced`, or none of the three, as it refuses a class whose id another class has ([Board updates](Rewrite-1.1.2#plugins)).
+Registering a class refuses the whole class where one of its board actions has the id of another board action, an empty `on`, `run` beside `quick` or `advanced`, or none of the three, as it refuses a class whose id another class has ([Board updates](Rewrite-1.1.2#plugins)), and core then opens no board ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 
 ### The menus of board objects
 
@@ -282,7 +282,7 @@ interface Role {
 A role's id is global and names no package, as a board option's does, since one edit has one role, whichever package defines it ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 It ends in `_role` by convention, so that it reads as neither a board action's id nor a command's.
 Core defines a role for each of its board actions that runs commands (Core's board actions), and a plugin class lists roles of its own in `roles`, beside `boardActions`, which core registers with the class ([Plugins](Rewrite-1.1.12#a-plugin)).
-Registering a class refuses the whole class where one of its roles has the id of another package's role, and names both packages.
+Registering a class refuses the whole class, naming both packages, where one of its roles has the id of another package's role, and core then opens no board ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 The role's inputs are the args of its commands that the target does not fix, as Append block's are the new block's class, id and name and the input that the link feeds, so that the board action that plays it gathers them, in whatever UI it draws.
 A board action that runs no command, such as Copy block ID, plays no role, since no command would tie it to its edit.
 

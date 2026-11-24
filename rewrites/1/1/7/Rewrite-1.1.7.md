@@ -215,7 +215,9 @@ Core imports the module of every board option that an available package lists, w
 So a board option's UI imports the rest of its code with `import()` in its `render()`, from a file of its own, and the page loads what the UI draws with, such as React Aria, only as the UI first renders ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask the user, through a notification, to reload the page rather than load a second copy ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
-A module that fails to load is named in a notification with its package, and core carries on with the rest, so the board opens without that module's plugin class or board option, and without the plugins of the class, as without those of a package that the app does not use ([Board updates](Rewrite-1.1.2#plugins)).
+Core opens no board where a module fails to load, declares another major or has no default export, where the store refuses the plugin class or the board option that it defines, where a board action or a role of the class breaks a rule ([Board actions](Rewrite-1.1.16)), or where the command registry refuses a command of the class.
+The page then shows why in place of the board, naming each such module with its package, as it does for a pick of `board_actions` that fails ([Board actions](Rewrite-1.1.16#roles), [blockr.core#854](https://github.com/BristolMyersSquibb/blockr.core/pull/854)).
+Opening the board without such a module would drop what the board holds for the plugins of its class or for its board option, such as the DAG's positions, since the store keeps only what a package registers, and saving the board would then lose it for good ([Board updates](Rewrite-1.1.2#plugins)).
 
 Core keeps what packages share independent of any order between them:
 
