@@ -31,6 +31,8 @@ On `js-state`, at `79507c4`, core holds what this page gives blockr.ui:
 - Core's runtime, `blockr-core.js`, imports `@blockr/core/react` up front ([inst/js/preload.json#L43-L51](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/inst/js/preload.json#L43-L51)).
   It needs the SDK for the dialogs of its board actions, the block picker among them, and for the card of a block that `serve()` serves alone, which it imports statically ([srcts/core/start.ts#L112](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/core/start.ts#L112), [srcts/page/page.ts#L25](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/page/page.ts#L25)).
   So every page loads the SDK's components, and React Aria with them.
+- The modules of core's board options `n_rows` and `dark_mode` import `@blockr/core/react` up front too, since each holds its UI, which draws with the SDK's `NumberField` or `ToggleButtonGroup` ([inst/js/preload.json#L56-L59](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/inst/js/preload.json#L56-L59), [#L91-L94](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/inst/js/preload.json#L91-L94)).
+  Core imports both as every page starts, to register them, so they would load React Aria even without the runtime's import.
 - The page's import map names React's four entry points, core's own and OpenTelemetry's API ([srcts/import-map/index.ts#L16-L29](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/import-map/index.ts#L16-L29)).
 - Core's stylesheet imports Tailwind's theme under core's prefix, `bc`, and keys its dark variant on the attribute `data-bc-theme` ([srcts/runtime/index.css#L38-L41](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/runtime/index.css#L38-L41)).
   It holds core's theme, with the colours of statuses and categories in `@theme static` ([#L169-L183](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/runtime/index.css#L169-L183)).
@@ -52,22 +54,26 @@ A package imports both from `@blockr/ui/build`, whichever preset it spreads.
 
 The React half:
 
-1. It leaves each import of React's entry points, `react`, `react/jsx-runtime`, `react-dom` and `react-dom/client`, an import, and each import of `@blockr/ui` and of `react-aria-components` as well.
+1. It leaves each import of React's entry points, `react`, `react/jsx-runtime`, `react-dom` and `react-dom/client`, an import, and each import of `@blockr/ui` and of React Aria's three packages as well.
+   Those are `react-aria-components`, with React Aria's components, `react-aria`, with the hooks that the components are built from, and `react-stately`, with the state that the hooks keep.
    The page's import map resolves them to blockr.ui's files ([The bundle](#the-bundle)), so no package's bundle holds React, React Aria or blockr.ui's components.
-   A package imports `react-aria-components` as any code written with React Aria does.
+   A package imports React Aria's packages as any code written with React Aria does.
    Core's menu of board actions, for one, draws React Aria's `TextField`, `Input` and `Separator`, and the Edit board plugin reads its `TableStateContext`.
+   React Aria's `Table` runs hooks in each of its cells.
+   A table that draws thousands of cells without them would take its focus ring, its keyboard handling and its selection from `react-aria` and `react-stately`, whether blockr.ui or another package draws it.
    A package still draws with blockr.ui's component wherever blockr.ui has one ([State in JS](Rewrite-1#what-must-hold)).
 2. It fails a build that imports an entry point of React that the import map does not name, rather than bundle a second copy of React.
    The React Compiler's runtime is the exception.
    A library that the compiler built imports `react-compiler-runtime` or `react/compiler-runtime`, as React Flow, which blockr.graph draws with, imports the first.
    The preset resolves both to a small module that reads the runtime from `react`, as core's preset does on `js-state` ([srcts/build/preset.ts#L43-L67](https://github.com/BristolMyersSquibb/blockr.core/blob/195d006ec31ec259cd70582a874dbc770f29bbb1/srcts/build/preset.ts#L43-L67)).
    So a package's bundle holds no copy of the runtime, and the import map names no entry for it.
-3. It fails a build that imports `react-aria`, `react-stately` or a package under `@react-aria/` or `@react-stately/`, with an error that names `react-aria-components`.
+3. It fails a build that imports a package under `@react-aria/` or `@react-stately/`, or an entry point inside one of React Aria's three packages, such as `react-aria-components/Table`, with an error that names the package to import instead.
+   React Aria 1.22 gives each of its components such an entry point, and the packages under `@react-aria/` and `@react-stately/` now only pass on what those entry points hold (notes).
    Each would bundle a second copy of what blockr.ui's copy of React Aria holds inside itself: its React contexts, the focus modality and the stack of open overlays.
    An item of the second copy inside blockr.ui's `ComboBox` would then find no combo box.
    The packages under `@internationalized/`, such as `@internationalized/date`, hold no context, so a package bundles them itself.
    A type that a module imports with `import type` passes, since esbuild drops that import before it resolves anything.
-4. It fails a build whose `react-aria-components` is another version than the one in blockr.ui's file, so that a package builds against the React Aria that runs on the page.
+4. It fails a build whose React Aria packages are at other versions than those in blockr.ui's files, so that a package builds against the React Aria that runs on the page.
    React Aria's major moves with blockr.ui's, as React's does ([UI modules in JS](Rewrite-1.1.7#react)).
 
 The Tailwind half:
@@ -134,21 +140,22 @@ So the colours of a block's statuses are the jobs that core maps them onto, and 
 
 ### The bundle
 
-The build of blockr.ui bundles its code and the libraries that it ships into three files in its `inst/js`:
+The build of blockr.ui bundles its code and the libraries that it ships into these files in its `inst/js`:
 
 1. React's file, `react-<hash>.js`, with React and ReactDOM, minified.
    Beside it, an ES module for each of React's entry points, such as `react.js`, reads React from that file, as core's build writes them on `js-state` (Today).
 2. The file of blockr.ui's components, `blockr-ui.js`, with blockr.ui's own code, unminified, which imports React through React's entry points ([State in JS](Rewrite-1#conventions)).
-3. React Aria's file, `react-aria-<hash>.js`, minified, with the whole of `react-aria-components`.
-   The file of the components imports it, and so does any module that imports `react-aria-components`.
+3. React Aria's files, minified, with the whole of React Aria's three packages.
+   The build bundles each package as an entry of its own, and esbuild splits the code that the three share into files of their own.
+   The file of the components imports `react-aria-components`, as does any module that draws with React Aria's components.
 
-The page's import map names React's entry points, `@blockr/ui` and `react-aria-components`.
+The page's import map names React's entry points, `@blockr/ui` and React Aria's three packages.
 The build of blockr.ui writes their entries into its own `inst/js/import-map.json`, as core's build writes core's.
 R puts the entries of both packages into the one import map in the head of the page that it serves.
 So a module that imports React loads React's file alone.
-A module that imports `react-aria-components` loads React Aria's file too, and one that imports `@blockr/ui` loads the file of the components as well.
+A module that imports one of React Aria's packages loads the files of React Aria that the package needs too, and one that imports `@blockr/ui` loads the file of the components as well.
 The build of blockr.ui also lists what each of its files imports up front in its `inst/js/preload.json`, as every package's build does ([State in JS](Rewrite-1#conventions)).
-So R names React Aria's file in the page's head only where a module that it names there imports `@blockr/ui` or `react-aria-components`, directly or through another file.
+So R names React Aria's files in the page's head only where a module that it names there imports `@blockr/ui` or one of React Aria's packages, directly or through another file.
 
 Core's React SDK holds two entries, so that a page whose UIs use core's hooks loads no React Aria either:
 
@@ -161,16 +168,31 @@ Core's runtime imports neither entry up front, unlike on `js-state` (Today).
 Each UI that core draws loads as core first draws it.
 Its menu of board actions and its advanced actions are modules already ([Board actions](Rewrite-1.1.16#what-a-frontend-gives)), and the card of a block that `serve()` serves alone loads through a dynamic import.
 
+The UI of a board option loads as it first renders too.
+Core imports the module of every board option that an available package lists as the page starts, to register it, and that module holds the board option's UI ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
+So the UI's `render()` imports the rest of its code with `import()`, from a file of its own, which the contract allows, since `render()` may be async ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+Core's board options do so.
+Otherwise every page would load React Aria as it starts, through the UIs of `n_rows` and `dark_mode` (Today), even where an app names other UIs for them in `renderers` and nothing draws core's ([Drawing the board](Rewrite-1.1.8#renderers)).
+
+Core's tests read its `inst/js/preload.json` and fail where core's runtime, the entry `@blockr/core/react` or the module of one of core's board options imports `@blockr/ui` or one of React Aria's packages up front, directly or through another file.
+
 A page whose UIs draw neither with blockr.ui's components nor with React Aria's thus never loads React Aria (condition 3).
 A module reads React through imports, so nothing of blockr.ui's is a page global (condition 6).
 The `window.React` that reactR's dependency sets stays apart from the page's React ([R/dependencies.R#L35-L48](https://github.com/react-R/reactR/blob/808b21f4f2e5c374cb8ec910f8e2cc27f6b40e1b/R/dependencies.R#L35-L48)).
 
-React Aria's file holds the whole of `react-aria-components`, rather than the parts that the components draw with.
-Those parts take 263 KB gzipped, and the whole takes 279 KB (notes).
+React Aria's files hold the whole of its three packages, rather than the parts that the components draw with.
+Those parts take 263 KB gzipped, and the whole of `react-aria-components` takes 279 KB (notes).
 A file of the parts alone would save a page 16 KB, about 4 ms.
 A package that needed another part would then wait for a release of blockr.ui.
-The file loads with the first module that imports `@blockr/ui` or `react-aria-components`.
+The hooks and their state, in `react-aria` and `react-stately`, add only 3.4 KB to the whole, since React Aria's components are built from them and hold most of their code already.
+A page loads those 3.4 KB only where a module imports `react-aria` or `react-stately` (notes).
+The files load with the first module that imports `@blockr/ui` or one of React Aria's packages.
 Under core's basic frontend or the dock, that is as the page opens, since their UIs draw with blockr.ui's components.
+
+A file for each group of [the first set](Rewrite-1.7.3#the-first-set) was considered and not chosen.
+Core's own UIs draw with six of the eight groups as the page opens, under core's basic frontend and under the dock, so only the dates and times and the colours could load later.
+Their parts of React Aria take 68.6 KB gzipped, which added 18 ms to a cold load in [blockr.core#791](https://github.com/BristolMyersSquibb/blockr.core/pull/791) (notes).
+A split would give blockr.ui an entry for each group, such as `@blockr/ui/dates`, which every package's imports would follow.
 
 ### The stylesheet on the page
 
@@ -199,6 +221,17 @@ None.
   There, the 69 KB of the dates and the colours added 18 ms to loading core's vendor file in headless Chromium, 176 ms against 158 ms, the median of 9 cold loads.
   Each figure bundles `export { … } from "react-aria-components"` with esbuild, minified, with `process.env.NODE_ENV` set to `"production"` and React external, and gzips it at level 9.
   A package that bundled React Aria itself would hold 11 KB gzipped of it for a text field alone, and 72 KB for the parts of the select.
+- On 2026-11-24, `react-aria-components` 1.22.1 resolved `react-aria` 3.53.1 and `react-stately` 3.51.0, as core's `package-lock.json` on `js-state` does.
+  Bundled alone with esbuild 0.28.2, as above, `react-aria-components` took 284.4 KB gzipped, in KB of 1,000 bytes.
+  Bundled as three entries with `splitting`, the files that a module importing `react-aria-components` loads took 284.2 KB, and the entries of `react-aria` and `react-stately` added 3.4 KB.
+  Of the 160 names that `react-aria` exports, `react-aria-components` passes on 20, such as `useLocale`, and leaves out `useFocusRing`, `useKeyboard`, `FocusScope` and `mergeProps`.
+  Of the 68 names that `react-stately` exports, `react-aria-components` leaves out 46, among them `useMultipleSelectionState` and `useTableColumnResizeState`.
+- The packages under `@react-aria/` and `@react-stately/` only pass on what the entry points of `react-aria` and `react-stately` hold, as `@react-aria/table` 3.18.1 passes on `react-aria/useTable`.
+- Split along the groups of the first set, the same way on 2026-11-24, React Aria took 41 files of 285.3 KB gzipped.
+  Each group's entry exported the parts of React Aria that `srcts/aria/index.ts` names for its components, through React Aria's entry point for each component, such as `react-aria-components/DatePicker`, and esbuild split the rest.
+  The six groups that core's UIs draw with as the page opens took 216.7 KB, and the dates and times and the colours added 68.6 KB.
+  The code that one group alone needs takes 44.6 KB for the dates and times, 43.7 KB for the collections, 24.1 KB for the colours, 19.4 KB for the picks, 13.0 KB for the overlays, 9.6 KB for the fields, 6.0 KB for the layout and 1.7 KB for the buttons and files.
+  Where each entry imported its parts from `react-aria-components` itself, every group loaded some 268 KB, so a split has to go through the entry point for each component.
 - The build of blockr.ui bundles React and React Aria without the plugin of the React half, as core's build writes its vendor file without the preset's plugins on `js-state`.
 - Tailwind 4.3.3, as of 2026-11-23, writes these from the mappings of the Tailwind half:
   - Under `prefix(bk)`, `@theme inline { --color-popover: var(--bk-color-popover) }` writes `--bk-color-popover: var(--bk-color-popover)` into the theme layer, a variable that refers to itself, while `@theme inline reference` writes no variable.
@@ -208,6 +241,9 @@ None.
 - The entry `@blockr/core/components` joins core's other entries in core's import map and in the filter of core's preset, as `@blockr/core/controls` does, and takes `NotificationList` from `srcts/react/notifications.tsx`.
   On `js-state`, the card of a block that `serve()` serves alone imports `useNotified()` and `useStatus()` from the SDK, which stay in `@blockr/core/react`, and the footer, pills and banners of `srcts/card`.
 - On `js-state`, core's `setTheme()` in `srcts/options/options.ts` sets `data-bc-theme`, which becomes `data-bk-mode`.
+- On `js-state`, `srcts/options/ui.tsx` builds the UIs of `n_rows` and `dark_mode` with the SDK's `NumberField`, `ToggleButton` and `ToggleButtonGroup`, and `srcts/options/options.ts` holds each in its `Option`'s `ui`.
+- The esbuild 0.28.2 that core builds with writes the code that an `import()` names into a file of its own only where the build splits code, with `splitting`, or leaves that import an import of a file built apart, as the assistant's build does for the parts of pi that it loads on demand ([srcts/build/build.ts#L24-L31](https://github.com/BristolMyersSquibb/blockr.assistant/blob/4a3142df3016309a8ba38776b17f221e6d70de64/srcts/build/build.ts#L24-L31)).
+  Otherwise esbuild puts that code into the board option's module, and the code's imports, such as `@blockr/ui`, become imports of the module, which load up front.
 - On `js-state`, core's `Toast` in `srcts/overlays/toast.tsx` writes the classes that it is given after its own, `bc:border` among them, and the basic frontend's toasts in `srcts/modules/basic/board.tsx` give it `bc:border-l-4`.
   Once the toast is blockr.ui's, its `bk:border` and the frontend's `bc:border-l-4` sit in two stylesheets, and the stripe holds only while core's comes later.
 

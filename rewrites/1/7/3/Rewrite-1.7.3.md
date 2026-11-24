@@ -76,9 +76,12 @@ Core keeps its own copies for its own code.
 Each component is rewritten onto the theme variables as it moves, in place of the colours of Tailwind's palette, as a component of the starter kit is when it is copied in ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
 A component that blockr.ui adds later follows the starter kit wherever the kit has one.
 
-Beside its components, blockr.ui puts the whole of React Aria on the page, which every package imports as `react-aria-components` for what no component of blockr.ui does, such as the filter of core's menu of board actions ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
+Beside its components, blockr.ui puts the whole of React Aria on the page, for what no component of blockr.ui does ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 So the first set needs nothing beyond the components of core's React SDK.
 It keeps the parts of React Aria that core's React SDK exports as they are, such as `Autocomplete`, `Text` and `Focusable`, so that a UI that draws with them changes only its import.
+A package imports React Aria's other components as `react-aria-components`, as core's menu of board actions does for its filter.
+A package imports the hooks that those components are built from as `react-aria`, and the state that the hooks keep as `react-stately`.
+A table that draws thousands of cells without hooks in each would use those.
 
 ### The interface `Bound`
 
