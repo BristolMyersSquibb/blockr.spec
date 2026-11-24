@@ -1,5 +1,5 @@
 # UI kit and design system for the client
-Status: review. Part of [State in JS](Rewrite-1).
+Status: settled on 2026-11-24. Part of [State in JS](Rewrite-1).
 
 This part covers blockr.ui as the client's UI kit: the one copy each of React and of React Aria on the page, React Aria's components and Lucide's icons, which every UI of blockr's packages draws with, core's among them, the theme variables that give those UIs their look, and the build preset through which every package builds against them.
 It builds on no other blockr package, since core builds on blockr.ui rather than the other way round ([UI modules in JS](Rewrite-1.1.7#react)).
