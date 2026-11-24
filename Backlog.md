@@ -105,3 +105,19 @@ What it would remove: the `scope` of a board option, and with it a board option 
 What it would cost: a kind of option of its own in core, with its definitions and their registration, a constructor in R whose value R hands to the page rather than writing it into the board, and a place in each frontend that draws options, beside the board options.
 
 What would settle it: a second option that should stay with the user, or an app that has to set the mode in its script rather than through a blockr option.
+
+## Another kit in place of blockr.ui's components
+
+Every UI of blockr's packages draws with blockr.ui's components, which style React Aria's components with Tailwind's classes.
+An app restyles them through the theme variables alone: colours, fonts, sizes of text, radii, shadows and spacing ([The theme variables](Rewrite-1.7.2#which-theme-variables-blockrui-declares)).
+So an app can give every UI Bootstrap's colours and proportions, but not the shapes of Bootstrap's components.
+An app that brings its own blocks may draw everything that core draws with another kit, while the UIs of other packages, such as the dock and the blocks of blockr.dplyr, keep blockr.ui's components ([UI kit and design system for the client](Rewrite-1.7#what-blockrui-holds)).
+A package could instead offer the same components, under the same names, with the same props and `Bound`, styled with CSS of its own, as React Aria's starter kit in plain CSS styles React Aria's components ([starters/docs](https://github.com/adobe/react-spectrum/tree/react-aria-components%401.22.1/starters/docs)).
+The page's import map would then resolve `@blockr/ui` to that package's files, so that every UI draws with them, which the design keeps open ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
+Raised in the review of [Building on blockr.ui](Rewrite-1.7.4) on 2026-11-24.
+
+What it would remove: the limit that the theme variables set on how far an app restyles the UIs of other packages.
+
+What it would cost: a way for an app to name the kit, such as a blockr option, which R reads as it writes the page's import map from the entries of each package ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)); the kit itself, which implements every component of blockr.ui with its props and sets every theme variable, since the classes of other packages read them ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)); a stylesheet that styles the kit's components alone, as every package's does, and so not Bootstrap's own, which styles every element of the page ([Building on blockr.ui](Rewrite-1.7.4#what-must-hold)); and test helpers of its own wherever it draws a part somewhere other than where React Aria draws it, since the tests of other packages act on the components through the helpers of `@blockr/ui/stubs` ([The components of blockr.ui](Rewrite-1.7.3#testing)).
+
+What would settle it: whether an app asks for a look that the theme variables cannot give, such as the shapes of Bootstrap's components.
