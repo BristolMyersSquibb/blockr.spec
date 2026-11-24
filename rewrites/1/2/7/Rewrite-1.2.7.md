@@ -102,7 +102,7 @@ No block class declares whether it has controls, and the registry entry stays as
 
 The status dot sits on the mark's upper right corner: an 8px dot with a 2px ring in the card's surface colour.
 It is core's dot, which reads `scheduler.status()` for the block and the notifications about it ([Evaluation in the client](Rewrite-1.1.10#statuses)).
-It is filled or a ring, in the job of blockr.ui's theme that core maps the status onto, with a tooltip, as the table of [Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot) gives them, so that the DAG's nodes show the same dot for the same block.
+It is filled or a ring, in the theme variable that core maps the status onto, with a tooltip, as the table of [Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot) gives them, so that the DAG's nodes show the same dot for the same block.
 Its rows of `stale`, `waiting`, `invalid` and `failed` are today's card's, with `invalid` in place of `unset` ([R/plugin-block.R#L582-L659](https://github.com/BristolMyersSquibb/blockr.dock/blob/655e323c990649818627ff0ba216717396e00d5c/R/plugin-block.R#L582-L659)).
 Today's card shows no dot for a block that is `ready` or `unevaluated`, so a card without one leaves open whether the block has run, which the two dots settle.
 Today a block that raises an error reads `failed` even where its status is `ready`, which the dot carries over.

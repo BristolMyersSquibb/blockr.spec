@@ -3,7 +3,7 @@ Status: implementing in [blockr#513](https://github.com/orgs/BristolMyersSquibb/
 
 This part covers blockr.graph, a new package that holds the DAG plugin, of the plugin class `blockr.graph-graph_plugin`: a plugin drawn in the browser, which draws the board's blocks, links and stacks, edits them through commands, and keeps the positions of the blocks and of the stacks that hold no block, its layout's direction, spacing, placement and snapping, and which stacks are collapsed in its state.
 It takes the place of today's blockr.dag, which the rewrite leaves to its maintainer, who may retire it or rewrite it for the new stack.
-It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), works under every frontend, the dock among them ([Client-drawn dock](Rewrite-1.2)), and takes its colours from the variables of blockr.ui's theme ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [UI kit and design system for the client](Rewrite-1.7)).
+It builds on [Client-owned board state](Rewrite-1.1), whose plugins take the place of today's extensions ([Plugins](Rewrite-1.1.12)), works under every frontend, the dock among them ([Client-drawn dock](Rewrite-1.2)), and takes its colours from the theme variables ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [UI kit and design system for the client](Rewrite-1.7)).
 
 ## Problem
 
@@ -66,7 +66,7 @@ Today's code stays in blockr.dag, so the table says what blockr.graph carries ov
   While the user has snapping on, every position that the DAG sets snaps to the snap size ([The DAG's state, commands and placement](Rewrite-1.3.1#how-the-dag-moves-blocks)).
 - The DAG is drawn with React Flow (`@xyflow/react`), in place of G6.
   It is React, so a node is a component in the DAG's own React root that reads core's store, since the DAG's UI shares no React context with the dock's ([Plugins](Rewrite-1.1.12#plugin-classes)).
-  Its nodes are elements of the page, so they read the variables of blockr.ui's theme from CSS, where today's canvas needs a script that resolves each token through a canvas of one pixel ([inst/assets/js/dag-chrome.js#L1-L25](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/dag-chrome.js#L1-L25)).
+  Its nodes are elements of the page, so they read the theme variables from CSS, where today's canvas needs a script that resolves each token through a canvas of one pixel ([inst/assets/js/dag-chrome.js#L1-L25](https://github.com/BristolMyersSquibb/blockr.dag/blob/898a097ab404db92901c23efd52d6422e43ce4dc/inst/assets/js/dag-chrome.js#L1-L25)).
   Langflow, Flowise and Dify are built on it, and it is 88 KB gzipped at 13.0.0, against 400 KB for G6 (notes).
   The prototype [cynkra/blockr.react](https://github.com/cynkra/blockr.react) drew the DAG with React Flow as a dock extension, with links drawn by dragging, menus, and copy and paste (notes).
   On the largest real board, React Flow drew the board in a third of the time that G6 took (notes).

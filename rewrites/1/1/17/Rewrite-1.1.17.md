@@ -1,8 +1,8 @@
 # An app's theme: `new_blockr_theme()`, the argument `theme` of `serve()` and the rules that R writes
-Status: review. Design for [Client-owned board state](Rewrite-1.1).
+Status: dropped on 2026-11-24, because it moved to [An app's theme: `new_blockr_theme()`, the argument `theme` of `serve()` and the rules that R writes](Rewrite-1.7.5). Design for [Client-owned board state](Rewrite-1.1).
 
 One of the API proposals for the client-owned board ([Client-owned board state](Rewrite-1.1)): how an app gives the page a theme of its own, which `new_blockr_theme()` makes in R and `serve()` takes, and how R writes the theme into the page, so that its values win over the frontend's and over blockr.ui's defaults from the moment core sets the page's mode.
-Which variables a theme sets, what each is for, their defaults, how a frontend sets values of its own and which defaults a frontend keeps belong to [The theme's variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
+Which variables a theme sets, what each is for, their defaults, how a frontend sets values of its own and which defaults a frontend keeps belong to [The theme variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
 ## What must hold
@@ -26,7 +26,7 @@ An app may give a theme of its own, whose values win over the frontend's and ove
 It sets variables of blockr.ui's theme, as a frontend does, so that one theme fits every frontend, and it sets those whose values the app wants its own and leaves the rest to the frontend.
 So blockr.theme makes such a theme from its values, where today it sets blockr.ui's tokens ([Today](#today)).
 
-The theme names jobs rather than the steps of a palette ([The theme's variables](Rewrite-1.7.2#colours)), and a frontend sets each job's value itself, so an app's theme sets every job whose look it changes.
+The theme names jobs rather than the steps of a palette ([The theme variables](Rewrite-1.7.2#colours)), and a frontend sets each job's value itself, so an app's theme sets every job whose look it changes.
 A company's brand colour is thus `primary`, with `primary-foreground` for the text on it, `primary-text` for links and messages, and `ring` for the focus ring, each in both modes, where blockr.theme sets two of blockr.ui's tokens today, and no other job of a theme is derived from it behind its author's back.
 
 A theme that starts from a few colours, such as a company's brand colour, gets the values of the rest as it is made, from whatever makes it, such as blockr.theme, which computes colours for its palettes of plots already ([R/palettes.R#L26-L40](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/palettes.R#L26-L40)), so that the theme holds every value that the page draws, where its author sees and checks it.
@@ -60,9 +60,9 @@ new_blockr_theme(
 )
 ```
 
-Its `light` and `dark` hold the values of each mode, each under its variable's full name, as [The theme's variables](Rewrite-1.7.2) and the browser's tools show it, and each value holds in its own mode alone.
+Its `light` and `dark` hold the values of each mode, each under its variable's full name, as [The theme variables](Rewrite-1.7.2) and the browser's tools show it, and each value holds in its own mode alone.
 A name that blockr.ui's theme lacks stops the app as it starts, since `new_blockr_theme()` refuses it, naming it, so that a misspelt name, or one that a later blockr.ui drops, never does nothing in silence.
-The function checks each name against blockr.ui's `theme_variables()`, which returns the full name of each of the theme's variables ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
+The function checks each name against blockr.ui's `theme_variables()`, which returns the full name of each of the theme's variables ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
 A value is any CSS value, which R writes into the page as it is.
 Its `fonts` hold a face for each file of a font, under the names that blockr.theme's `bundled_font()` gives them today: `family`, `file`, `weight` and `style` ([R/theme.R#L214-L234](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L214-L234)).
 Here `file` is the path of the font's file, where `bundled_font()` takes the name of a file in a package's `inst/fonts`.
@@ -97,9 +97,9 @@ For the theme above, R writes two rules:
 ```
 
 The rule of light mode holds in light mode and the rule of dark mode in dark mode, so each value holds in its own mode alone.
-Before core first sets the page's mode, neither holds, so that the page draws in the neutral greys of blockr.ui's stylesheet until core knows the mode ([The theme's variables](Rewrite-1.7.2#light-mode-and-dark-mode)).
+Before core first sets the page's mode, neither holds, so that the page draws in the neutral greys of blockr.ui's stylesheet until core knows the mode ([The theme variables](Rewrite-1.7.2#light-mode-and-dark-mode)).
 As `dark_mode` switches the attribute `data-bk-mode`, the browser applies the rule of the new mode, with nothing for core to do ([Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
-Each rule names `:root` twice beside the mode's attribute, which gives it a specificity of (0,3,0), while a frontend sets its values under `:root[data-bk-mode="light"]` and `:root[data-bk-mode="dark"]`, each of (0,2,0) ([Where the frontend sets the values](Rewrite-1.7.2#where-the-frontend-sets-the-values)).
+Each rule names `:root` twice beside the mode's attribute, which gives it a specificity of (0,3,0), while a frontend sets its values under `:root[data-bk-mode="light"]` and `:root[data-bk-mode="dark"]`, each of (0,2,0) ([Where the values are set](Rewrite-1.7.2#where-the-values-are-set)).
 So the app's values win over the frontend's whichever stylesheet loads first, although the frontend's loads with its module, after the page's head ([UI modules in JS](Rewrite-1.1.7#packaging)), and over blockr.ui's defaults, which sit in a cascade layer, over which every rule outside one wins.
 The rule of light mode names the mode that it holds in, since a rule of `:root:root` alone would hold in dark mode too, where it would win over blockr.ui's defaults of dark mode, and before core sets the mode, where it would paint the app's light values over the greys.
 
@@ -117,10 +117,10 @@ None.
 - The function `new_blockr_theme()` returns an object of class `blockr_theme`, and core exports `is_blockr_theme()` beside it, as it exports `is_plugin()` beside `new_plugin()`.
   The class is not `theme`, which ggplot2's themes carry, as ggplot2 4.0.3's `class(theme_grey())` begins with it, so that neither package's methods dispatch on the other's objects.
   The object that blockr.theme makes carries the class `blockr_theme` today, with the functions `blockr_theme()` and `is_blockr_theme()`, so blockr.theme gives them other names.
-- The function `new_blockr_theme()` reads the theme's list from the installed blockr.ui, through its `theme_variables()`, which reads the file that blockr.ui's build writes from the list in TypeScript, so that the lists in R and in JS never disagree ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)).
+- The function `new_blockr_theme()` reads the theme's list from the installed blockr.ui, through its `theme_variables()`, which reads the file that blockr.ui's build writes from the list in TypeScript, so that the lists in R and in JS never disagree ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
 - R writes each value as it is, so `new_blockr_theme()` refuses a value that holds `}` or `<`, which would end the rule or the element that holds it.
   The check goes no further, so a value that is malformed in another way, such as one with an unclosed parenthesis, can break the theme, which is then its author's to fix.
-- A frontend that set a variable of the theme on an element below `:root` would win over the app's theme there by inheritance, whatever the selectors, which is why a frontend sets its values on `:root` alone ([Where the frontend sets the values](Rewrite-1.7.2#where-the-frontend-sets-the-values)).
+- A frontend that set a variable of the theme on an element below `:root` would win over the app's theme there by inheritance, whatever the selectors, which is why a frontend sets its values on `:root` alone ([Where the values are set](Rewrite-1.7.2#where-the-values-are-set)).
 - The blockr option `theme` is the R option `blockr.theme`, which bears the name of the package blockr.theme.
   So blockr.theme names its own R options otherwise, as it names `blockr.theme.current` today.
 

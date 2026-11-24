@@ -2,21 +2,23 @@
 Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how a package builds its modules and its classes against blockr.ui through blockr.ui's build preset, which files blockr.ui's own build writes, and what of them R puts on the page.
-It shapes the items of 1.7's Work list that start blockr.ui's client, write the theme and declare its list, build core's stylesheet with the preset, and split core's React SDK ([UI kit and design system for the client](Rewrite-1.7#work)).
-Which variables the theme names, their defaults, and why those defaults sit in a cascade layer belong to [The theme's variables](Rewrite-1.7.2).
+It shapes the items of 1.7's Work list that start blockr.ui's client, write the theme variables and declare their list, build core's stylesheet with the preset, and split core's React SDK ([UI kit and design system for the client](Rewrite-1.7#work)).
+Which theme variables there are, their defaults, and why those defaults sit in a cascade layer belong to [The theme variables](Rewrite-1.7.2).
 The components belong to [The components of blockr.ui](Rewrite-1.7.3).
-Why a module gets React through its build rather than its host, and how a module's own stylesheet loads with it, belong to [UI modules in JS](Rewrite-1.1.7), and how R writes an app's theme into the page belongs to [An app's theme](Rewrite-1.1.17).
+Why a module gets React through its build rather than its host, and how a module's own stylesheet loads with it, belong to [UI modules in JS](Rewrite-1.1.7), and how an app gives the page a theme of its own belongs to [An app's theme](Rewrite-1.7.5).
 
 ## What must hold
 
-1. A package's build gets everything it needs of blockr.ui from the preset: its bundles hold no React and no React Aria, and its classes read blockr.ui's theme under the package's own prefix.
+1. A package's build gets everything it needs of blockr.ui from the preset: its bundles hold no React and no React Aria, and its classes read the theme variables under the package's own prefix.
 2. One copy each of React and of React Aria runs on the page, both from blockr.ui's files ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)).
 3. React loads in a file of its own, and core's hooks in one that imports nothing of blockr.ui, so that a page whose UIs draw with React, but neither with blockr.ui's components nor with React Aria's, loads no React Aria.
-4. Only a major release of blockr.ui drops or renames what the theme's list holds, and no other package's build reads a variable of blockr.ui's that the list lacks or writes a class under `bk:`.
+4. Only a major release of blockr.ui drops or renames what the list of theme variables holds, and no other package's build reads a variable of blockr.ui's that the list lacks or writes a class under `bk:`.
 5. The stylesheet of blockr.ui is on the page from the first paint, under every frontend, and no stylesheet that a package builds styles another package's elements.
 6. Nothing of blockr.ui's is a page global.
 
 ## Today
+
+On main, blockr.ui has no build: its scripts and stylesheets are written by hand in `inst/assets`, and R puts them on a Shiny page as HTML dependencies, such as those of `theme_dep()` ([R/theme.R#L44-L67](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/R/theme.R#L44-L67)).
 
 On `js-state`, at `79507c4`, core holds what this page gives blockr.ui:
 
@@ -81,42 +83,42 @@ The Tailwind half:
    ```
 
    The stylesheet of blockr.ui does the same under `bk`, so that one mapping serves every package, blockr.ui's own included.
-2. The preset's stylesheet maps each name of Tailwind's theme that blockr.ui's theme holds onto blockr.ui's variable for it, through `@theme inline reference`, as `--color-popover` onto `var(--bk-color-popover)`.
+2. The preset's stylesheet maps each name of Tailwind's theme that has a theme variable onto that variable, through `@theme inline reference`, as `--color-popover` onto `var(--bk-color-popover)`.
    So a package's classes compile to reads of blockr.ui's variables, whatever the package's prefix: core's `bc:bg-popover` writes `background-color: var(--bk-color-popover)`, and its `bc:shadow-md` writes `--tw-shadow: var(--bk-shadow-md)`.
-   With `reference`, Tailwind writes none of these variables into the package's stylesheet, so blockr.ui's stylesheet alone sets them ([The theme's list](#the-themes-list)).
+   With `reference`, Tailwind writes none of these variables into the package's stylesheet, so blockr.ui's stylesheet alone sets them ([The list of theme variables](#the-list-of-theme-variables)).
 3. It drops Tailwind's palette, so that a class of the palette, such as `bc:bg-blue-600`, writes nothing.
-   Tailwind skips a class that it does not know without a word, so the check fails a build whose code names a colour of the palette, under any prefix ([The theme's variables](Rewrite-1.7.2#colours)).
+   Tailwind skips a class that it does not know without a word, so the check fails a build whose code names a colour of the palette, under any prefix ([The theme variables](Rewrite-1.7.2#colours)).
 4. It keys the dark variant on `data-bk-mode="dark"` on the page's root, which core's board option `dark_mode` sets ([Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
    Every job carries both modes, so the variant serves only what a package writes beyond the jobs.
 5. It leaves out Tailwind's reset of the whole page, so that nothing that one package loads styles another package's elements.
    It keeps the utilities outside any cascade layer, so that a page's other CSS, such as Bootstrap's, does not win over them ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
-6. The check fails a build whose stylesheet reads a variable of blockr.ui's that the theme's list lacks, as in plain CSS or in an arbitrary value ([The theme's list](#the-themes-list)).
-   It fails another package's build whose code names a class under `bk:`, which blockr.ui alone writes ([Prefixes](#prefixes)), and any build that runs another version of Tailwind than the one that the theme is written for.
+6. The check fails a build whose stylesheet reads a variable of blockr.ui's that the list of theme variables lacks, as in plain CSS or in an arbitrary value ([The list of theme variables](#the-list-of-theme-variables)).
+   It fails another package's build whose code names a class under `bk:`, which blockr.ui alone writes ([Prefixes](#prefixes)), and any build that runs another version of Tailwind than the one that blockr.ui is written for.
 
 ### Prefixes
 
 Tailwind writes CSS only for the classes that it finds in the files it scans.
 So each package that writes classes builds them itself, under a prefix of its own.
-The rest of Tailwind is blockr.ui's: the theme, the dark variant and the choices above, which hold for every package.
+The rest of Tailwind is blockr.ui's: the theme variables, the dark variant and the choices above, which hold for every package.
 
-The theme's variables and the classes that blockr.ui writes take the prefix `bk`, for all of blockr rather than one package, as `--bk-color-popover` and `bk:flex`.
+The theme variables and the classes that blockr.ui writes take the prefix `bk`, for all of blockr rather than one package, as `--bk-color-popover` and `bk:flex`.
 Every other package writes its classes under a prefix of its own, as core writes `bc:flex`, since stylesheets built apart that share a class override each other by load order ([UI modules in JS](Rewrite-1.1.7#packaging)).
 Tailwind writes a class under `bk:` only where a component of blockr.ui uses it, so those classes come and go with blockr.ui's components.
 So no other package uses one, and the check fails another package's build whose code names one ([The build preset](#the-build-preset)).
 The mode attribute takes the prefix too: `data-bk-mode`, which holds `light` or `dark`.
-A package that writes no classes of its own, as the dock writes plain CSS today, runs no Tailwind, reads the theme's variables in its CSS, and runs the check on that CSS and on its code.
+A package that writes no classes of its own, as the dock writes plain CSS today, runs no Tailwind, reads the theme variables in its CSS, and runs the check on that CSS and on its code.
 
-### The theme's list
+### The list of theme variables
 
 Every package's stylesheet reads blockr.ui's variables.
 Tailwind leaves out of a stylesheet whatever the files that it scans do not use, such as a variable of its theme or a class.
-If Tailwind wrote blockr.ui's theme, the stylesheet would drop a variable as soon as no component of blockr.ui used it, and another package that reads the variable would lose its look without a word.
+If Tailwind wrote the theme variables, the stylesheet would drop a variable as soon as no component of blockr.ui used it, and another package that reads the variable would lose its look without a word.
 
-So what blockr.ui's stylesheet provides other packages is a list that blockr.ui declares and exports, in JS for builds and in R for core's `new_blockr_theme()` ([An app's theme](Rewrite-1.1.17#a-theme-in-r)): the theme's variables, its fonts and the mode attribute.
+So what blockr.ui's stylesheet provides other packages is a list that blockr.ui declares and exports, in JS for builds and in R for its own `new_blockr_theme()` ([An app's theme](Rewrite-1.7.5#a-theme-in-r)): the theme variables, its fonts and the mode attribute.
 Its classes are not on the list, since no other package uses them ([Prefixes](#prefixes)).
 The build of blockr.ui writes the list, which blockr.ui declares once in TypeScript, into a JSON file in its `inst/`.
 The JS export comes from that declaration, and the R export reads the file, so the two never disagree.
-The R export is `theme_variables()`, which returns the full names of the theme's variables as a character vector, such as `"--bk-color-primary"`.
+The R export is `theme_variables()`, which returns the full names of the theme variables as a character vector, such as `"--bk-color-primary"`.
 For the list:
 
 1. The stylesheet of blockr.ui writes the whole list as plain CSS: the values of each variable as rules in `@layer theme`, and each font as a face.
@@ -127,7 +129,7 @@ For the list:
 5. Tailwind's version is part of the contract: each major of blockr.ui names one version of Tailwind, which every package's build runs.
    The properties that Tailwind registers for its utilities, such as `--tw-blur`, carry no prefix, so every package's stylesheet registers them, and stylesheets built with two versions could register them differently.
 
-The list holds the theme's own names alone, none of another package's.
+The list holds blockr.ui's own names alone, none of another package's.
 So the colours of a block's statuses are the jobs that core maps them onto, and the colours of the categories of block classes are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 
 ### The bundle
@@ -172,9 +174,9 @@ Under core's basic frontend or the dock, that is as the page opens, since their 
 
 ### The stylesheet on the page
 
-R puts blockr.ui's stylesheet, with its theme and the font faces, on every page from the start, ahead of core's.
-So everything that reads the theme finds it, core's loading note included, which R's page holds from the start.
-R writes an app's theme into the page's head after it ([An app's theme](Rewrite-1.1.17#the-rules-that-r-writes)).
+R puts blockr.ui's stylesheet, with the theme variables, their defaults and the font faces, on every page from the start, ahead of core's.
+So everything that reads the theme variables finds them, core's loading note included, which R's page holds from the start.
+R writes an app's theme into the page's head after it ([An app's theme](Rewrite-1.7.5#the-rules-that-r-writes)).
 Loading the stylesheet later, with blockr.ui's JS, would save a page little: core's compiled stylesheet, which holds the classes of the components on `js-state`, takes 10.5 KB gzipped, and the browser downloads a font only once something uses it.
 
 The stylesheet of blockr.ui comes first, since a package may pass classes of its own to one of blockr.ui's components.
@@ -182,7 +184,7 @@ A component writes those classes after its own, as core's basic frontend gives a
 Both rules sit outside any layer and have the same specificity, so the rule of the later stylesheet wins.
 Every package's stylesheet comes after blockr.ui's: core's follows it in the page's head, and a module's stylesheet loads with the module ([UI modules in JS](Rewrite-1.1.7#packaging)).
 
-The stylesheet sets the theme's defaults inside Tailwind's theme layer, `@layer theme`, where [The theme's variables](Rewrite-1.7.2#where-the-frontend-sets-the-values) has them sit.
+The stylesheet sets the defaults of the theme variables inside Tailwind's theme layer, `@layer theme`, where [The theme variables](Rewrite-1.7.2#where-the-values-are-set) has them sit.
 So a frontend's values, which it sets outside any layer, win over the defaults whichever stylesheet loads first.
 
 ## Open questions

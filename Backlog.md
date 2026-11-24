@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-23.
+Revised on 2026-11-24.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -92,3 +92,16 @@ The spike also settles two questions that the draft left open:
 
 - Which containers the first set has besides rows and gear trays, such as tabs or sections that collapse.
 - Whether an attribute that reads only state, such as whether to show a field, is worked out in the client without asking R, since R runs one request at a time, and a UI with several dynamic attributes waits on each ([UI modules in JS](Rewrite-1.1.7#the-contract)).
+
+## User options
+
+A user option would be a third kind of option, beside board options and blockr options, for what each user picks for themselves, such as the mode that `dark_mode` switches.
+An app's script could set its value as the app starts, as a script sets a board option today, while the board would never save it and the browser would keep the user's pick.
+In State in JS, a board option whose definition has `scope: "user"` does this job instead, and `dark_mode` is the only such board option ([Board options and blockr options](Rewrite-1.1.13#board-options-that-stay-with-the-user)).
+A script gives it no value, and an app sets its default through the blockr option `dark_mode`.
+
+What it would remove: the `scope` of a board option, and with it a board option whose value no board holds, which the name "board option" does not fit.
+
+What it would cost: a kind of option of its own in core, with its definitions and their registration, a constructor in R whose value R hands to the page rather than writing it into the board, and a place in each frontend that draws options, beside the board options.
+
+What would settle it: a second option that should stay with the user, or an app that has to set the mode in its script rather than through a blockr option.

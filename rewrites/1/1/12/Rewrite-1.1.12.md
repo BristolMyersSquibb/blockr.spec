@@ -177,7 +177,7 @@ export default {
 
 So one module draws the plugin of its class, from the plugin's state, which core names by the class's id.
 It is free of any framework, as a block's UI is, and may be written in React on the one copy that core ships ([UI modules in JS](Rewrite-1.1.7#react)).
-A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui, drawing with blockr.ui's components in blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7)).
+A plugin's UI renders in a root of its own, which shares no React context with the frontend's and takes its look from blockr.ui, drawing with blockr.ui's components and the theme variables ([UI kit and design system for the client](Rewrite-1.7)).
 So does core's own Edit board plugin, since core builds on blockr.ui ([The Edit board plugin](Rewrite-1.1.15#its-look)).
 
 ### The frontend

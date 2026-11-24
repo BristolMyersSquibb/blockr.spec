@@ -133,7 +133,7 @@ So every module on the bar comes from a package, which R serves as it serves eve
 The module meets the contract of a UI module, with `CoreApi` in place of a host: the dock calls its `render()` with the item's element, `CoreApi` and a signal that it aborts when it takes the bar down, and runs the cleanup that `render()` returns ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Where the module fails to load, declares another `api` major or throws in `render()`, the dock leaves a warning icon in the item's place, whose tooltip names the module, as core leaves an error in the element of a module that fails, and the rest of the bar works (condition 8).
 A module may be written in TSX, which its package's build compiles ([UI modules in JS](Rewrite-1.1.7#packaging)).
-A module draws itself, so it looks like the rest of the bar only where its author builds it from blockr.ui's components, in blockr.ui's theme, as a plugin's `ui` does in a panel.
+A module draws itself, so it looks like the rest of the bar only where its author builds it from blockr.ui's components and the theme variables, as a plugin's `ui` does in a panel.
 It keeps its width on a narrow bar, as the dock's own parts other than the board's name do.
 Nothing on the bar runs in R, so a module that needs R calls the requests of a plugin class of its package with `core.request()`, as a button that files an issue through R would ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 

@@ -95,7 +95,6 @@ A board with two views, the DAG on a rail of the first, a stack, and a card that
     "links": { "ab": { "from": "a", "to": "b", "input": "data" } },
     "stacks": { "s1": { "name": "Input", "blocks": ["a", "b"], "color": "#ffcc88" } },
     "options": {
-      "dark_mode": { "value": "light", "version": 1 },
       "compact": { "value": false, "version": 1 },
       "view_tabs": { "value": false, "version": 1 },
       "sync_rails": { "value": true, "version": 1 }
