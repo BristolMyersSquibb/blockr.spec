@@ -123,7 +123,7 @@ None.
 - Draw the assistant's chat and the DAG from the theme variables in place of core's Tailwind theme, keying dark mode on `data-bk-mode` in place of `data-bc-theme`, with no colour of their own, in blockr.assistant and blockr.graph ([The theme variables](Rewrite-1.7.2#colours), [Drawing the DAG](Rewrite-1.3.2#its-look))
 - Draw core's mark and status dot on the dock's cards and on the DAG's nodes, in place of the copies that each draws until then, in blockr.dock and blockr.graph ([Block cards in the dock](Rewrite-1.2.7#the-status-dot), [Drawing the DAG](Rewrite-1.3.2#nodes))
 - Write the design system's article anew for the new kit, in blockr.ui
-- Write the migration notes for app scripts that use blockr.ui as a vignette, which lists each change that such a script needs, such as dropping the table preview that `options(blockr.tabular_display = blockr.ui::html_table_display)` picks, for an AI to apply, in blockr.ui ([The conversion and the migration notes](Rewrite-1.9#the-migration-notes))
+- Write the migration notes for app scripts that use blockr.ui as a vignette, which lists each change that such a script needs, such as dropping the table preview that `options(blockr.tabular_display = blockr.ui::html_table_display)` picks, for an AI to apply, in blockr.ui ([The conversion and the migration notes](Rewrite-1.8.3#the-migration-notes))
 - Write the migration notes for app scripts that use blockr.theme as a vignette, which lists each change that such a script needs, such as passing the theme to `serve()` in place of adding `use_theme()`'s `<style>` to the dock's page, for an AI to apply, in blockr.theme ([An app's theme](Rewrite-1.7.5#today))
 
 ## Design pages

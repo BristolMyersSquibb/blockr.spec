@@ -32,7 +32,7 @@ With the board held by the client ([Client-owned board state](Rewrite-1.1)), and
 - At the start of a session, R exchanges the visitor's session token, which Connect attaches to the requests that reach the content's process, for a visitor-scoped API key through the Visitor API Key integration, and hands the key to the browser.
   The key carries only the visitor's own rights, capped by the role an administrator sets ([Connect integrations](https://docs.posit.co/connect/user/oauth-integrations/)).
 - The app's opening board still comes from R ([blockr.core#428](https://github.com/BristolMyersSquibb/blockr.core/issues/428)), and a URL that names a record makes the plugin load that record and open it in place of the opening board through its class's `storage.load()`, before anything is drawn or evaluated ([Drawing the board](Rewrite-1.1.8#starting-the-page), [blockr.core#588](https://github.com/BristolMyersSquibb/blockr.core/pull/588)), so `rack_loader()` goes.
-- A record that blockr.session stored today, or a file of today's stack that a visitor uploads, converts as the plugin opens it, through a request that R answers with blockr.convert ([The conversion and the migration notes](Rewrite-1.9#who-converts)).
+- A record that blockr.session stored today, or a file of today's stack that a visitor uploads, converts as the plugin opens it, through a request that R answers with blockr.convert ([The conversion and the migration notes](Rewrite-1.8.3#who-converts)).
 - Its controls take the place of core's Save and Open, which save a download and open an upload.
 
 ## Open questions

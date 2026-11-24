@@ -9,5 +9,6 @@
 - [Assistant as a plugin](Rewrite-1.4), implementing
 - [Code export as a plugin](Rewrite-1.5), draft
 - [Session management as a storage plugin](Rewrite-1.6), draft
-- [Benchmarks of the new stack](Rewrite-1.8), draft
-- [The conversion and the migration notes](Rewrite-1.9), review
+- [Wrap-up](Rewrite-1.8), review
+
+<!-- dropped: Rewrite-1.9 -->
