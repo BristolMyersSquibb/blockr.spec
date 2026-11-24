@@ -75,7 +75,7 @@ The tools `list_plugins` and `get_plugin_state` leave out the assistant's own pl
 The tool `read_skill` is offered in every app, even where no skill is listed, so that the tools' definitions change only with a release of blockr.assistant ([The system prompt](Rewrite-1.4.5#what-a-call-sends-and-in-which-order)).
 The tool `list_board_options` lists every board option that an available package defines, so that the model can set one that nothing on the page uses yet, such as `n_rows` before any table is drawn.
 It gives the value of each board option that the board holds, and no value for the others, since core puts a default on the board only once something on the page requires the board option ([Board options and blockr options](Rewrite-1.1.13#which-board-options-a-board-holds)).
-The edit tool sets any of them through core's `blockr.core-set_option`, on a locked board too, since a lock leaves board options open ([Board options and blockr options](Rewrite-1.1.13#locked-boards)).
+The edit tool sets any of them but one whose value stays with the user, such as `dark_mode`, through core's `blockr.core-set_option`, on a locked board too, since a lock leaves board options open ([Board options and blockr options](Rewrite-1.1.13#locked-boards)).
 Unlike today's `set_board_option`, it refuses none of them, since `llm_model` goes and each conversation keeps its own pick of the model ([Assistant as a plugin](Rewrite-1.4#proposal)).
 
 ### The edit tool

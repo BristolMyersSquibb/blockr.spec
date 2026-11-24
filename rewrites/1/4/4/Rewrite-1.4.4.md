@@ -52,7 +52,7 @@ Today's chat is shinychat's `chat_ui()` in the dock's panel of the assistant, wi
 ### The panel
 
 The assistant's class has a `ui`, a module whose `render()` core calls with the element that the frontend gives `mountPlugin()` ([Plugins](Rewrite-1.1.12#plugin-classes)).
-It draws the chat in React, on the one copy that blockr.ui ships, in a root of its own, in blockr.ui's theme, as every plugin's UI takes its look ([UI modules in JS](Rewrite-1.1.7#react), [Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
+It draws the chat in React, on the one copy that blockr.ui ships, in a root of its own, with the theme variables, from which every plugin's UI takes its look ([UI modules in JS](Rewrite-1.1.7#react), [Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
 It sizes itself from its element, as a container, so that the message field and the footer fit a rail.
 The list of models, which needs more room than the panel, opens in an overlay of blockr.ui's components ([Places the dock offers plugins](Rewrite-1.2.4#a-plugins-panel)), while the drawer of conversations opens over the chat, in the chat's own element (Conversations).
 The chat's controls and overlays beside the transcript and the message field, such as the buttons of its drawer and its footer, the drawer's search and list, the field for the visitor's key and the login beside it, the dialog before a link opens another site, an attachment opened large and the pick of the model, are blockr.ui's components ([UI modules in JS](Rewrite-1.1.7#react)).

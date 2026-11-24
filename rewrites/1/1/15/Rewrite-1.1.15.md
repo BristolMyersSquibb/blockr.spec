@@ -135,7 +135,7 @@ It reads the lock from `core.lock.board` ([Drawing the board](Rewrite-1.1.8#what
 
 ### Its look
 
-Its UI is written in React, as TSX, and draws with blockr.ui's components and with Tailwind CSS under core's prefix, built against blockr.ui's theme, as core's basic frontend and the UIs of core's built-in blocks do ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
+Its UI is written in React, as TSX, and draws with blockr.ui's components and with Tailwind CSS under core's prefix, built against the theme variables, as core's basic frontend and the UIs of core's built-in blocks do ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 So it takes its look from blockr.ui under every frontend, as other plugins do ([Plugins](Rewrite-1.1.12#plugin-classes), [UI kit and design system for the client](Rewrite-1.7)).
 
 ### What `serve()` gives by default

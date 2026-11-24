@@ -49,7 +49,7 @@ Each block is a node:
 - Its mark is core's, 32 px across: the icon of its class's entry in the block registry on a tint of its category's colour, which core holds ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
   The block's name shows below the mark, as today.
 - The status dot is core's, on the mark's upper right corner, as on the dock's card ([Block cards in the dock](Rewrite-1.2.7#the-status-dot)).
-  It is filled or a ring, in the job of blockr.ui's theme that core maps the block's status onto, with its tooltip, from the block's status and the notifications that concern the block ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+  It is filled or a ring, in the theme variable that core maps the block's status onto, with its tooltip, from the block's status and the notifications that concern the block ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
   So the dot reads `failed` where an error about the block's output concerns the block, as the card's dot does.
   It follows `scheduler.subscribe()` and the notifications of `CoreApi`, and the DAG demands no block for it ([Evaluation in the client](Rewrite-1.1.10#demand)).
 - It has a handle for each data input of its class, named after the input, and one handle for its result.
@@ -58,7 +58,7 @@ Each block is a node:
   A handle with several links, as a result often has, shows on each side that one of them uses, and several handles on one side spread along it, those of a variadic block in the order of their links.
   A handle that no link uses, a variadic block's placeholder among them, sits on the side that the layout's direction gives, as today's ports do: from top to bottom, an input on top of the mark and the result below it, and from left to right, an input on the mark's left and the result on its right.
   A handle on the bottom sits below the block's name, so that no link crosses the name.
-  While the pointer is over a handle, the handle grows and takes the colour of the theme's `primary`, the link that feeds it shows as it does while the pointer is over the link (Links), and after a moment blockr.ui's `Tooltip` names the input, as `data`, with its source where a link feeds it, as `data, from Filter`, or "Next input" on a variadic block's placeholder.
+  While the pointer is over a handle, the handle grows and takes the colour of the theme variable `primary`, the link that feeds it shows as it does while the pointer is over the link (Links), and after a moment blockr.ui's `Tooltip` names the input, as `data`, with its source where a link feeds it, as `data, from Filter`, or "Next input" on a variadic block's placeholder.
   A handle takes the pointer only within its own size and a small margin around it, never over the node's body, so that a press on the node lands on the node, and a press on a handle is one that the user saw coming.
 
 A node's box is its mark, and the block's name hangs below the box, as G6 draws today's label outside the node.
@@ -77,7 +77,7 @@ The input's name shows on the edge while the pointer is over it, as today's labe
 ### Stacks
 
 Each stack is a group node behind its blocks, in the colour that core keeps on the stack, with its name above it.
-A stack whose `color` is `null` takes the theme's colour for borders, a default of the DAG's own ([Board objects](Rewrite-1.1.1#stacks)).
+A stack whose `color` is `null` takes the colour of the theme variable `border`, a default of the DAG's own ([Board objects](Rewrite-1.1.1#stacks)).
 Its box fits its blocks, with the padding that the layout gives a cluster ([The DAG's state, commands and placement](Rewrite-1.3.1#laying-the-board-out-again)).
 A stack that holds no block shows as a box that holds its name and the number of its blocks, as a collapsed stack does, at its position in the DAG's state ([The DAG's state, commands and placement](Rewrite-1.3.1#the-state)).
 A block dropped on that box joins the stack, whose box then fits the block.
@@ -225,7 +225,7 @@ Under the board lock, it says only "No blocks yet.", since the lock leaves nothi
 
 ### Its look
 
-The DAG takes its colours from the jobs of blockr.ui's theme for surfaces, text and borders, from which it sets React Flow's own styles ([Building on blockr.ui](Rewrite-1.7.4#the-themes-list)), while its nodes draw core's mark and status dot ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
+The DAG takes its colours from the theme variables for surfaces, text and borders, from which it sets React Flow's own styles ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)), while its nodes draw core's mark and status dot ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
 It follows the mode that core's board option `dark_mode` switches the page to.
 It draws its own controls, such as the toolbar's buttons, the search field and the outline, and its tooltips with blockr.ui's components wherever blockr.ui has one, as every UI of blockr's packages does ([State in JS](Rewrite-1#what-must-hold), [UI modules in JS](Rewrite-1.1.7#react)).
 It draws the block's mark and status dot itself, until core's React SDK offers them ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).

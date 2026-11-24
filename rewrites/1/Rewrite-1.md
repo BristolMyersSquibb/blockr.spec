@@ -22,7 +22,7 @@ The dock, which draws the board from R with DOM operations, shows the same split
 3. A board edit costs no R time beyond evaluating what is demanded and fetching data for what is on screen, except what an app has R evaluate in the background while it has nothing else to run ([Evaluation in the client](Rewrite-1.1.10#demand)).
 4. Boards written by today's `blockr_ser()` open, with the dock's views, their grids and the DAG's positions, for block classes that have been ported ([Serialization](Rewrite-1.1.4)).
 5. A full app is still defined by R code calling board and block constructors ([Defining a board in R](Rewrite-1.1.3)), and a block is still an S3 object.
-6. Every UI that blockr's packages draw, core's among them, draws with the components of blockr.ui, which are React Aria's, after React Aria's Tailwind starter kit, wherever blockr.ui has one, in blockr.ui's theme ([UI kit and design system for the client](Rewrite-1.7)).
+6. Every UI that blockr's packages draw, core's among them, draws with the components of blockr.ui, which are React Aria's, after React Aria's Tailwind starter kit, wherever blockr.ui has one, and with its theme variables ([UI kit and design system for the client](Rewrite-1.7)).
    Their look roughly keeps that of today's [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html), tweaked where that is warranted, while blockr.ui is built anew on Tailwind CSS and the conventions of kits built on it, such as shadcn/ui's, rather than on today's code.
    An app that uses core without core's blocks and plugins draws with whatever it likes, since everything that core draws is a default that the app may swap ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend), [Board actions](Rewrite-1.1.16#roles)).
 
@@ -103,14 +103,14 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 
 | Repo or area | Change | Page | Builds on |
 |---|---|---|---|
-| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, and the Tailwind theme with its build preset, in roughly today's look, depending on no other blockr package and holding nothing of theirs, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
+| blockr.ui | Rewritten as the client's UI kit: the one copy of React, React Aria's components after its Tailwind starter kit, the theme variables with their defaults, the build preset and, in R, `new_blockr_theme()` for an app's theme, in roughly today's look, depending on no other blockr package and holding nothing of theirs, while today's widgets, R helpers and table preview go | [UI kit and design system for the client](Rewrite-1.7) | |
 | blockr.core | Rewritten around the client's store, with core's JS API, the wire protocol, R's evaluator, block classes, plugins and core's basic frontend | [Client-owned board state](Rewrite-1.1) | blockr.ui |
 | blockr.dock | The dock plugin, a frontend drawn in the browser with dockview, which places every plugin that has a UI in a panel | [Client-drawn dock](Rewrite-1.2) | blockr.core |
 | blockr.graph | New: the DAG plugin, drawn in the browser with React Flow, in the place of blockr.dag | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
-| blockr.theme | Makes an app's theme with core's `new_blockr_theme()`, from its chrome under the names of blockr.ui's theme and from its font, while its palettes for plots, its scale map and its templates stay its own | [An app's theme](Rewrite-1.1.17) | blockr.core |
+| blockr.theme | Makes an app's theme with blockr.ui's `new_blockr_theme()`, from its chrome under the names of the theme variables and from its font, while its palettes for plots, its scale map and its templates stay its own | [An app's theme](Rewrite-1.7.5) | blockr.ui |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with blockr.ui's components | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, and how well the assistant does what users ask | [Benchmarks of the new stack](Rewrite-1.8) | A proof of concept of the new stack |

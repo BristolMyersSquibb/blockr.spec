@@ -15,10 +15,12 @@ Each blockr option belongs to the page of the code that reads it, as the three t
    A plugin may also read a board option that it does not name, where the board holds its value, as the board holds the value of every board option that something on the page requires.
    The assistant does so, to tell its model the value of each board option in use ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 3. A board holds the value of every board option that a script, a file or a command has set, or that something on the page requires, its default included where nobody set one, so that a board option left at its default counts as chosen ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
+   The exception is a board option whose value stays with the user, such as `dark_mode`: the browser keeps its value, and no board holds it.
 4. A change to a board option's value evaluates no block, since no board option reaches `expr`, and neither undo nor redo changes a board option's value.
 5. A blockr option is fixed when the app starts or is deployed, by an R option or an environment variable, and neither a board nor a file holds one.
 6. Client code reads a blockr option only by asking R for it by name, but for the two locks, `lock_load` and `locked`, which R sends in the reply to `hello`, and nothing declares a blockr option in R.
 7. A board option takes a blockr option's value only as its default, which its definition in the client reads, so that R computes no default.
+8. What a user picks for a board option whose value stays with the user holds for every board that they open in that browser, and no board carries one reader's pick to another.
 
 ## Today
 
@@ -45,8 +47,8 @@ A board option is no substitute for a plugin's state, where a setting of the plu
 | Example | `n_rows`, the number of rows on a page of a table output | `gate_visibility`, which has core demand every block when it is `FALSE` |
 | Set by | The user through its UI, the assistant or another plugin through a command, a script through its constructor, or a file | The app through an R option `blockr.<name>`, or a deployment through an environment variable `BLOCKR_<NAME>` |
 | Changes | Whenever a command sets it | Never while the app runs |
-| Held by | The board, under the board option's id, once someone sets it or something on the page requires it, which core gives its default where nobody set it | Nobody: R reads it where its code needs it, and the client keeps what it asked R for until the page closes |
-| Saved | With the board, and never undone | Never |
+| Held by | The board, under the board option's id, once someone sets it or something on the page requires it, which core gives its default where nobody set it, or the browser, for one whose value stays with the user | Nobody: R reads it where its code needs it, and the client keeps what it asked R for until the page closes |
+| Saved | With the board, but for one whose value stays with the user, and never undone | Never |
 | Defined | Once, in the client, by the package that ships it | Nowhere: the code that reads it names it and gives a fallback |
 | Read by | Only a component that names it, as a block class does in its UI module, and the board option's own UI | Any code, through `blockr_option()` in R and `CoreApi.blockrOption()` in the client |
 
@@ -66,6 +68,7 @@ interface Option {                                 // as core registers it in th
   schema: JsonSchema;                              // the values it takes, with a description for a model
   default: Json | ((core: CoreApi) => Promise<Json>);   // what readers get where the board holds no value, or a function core calls for it with CoreApi
   ui: OptionModule;                                // its UI module, which gets an OptionHost
+  scope?: "board" | "user";                        // where its value lives: on the board, by default, or with the user, in the browser
   onChange?(value: Json, core: CoreApi, notify: (n: Raised) => () => void): void;   // what a new value does on the page, such as switching the mode
   migrate?(value: Json, version: number): Json;    // converts a value that a JSON board records at an older version of its shape
 }
@@ -100,7 +103,7 @@ Core puts what the default gives on the board, and keeps no default of its own, 
 So nothing is read for a board option that nothing requires and that has no `onChange`.
 A default that reads a blockr option whose value does not convert to the fallback's type, such as an `n_rows` of `"many"`, reports the value and takes the fallback ([Blockr options](#blockr-options)).
 Core calls `onChange` as each board opens, for every board option that has one, with the board's value, and again as a delta sets a value other than the one that it last heard.
-Where the board holds no value, as the board opens or once a delta removed it, core first puts the board option on the board with its default, whether or not anything on the page requires it, so that what `onChange` does on the page follows the board that is open, as the mode that `dark_mode` switches does ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
+Where the board holds no value, as the board opens or once a delta removed it, core first puts the board option on the board with its default, whether or not anything on the page requires it, so that what `onChange` does on the page follows the board that is open ([Principles](Principles#opening-a-board-leaves-the-page-as-starting-it-with-that-board-would)).
 Its `notify` raises a notification of the board option's, such as a value that the page cannot follow, which concerns the board option unless it names another board object, and holds until the function that it returns runs or the next call of `onChange` returns ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 The `migrate` function converts a value that a JSON board records at a version of its shape below the one that the package's method of `board_option_version()` gives in R ([Serialization](Rewrite-1.1.4#board-options)).
 
@@ -140,6 +143,25 @@ A default that a blockr option gives then reaches a board only where the board h
 A script gives a board option only to set a value other than its default, and nothing in R decides which board options a board has.
 
 Undo never takes a value back, nor does redo set it again, since a board option never changes what the board computes, and most say only how it shows: a step's inverse holds no board option values, and a step that sets or removes only those is no undo step ([Board updates](Rewrite-1.1.2#undo)).
+
+### Board options that stay with the user
+
+A board option whose definition has `scope: "user"` keeps its value with the user rather than with the board, as core's `dark_mode` does, since the mode is a reader's choice rather than the board's:
+
+1. Core keeps the value in the browser's local storage, under the board option's id.
+   So the user's pick holds for every board that they open in that browser, and across reloads.
+2. The board never holds the value, so no file saves it, and a board opens in each reader's own pick.
+3. Where the browser holds no value, the definition's `default` applies.
+   Core stores nothing for it, so that a default that reads the system's preference, as `dark_mode`'s does, follows that preference until the user picks.
+4. The board option's UI sets the value through its host's `submit()`, which stores it in the browser rather than running a command.
+   Core then calls `onChange`, as for any board option, and calls it as each board opens with the browser's value or the default.
+5. Core's `blockr.core-set_option` refuses such a board option, since a command edits the board, so the user alone sets it, through its UI.
+6. A script gives it no value: core's `new_dark_mode_option()` takes none, and an app sets the default instead through the blockr option `dark_mode`, as `options(blockr.dark_mode = "dark")` does in its script.
+   No file saves a blockr option.
+7. The store drops a value that an opening board holds for such a board option, naming it, as it drops a value that no board option claims ([Serialization](Rewrite-1.1.4#board-options)), and the conversion leaves such values out.
+
+Core's `dark_mode` is the only board option that stays with the user.
+A kind of option of its own for what a user picks for themselves, which an app script could set without the board saving it, is a later project in the [Backlog](Backlog#user-options).
 
 ### The renderer before the first output
 
@@ -205,7 +227,7 @@ The client can read neither an R option nor an environment variable of the serve
 
 1. Core asks R the first time code reads a blockr option, with a `blockr_options` request, and the names that code reads within one task go in one request ([Wire protocol](Rewrite-1.1.9#blockr-options)).
 2. R replies with the value of each blockr option it has a value for, as `blockr_option()` reads it.
-   It leaves out one that it cannot read, as where its R option and its environment variable disagree, which `blockr_option()` refuses, or whose value it cannot write as JSON, such as `renderers` and `theme`, which hold renderer objects and an app's theme ([An app's theme](Rewrite-1.1.17#where-an-app-gives-it)), and warns in its log, naming it, so that the code reading it takes its fallback while the request's other names get their values.
+   It leaves out one that it cannot read, as where its R option and its environment variable disagree, which `blockr_option()` refuses, or whose value it cannot write as JSON, such as `renderers` and `theme`, which hold renderer objects and an app's theme ([An app's theme](Rewrite-1.7.5#where-an-app-gives-it)), and warns in its log, naming it, so that the code reading it takes its fallback while the request's other names get their values.
 3. Core keeps each value until the page closes, since a blockr option is fixed for the app, and gives the code its fallback where R has no value.
 
 A value that an environment variable sets arrives as a string, which core converts to the fallback's type, a number or a logical, since only the code that reads a blockr option knows its type.
@@ -225,7 +247,8 @@ A board option's definition may take its default from a blockr option, through `
 So a deployment that sets `BLOCKR_N_ROWS=25` gives 25 rows per page to every board that holds no value for `n_rows`.
 The default applies only where the board holds no value: a value that the board holds wins over it, whether someone set it or core put an earlier default there, so a board saved with 50 rows per page opens with 50 under any deployment, and only a board that holds no value for `n_rows`, such as one saved before any table was drawn, takes the deployment's ([blockr.core#534](https://github.com/BristolMyersSquibb/blockr.core/pull/534)).
 Where no blockr option sets `dark_mode`, its default is the mode that the user's system prefers, read from `prefers-color-scheme`, as with today's fallback of `NULL`.
-Core puts that default on the board as each board opens, since `dark_mode` has an `onChange` ([Defining a board option](#defining-a-board-option)), so a board saved by one reader opens in that reader's mode for another.
+The board option `dark_mode` stays with the user, so core stores neither that default nor a reader's pick on the board, and a board opens in each reader's own mode ([Board options that stay with the user](#board-options-that-stay-with-the-user)).
+R writes into the page's head a line that sets the mode before the page first paints, from the user's pick, else the blockr option, else the system's preference ([The theme variables](Rewrite-1.7.2#light-mode-and-dark-mode)).
 A definition converts what it reads: R writes a blockr option of length one bare, as an environment variable gives it, so `show_conditions` takes a lone severity as an array of one, and `dark_mode` takes today's `TRUE` and `FALSE` as dark and light.
 That is the only link between the values of the two kinds.
 R computes no default for a board option, a blockr option never changes a value that the board holds, and nothing sets a blockr option from a board option.
@@ -248,6 +271,8 @@ On `js-state`, `answer_blockr_options()` in `R/evaluator-answer.R` fails the who
 On `js-state`, core's commands mint ids in the shape `adjective_animal`, through `mintId()` in `srcts/store/ids.ts`, and read no `rand_id` ([blockr.core#510](https://github.com/BristolMyersSquibb/blockr.core/issues/510)).
 On `js-state`, the store drops a board option value that its schema refuses without naming it, in `srcts/store/open.ts`, where this page has it refuse the board and name every such value ([blockr.core#509](https://github.com/BristolMyersSquibb/blockr.core/issues/509)).
 On `js-state`, `commit()` in `srcts/store/commit.ts` keeps a step's board option values in its inverse, which this page leaves out, as settled on [blockr#503](https://github.com/orgs/BristolMyersSquibb/discussions/503#discussioncomment-19358997).
+
+On `js-state`, core's `darkMode()` keeps its value on the board, and `new_dark_mode_option()` in `R/board-option.R` takes a value, where this page has the browser keep the value and the constructor take none.
 
 On `js-state`, `CORE_BOARD` in `srcts/store/registrations.ts`, core's board class `board`, requires `show_conditions` and `dark_mode`, which core's basic frontend names instead once plugins replace board classes ([Plugins](Rewrite-1.1.12), [blockr.core#507](https://github.com/BristolMyersSquibb/blockr.core/issues/507)).
 

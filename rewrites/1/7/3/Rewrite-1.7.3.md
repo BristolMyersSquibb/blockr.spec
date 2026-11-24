@@ -4,7 +4,7 @@ Status: review. Design for [UI kit and design system for the client](Rewrite-1.7
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): the components that blockr.ui offers every package, after React Aria's Tailwind starter kit, of which the first set moves from core's React SDK on `js-state`.
 It covers the interface `Bound`, through which an input takes the value that it shows and submits, and how the components are tested, in blockr.ui and in the packages that draw with them.
 It shapes the items of 1.7's Work list that move the components to blockr.ui and import them in the dock and the assistant ([UI kit and design system for the client](Rewrite-1.7#work)).
-How a package builds against the components and how they load belong to [Building on blockr.ui](Rewrite-1.7.4), and the jobs that they draw with belong to [The theme's variables](Rewrite-1.7.2).
+How a package builds against the components and how they load belong to [Building on blockr.ui](Rewrite-1.7.4), and the jobs that they draw with belong to [The theme variables](Rewrite-1.7.2).
 The binding's rules, core's `useValue()` and where overlays open belong to [UI modules in JS](Rewrite-1.1.7).
 The block's mark and status dot, which read core's statuses and categories, belong to [Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot).
 
@@ -14,11 +14,12 @@ The block's mark and status dot, which read core's statuses and categories, belo
    The one exception is `Stack`, which becomes `FormLayout` ([The first set](#the-first-set)).
 2. A component needs nothing of another blockr package: an input takes its value through `Bound`, an interface of blockr.ui's, and knows no host, no block and no board option ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)).
 3. An input that takes a `bound` keeps the contract's rules for the value through it: it shows the value that the `bound` gives, except while the user types, and it submits only as the user acts ([UI modules in JS](Rewrite-1.1.7#the-contract)).
-4. Every component draws with the theme's jobs alone, never with a colour of Tailwind's palette, and opens its overlays in React Aria's portal, never in the browser's top layer ([UI modules in JS](Rewrite-1.1.7#react)).
+4. Every component draws with the theme variables alone, never with a colour of Tailwind's palette, and opens its overlays in React Aria's portal, never in the browser's top layer ([UI modules in JS](Rewrite-1.1.7#react)).
 5. The components' tests run in blockr.ui, without core.
 
 ## Today
 
+On main, blockr.ui offers no components in React: its widgets sit on `window.Blockr`, and its R helpers draw into Shiny UIs ([UI kit and design system for the client](Rewrite-1.7#today)).
 On `js-state`, at `79507c4`, core's React SDK holds the components, built after React Aria's Tailwind starter kit ([starters/tailwind/src](https://github.com/adobe/react-spectrum/tree/react-aria-components%401.22.1/starters/tailwind/src)).
 They take 6,473 lines of TypeScript, without their 16 files of tests, and `@blockr/core/react` exports them beside core's hooks ([srcts/react/index.ts](https://github.com/BristolMyersSquibb/blockr.core/blob/79507c4047268930ead351863d588035488fc887/srcts/react/index.ts)).
 By folder, the parts of React Aria that they draw with take 258 lines, the inputs 4,634, the overlays 619, the layout 407, the trees 246, the table 174, the grid list 73, and drag and drop 62.
@@ -35,7 +36,7 @@ Their tests import more of core: its stubs of the hosts, the hooks `useValue()` 
 Besides the components' own tests, 32 of core's other test files use those helpers.
 Core exports none of them, so the dock's tests write their own `type()`, `press()`, `find()` and `openMenu()`, and the assistant's write their own `type()` and `press()` ([options-sidebar.test.tsx#L317-L322](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/options-sidebar.test.tsx#L317-L322), [views-menu.test.tsx#L159-L163](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/views-menu.test.tsx#L159-L163), [chat.test.tsx#L225-L238](https://github.com/BristolMyersSquibb/blockr.assistant/blob/4a3142df3016309a8ba38776b17f221e6d70de64/srcts/chat/chat.test.tsx#L225-L238)).
 
-They draw with core's theme, and some of them with colours of Tailwind's palette, as [The theme's variables](Rewrite-1.7.2#today) counts.
+They draw with core's theme, and some of them with colours of Tailwind's palette, as [The theme variables](Rewrite-1.7.2#today) counts.
 
 ## Proposal
 
@@ -58,7 +59,7 @@ Each keeps its name and its props, so that core's UIs, the dock's and the assist
 The one exception is `Stack`, which lays out the controls of a UI one below the other.
 In blockr, a stack is a group of blocks ([Board objects](Rewrite-1.1.1#stacks)), so the component becomes `FormLayout`, as Shopify's Polaris names the component that does the same ([FormLayout.tsx#L18](https://github.com/Shopify/polaris/blob/3f7954ae42fabf26d63cee68c23ceebfd7ef0972/polaris-react/src/components/FormLayout/FormLayout.tsx#L18)).
 It pairs with `Form` without being it: `Form` is React Aria's form element with its validation, while `FormLayout` only arranges controls, so a block's UI uses it without a form.
-The overlays stack at the theme's `--bk-z-index-overlay` ([The theme's variables](Rewrite-1.7.2#the-defaults)).
+The overlays stack at the theme variable `--bk-z-index-overlay` ([The theme variables](Rewrite-1.7.2#the-defaults)).
 
 Core keeps what binds a value or reads core's own types, in three entries of its own:
 
@@ -72,7 +73,7 @@ The first imports nothing of blockr.ui, so that a UI that binds its values with 
 The components bring along what they use of the rest of core, as blockr.ui's own: the type `Json`, the classes of `srcts/styles` under `bk:`, and the helpers `jsonEqual()`, `own()` and `strings()`.
 Core keeps its own copies for its own code.
 
-Each component is rewritten onto the theme's jobs as it moves, in place of the colours of Tailwind's palette, as a component of the starter kit is when it is copied in ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
+Each component is rewritten onto the theme variables as it moves, in place of the colours of Tailwind's palette, as a component of the starter kit is when it is copied in ([UI kit and design system for the client](Rewrite-1.7#designed-against-tailwind)).
 A component that blockr.ui adds later follows the starter kit wherever the kit has one.
 
 Beside its components, blockr.ui puts the whole of React Aria on the page, which every package imports as `react-aria-components` for what no component of blockr.ui does, such as the filter of core's menu of board actions ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).

@@ -20,7 +20,7 @@ Only the dock checks its notes, by opening each example's script, changed as the
 
 ## What must hold
 
-1. Every file that today's packages open converts once, through blockr.convert, into a JSON board, which opens with the same blocks, links, stacks, board option values and plugins' state, for the block classes and plugin classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
+1. Every file that today's packages open converts once, through blockr.convert, into a JSON board, which opens with the same blocks, links, stacks, board option values, but for `dark_mode`, whose value stays with the user, and plugins' state, for the block classes and plugin classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 2. Converting a file runs nothing that the file holds, so that a crafted file runs no code in the session that converts it ([Serialization](Rewrite-1.1.4#files)).
 3. No package but blockr.convert holds code that reads today's files.
 4. A record that blockr.session stored today opens in an app of the new stack for the user who stored it, and so does a file of today's stack that a user uploads to it.
