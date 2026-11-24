@@ -211,6 +211,9 @@ Core imports each module that the reply names once per page, and registers the d
 No package sets anything up for another, so no order holds between packages, and core imports the modules all at once.
 A package has no module of its own beside these: a storage plugin names a board to open in place of the one R sent through its class's `storage.load()` ([Plugins](Rewrite-1.1.12#storage)), and a package that follows the store, such as one that saves drafts, subscribes from its plugin's `start()` ([Board updates](Rewrite-1.1.2#following-the-board)).
 
+Core imports the module of every board option that an available package lists, whether or not anything draws the board option's UI.
+So a board option's UI imports the rest of its code with `import()` in its `render()`, from a file of its own, and the page loads what the UI draws with, such as React Aria, only as the UI first renders ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
+
 A reply that names a package at another version than the one loaded, as after R restarts with the package reinstalled, makes core ask the user, through a notification, to reload the page rather than load a second copy ([Notifications, logging and tracing](Rewrite-1.1.14#notifications)).
 A module that fails to load is named in a notification with its package, and core carries on with the rest, so the board opens without that module's plugin class or board option, and without the plugins of the class, as without those of a package that the app does not use ([Board updates](Rewrite-1.1.2#plugins)).
 
@@ -236,7 +239,7 @@ Each of them takes React Aria's props and those that the starter kit adds, such 
 Core's own UIs draw with them, and so do those of frontends, plugins and blocks, rather than with components of their own wherever blockr.ui has one, since [State in JS](Rewrite-1#principles) keeps one shared toolkit per language.
 Binding a component to a value by the contract's rules is the costly part, which they then share: core's select takes 574 lines to bind a state arg and show the picks of several as chips, where the starter kit's takes 76.
 React Aria was chosen over Base UI, Ark UI, Radix, Headless UI and Ariakit for its record and its breadth, from selects to date pickers, tables and trees ([blockr.core#686](https://github.com/BristolMyersSquibb/blockr.core/pull/686)).
-The page runs one copy of React Aria too, blockr.ui's, which holds the whole of `react-aria-components` (condition 4).
+The page runs one copy of React Aria too, blockr.ui's, which holds the whole of React Aria's three packages: its components, the hooks that they are built from and the state that the hooks keep (condition 4).
 A module imports React Aria's own parts from it for what no component of blockr.ui does, and a page that draws neither with blockr.ui's components nor with React Aria's never loads it ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 Core's hooks and blockr.ui's inputs keep the contract's rules for a value that a control shows and submits ([The contract](#the-contract)), which core's binding also offers without React, for a module in plain TypeScript, so that a UI meets the contract alike whatever it is written in.
 
