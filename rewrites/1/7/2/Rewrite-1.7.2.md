@@ -1,5 +1,5 @@
 # The theme variables: their jobs, their defaults and a frontend's values
-Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
+Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): which theme variables blockr.ui declares, what each is for, the defaults that blockr.ui gives them in both modes, how a frontend sets values of its own and draws its own parts with them, which value wins on the page, blockr.ui's default, the frontend's or the app's, and which defaults a frontend keeps.
 It shapes the items of 1.7's Work list that write the theme variables, export the helper that tells which defaults a frontend keeps, and draw the dock's own parts from the theme variables ([UI kit and design system for the client](Rewrite-1.7#work)).
