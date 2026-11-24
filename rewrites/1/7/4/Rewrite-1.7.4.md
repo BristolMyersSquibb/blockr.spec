@@ -1,5 +1,5 @@
 # Building on blockr.ui: the build preset, the bundle and the stylesheet on the page
-Status: review. Design for [UI kit and design system for the client](Rewrite-1.7).
+Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how a package builds its modules and its classes against blockr.ui through blockr.ui's build preset, which files blockr.ui's own build writes, and what of them R puts on the page.
 It shapes the items of 1.7's Work list that start blockr.ui's client, write the theme variables and declare their list, build core's stylesheet with the preset, and split core's React SDK ([UI kit and design system for the client](Rewrite-1.7#work)).
