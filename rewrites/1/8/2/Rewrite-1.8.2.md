@@ -2,7 +2,7 @@
 Status: review. Design for [Wrap-up](Rewrite-1.8).
 
 One of the design pages of [Wrap-up](Rewrite-1.8): the R and TypeScript references and the long-form guides to the client internals of every package with client code.
-It shapes the TypeScript-to-pkgdown build, the reusable pkgdown workflow, core's reference and guides, and each later package's reference and guide, all items in Wrap-up's Work list.
+It shapes the TypeScript-to-pkgdown build, the reusable CI and pkgdown workflows, core's reference and guides, and each later package's reference and guide, all items in Wrap-up's Work list.
 The conversion and migration notes are [The conversion and the migration notes](Rewrite-1.8.3)'s, and the user guides that each implementation part already plans stay there.
 The assistant's benchmark is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
@@ -10,10 +10,10 @@ The assistant's benchmark is [The assistant's benchmark](Rewrite-1.8.1)'s.
 
 1. Every package with client code has one pkgdown site whose theme and navigation join its R documentation, its TypeScript reference and its guides, with no separately hosted TypeDoc site.
 2. Roxygen2 remains the source of the R reference, TypeDoc generates the TypeScript reference from source entry points, and neither generator reads the bundles and declarations that a package's build writes into `inst/`.
-3. TypeDoc documents what a package exports to other packages, rather than every source file, while the guides explain the internal modules and how they work together.
+3. TypeDoc documents the modules that core mounts and the declarations that other packages import, rather than every source file, while the guides explain the internal modules and how they work together.
 4. Every package with client code has a long-form guide that names its own modules, follows its important end-to-end flows and links its source, tests and reference pages.
 5. The generated TypeScript pages blend into pkgdown's articles and navigation, and their internal links survive the build.
-6. A documentation change rebuilds the generated pages locally and in CI without committing generated Markdown or requiring Node during `R CMD check`.
+6. A documentation change rebuilds the generated pages locally, in the pull request check and in the deployment workflow, without committing generated Markdown or requiring Node during `R CMD check`.
 7. The comments that generate JSON Schemas keep their schema annotations when public TypeScript exports gain documentation comments.
 8. The reference and client guide of each package with client code are complete before the switch, with a block package's following the port of its block classes.
 
@@ -45,9 +45,9 @@ The issue records how the generated Markdown is wrapped, named and excluded from
 If TypeDoc's Markdown cannot preserve those links through pkgdown, the issue evaluates TypeDoc's JSON output as the input to the same pkgdown build step rather than shipping a separate site.
 
 The generated pkgdown input is ignored by git and `.Rbuildignore`, and CI creates it afresh.
-A package runs the same command for a local preview and in the reusable documentation workflow, which calls it immediately before `pkgdown::build_site_github_pages()`.
-The reusable workflow leaves a package with no TypeScript entry points unchanged.
-R's build and check continue to need no Node because only the documentation workflow runs TypeDoc.
+A package runs the same command for a local preview, in the reusable CI workflow's `pkgdown-dev` job and in the reusable pkgdown workflow, each of which calls it immediately before its pkgdown build.
+The reusable workflows leave a package with no TypeScript entry points unchanged.
+R's build and check continue to need no Node because the TypeScript build has no part in them.
 
 The site's navigation gives the TypeScript reference and the client guide their own places beside the existing R reference, articles and migration notes.
 The spike establishes their exact labels and paths once, and the shared build keeps them stable across packages.
@@ -55,12 +55,13 @@ A reader can move from a guide to the signatures it discusses and from a signatu
 
 ### The TypeScript reference
 
-Each package lists the TypeScript source entry points that form its public package exports.
-TypeDoc follows their re-exports, so it documents the declarations that another package imports without making every internal file an entry point.
+Each package lists two kinds of TypeScript source entry point: the modules that core mounts, including its block, board option, plugin and output modules, and the entries whose declarations other packages import.
+TypeDoc follows their re-exports, so it documents what those entries export without making every internal file an entry point.
 The source entry points, not `inst/js/` or `inst/types/`, carry the `/** ... */` comments that explain an export's purpose, arguments, result, errors and examples where readers need them.
 
 Core's current public entries are `srcts/index.ts`, `srcts/react/index.ts`, `srcts/binding/index.ts`, `srcts/controls/index.ts`, `srcts/stubs/index.ts` and `srcts/build/index.ts`.
 The planned `@blockr/core/components` entry joins them when core splits its React SDK ([UI kit and design system for the client](Rewrite-1.7#work)).
+The source entry points of core's mounted block, board option, plugin and output modules join them under the same rule.
 The root `@blockr/core` entry is type-only, and the guides explain how a module reaches runtime behavior through `CoreApi` or its host rather than implying that an extension imports core's runtime store.
 Other packages name their own entry points in their documentation build.
 
@@ -96,12 +97,13 @@ Each block package explains its block modules, state schemas, hosts and any requ
 ### Ownership and checks
 
 Wrap-up owns the shared build and the new client guides.
-The implementation parts keep the user guides and migration notes they already list, and the TypeScript reference for a new package joins its documentation Work here when that package starts.
+The implementation parts keep the user guides and migration notes they already list.
+The reference and client guide of a package whose implementation part starts later join Wrap-up's Work when that part starts.
 An implementation change updates the affected guide and public comments in the same pull request once those pages exist.
 
-The documentation workflow builds the complete site and checks the internal links of the new TypeScript reference and client guides.
-TypeDoc warnings and link-check failures stop deployment.
-The first issue fixes the link checker and the paths it checks, and the reusable workflow runs the same command for every package.
+The pull request check and the deployment workflow each build the complete site and check the internal links of the new TypeScript reference and client guides.
+TypeDoc warnings and link-check failures stop both.
+The first issue chooses the link checker and the paths it checks, and the reusable workflows run the same command for every package.
 
 ## Open questions
 
@@ -111,7 +113,9 @@ None.
 
 TypeDoc supports TypeScript 6.0.x in its current 0.28 release, and `typedoc-plugin-markdown` 4.x targets TypeDoc 0.28.
 TypeDoc reads `/** ... */` comments by default and follows re-exports from explicit entry points, so no `entryPointStrategy: expand` over `srcts/` is needed.
-The reusable pkgdown workflow currently removes `vignettes/_metadata.yml` before building because of Mermaid, then calls `pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)`; the TypeScript build belongs immediately before that call.
+The reusable CI workflow's `pkgdown-dev` job and the reusable pkgdown workflow currently remove `vignettes/_metadata.yml` before building because of Mermaid.
+They then call `pkgdown::build_site(devel = TRUE, new_process = FALSE, install = FALSE)` and `pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)`, respectively.
+The TypeScript build belongs immediately before each call.
 
 Core's `srcts/index.ts` exports the public types, and `inst/types/package.json` exposes `.`, `./binding`, `./build`, `./react`, `./stubs` and `./controls`.
 The root `tsconfig.json` is a solution file that references the browser and Node projects, so the first issue chooses the TypeScript configuration that TypeDoc needs instead of assuming the root file compiles sources directly.

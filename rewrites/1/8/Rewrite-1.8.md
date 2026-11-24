@@ -41,7 +41,7 @@ Each package writes migration notes for the app scripts that call it, and conver
 ### Documentation of the new stack
 
 Each package with client code keeps one pkgdown site, with roxygen2's R reference, TypeDoc's TypeScript reference and hand-written guides to its client internals under one theme and navigation.
-Blockr.core proves the TypeScript-to-pkgdown build before the reusable workflow gains it and the other packages adopt it.
+Blockr.core proves the TypeScript-to-pkgdown build before the reusable workflows gain it and the other packages adopt it.
 [Documentation of the new stack](Rewrite-1.8.2) holds the design.
 
 ## Open questions
@@ -56,8 +56,8 @@ None.
 - Carry over the methods of `blockr_deser()` of blockr.dplyr's main, and write those that make the plugins of the DAG, the assistant and blockr.md from today's extensions, in blockr.convert
 - Write the test files of every package that wrote today's files and of the clinical data explorer's board, from main at the switch, and the check that each example's script, changed by an AI from the migration notes alone, opens into the same board as the conversion of its file, in blockr.convert
 - Prove a pkgdown build that renders TypeDoc's reference for `@blockr/core` beside roxygen2's R reference under one theme and navigation, chooses how TypeDoc's Markdown becomes pkgdown input, and checks its internal links, in blockr.core ([One site per package](Rewrite-1.8.2#one-site-per-package))
-- Extend the reusable pkgdown workflow to run a package's documentation build before `pkgdown::build_site_github_pages()`, check the internal links of the built site, and leave a package without TypeScript entry points unchanged, in blockr.ci
-- Generate reference pages for `@blockr/core/react`, `@blockr/core/components`, `@blockr/core/binding`, `@blockr/core/controls`, `@blockr/core/stubs` and `@blockr/core/build` from their source entry points, with their exported `/** ... */` comments and the schema annotations preserved, in blockr.core
+- Extend the reusable CI workflow's `pkgdown-dev` job and the reusable pkgdown workflow to run a package's documentation build before their pkgdown builds, check the internal links of each built site, and leave a package without TypeScript entry points unchanged, in blockr.ci
+- Generate reference pages for core's mounted block, board option, plugin and output modules and for `@blockr/core/react`, `@blockr/core/components`, `@blockr/core/binding`, `@blockr/core/controls`, `@blockr/core/stubs` and `@blockr/core/build` from their source entry points, with their exported `/** ... */` comments and the schema annotations preserved, in blockr.core
 - Write the overview of core's client and the starting-the-page guide, with the source map, the boundary between source and generated files, and the sequence from `startPage()` through `hello`, registration, board opening, frontend rendering and scheduler startup, in blockr.core
 - Write the guides to `CoreApi`, the hosts and mounting modules, covering block, board option, plugin and output mounts and their lifetimes, in blockr.core
 - Write the guides to the store, deltas, steps, the command registry and board actions, following `BlockHost.submit()` and a board action through one step, in blockr.core
