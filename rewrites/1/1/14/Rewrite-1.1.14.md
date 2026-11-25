@@ -95,7 +95,7 @@ interface Notification {
 
 interface SourceModule {             // the package's module behind a notification, in one form whoever raised it
   object: { plugin: PluginClassId } | { block: BlockId } | { option: OptionId };  // the board object whose module it is
-  renderer?: string;                 // the renderer, by its id, where the module is the renderer of a block's output or the one that draws a board option
+  renderer?: string;                 // the renderer, by its id, where the module is the renderer of a block's output
   package?: string;                  // the module's package, where core knows it
 }
 
@@ -149,7 +149,7 @@ What a mounted module raises holds until its mount ends at the latest, and what 
 The code lets a frontend choose how to draw a notification, such as a button that reloads the page for core's `page_reload_needed`, while a class vector stays R's, on R's conditions alone.
 The source lets a frontend say who raised one, and lets a plugin find its own.
 Each source names the module behind a notification in `module`, in the one form of `SourceModule`, so that a frontend reads which module a notification is of in one way, whoever raised it: the module that made R's request, the module whose code core found failing, or the module that raised it ([blockr.core#615](https://github.com/BristolMyersSquibb/blockr.core/pull/615)).
-A block has two modules, its class's UI module and the renderer of its output, and so has a board option, its own module and the renderer that the app may name to draw its value in place of its UI, so a module names the renderer, by its id, where it is one.
+A block has two modules, its class's UI module and the renderer of its output, so a module names the renderer, by its id, where it is one.
 A module without a renderer is the block's UI module, the board option's own module or the plugin class's module.
 
 Core makes a block's notifications from the conditions of its status, one for each, and derives them from the scheduler rather than copying them.

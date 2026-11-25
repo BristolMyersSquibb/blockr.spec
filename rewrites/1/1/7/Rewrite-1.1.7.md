@@ -119,7 +119,7 @@ An upload is an action that receives the file the user picked, in the argument t
 The host sends a file only with a request whose `new_block_request()` names an argument for one, and otherwise rejects the request at once, so that no file is dropped without a word ([Block classes in R](Rewrite-1.1.5#requests)).
 Core neither keeps nor merges a call that sends a file, since the file is no part of the key that it keeps answers by.
 
-A board option's UI, or the renderer that replaces it, gets an `OptionHost`, which reaches R through the board option's own requests, which the package that ships it registers in R under the board option's id, as blockr.io's data directory board option checks and lists the server's directories today ([R/data-dir.R#L50-L124](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/data-dir.R#L50-L124)), and an output's renderer ([Drawing the board](Rewrite-1.1.8#renderers)) gets an output host:
+A board option's UI gets an `OptionHost`, which reaches R through the board option's own requests, which the package that ships it registers in R under the board option's id, as blockr.io's data directory board option checks and lists the server's directories today ([R/data-dir.R#L50-L124](https://github.com/BristolMyersSquibb/blockr.io/blob/9d8a10142777ae86bbde400c91ce6e4c20f515b7/R/data-dir.R#L50-L124)), and an output's renderer ([Drawing the board](Rewrite-1.1.8#renderers)) gets an output host:
 
 ```ts
 interface OptionHost<V extends Json = Json> {
@@ -172,7 +172,7 @@ Once core holds the output of the block's current revision, the host sends the r
 Where the block reads `failed`, `invalid` or `waiting`, no result is in sight, and the host rejects the request at once with the block's status.
 Core keeps an answer as it keeps the output, since no such request is volatile and none writes, so a renderer still changes nothing itself ([Block classes in R](Rewrite-1.1.5#outputs)).
 
-Only what core mounts inside a frontend's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI or renderer, and an output's renderer.
+Only what core mounts inside a frontend's layout, written by another package, gets a host narrowed to one thing: a block's UI, a board option's UI and an output's renderer.
 A plugin's UI, which core mounts there too, gets the whole `CoreApi` instead ([Plugins](Rewrite-1.1.12#plugin-classes)).
 A frontend, which draws the whole board, its stacks and links included, gets `CoreApi`, as every other plugin does, so core makes no host for a stack or for the board.
 A frontend that mounts other packages' UI itself, such as on its stacks, narrows `CoreApi` for it in the same way, and keeps what that UI should save in its own state, keyed by stack id ([Board updates](Rewrite-1.1.2#plugins)), as in this host for a note on each stack:

@@ -208,7 +208,6 @@ Every reader gets the board's value, which holds the default where nobody set on
 - A renderer gets, through its output host's `options()`, the values of the board options its module names, as the output it holds was asked with.
 - A board option's UI gets an `OptionHost`, whose `value()` gives the board's value, which core puts on the board with its default before it calls the module's `render()` where the board holds none, and whose `submit()` runs `blockr.core-set_option` ([UI modules in JS](Rewrite-1.1.7#the-contract)).
   A frontend mounts it with `mountOption()` where it shows the board options that the board holds, which include every one that something on the page requires, as core's basic frontend does in its toolbar and the dock in its options sidebar ([Drawing the board](Rewrite-1.1.8#what-core-gives-plugins)).
-  An app replaces it with a renderer that it names in the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)).
 - A plugin reads the values of the board options that its class names through `core.options.value()`, and follows a change of the board's through `store.subscribe()` ([Board updates](Rewrite-1.1.2#following-the-board)).
   It may read any other board option that the board holds in the same way, as the assistant does to tell its model the value of each board option in use ([The assistant's tools](Rewrite-1.4.2#the-tools)).
 
@@ -252,7 +251,6 @@ R writes into the page's head a line that sets the mode before the page first pa
 A definition converts what it reads: R writes a blockr option of length one bare, as an environment variable gives it, so `show_conditions` takes a lone severity as an array of one, and `dark_mode` takes today's `TRUE` and `FALSE` as dark and light.
 That is the only link between the values of the two kinds.
 R computes no default for a board option, a blockr option never changes a value that the board holds, and nothing sets a blockr option from a board option.
-The blockr option `renderers` also replaces a board option's UI (above), which changes how the value is drawn and never the value.
 
 ## Open questions
 
