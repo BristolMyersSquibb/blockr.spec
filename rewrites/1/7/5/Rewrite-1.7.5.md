@@ -4,7 +4,7 @@ Status: settled on 2026-11-24. Design for [UI kit and design system for the clie
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how an app gives the page a theme of its own, which blockr.ui's `new_blockr_theme()` makes in R and core's `serve()` takes, and how R writes the theme into the page.
 It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that export `new_blockr_theme()` from blockr.ui, [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), make blockr.theme's theme with it, [blockr.theme#10](https://github.com/BristolMyersSquibb/blockr.theme/issues/10), and have `serve()` take the theme and write it into the page, [blockr.core#868](https://github.com/BristolMyersSquibb/blockr.core/issues/868).
 The issues that write the design system's article and blockr.theme's migration notes rely on it too: [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116) and [blockr.theme#11](https://github.com/BristolMyersSquibb/blockr.theme/issues/11).
-Which theme variables there are, what each is for, their defaults, how a frontend sets values of its own, which value wins on the page and which defaults a frontend keeps belong to [The theme variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
+Which theme variables there are, what each is for, their defaults, how a frontend gives values of its own, which value wins on the page and which defaults a frontend keeps belong to [The theme variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
 ## What must hold
@@ -117,6 +117,7 @@ It would serve every such package alike, with ggplot2's themes as a starting poi
 R writes the theme into the page that it serves, in the page's head, after blockr.ui's stylesheet, so that the theme holds from the first paint, with no request between, and every board that the app opens draws in it, since the page keeps it ([Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page)).
 The theme never changes while the page runs, so nothing else carries it.
 The rules come from blockr.ui's method of `format()` for the class `blockr_theme`, so that their selectors stay with those of blockr.ui's defaults, and core puts the text that it returns into the page's head.
+R writes the frontend's theme the same way, just before the app's, so that the app's rules come later and win ([The theme variables](Rewrite-1.7.2#where-the-values-are-set)).
 For the theme above, it writes two rules:
 
 ```css
@@ -133,9 +134,9 @@ For the theme above, it writes two rules:
 
 The rule of light mode holds in light mode and the rule of dark mode in dark mode, so each value holds in its own mode alone.
 As `dark_mode` switches the attribute `data-bk-mode`, the browser applies the rule of the new mode, with nothing for core to do ([Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
-Why each rule names `:root` twice and its mode, so that the app's values win over the frontend's and over blockr.ui's defaults, belongs to [The theme variables](Rewrite-1.7.2#where-the-values-are-set).
+Why each rule names `:root` twice and its mode belongs to [The theme variables](Rewrite-1.7.2#where-the-values-are-set).
 
-For each of the theme's fonts, core serves the file and writes a face with `@font-face`, at the URL at which it serves the file, and with `font-display: swap`, as blockr.theme writes its faces today ([R/theme.R#L240-L261](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L240-L261)).
+For each font of the app's theme and of the frontend's, core serves the file and writes a face with `@font-face`, at the URL at which it serves the file, and with `font-display: swap`, as blockr.theme writes its faces today ([R/theme.R#L240-L261](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L240-L261)).
 R also names each file in the page's head as a preload link, as it names the files that the page imports as it starts ([State in JS](Rewrite-1#conventions)).
 So the browser fetches the file as the page loads.
 Where the file is still on its way, the text draws in the next face of the stack rather than not at all.
