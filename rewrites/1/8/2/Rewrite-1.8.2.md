@@ -2,7 +2,9 @@
 Status: settled on 2026-11-26. Design for [Wrap-up](Rewrite-1.8).
 
 One of the design pages of [Wrap-up](Rewrite-1.8): the R and TypeScript references of every package with client code, and its client guides, the hand-written articles on how its client works inside.
-It shapes the Work items of its section of that part's Work list.
+It shapes the issues of the spec [blockr#515](https://github.com/orgs/BristolMyersSquibb/discussions/515), which holds its section of that part's Work list.
+They prove the documentation build in core, [blockr.core#888](https://github.com/BristolMyersSquibb/blockr.core/issues/888), and run it in the workflows of blockr.ci, [blockr.ci#127](https://github.com/BristolMyersSquibb/blockr.ci/issues/127).
+They write core's reference and client guides, [blockr.core#889](https://github.com/BristolMyersSquibb/blockr.core/issues/889) to [blockr.core#895](https://github.com/BristolMyersSquibb/blockr.core/issues/895), and the references and client guides of blockr.ui, the dock, the DAG and the assistant, [blockr.ui#130](https://github.com/BristolMyersSquibb/blockr.ui/issues/130), [blockr.dock#688](https://github.com/BristolMyersSquibb/blockr.dock/issues/688), [blockr.graph#29](https://github.com/BristolMyersSquibb/blockr.graph/issues/29) and [blockr.assistant#333](https://github.com/BristolMyersSquibb/blockr.assistant/issues/333).
 The migration notes are [The conversion and the migration notes](Rewrite-1.8.3)'s, and the vignettes of the meta-package blockr are [The `blockr` meta-package](Rewrite-1.8.5)'s.
 Each package's other user guides, such as core's vignette *Create a block class*, stay with the part that changes the package.
 
