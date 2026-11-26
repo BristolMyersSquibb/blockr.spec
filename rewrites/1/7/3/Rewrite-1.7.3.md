@@ -178,6 +178,8 @@ It holds two things:
   In blockr.ui, a change to a component and the change to its helper ship in the same release.
   The tests of core, the dock, the assistant and the block packages act on the components through them, in place of copies of their own.
 
+Loading `@blockr/ui/stubs` also makes happy-dom do as a browser does where the components need it, as loading core's stubs does on `js-state` ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
+
 On `js-state`, 83 of the inputs' 140 tests bind an input through `useValue()` on core's stubs of the hosts (Today).
 So they split as they move:
 
@@ -193,6 +195,10 @@ None.
 - The components at `79507c4` are in `srcts/aria`, `srcts/inputs`, `srcts/overlays`, `srcts/layout`, `srcts/dnd`, `srcts/gridlist`, `srcts/table` and `srcts/tree`, with the classes that they share in `srcts/styles`, and their tests beside them as `*.test.tsx`.
 - The helpers that read a `Bound` move with the inputs: `useTyped()` in `inputs/inputs.tsx`, `useBoundDate()` in `inputs/bounddate.ts` and `useDragged()` in `inputs/colors.ts`.
 - The icons of `inputs/icons.tsx`, `Chevron`, `ChevronRight`, `Tick`, `Dash`, `Cross` and `Magnifier`, and the grip of `DragButton` in `dnd/dnd.tsx` give way to Lucide's `ChevronDown`, `ChevronRight`, `Check`, `Minus`, `X`, `Search` and `GripVertical`, as the starter kit's select draws `ChevronDown`, its checkbox `Check` and `Minus`, and its menu `Check` and `ChevronRight`.
+  The icons that core's components draw by hand elsewhere give way to the starter kit's as well.
+  The chevrons of the number field's steppers become `ChevronUp` and `ChevronDown`, and those that page the calendar `ChevronLeft` and `ChevronRight`.
+  The calendar on the date picker's button becomes `Calendar`, the marks of the dialog that asks `CircleExclamationPoint` and `Info`, and the meter's warning `TriangleExclamationPoint`.
+  The table's sort arrow becomes `ArrowUp`, and the markers of the disclosure and the tree `ChevronRight` ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
 - The package `lucide` holds each icon as data of its type `IconNode`, a list of SVG elements with their attributes, while `lucide-react` wraps each in a component of its own.
   The entry `@blockr/ui/icons` re-exports the icons of `lucide`, their aliases and the type `IconNode`, but neither `icons`, the object that holds all of them, nor the functions of `lucide`, such as `createIcons()`.
 - With esbuild 0.28.2 and Lucide 1.79.0, whose 2,104 icons take 605 KB minified and 130 KB gzipped at level 9, a file that imports three of them through an entry that re-exports them all bundles to 920 bytes minified and 471 gzipped.
@@ -201,5 +207,7 @@ None.
 - Core's `Binding`, in `srcts/binding/binding.ts`, has `release()` beside the members of `Bound`, and `PAUSE`, the 500 ms that it waits after the last keystroke before it submits.
 - The helpers that move to `@blockr/ui/stubs` are those of `srcts/testing/inputs.ts`, `select.ts`, `overlays.ts` and `rows.ts`, and `step()` and `draw()` of `react.ts`.
   The `mountReact()` of `react.ts` stays in core, since it mounts a module with core's `mount()`, and so does `requests.ts`, which holds the requests of core's stubs of the hosts.
+  The parts of `srcts/testing/dom.ts` that the components need move as well.
+  Its `IntersectionObserver`, which reports every element in view for core's basic frontend, stays in core.
 
 </details>
