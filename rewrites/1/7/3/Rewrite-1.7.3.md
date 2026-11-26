@@ -164,7 +164,12 @@ The preset's check fails blockr.ui's own build where a component names a colour 
 For tests, blockr.ui exports `@blockr/ui/stubs`, as core exports its stubs of the hosts as `@blockr/core/stubs` ([UI modules in JS](Rewrite-1.1.7#testing)).
 It holds two things:
 
-- The stub of `Bound`, `stubBound()`, which holds a value, records each value that an input commits, types and flushes, and refuses a submit with an error where a test asks it to.
+- The stub of `Bound`, `stubBound()`, with the hook `useStubBound()`.
+  The stub holds a value, records each value that an input commits, types and flushes, and refuses a submit with an error where a test asks it to.
+  A component that a test draws binds an input to the stub through the hook, as a module's UI binds one to a host through core's `useValue()`.
+  The hook gives the input a `Bound` of its own for each value and error that the stub holds, so that the input draws again as either changes.
+  The stub is not a `Bound` itself, so TypeScript refuses to let an input take it directly.
+  An input that took the stub directly would never draw again ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
   So blockr.ui tests its inputs without core, and a package tests a component apart from any host.
 - The helpers that act on the components as a user does, which move from core's `srcts/testing` (Today).
   For example, `type()` types into a field one keystroke at a time, and `picked()` opens a select's list and clicks the rows with the labels given.
@@ -176,7 +181,7 @@ It holds two things:
 On `js-state`, 83 of the inputs' 140 tests bind an input through `useValue()` on core's stubs of the hosts (Today).
 So they split as they move:
 
-- A test of what an input does with its `bound` moves to blockr.ui, where it binds the input to the stub: which value the input shows, when it calls `commit()`, `type()` and `flush()`, and where it shows `error`.
+- A test of what an input does with its `bound` moves to blockr.ui, where it binds the input to the stub through `useStubBound()`: which value the input shows, when it calls `commit()`, `type()` and `flush()`, and where it shows `error`.
 - A test of the binding's rules stays in core, with core's stubs of the hosts and `useValue()`: the pause before a submit, the value that the input shows while the user types, and the error of a submit that the host refuses ([UI modules in JS](Rewrite-1.1.7#testing)).
 
 ## Open questions
