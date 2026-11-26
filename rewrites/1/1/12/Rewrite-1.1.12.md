@@ -258,7 +258,7 @@ storage: {                                          // core's storage plugin's
 
 Core lists its class with a module of its own, as it lists its basic frontend's, and it keeps no state, so the board holds nothing for it, while an app runs it unless its rows hold another storage plugin ([Which plugins a board has](#which-plugins-a-board-has)).
 A frontend draws the controls of `core.plugins.storage()`, the `storage` of the app's storage plugin, and draws none where the app holds none ([What a frontend offers other plugins](#what-a-frontend-offers-other-plugins)).
-The storage plugin of blockr.session saves to Connect and opens from it, and its controls show the workflow's name, its save status and its versions ([Session management as a storage plugin](Rewrite-1.6)).
+The storage plugin of blockr.session saves to Connect and opens from it, and its controls show the record's key, its save status and its versions ([Session management as a storage plugin](Rewrite-1.6)).
 
 An app holds its storage plugin as it holds any other, among the rows of `plugins`, so that an app with blockr.session installed saves to Connect by default, and one that keeps core's storage leaves blockr.session's plugin out:
 
@@ -272,7 +272,7 @@ So a board that a user saved as a download through core's storage plugin saves t
 So a deployment alone chooses where its pages save, through the packages it installs and the rows its script passes to `serve()`.
 
 The three kinds are core's, so a frontend draws the controls of every storage plugin, of a package it does not know too.
-What a storage plugin cannot build from them, such as the sharing settings of session management or every version of a workflow, it draws in a dialog of its own, which one of its controls opens and which takes its look from blockr.ui's design system, as every plugin's UI does ([Plugin classes](#plugin-classes)).
+What a storage plugin cannot build from them, such as the sharing settings of session management or every version of a record, it draws in a dialog of its own, which one of its controls opens and which takes its look from blockr.ui's design system, as every plugin's UI does ([Plugin classes](#plugin-classes)).
 A kind that core adds later needs a rule for a frontend built before it, such as skipping its controls, which the version of core that adds it settles.
 A storage plugin keeps no state in the board, since the record a board was opened from is the URL's and the plugin's own, as [Session management as a storage plugin](Rewrite-1.6) has it.
 Nor does it key a record on the board's name, which a rename changes at any time while some backends cannot rename a key, so a frontend's field for the name renames the board alone ([The dock's navbar](Rewrite-1.2.5#the-docks-own-parts)).
@@ -348,6 +348,7 @@ Whoever calls `CoreApi.request()` names one of the app's plugins by its class's 
 So R calls no method of `plugin_requests()` to answer a request, and reads no package's listing for it, in whatever process runs the app, and refuses a request of a plugin class that the app does not run.
 A method of `plugin_requests()` that gives anything but a list of functions by name stops `serve()`, as a method of `plugin_version()` does that gives no whole number from 1.
 R calls the request's function with the args that the client passes, by name, with the request's body in `file` where the function takes it, and with the blocks that the request reads in `reads`, by block id, each a list of the block's `result` and its block expression `expr`.
+Where the function takes `headers`, R passes it the headers of the HTTP request that opened the session, as the transport gives them, so that a request reads what a server attaches there, such as the session token of a Connect visitor, without Shiny's session ([Session management as a storage plugin](Rewrite-1.6#proposal)).
 Core has those blocks evaluated first, even off screen, as for a one-time evaluation ([Evaluation in the client](Rewrite-1.1.10#demand)).
 A plugin's request may write, so the client never keeps its answer ([Wire protocol](Rewrite-1.1.9#requests)).
 It may answer with a file, through `new_reply_body()`, and report how far it has come through `report_progress()`.
