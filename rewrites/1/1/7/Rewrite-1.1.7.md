@@ -226,7 +226,7 @@ Core keeps what packages share independent of any order between them:
 - Ids carry their package, and two packages that list one board option, whose id carries none, stop the app as `serve()` is called, naming both ([Board options and blockr options](Rewrite-1.1.13#defining-a-board-option)).
 - Every module is registered once R has replied and before the store migrates or drops anything, since core registers them before it calls the store's `open()` ([Board updates](Rewrite-1.1.2#the-store)), and so before the store announces the board ([Board updates](Rewrite-1.1.2#following-the-board)) and before the frontend reads what packages registered, such as the commands in its menus.
 - A stylesheet loads with its module and styles only classes under a prefix of its package's own, so packages that don't know each other never style the same element, and a theme restyles every package through the theme variables, which the classes of every package read ([UI kit and design system for the client](Rewrite-1.7)).
-  The stylesheet of blockr.ui, with the theme variables, the app's theme and the fonts that they refer to, is on the page from the start, before any module loads, since no module of a package's own carries them ([UI kit and design system for the client](Rewrite-1.7)).
+  The stylesheet of blockr.ui, with the theme variables, the frontend's theme, the app's theme and the fonts that they refer to, is on the page from the start, before any module loads, since no module of a package's own carries them ([UI kit and design system for the client](Rewrite-1.7)).
 
 ### React
 

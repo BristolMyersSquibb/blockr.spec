@@ -1,16 +1,16 @@
 # The theme variables: their jobs, their defaults and a frontend's values
 Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
-One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): which theme variables blockr.ui declares, what each is for, the defaults that blockr.ui gives them in both modes, how a frontend sets values of its own and draws its own parts with them, which value wins on the page, blockr.ui's default, the frontend's or the app's, and which defaults a frontend keeps.
-It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that write the theme variables, [blockr.ui#109](https://github.com/BristolMyersSquibb/blockr.ui/issues/109), export the helper that tells which defaults a frontend keeps, [blockr.ui#111](https://github.com/BristolMyersSquibb/blockr.ui/issues/111), and move the dock onto the theme variables, [blockr.dock#673](https://github.com/BristolMyersSquibb/blockr.dock/issues/673).
-The issues that drop today's code from blockr.ui, declare the list of theme variables, make an app's theme in blockr.ui and in blockr.theme, move the components, switch core, keep `dark_mode` with the user, move the assistant and the DAG, offer core's mark and status dot and write the design system's article rely on it too: [blockr.ui#107](https://github.com/BristolMyersSquibb/blockr.ui/issues/107), [blockr.ui#110](https://github.com/BristolMyersSquibb/blockr.ui/issues/110), [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), [blockr.theme#10](https://github.com/BristolMyersSquibb/blockr.theme/issues/10), [blockr.ui#114](https://github.com/BristolMyersSquibb/blockr.ui/issues/114), [blockr.core#866](https://github.com/BristolMyersSquibb/blockr.core/issues/866), [blockr.core#867](https://github.com/BristolMyersSquibb/blockr.core/issues/867), [blockr.assistant#319](https://github.com/BristolMyersSquibb/blockr.assistant/issues/319), [blockr.graph#12](https://github.com/BristolMyersSquibb/blockr.graph/issues/12), [blockr.core#870](https://github.com/BristolMyersSquibb/blockr.core/issues/870) and [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116).
+One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): which theme variables blockr.ui declares, what each is for, the defaults that blockr.ui gives them in both modes, how a frontend gives values of its own, as a theme, and draws its own parts with them, which value wins on the page, blockr.ui's default, the frontend's or the app's, and which defaults a frontend keeps.
+It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that write the theme variables, [blockr.ui#109](https://github.com/BristolMyersSquibb/blockr.ui/issues/109), export `unset_variables()`, which tells which defaults a frontend keeps, [blockr.ui#111](https://github.com/BristolMyersSquibb/blockr.ui/issues/111), give a frontend's theme through `frontend_theme()` and write it into the page, [blockr.core#866](https://github.com/BristolMyersSquibb/blockr.core/issues/866) and [blockr.core#868](https://github.com/BristolMyersSquibb/blockr.core/issues/868), and move the dock onto the theme variables, [blockr.dock#673](https://github.com/BristolMyersSquibb/blockr.dock/issues/673).
+The issues that drop today's code from blockr.ui, declare the list of theme variables, make an app's theme in blockr.ui and in blockr.theme, move the components, keep `dark_mode` with the user, move the assistant and the DAG, offer core's mark and status dot and write the design system's article rely on it too: [blockr.ui#107](https://github.com/BristolMyersSquibb/blockr.ui/issues/107), [blockr.ui#110](https://github.com/BristolMyersSquibb/blockr.ui/issues/110), [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), [blockr.theme#10](https://github.com/BristolMyersSquibb/blockr.theme/issues/10), [blockr.ui#114](https://github.com/BristolMyersSquibb/blockr.ui/issues/114), [blockr.core#867](https://github.com/BristolMyersSquibb/blockr.core/issues/867), [blockr.assistant#319](https://github.com/BristolMyersSquibb/blockr.assistant/issues/319), [blockr.graph#12](https://github.com/BristolMyersSquibb/blockr.graph/issues/12), [blockr.core#870](https://github.com/BristolMyersSquibb/blockr.core/issues/870) and [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116).
 It takes the place of the fix that [blockr.core#789](https://github.com/BristolMyersSquibb/blockr.core/issues/789) asks for.
 The prefix, the mode's attribute, what the list of theme variables promises other packages and how the build preset writes the theme variables belong to [Building on blockr.ui](Rewrite-1.7.4), how an app gives its theme to [An app's theme](Rewrite-1.7.5), what a frontend is to [Plugins](Rewrite-1.1.12#the-frontend), and how a stylesheet loads with its module and where overlays sit to [UI modules in JS](Rewrite-1.1.7).
 
 ## What must hold
 
 1. The stylesheet of blockr.ui gives every theme variable a default, for light mode and for dark mode, so that every page draws whole, whatever its frontend sets, a block that `serve()` serves alone included.
-2. A frontend restyles the page by setting theme variables alone, and a value that it sets wins over blockr.ui's default, whichever stylesheet loads first.
+2. A frontend restyles the page by setting theme variables alone, in a theme of its own, and a value that it sets wins over blockr.ui's default.
 3. Every colour that blockr.ui's components, core's UIs and the frontend's own parts draw comes from a theme variable, so that a frontend restyles them by setting those variables, and an app's theme restyles all of them.
    The colours of block categories are one exception, since they are core's ([Drawing the board](Rewrite-1.1.8#the-blocks-mark-and-the-status-dot)).
    The black of a modal's backdrop and the black and white rings of a colour field are the other, since they must stand out on any colour ([Colours](#colours)).
@@ -57,7 +57,7 @@ Every UI draws with them: blockr.ui's components, core's UIs, the frontend's own
 The set is as big as that needs and as small as it can be, so it holds the colours, fonts, sizes of text, radii, shadows and spacing that a frontend may want its own, and leaves the rest of how components look to blockr.ui.
 Each is a variable that Tailwind CSS 4 keeps its theme in, under the prefix `bk`, as `--bk-color-popover` and `--bk-spacing`, which every package's classes read through `@theme inline`, as core's `bc:bg-popover` and `bc:px-2` do ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
 The stylesheet of blockr.ui declares the variables and gives each a default for both modes, its documentation says what each is for, and it exports their list ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
-A frontend sets the variables whose values it wants its own, and keeps blockr.ui's defaults for the rest ([The defaults](#the-defaults)), and an app's theme sets those whose values the app wants its own, over the frontend's ([An app's theme](Rewrite-1.7.5)).
+A frontend sets the variables whose values it wants its own, in its theme, and keeps blockr.ui's defaults for the rest ([Where the values are set](#where-the-values-are-set), [The defaults](#the-defaults)), and an app's theme sets those whose values the app wants its own, over the frontend's ([An app's theme](Rewrite-1.7.5)).
 Beside them, the theme variable `--bk-z-index-overlay` gives the layer that every overlay stacks on, whose default [The defaults](#the-defaults) gives.
 
 #### Colours
@@ -157,10 +157,21 @@ The build preset maps the classes of shadows onto these variables, as it maps th
 Three sources set the theme variables, each over the one before:
 
 1. The stylesheet of blockr.ui gives every variable its default.
-2. The frontend's stylesheet sets the values that the frontend wants its own.
+2. The frontend's theme sets the values that the frontend wants its own.
 3. An app's theme sets the values that the app wants its own ([An app's theme](Rewrite-1.7.5)).
 
+A frontend gives its values as an app gives its own: as a theme, which blockr.ui's `new_blockr_theme()` makes in R ([A theme in R](Rewrite-1.7.5#a-theme-in-r)).
+Core defines the generic `frontend_theme()`, whose method returns the frontend's theme ([Plugins](Rewrite-1.1.12#the-frontend)).
+R calls `frontend_theme()` on the app's frontend as `serve()` builds the app, as it calls `frontend_args()`.
+Core's method for `frontend_plugin` returns a theme with no values, so a frontend that keeps every default needs no method of its own.
+
 No other stylesheet of a package styles `:root`.
+No stylesheet of a package but blockr.ui's sets a theme variable either, for two reasons:
+
+1. A value that a stylesheet sets on an element below `:root` wins there over both themes, since the element no longer inherits the variable.
+2. A value in a stylesheet escapes the frontend's theme, which the frontend's tests read ([Which defaults a frontend keeps](#which-defaults-a-frontend-keeps)).
+
+So the check of the build preset fails another package's build whose stylesheet sets a variable under `--bk-` ([The build preset](Rewrite-1.7.4#the-build-preset)).
 
 The stylesheet of blockr.ui sets its defaults inside a cascade layer, under three selectors:
 
@@ -168,51 +179,51 @@ The stylesheet of blockr.ui sets its defaults inside a cascade layer, under thre
 2. Under `:root[data-bk-mode="light"]`, it sets the colours and the shadows of light mode, and the browser's `color-scheme`, `light`.
 3. Under `:root[data-bk-mode="dark"]`, it sets those of dark mode, and `color-scheme: dark`.
 
-The frontend sets its values in the stylesheet beside its module, which core loads with the module and waits for, so that the values are on the page before the frontend draws ([UI modules in JS](Rewrite-1.1.7#packaging)):
+R writes the frontend's theme and then the app's into the page's head, after blockr.ui's stylesheet, each through blockr.ui's method of `format()` ([The rules that R writes](Rewrite-1.7.5#the-rules-that-r-writes)).
+For two of the variables, a frontend's method of `frontend_theme()` would return:
 
-1. The stylesheet sets each variable whose value it gives under `:root[data-bk-mode="light"]`, on the page's root element, with its value in light mode.
-2. It sets each of them again under `:root[data-bk-mode="dark"]`, with its value in dark mode, which is the same value where the two modes share one.
-3. Every element inherits the values from `:root`, so that an overlay takes them wherever it sits, React Aria's portal at the end of the page's body included ([UI modules in JS](Rewrite-1.1.7#react)).
+```r
+new_blockr_theme(
+  light = list("--bk-color-popover" = "#fafafa", "--bk-spacing" = "0.25rem"),
+  dark = list("--bk-color-popover" = "#262626", "--bk-spacing" = "0.25rem")
+)
+```
 
-For two of the variables, a frontend's stylesheet would hold:
+R writes that theme as two rules:
 
 ```css
-:root[data-bk-mode="light"] {
+:root:root[data-bk-mode="light"] {
   --bk-color-popover: #fafafa;
   --bk-spacing: 0.25rem;
 }
 
-:root[data-bk-mode="dark"] {
+:root:root[data-bk-mode="dark"] {
   --bk-color-popover: #262626;
   --bk-spacing: 0.25rem;
 }
 ```
 
-R writes the rules of an app's theme into the page's head, under `:root:root[data-bk-mode="light"]` and `:root:root[data-bk-mode="dark"]` ([The rules that R writes](Rewrite-1.7.5#the-rules-that-r-writes)).
+Every element inherits the values from `:root`, so that an overlay takes them wherever it sits, React Aria's portal at the end of the page's body included ([UI modules in JS](Rewrite-1.1.7#react)).
 
 Which value wins follows from where each source sets it:
 
-1. The frontend sets its values outside any layer, so they win over blockr.ui's defaults, which sit in one, whichever stylesheet loads first.
-2. Each rule of an app's theme names `:root` twice beside the mode's attribute, which gives it a specificity of (0,3,0), while the frontend's selectors have (0,2,0).
-   So the app's values win over the frontend's whichever stylesheet loads first, although the frontend's loads with its module, after the page's head ([UI modules in JS](Rewrite-1.1.7#packaging)).
-   They sit outside any layer too, so they win over blockr.ui's defaults as well.
+1. R writes both themes outside any layer, so their values win over blockr.ui's defaults, which sit in one.
+2. The rules of the two themes have the same selectors, so the later rule wins: the app's, which R writes after the frontend's.
+3. Each rule names `:root` twice beside the mode's attribute, which gives it a specificity of (0,3,0).
+   A stylesheet that the check does not reach may still set a theme variable under `:root[data-bk-mode="light"]`, at (0,2,0).
+   Both themes win over such a value, whichever loads first.
 
-A frontend sets its values under its two selectors alone, for three reasons:
-
-1. The rules of an app's theme win over them by specificity.
-2. A value set on an element below `:root` would win there over the app's by inheritance.
-3. A value on `:root` that names no mode would hold in both modes, where it would win over blockr.ui's defaults of the other mode.
-
-An app's theme names the mode in its rule of light mode as well.
+The rule of light mode names its mode as well.
 A rule of `:root:root` alone would hold in dark mode too, where it would win over blockr.ui's defaults of dark mode.
 
-The values outlive the opening of another board, since the page keeps the stylesheets that it loaded and never switches to another frontend ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
+The values hold from the first paint, core's loading note included, since R writes both themes into the page's head.
+They outlive the opening of another board, since the page keeps its head and never switches to another frontend ([Drawing the board](Rewrite-1.1.8#opening-a-board)).
 On `js-state`, the dock sets its own variables on its own elements, and on the block's menu through that menu's class, so that an overlay without that class, such as a select's list in a block's UI, gets none of them, while a value on `:root` reaches every overlay.
 
 ### The frontend's own parts
 
 A frontend draws its own parts with the theme variables too, such as the dock's cards, its navbar and the frame that dockview draws around its panels, so that an app's theme restyles them with every other UI ([An app's theme](Rewrite-1.7.5)).
-So the frontend's stylesheet takes every colour, face, size, radius and shadow of those parts from a theme variable, and holds no colour of its own outside the values that it sets.
+So the frontend's stylesheet takes every colour, face, size, radius and shadow of those parts from a theme variable, and holds no colour of its own, since the values that the frontend sets are in its theme.
 Where a part needs a value that no theme variable gives, such as a grey between two of its own or the larger radius of the dock's panels, the frontend takes the variable whose job comes closest, or derives the value from theme variables in its own stylesheet, which an app's theme then reaches only through the values it derives from.
 
 On `js-state`, the dock defines 26 colours for itself ([srcts/modules/dock/index.css#L93-L185](https://github.com/BristolMyersSquibb/blockr.dock/blob/5d9a4764709d0e3a391117855c0434cf06034bfb/srcts/modules/dock/index.css#L93-L185)).
@@ -224,14 +235,14 @@ The dock gives dockview's variables their values from the theme variables as wel
 
 ### Light mode and dark mode
 
-A theme has two modes, light mode and dark mode, and gives each variable that it sets a value for both, whether it is blockr.ui's defaults, a frontend's values or an app's theme.
+A theme has two modes, light mode and dark mode, and gives each variable that it sets a value for both, whether it is blockr.ui's defaults, a frontend's theme or an app's theme.
 Core's board option `dark_mode` switches the page between the two, through the attribute `data-bk-mode` on the page's root, as the user picks one or as the user's system prefers ([Building on blockr.ui](Rewrite-1.7.4#prefixes), [Board options and blockr options](Rewrite-1.1.13#where-the-two-meet)).
 Its value stays with the user, in the browser, rather than with the board ([Board options and blockr options](Rewrite-1.1.13#board-options-that-stay-with-the-user)).
 So no theme is light or dark alone.
 In VS Code and JupyterLab a colour theme is one or the other, and the user picks one theme among many, since a theme is a plugin of its own there.
 Here a theme comes with the page's one frontend, or with the app, so it holds both modes, and `dark_mode` stays the only switch.
 A theme with one mode would also clash with what switches beside it: blockr.ui's defaults differ by mode, and the browser draws its scrollbars and form controls in the mode that core switches the page to.
-A frontend sets each of its values under the attribute of its mode, so that no value of its light mode, such as a white menu, shows in its dark mode.
+A frontend's theme holds each of its values in `light` or in `dark`, and R writes each under the attribute of its mode, so that no value of its light mode, such as a white menu, shows in its dark mode.
 
 The page knows its mode before it first paints, since the value of `dark_mode` stays with the user rather than with the board, which opens later:
 
@@ -275,6 +286,7 @@ The fonts, the sizes of text, the radii, the shadows and the spacing take Tailwi
 So the page keeps the look of today's blockr.ui wherever its frontend sets nothing, and a variable that a later version of blockr.ui adds draws at once under every frontend that does not know it yet, as VS Code registers a default for each of its colours, for light and for dark themes, and takes the default wherever a theme leaves a colour out ([colorUtils.ts#L70-L75](https://github.com/microsoft/vscode/blob/817607ae52b88ef6021bb456e5995b6367e1b481/src/vs/platform/theme/common/colorUtils.ts#L70-L75), [#L222-L223](https://github.com/microsoft/vscode/blob/817607ae52b88ef6021bb456e5995b6367e1b481/src/vs/platform/theme/common/colorUtils.ts#L222-L223)).
 
 Core's basic frontend and the dock keep every one of blockr.ui's defaults, since their look is blockr.ui's, so that the values of that look have one home.
+So neither has a method of `frontend_theme()`, and both take core's, which returns a theme with no values ([Where the values are set](#where-the-values-are-set)).
 The basic frontend draws its page in `background` and its cards in `card`, so it needs no stylesheet of its own, as on `js-state`.
 A block that `serve()` serves alone draws in blockr.ui's defaults, since its page has no frontend ([Defining a board in R](Rewrite-1.1.3#data-passed-to-serve)), or in the app's theme where the app gives one ([An app's theme](Rewrite-1.7.5)).
 
@@ -289,15 +301,29 @@ Core maps each status onto a theme variable, as `ready` onto `success`, and hold
 
 ### Which defaults a frontend keeps
 
-Beside the list of theme variables, blockr.ui exports for tests a function that takes the text of a frontend's stylesheet and returns, for light mode and for dark mode, the theme variables that the stylesheet leaves at blockr.ui's defaults.
-It returns as well each rule that sets a theme variable under another selector than the two that a frontend uses ([Where the values are set](#where-the-values-are-set)).
-A frontend's tests check that it returns exactly what the frontend keeps on purpose, and no such rule, as the tests of core's basic frontend and of the dock list every variable, since both keep every default.
+Beside the list of theme variables, blockr.ui exports for tests `unset_variables()`.
+It takes a theme, as `new_blockr_theme()` makes it, and returns, for light mode and for dark mode, the theme variables that the theme sets no value for, in the order of `theme_variables()`.
+For a frontend's theme, those are the defaults of blockr.ui that the frontend keeps.
+A frontend's tests check that `unset_variables()` returns exactly what the frontend keeps on purpose, for the theme that `frontend_theme()` returns for the frontend.
+The tests of core's basic frontend and of the dock list every variable, since both keep every default:
+
+```r
+expect_identical(
+  unset_variables(frontend_theme(new_dock_plugin())),
+  list(
+    light = c("--bk-color-background", "--bk-color-foreground", ...),
+    dark = c("--bk-color-background", "--bk-color-foreground", ...)
+  )
+)
+```
+
 So a default that a frontend keeps is a choice that its tests write down, and a colour that it sets for light mode alone shows up in its list for dark mode.
+No value of a frontend's escapes its theme, since the check of the build preset fails a build whose stylesheet sets a variable under `--bk-` ([Where the values are set](#where-the-values-are-set)).
 When blockr.ui adds a variable, in a minor release ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)):
 
 1. Every page draws the new variable in blockr.ui's default, so nothing breaks for users.
 2. The next time a frontend's tests run against that blockr.ui, they fail and name the new variable.
-3. The frontend's author sets the variable, or adds it to the defaults that the frontend keeps.
+3. The frontend's author sets the variable in the frontend's theme, or adds it to the defaults that the frontend keeps.
 
 Nothing warns of a kept default while the page runs, since a deployed app would then warn on every page, for the defaults that a frontend keeps on purpose too.
 
@@ -309,7 +335,8 @@ None.
 
 - The build preset of blockr.ui drops Tailwind's palette with `--color-*: initial` and declares `--color-black` and `--color-white` again, for the backdrop and the colour field's rings, while `bg-transparent` and `bg-current` need no variable.
 - The DAG and core's Edit board plugin take their colours from the theme variables already ([Drawing the DAG](Rewrite-1.3.2#its-look), [The Edit board plugin](Rewrite-1.1.15#its-look)), so an app's theme reaches them with no change but the names under `bk` and the move off Tailwind's palette.
-- Core loads a frontend's stylesheet, and waits for it, before it opens the board, so that the frontend's values hold from the board's first paint, while core's loading note draws in blockr.ui's defaults before it.
+- Core loads a frontend's stylesheet, and waits for it, before it opens the board, so that the frontend's own parts are styled from the board's first paint.
+  The frontend's values need no such wait, since R writes the frontend's theme into the page's head.
 - The CSS of shadcn/ui sets its variables without a prefix, as `--card`, and maps them through `@theme inline` onto `--color-card`, while blockr.ui's carry the prefix, as `--bk-color-card`, so a theme made for shadcn/ui maps onto blockr.ui's name by name ([Building on blockr.ui](Rewrite-1.7.4#prefixes)).
 
 The defaults that [The defaults](#the-defaults) gives, from the tokens of today's blockr.ui at `e14e831`, with each variable named without `--bk-` and, for a colour, without `color-`, as `background` for `--bk-color-background`:

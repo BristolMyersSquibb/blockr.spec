@@ -265,7 +265,7 @@ A module's stylesheet and JSON Schema need no declaration, since they sit beside
 ### What goes from R
 
 The generics that draw or redraw UI from R go: `board_ui()`, `block_ui()`, `insert_block_ui()`, `remove_block_ui()`, `toolbar_ui()`, the stack UI generics, `blockr_app_ui()` and `blockr_app_server()`, and so do the `callbacks` through which a frontend hooks into `board_server()`, which goes with the board server ([Client-owned board state](Rewrite-1.1#today)).
-A frontend's R side shrinks to what its object lists, its plugin class with its module and the modules it offers, its plugin class's methods of `plugin_version()`, `plugin_requests()` and `frontend_args()`, its output families, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_plugin()` and its `new_dock_board()`, which keeps working as a board that holds the dock's state ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
+A frontend's R side shrinks to what its object lists, its plugin class with its module and the modules it offers, its plugin class's methods of `plugin_version()`, `plugin_requests()`, `frontend_args()` and `frontend_theme()`, its output families, its output classes' methods and the functions that make any renderers of its own (above), and the constructors that app scripts call, such as the dock's `new_dock_plugin()` and its `new_dock_board()`, which keeps working as a board that holds the dock's state ([Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today)).
 
 ### Testing
 

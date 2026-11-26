@@ -13,7 +13,7 @@ Why a module gets React through its build rather than its host, and how a module
 1. A package's build gets everything it needs of blockr.ui from the preset: its bundles hold no React and no React Aria, and its classes read the theme variables under the package's own prefix.
 2. One copy each of React and of React Aria runs on the page, both from blockr.ui's files ([UI kit and design system for the client](Rewrite-1.7#what-must-hold)).
 3. React loads in a file of its own, and core's hooks in one that imports nothing of blockr.ui, so that a page whose UIs draw with React, but neither with blockr.ui's components nor with React Aria's, loads no React Aria.
-4. Only a major release of blockr.ui drops or renames what the list of theme variables holds, and no other package's build reads a variable of blockr.ui's that the list lacks or writes a class under `bk:`.
+4. Only a major release of blockr.ui drops or renames what the list of theme variables holds, and no other package's build reads a variable of blockr.ui's that the list lacks, sets a variable under `--bk-` or writes a class under `bk:`.
 5. The stylesheet of blockr.ui is on the page from the first paint, under every frontend, and no stylesheet that a package builds styles another package's elements.
 6. Nothing of blockr.ui's is a page global.
 
@@ -100,6 +100,7 @@ The Tailwind half:
    It keeps the utilities outside any cascade layer, so that a page's other CSS, such as Bootstrap's, does not win over them ([Drawing the board](Rewrite-1.1.8#cores-basic-frontend)).
 6. The check fails a build whose stylesheet reads a variable of blockr.ui's that the list of theme variables lacks, as in plain CSS or in an arbitrary value ([The list of theme variables](#the-list-of-theme-variables)).
    It fails another package's build whose code names a class under `bk:`, which blockr.ui alone writes ([Prefixes](#prefixes)), and any build that runs another version of Tailwind than the one that blockr.ui is written for.
+   It fails another package's build whose stylesheet sets a variable under `--bk-`, since blockr.ui's stylesheet alone sets the defaults, and R writes the values of the frontend and of the app from their themes ([The theme variables](Rewrite-1.7.2#where-the-values-are-set)).
 
 ### Prefixes
 
@@ -130,7 +131,7 @@ For the list:
 1. The stylesheet of blockr.ui writes the whole list as plain CSS: the values of each variable as rules in `@layer theme`, and each font as a face.
    Tailwind copies plain CSS into what it writes as it stands, so nothing of the list depends on what blockr.ui's own components use.
 2. Its tests compare its compiled stylesheet with the list.
-3. The preset's check fails a build whose stylesheet reads a variable of blockr.ui's that the list lacks, and another package's build whose code names a class under `bk:` ([The build preset](#the-build-preset)).
+3. The preset's check fails a build whose stylesheet reads a variable of blockr.ui's that the list lacks, and another package's build whose stylesheet sets a variable under `--bk-` or whose code names a class under `bk:` ([The build preset](#the-build-preset)).
 4. Adding to the list takes a minor release of blockr.ui, and removing or renaming takes a major.
 5. Tailwind's version is part of the contract: each major of blockr.ui names one version of Tailwind, which every package's build runs.
    The properties that Tailwind registers for its utilities, such as `--tw-blur`, carry no prefix, so every package's stylesheet registers them, and stylesheets built with two versions could register them differently.
@@ -203,7 +204,7 @@ A split would give blockr.ui an entry for each group, such as `@blockr/ui/dates`
 
 R puts blockr.ui's stylesheet, with the theme variables, their defaults and the font faces, on every page from the start, ahead of core's.
 So everything that reads the theme variables finds them, core's loading note included, which R's page holds from the start.
-R writes an app's theme into the page's head after it ([An app's theme](Rewrite-1.7.5#the-rules-that-r-writes)).
+R writes the frontend's theme and then the app's into the page's head after it ([An app's theme](Rewrite-1.7.5#the-rules-that-r-writes)).
 Loading the stylesheet later, with blockr.ui's JS, would save a page little: core's compiled stylesheet, which holds the classes of the components on `js-state`, takes 10.5 KB gzipped, and the browser downloads a font only once something uses it.
 
 The stylesheet of blockr.ui comes first, since a package may pass classes of its own to one of blockr.ui's components.
@@ -212,7 +213,7 @@ Both rules sit outside any layer and have the same specificity, so the rule of t
 Every package's stylesheet comes after blockr.ui's: core's follows it in the page's head, and a module's stylesheet loads with the module ([UI modules in JS](Rewrite-1.1.7#packaging)).
 
 The stylesheet sets the defaults of the theme variables inside Tailwind's theme layer, `@layer theme`, where [The theme variables](Rewrite-1.7.2#where-the-values-are-set) has them sit.
-So a frontend's values, which it sets outside any layer, win over the defaults whichever stylesheet loads first.
+So the values of the frontend's theme and of the app's, which R writes outside any layer, win over the defaults.
 
 ## Open questions
 
