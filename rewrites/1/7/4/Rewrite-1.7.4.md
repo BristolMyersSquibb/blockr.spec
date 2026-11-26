@@ -149,6 +149,8 @@ The build of blockr.ui bundles its code and the libraries that it ships into the
 3. React Aria's files, minified, with the whole of React Aria's three packages.
    The build bundles each package as an entry of its own, and esbuild splits the code that the three share into files of their own.
    The file of the components imports `react-aria-components`, as does any module that draws with React Aria's components.
+4. The vendor file of blockr.ui, `vendor-<hash>.js`, minified, with what its components draw with beside React and React Aria: functions of `@internationalized/date` and the icons of Lucide that they draw.
+   The file of the components imports it by its name, so that it holds blockr.ui's own code alone, as the vendor check asks of every package ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
 
 The page's import map names React's entry points, `@blockr/ui` and React Aria's three packages.
 It names no entry for `@blockr/ui/icons`, whose icons each package bundles ([The build preset](#the-build-preset)).

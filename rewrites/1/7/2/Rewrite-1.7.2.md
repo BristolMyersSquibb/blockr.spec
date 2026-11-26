@@ -113,6 +113,8 @@ That lies between the soft border of today's blockr.ui, about 1.2:1, and the 3:1
 The theme variables hold a colour for the page, `background`, so that an app's theme reaches the page under every frontend, which draws it behind its panels and cards ([The frontend's own parts](#the-frontends-own-parts)).
 A plugin's UI leaves its own background transparent, so that it shows the page or the panel that the frontend puts it in.
 The theme variables hold no fill for a field, since the fields that move from core's React SDK have none.
+An input takes the colour of the text around it, as shadcn/ui's fields do.
+The page, the card or the popover that holds the input gives that colour through its own `-foreground`, so the input reads on any of them ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
 The hover, `accent`, has a name of its own, apart from `muted`, since the two differ once their values are solid colours, as blockr.ui's defaults are: the subtle fill of today's blockr.ui, `#f9fafb`, differs from a white menu by 1.05:1, which nobody sees, while its hover, `#f3f4f6`, reaches 1.10:1.
 
 The secondary button keeps its frame, as today's design system and core's SDK on `js-state` draw it, so it reads `border`, and `accent` under the pointer ([design-system.Rmd#L851](https://github.com/BristolMyersSquibb/blockr.ui/blob/e14e8310481e98b156871bf96669b41cb88c8435/vignettes/articles/design-system.Rmd#L851)).
@@ -150,6 +152,8 @@ The weights of the faces, the line heights and letter spacing that the classes n
 
 A frontend thus sets the type and the density of every UI, as today's blockr.ui draws its text at 13 pixels where core's fields on `js-state` draw 14.
 So blockr.ui's components take every size from the set: the few fixed sizes that they hold on `js-state`, such as a field's height of 30 pixels, become multiples of the spacing or follow the line height of their text, so that a frontend's spacing and sizes of text reach them too.
+Where a component has to give a size in pixels, it measures the spacing on the page and multiplies it.
+The select's list does so for the heights of its rows, which React Aria's Virtualizer takes in pixels ([blockr.ui#125](https://github.com/BristolMyersSquibb/blockr.ui/pull/125)).
 The build preset maps the classes of shadows onto these variables, as it maps the rest of the set, so that they read them ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 
 ### Where the values are set
