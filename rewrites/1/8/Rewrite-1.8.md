@@ -13,7 +13,7 @@ On one R process, a classic Shiny app answered none of one user's updates within
 The bar is a new stack that is faster than today's, rather than no slower, which takes measurements on boards of the size users run, such as the clinical data explorer's board.
 Nor does anything show where the new stack spends its time, or tell a pull request that it made the new stack slower.
 No file that today's stack saved opens in the new one, and 89 R scripts and 8 documents in 15 of the workspace's repos call `serve()`, whose packages change at the switch.
-The packages also document their R APIs through roxygen2 and pkgdown, but their TypeScript APIs and client internals have no shared documentation form.
+The packages also document their R APIs through roxygen2 and pkgdown, but their TypeScript APIs and client internals have no documentation outside the code.
 A reader can find neither one site that joins the R and TypeScript references nor guides that follow the client's work across its modules.
 Each package tests itself with stand-ins for the others, and the revdep checks in a merge queue run each downstream package's own tests.
 So no test runs the dock, the DAG and the assistant on one page.
@@ -54,8 +54,8 @@ Each package writes migration notes for the app scripts that call it, and conver
 
 ### Documentation of the new stack
 
-Each package with client code keeps one pkgdown site, with roxygen2's R reference, TypeDoc's TypeScript reference and hand-written guides to its client internals under one theme and navigation.
-Blockr.core proves the TypeScript-to-pkgdown build before the reusable workflows gain it and the other packages adopt it.
+Each package with client code keeps one pkgdown site, with roxygen2's R reference, TypeDoc's TypeScript reference and its client guides, hand-written articles on how its client works inside, under one theme and navigation.
+The first issue, in blockr.core, proves the documentation build before the reusable workflows gain it and the other packages take it up.
 [Documentation of the new stack](Rewrite-1.8.2) holds the design.
 
 ### The meta-package blockr
@@ -88,26 +88,26 @@ This item moves into the spec of whichever benchmark settles first.
 
 ### [Documentation of the new stack](Rewrite-1.8.2)
 
-- Prove a pkgdown build that renders TypeDoc's reference for `@blockr/core` beside roxygen2's R reference under one theme and navigation, chooses how TypeDoc's Markdown becomes pkgdown input, and checks its internal links, in blockr.core ([One site per package](Rewrite-1.8.2#one-site-per-package))
-- Extend the reusable CI workflow's `pkgdown-dev` job and the reusable pkgdown workflow to run a package's documentation build before their pkgdown builds, check the internal links of each built site, and leave a package without TypeScript entry points unchanged, in blockr.ci
-- Generate reference pages for core's mounted block, board option, plugin and output modules and for `@blockr/core/react`, `@blockr/core/components`, `@blockr/core/binding`, `@blockr/core/controls`, `@blockr/core/stubs` and `@blockr/core/build` from their source entry points, with their exported `/** ... */` comments and the schema annotations preserved, in blockr.core
-- Write the overview of core's client and the starting-the-page guide, with the source map, the boundary between source and generated files, and the sequence from `startPage()` through `hello`, registration, board opening, frontend rendering and scheduler startup, in blockr.core
-- Write the guides to `CoreApi`, the hosts and mounting modules, covering block, board option, plugin and output mounts and their lifetimes, in blockr.core
+- Prove a pkgdown build that renders TypeDoc's reference for `@blockr/core` beside roxygen2's R reference under one theme and navigation, chooses how TypeDoc's Markdown becomes pkgdown input, and checks its internal links, as [Documentation of the new stack](Rewrite-1.8.2#one-site-per-package) has it, in blockr.core
+- Extend the reusable CI workflow's `pkgdown-dev` job and the reusable pkgdown workflow to run a package's npm script `docs` before their pkgdown builds, with no token in its npm steps, check the internal links of each built site, build the site as today for a package without that script, and deploy the site that a push to `js-state` builds under `dev/`, in blockr.ci
+- Document every export of core's entry points in a `/** ... */` comment, from the `//` comments that document them now, turn on TypeDoc's check for an export without one, and generate the reference pages of its modules in `srcts/modules/` and of `@blockr/core`, `@blockr/core/react`, `@blockr/core/components`, `@blockr/core/binding`, `@blockr/core/controls`, `@blockr/core/stubs` and `@blockr/core/build`, with the schema annotations kept, and deploy core's site under `dev/` on each push to `js-state`, in blockr.core
+- Write the overview of core's client, with its source directories, the files that its build generates and the three flows that core's guides follow, and the guide to starting the page, from `startPage()` until the plugins have started, in blockr.core
+- Write the guides to `CoreApi`, the hosts and mounting modules, covering how core mounts the modules of block classes, board options, plugin classes and renderers, and how long each mount lasts, in blockr.core
 - Write the guides to the store, deltas, steps, the command registry and board actions, following `BlockHost.submit()` and a board action through one step, in blockr.core
-- Write the guides to the scheduler, wire protocol and Shiny transport, following demand through evaluation and output rendering, in blockr.core
-- Write the guides to core's frontend and plugins, its block and option modules, and storage with logging and tracing, in blockr.core
+- Write the guides to the scheduler, wire protocol and Shiny transport, following a demand until core mounts the block's output, in blockr.core
+- Write the guides to core's frontend and plugins, the UI modules of its block classes and board options, storage, and logging and tracing, in blockr.core
 - Write the guides to core's React SDK, binding and controls, and its build and tests, in blockr.core
-- Add the TypeScript reference and a guide to the client internals of blockr.ui on its pkgdown site, in blockr.ui
-- Add the TypeScript reference and a guide to the client internals of blockr.dock on its pkgdown site, in blockr.dock
-- Add the TypeScript reference and a guide to the client internals of blockr.graph on its pkgdown site, in blockr.graph
-- Add the TypeScript reference and a guide to the client internals of blockr.assistant on its pkgdown site, in blockr.assistant
-- Add the TypeScript reference and a guide to the client internals of blockr.code on its pkgdown site, in blockr.code
-- Add the TypeScript reference and a guide to the client internals of blockr.session on its pkgdown site, in blockr.session
-- Add the TypeScript reference and a guide to the client internals of blockr.dplyr on its pkgdown site once its block classes have moved to the new stack, in blockr.dplyr
-- Add the TypeScript reference and a guide to the client internals of blockr.ggplot on its pkgdown site once its block classes have moved to the new stack, in blockr.ggplot
-- Add the TypeScript reference and a guide to the client internals of blockr.io on its pkgdown site once its block classes have moved to the new stack, in blockr.io
-- Add the TypeScript reference and a guide to the client internals of blockr.dm on its pkgdown site once its block classes have moved to the new stack, in blockr.dm
-- Add the TypeScript reference and a guide to the client internals of blockr.ai on its pkgdown site once its block classes have moved to the new stack, in blockr.ai
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.ui to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.ui
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.dock to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.dock
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.graph to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.graph
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.assistant to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.assistant
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.code to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.code
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.session to its pkgdown site, and deploy the site under `dev/` on each push to `js-state`, in blockr.session
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.dplyr to its pkgdown site once its block classes have moved to the new stack, and deploy the site under `dev/` on each push to `js-state`, in blockr.dplyr
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.ggplot to its pkgdown site once its block classes have moved to the new stack, and deploy the site under `dev/` on each push to `js-state`, in blockr.ggplot
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.io to its pkgdown site once its block classes have moved to the new stack, and deploy the site under `dev/` on each push to `js-state`, in blockr.io
+- Add the TypeScript reference, with a comment on every export, and the client guide of blockr.dm to its pkgdown site once its block classes have moved to the new stack, and deploy the site under `dev/` on each push to `js-state`, in blockr.dm
+- Add a pkgdown site to blockr.ai, with the TypeScript reference, a comment on every export and the client guide, once its block classes have moved to the new stack, and deploy the site under `dev/` on each push to `js-state`, in blockr.ai
 
 ### [The conversion and the migration notes](Rewrite-1.8.3)
 
@@ -141,7 +141,7 @@ This item moves into the spec of whichever benchmark settles first.
 ## Design pages
 
 - [The assistant's benchmark: questions, answer keys and runs](Rewrite-1.8.1): how the decisions that shape what the assistant's model sees and does are judged, from its system prompt to its tools, what they return and how failures reach it, through questions with answer keys that a harness runs, with today's assistant as the baseline
-- [Documentation of the new stack](Rewrite-1.8.2): one pkgdown site per package for the R and TypeScript references, with long-form guides to the client internals and a build that every package shares
+- [Documentation of the new stack](Rewrite-1.8.2): one pkgdown site per package for the R and TypeScript references, with client guides on how each package's client works inside
 - [The conversion and the migration notes](Rewrite-1.8.3): blockr.convert's package and methods, who converts, which objects do not cross, migration notes and the tests that check them against today's examples
 - [The speed benchmark: boards, measurements and runs](Rewrite-1.8.4): how fast the new stack runs against today's stack on the same boards, where it spends its time, and the comparison that each pull request gets
 - [The `blockr` meta-package: what it attaches and its integration tests](Rewrite-1.8.5): the packages that `library(blockr)` attaches in the new stack, and the integration tests that run them together every night
