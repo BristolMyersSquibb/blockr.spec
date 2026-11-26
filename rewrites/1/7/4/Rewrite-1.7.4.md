@@ -177,7 +177,7 @@ The UI of a board option loads as it first renders too.
 Core imports the module of every board option that an available package lists as the page starts, to register it, and that module holds the board option's UI ([UI modules in JS](Rewrite-1.1.7#modules-of-plugin-classes-and-board-options)).
 So the UI's `render()` imports the rest of its code with `import()`, from a file of its own, which the contract allows, since `render()` may be async ([UI modules in JS](Rewrite-1.1.7#the-contract)).
 Core's board options do so.
-Otherwise every page would load React Aria as it starts, through the UIs of `n_rows` and `dark_mode` (notes), even where an app names other UIs for them in `renderers` and nothing draws core's ([Drawing the board](Rewrite-1.1.8#renderers)).
+Otherwise every page would load React Aria as it starts, through the UIs of `n_rows` and `dark_mode` (notes), even where nothing draws them.
 
 Core's tests read its `inst/js/preload.json` and fail where core's runtime, the entry `@blockr/core/react` or the module of one of core's board options imports `@blockr/ui` or one of React Aria's packages up front, directly or through another file.
 

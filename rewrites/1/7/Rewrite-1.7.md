@@ -65,7 +65,7 @@ The components of core's React SDK on `js-state` move to blockr.ui, and so do th
 Everything that the kit holds is general-purpose, so that any page could draw with it: a component knows no block, and no theme variable names a status.
 What blockr's packages share beyond the kit, such as the block's mark, is core's.
 
-Everything that core draws stays a default that an app may swap: its renderers and the UIs of its board options through the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)), its frontend and plugins as any other ([Plugins](Rewrite-1.1.12#the-frontend)), its menu of board actions through `board_action_menu`, and the board actions that play its roles through `board_actions` ([Board actions](Rewrite-1.1.16#roles)).
+Everything that core draws but the UIs of its board options stays a default that an app may swap: its renderers through the blockr option `renderers` ([Drawing the board](Rewrite-1.1.8#renderers)), its frontend and plugins as any other ([Plugins](Rewrite-1.1.12#the-frontend)), its menu of board actions through `board_action_menu`, and the board actions that play its roles through `board_actions` ([Board actions](Rewrite-1.1.16#roles)).
 So an app that swaps all of them for UIs drawn with another kit, and shows no other package's UI, never loads core's UIs, which draw with blockr.ui's components ([Building on blockr.ui](Rewrite-1.7.4#the-bundle)).
 
 ### Designed against Tailwind
