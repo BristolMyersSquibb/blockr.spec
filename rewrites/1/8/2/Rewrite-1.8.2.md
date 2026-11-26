@@ -1,5 +1,5 @@
 # Documentation of the new stack
-Status: review. Design for [Wrap-up](Rewrite-1.8).
+Status: settled on 2026-11-26. Design for [Wrap-up](Rewrite-1.8).
 
 One of the design pages of [Wrap-up](Rewrite-1.8): the R and TypeScript references of every package with client code, and its client guides, the hand-written articles on how its client works inside.
 It shapes the Work items of its section of that part's Work list.
