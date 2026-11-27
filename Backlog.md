@@ -1,5 +1,5 @@
 # Backlog
-Revised on 2026-11-24.
+Revised on 2026-11-26.
 
 This page lists additions to blockr that are small or medium, go beyond what [State in JS](Rewrite-1) needs for parity, and are not ready for a spec.
 Each item says what the addition would let us remove, what it would cost, and what would settle whether to build it, and an item leaves the list once it becomes a spec or an issue, or once it is dropped, with the reason.
@@ -137,3 +137,14 @@ It would cost the preset's reading of the imports, R's writing and serving of th
 A list that fell behind its code would also fail to load the module that imports a missing icon, as a whole.
 What would settle it is the weight of the copies on a page: on `js-state`, core and the dock both draw five icons, whose copies come to under 1 KB gzipped, while [Building on blockr.ui](Rewrite-1.7.4#the-bundle) lets a page load 16 KB of React Aria that it may not use.
 The preset keeps it open, since every package imports its icons through `@blockr/ui/icons`, so that it would change no package's code.
+
+## An empty New, and New in core's storage plugin
+
+Session management's "New workflow" opens the board that R sent, blocks included ([Session management as a storage plugin](Rewrite-1.6#proposal)), as today's New does in an app that passes no loader to `serve()`.
+Today's `rack_loader()` gives New an empty board instead: the script's board without its blocks, links and stacks, with its board options and the state of its extensions.
+A second row, "New empty workflow", could give that board, and core's storage plugin could offer New and New empty beside Save and Open, so that a core app starts over without a reload.
+It would remove the reload that starting over takes in a core app, and the empty board that a script would otherwise serve so that New starts empty.
+It would cost an option of the core change that lets a plugin open the board that R sent: the store would drop its blocks, links and stacks as it drops a block that it cannot rebuild, through core's expansion and each plugin class's `update` ([Board updates](Rewrite-1.1.2#opening-a-board)).
+For core's storage plugin it would cost two buttons too, with edits to [Plugins](Rewrite-1.1.12#storage), [The dock's navbar](Rewrite-1.2.5#the-storage-plugins-controls) and the [Glossary](Glossary).
+Under the load lock, New could stay, since it opens the opening board, while New empty could not.
+Users of the new stack asking for an empty start, where the app's board holds blocks, would settle it.
