@@ -63,7 +63,7 @@ The clinical data explorer, an app for exploring the data of clinical studies, u
   It keeps no state in the board, so its constructor takes no args ([Plugins](Rewrite-1.1.12#storage)).
   It runs by default wherever blockr.session is installed, so `manage_project()` goes, and a script that keeps core's storage plugin leaves blockr.session's out of the rows of `plugins` ([Plugins](Rewrite-1.1.12#storage)).
   Its controls take the place of core's Save and Open, which save a download and open an upload.
-  Its method of `plugin_requests()` gives what needs R: the once-per-page request, which exchanges the visitor's session token or opens R's folder.
+  Its method of `plugin_requests()` gives what needs R: a request for each operation of R's folder and the once-per-page request, which names the backend and, on Connect, exchanges the visitor's session token.
 - Its storage controls are those of today's piece of the navbar, in today's order: a workflows menu named after the record's key, a button for the drafts, the save status and a Save menu, followed by a status with the initials of the user whom the backend knows, while dialogs of the plugin's own hold what the controls cannot, such as the records with their search, sharing and the key chooser ([The controls and dialogs](Rewrite-1.6.3)).
   The controls call a record a workflow, as today's do, since "workflow" is the user's word for their board ([Glossary](Glossary)).
 - A URL that names a record opens it through the plugin's `storage.load()`, before anything is drawn, and a record that the user opens later opens through `core.store.open()`, with no reload, so that `rack_loader()` goes ([The controls and dialogs](Rewrite-1.6.3#opening)).
@@ -73,7 +73,7 @@ The clinical data explorer, an app for exploring the data of clinical studies, u
   Without that blockr option, the plugin uses Connect where the visitor has a key, R's folder where R runs off Connect, and no backend otherwise ([The storage API](Rewrite-1.6.1#choosing-the-backend)).
 - On Connect, the plugin calls Connect's API itself, with a key that R exchanges once per page for the visitor's session token, and writes and reads the pins of records itself, today's included, so that no save or listing waits on R, and the app's own Connect key goes ([Connect from the browser](Rewrite-1.6.2)).
   A visitor with Connect's Viewer role, who may create no content, opens the records shared with them and saves downloads ([Connect from the browser](Rewrite-1.6.2#what-a-visitors-role-allows)).
-- For setting up and testing, R serves the storage API on a pins folder of its own disk, through Shiny's `session$registerDataObj()` ([The storage API](Rewrite-1.6.1#rs-folder)).
+- For setting up and testing, R serves the storage API on a pins folder of its own disk, answering each operation as one of the plugin's requests ([The storage API](Rewrite-1.6.1#rs-folder)).
 - Where the plugin has no backend, its controls save a download, open an upload and start a new board, with a status that says why no records show ([The controls and dialogs](Rewrite-1.6.3#without-a-backend)).
 - The plugin writes drafts of unsaved work to the browser's own storage in every app, with no blockr option to set, and the same browser offers them again to the same user, at no cost to a backend ([Drafts in the browser](Rewrite-1.6.4)).
 - The plugin converts nothing that today's stack saved, and refuses its records and files with core's error ([Records, links and app scripts across the switch](Rewrite-1.6.5)).
@@ -93,7 +93,7 @@ None.
 - Write the Connect backend, which fills the storage API's operations with calls to Connect's API from the browser and writes and reads the pins of records, in blockr.session
 - Document the storage API for a service of a deployment's own in a vignette, in place of today's vignette on a backend of one's own, in blockr.session
 - Exchange the visitor's session token, which the plugin's request reads from `headers`, for a visitor-scoped API key once per page, in blockr.session
-- Serve the storage API from R on a pins folder through `session$registerDataObj()`, where R runs off Connect and the blockr option `session_mgmt_backend` is unset, with the folder that the blockr option `session_folder` names, and give its URL in the reply to the once-per-page request, in blockr.session
+- Serve the storage API from R on a pins folder, answering each operation as one of the storage plugin's requests, where R runs off Connect and the blockr option `session_mgmt_backend` is unset, with the folder that the blockr option `session_folder` names, in blockr.session
 - Rebuild session management as a storage plugin on the storage API, with its controls and its dialogs, in blockr.session
 - Offer Save as a download, Open as an upload and New where the plugin has no backend, with a status that says why, in blockr.session
 - Open the record that a URL names through the plugin's `storage.load()`, and keep the URL in step as records open and save, in blockr.session
