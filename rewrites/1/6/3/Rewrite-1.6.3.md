@@ -62,7 +62,7 @@ For a record that the user owns, saved five minutes ago, with two drafts waiting
   Until the listing comes, and where it fails, the menu holds its last three rows alone.
   The plugin lists the records as it starts, after each save, upload or delete of its own, and as a dialog of records opens.
 - The drafts button shows while any draft waits, as "1 draft" or "2 drafts", with today's tooltip, and opens the drafts ([Drafts in the browser](Rewrite-1.6.4)).
-- The save status reads "Not saved" before the first save, "Just now" after a save, and then how long ago the open version was saved, such as "5 mins ago", with the time of the save as its tooltip, and "Saved as draft" or "Autosave failed" where the plugin writes drafts.
+- The save status reads "Not saved" before the first save, "Just now" after a save, and then how long ago the open version was saved, such as "5 mins ago", with the time of the save as its tooltip, and "Saved as draft" or "Autosave failed" as the plugin writes a draft, which it does in every app except under the load lock ([Drafts in the browser](Rewrite-1.6.4#writing-a-draft)).
   The plugin's `subscribe()` calls back each minute, so that the frontend draws the status again.
 - The Save menu holds "Save…" alone before the first save, and Save, "Save as new workflow…", Download, "Version history" and "Share…" after it, as today's does.
   Its Download gives the open version as the backend stores it, where today's gives the latest version even after the user opened an older one.
@@ -144,7 +144,7 @@ For a record that the user owns, saved five minutes ago, with two drafts waiting
   A record that does not open leaves the open board as it was.
   Where the backend fails, the plugin tells the user why, with an error of the code `board_open_failed`.
   Where the store refuses the board, as it refuses one that today's stack saved until blockr.convert's `convert_file()` has converted it ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)), core tells the user why, as it does for core's Open ([Plugins](Rewrite-1.1.12#storage)).
-- Opening a record, or New (below), drops the board that was open, unsaved work included, as today's reload does, while a draft keeps that work where the blockr option `session_autosave` is set ([Drafts in the browser](Rewrite-1.6.4#writing-a-draft)).
+- Opening a record, or New (below), drops the board that was open, unsaved work included, as today's reload does, while a draft keeps that work ([Drafts in the browser](Rewrite-1.6.4#writing-a-draft)).
 - A page whose URL names no record opens the script's board as R sent it ([Defining a board in R](Rewrite-1.1.3#the-opening-board)), where today's loader clears its blocks, so a deployment that wants an empty start serves an empty board.
 - The plugin sets no board's name as a record opens, where today's sets it from the record's title, since the record holds the board with the name it was saved with.
 - Under the load lock, core calls no `storage.load()`, and the controls leave out what opens a board ([Plugins](Rewrite-1.1.12#storage)).
