@@ -44,7 +44,7 @@ An upload stores a file only once `blockr_deser()` reads it, and skips any other
 - A deployment that keeps records saved today runs `convert_file()` over them in R, and the migration notes say how.
   It writes each JSON board back as a new version of its record, so that the record keeps its key and its title, and the links made today open it (Links made today).
   The versions that today's stack saved stay as they were, and the store refuses each of them, whether or not their record was converted.
-- The Connect backend reads the pins of records saved today as it reads its own, their `data.txt` in YAML included ([Connect from the browser](Rewrite-1.6.2#the-bundle)), and R's folder reads those of today's local board through today's methods ([The storage API](Rewrite-1.6.1#rs-folder)).
+- The Connect backend reads the pins of records saved today as it reads its own, their `data.txt` in YAML included ([Connect from the browser](Rewrite-1.6.2#the-bundle)), and the folder backend reads those of today's local board through today's methods ([The storage API](Rewrite-1.6.1#the-folder-backend)).
   So the plugin lists every record saved today, and opens each that was converted.
   A deployment that saved its records today through a backend of its own may serve them through a service of its own, and converts those that it keeps in the same way.
 - A converted record opens under the name that its board held when it was saved, since the conversion takes the board's name from today's `board_name` board option ([Defining a board in R](Rewrite-1.1.3#the-script)).
@@ -85,13 +85,13 @@ What changes for an app script, each change argued on the page that it links:
   That holds as well for a loader of the script's own that wraps `rack_loader()`, such as one that keeps the script's board where the URL names no record, since that board is what such a URL opens now.
 - The blockr option `session_mgmt_backend` names a service by its URL, where today it holds a backend or a function that returns one ([The storage API](Rewrite-1.6.1#choosing-the-backend)).
   A script drops it where its value is `user_pins_board()`, `pins::board_local()`, or a function of the script's own that does what `user_pins_board()` does: a board on the visitor's key on Connect, and a local board elsewhere.
-  A script that sets it to `pins::board_folder()` sets the blockr option `session_folder` to that folder instead, which R serves only where it runs off Connect ([The storage API](Rewrite-1.6.1#rs-folder)).
+  A script that sets it to `pins::board_folder()` sets the blockr option `session_folder` to that folder instead, which R serves only where it runs off Connect ([The storage API](Rewrite-1.6.1#the-folder-backend)).
   A script may set it to a board on the app's own Connect key, such as `pins::board_connect`, which today's README gives for one store that every visitor shares.
   Such a script drops it, and its deployment changes as Deployments says (below).
   A script that sets it to a backend of its own, of class `rack_backend`, names a service that speaks the storage API instead ([The storage API](Rewrite-1.6.1#a-deployments-own-service)).
 - As the app starts, blockr.session refuses a value of `session_mgmt_backend` that is not a string, with an error that names `session_folder`.
   Without that error, a script that the notes missed would save to another backend without a word, since R leaves out of what the browser reads every blockr option that it cannot write as JSON ([Board options and blockr options](Rewrite-1.1.13#blockr-options)).
-- The function `user_pins_board()` goes, since R opens no pins board for the browser but R's folder ([The storage API](Rewrite-1.6.1#rs-folder)).
+- The function `user_pins_board()` goes, since R opens no pins board for the browser but that of the folder backend ([The storage API](Rewrite-1.6.1#the-folder-backend)).
 - The function `avatar_navbar_item()` stays, and returns the navbar item that places the plugin's avatar status apart ([The controls and dialogs](Rewrite-1.6.3#the-avatar)).
 - A dock app passes `drop = "name"` to `custom_navbar()`, so that its bar shows the record's key alone rather than beside the board's name ([The dock's navbar](Rewrite-1.2.5#app-scripts-from-today)).
 - The rack layer's exports go, since the storage API takes their place ([The storage API](Rewrite-1.6.1#the-operations)): `as_rack_id()`, `new_rack_id()`, `new_rack_record()`, and every function whose name starts with `rack_` but `rack_loader()` (above).
@@ -119,7 +119,7 @@ What changes for an app script, each change argued on the page that it links:
 - The migration notes of blockr.session are a vignette that lists each change above that an app script or a deployment needs, written for an AI to apply ([The conversion and the migration notes](Rewrite-1.8.3#the-migration-notes)).
 - They are checked as [The conversion and the migration notes](Rewrite-1.8.3#testing) checks every package's notes.
   Among the examples that an AI changes there, with nothing but the notes of the packages that a script calls, are those that pass `manage_project()`, such as blockr.dplyr's `duckdb-lazy` ([inst/examples/duckdb-lazy.R#L155](https://github.com/BristolMyersSquibb/blockr.dplyr/blob/58f232f5baebfab329e54255feca3ef9341d97e1/inst/examples/duckdb-lazy.R#L155)).
-- The tests of the plugin open a record that today's blockr.session saved in a pins folder, through R's folder, before and after converting it as the migration notes say.
+- The tests of the plugin open a record that today's blockr.session saved in a pins folder, through the folder backend, before and after converting it as the migration notes say.
   Before the conversion, the store refuses the record.
   After it, the record opens under its key and its title, while the store still refuses the version that today's stack saved.
 
