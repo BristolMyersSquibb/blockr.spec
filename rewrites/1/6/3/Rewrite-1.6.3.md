@@ -139,6 +139,7 @@ For a record that the user owns, saved five minutes ago, with two drafts waiting
 - Where the plugin has no backend, as on Connect for a visitor without a key, such as one who is not signed in, or where a service refuses with `unauthorized`, its controls are Save, which saves a download, Open, which opens an upload, and "New workflow", beside the drafts button.
 - A status says why no records show, with a tooltip that names what is missing: a Connect sign-in, a sign-in to the service, or the blockr option `session_mgmt_backend`.
   Where the service gives its `sign_in`, a button "Sign in" beside the status opens it in a new tab, since a status runs nothing ([The storage API](Rewrite-1.6.1#who-the-user-is)).
+  As the page comes back into view after the user signed in there, the plugin asks the backend's `user` again, so that the records and the controls come back without a reload.
 - Where the backend's capability `saving` is false, as on Connect for a visitor with the Viewer role, the controls list and open records as with a backend, while Save saves a download, "Save as new workflow…" and Delete are left out, and the status says that the user's role saves no records ([Connect from the browser](Rewrite-1.6.2#what-a-visitors-role-allows)).
 - Open converts a file of today's stack through R, as an upload does ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)).
 
