@@ -142,9 +142,10 @@ The client guides of the other packages have the same shape, with areas and flow
 
 ### Ownership and checks
 
-Wrap-up owns the documentation builds, the new steps of blockr.ci's workflows and the client guides.
+Wrap-up owns the documentation build, the new steps of blockr.ci's workflows, and the references and client guides of the packages on `js-state` already: core, blockr.ui, the dock, the DAG and the assistant.
 The implementation parts keep the user guides and migration notes that they already list.
-The reference and client guide of a package whose part starts later join the Work list of this page's spec once that part starts, as blockr.md's will.
+A package whose `js-state` branch starts later, such as blockr.code, blockr.session, blockr.md or a block package, gets no issue of this page's spec.
+It sets up the documentation build and the site under `dev/` on that branch, following the packages before it, and its reference and client guide grow with its client from there.
 Once a package's guide and documentation comments exist, a pull request that changes its client updates them too, as the Conventions of [State in JS](Rewrite-1#conventions) say.
 
 The `pkgdown-dev` job and the pkgdown workflow each build the whole site and check the links of the TypeScript reference and the client guides.
@@ -176,7 +177,7 @@ In the mode `deploy: actions`, each deployment replaces the whole site, so the w
 
 The `js-state` branch of blockr.assistant calls the pkgdown workflow at `v0.1.1`, which lacks the documentation build.
 The main branches of blockr.session, blockr.ggplot and blockr.io, from which their `js-state` branches will start, call it at `v0.1.1` too.
-So the item of such a package moves its call to `main`, where core's call points already.
+So blockr.assistant's issue moves its call to `main`, where core's call points already, and each of the others moves it as it sets up the documentation build.
 The package blockr.ai has no pkgdown site yet.
 
 Core's `inst/types/package.json` exposes `.`, `./binding`, `./build`, `./react`, `./stubs` and `./controls`, from `srcts/index.ts` and the `index.ts` of the directory of each name.
