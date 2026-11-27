@@ -50,7 +50,7 @@ So the new blockr.ui takes its look from today's, roughly, and none of its code.
 ### What blockr.ui holds
 
 The kit holds the one copy of React on the page, React Aria's components, which it builds after React Aria's Tailwind starter kit, the theme variables with their defaults, and its build preset.
-It holds what makes a theme as well: its `new_blockr_theme()` makes one in R, for an app or for a frontend, and core's `serve()` writes both into the page's head, so that a package that makes themes, such as blockr.theme, builds on blockr.ui alone ([An app's theme](Rewrite-1.7.5), [The theme variables](Rewrite-1.7.2#where-the-values-are-set)).
+It holds what makes a theme as well: its `new_blockr_theme()` makes one in R, for an app or for a frontend, and core's `serve()` writes both into the page's head, so that a package that makes themes builds on blockr.ui alone ([An app's theme](Rewrite-1.7.5), [The theme variables](Rewrite-1.7.2#where-the-values-are-set)).
 It holds the one copy of React Aria too, the whole of it: its components, the hooks that they are built from and the state that the hooks keep.
 A UI imports React Aria's own parts from it, as `react-aria-components`, `react-aria` and `react-stately`, for what no component of blockr.ui does, such as a table that draws thousands of cells without hooks in each ([Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
 Core, the dock, the assistant and the block packages draw with its components, which they import as `@blockr/ui` ([The components of blockr.ui](Rewrite-1.7.3)).
