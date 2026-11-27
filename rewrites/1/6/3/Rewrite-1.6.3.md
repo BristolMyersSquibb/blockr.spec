@@ -32,9 +32,9 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 
 ### The avatar
 
-- For a visitor who is signed in, a status with the visitor's initials follows those controls, in place of today's avatar, a navbar item of its own ([R/avatar.R#L23-L53](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/avatar.R#L23-L53)), while `avatar_navbar_item()` returns the navbar item that places that status apart.
+- For the user whom the backend's `user` gives, a status with the user's initials follows those controls, in place of today's avatar, a navbar item of its own ([R/avatar.R#L23-L53](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/avatar.R#L23-L53)), while `avatar_navbar_item()` returns the navbar item that places that status apart.
 - A dock app that appends that item to its `navbar`, as today's appends the avatar, keeps the status after the options button, where today's avatar sits ([The dock's navbar](Rewrite-1.2.5#what-the-bar-holds)).
-- The plugin takes the initials from the backend ([The storage API](Rewrite-1.6.1#choosing-the-backend)).
+- The plugin takes the initials from the backend, which gives in R's folder the user under whom R runs ([The storage API](Rewrite-1.6.1#who-the-user-is)).
 
 ### The dialogs
 
@@ -65,7 +65,7 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 
 - The controls save the JSON board that `core.store.save()` writes ([Serialization](Rewrite-1.1.4#files)).
 - Save adds a version to the record that the plugin opened, unless the record's last version holds the same content hash, which the plugin reports as "No changes to save", as today.
-- A board that no record holds asks for a key at its first save, which creates the record and fails where the key is taken ([The storage API](Rewrite-1.6.1#records)).
+- A board that no record holds asks for a key at its first save, which creates the record and fails where the key is taken ([The storage API](Rewrite-1.6.1#records-and-versions)).
 - "Save as new workflow…" creates a record under a key that the user picks, suggesting the key with `-copy`, as today, and moves the URL to it.
   It opens nothing, since the board on the page is the one that the new record holds.
 
@@ -76,8 +76,8 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 
 ### Without a backend
 
-- Where the plugin has no backend, as on Connect for a visitor without a key, such as one who is not signed in, its controls are Save, which saves a download, Open, which opens an upload, and "New workflow", beside the drafts button.
-- A status says why no records show, with a tooltip that names what is missing: a Connect sign-in, or the blockr option `session_mgmt_backend`.
+- Where the plugin has no backend, as on Connect for a visitor without a key, such as one who is not signed in, or where a service refuses with `unauthorized`, its controls are Save, which saves a download, Open, which opens an upload, and "New workflow", beside the drafts button.
+- A status says why no records show, with a tooltip that names what is missing: a Connect sign-in, a sign-in to the service, which the status links where the service gives its `sign_in` ([The storage API](Rewrite-1.6.1#who-the-user-is)), or the blockr option `session_mgmt_backend`.
 - Open converts a file of today's stack through R, as an upload does ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)).
 
 ### Notifications
@@ -92,6 +92,6 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 
 <details><summary>Notes for implementers</summary>
 
-Today's avatar relies on the dock taking no room for a navbar item whose output renders nothing, which is among the coupling listed in [Client-drawn dock](Rewrite-1.2), while as one of the plugin's controls it is left out for a visitor who is not signed in ([The dock's navbar](Rewrite-1.2.5)).
+Today's avatar relies on the dock taking no room for a navbar item whose output renders nothing, which is among the coupling listed in [Client-drawn dock](Rewrite-1.2), while as one of the plugin's controls it is left out wherever the backend gives no user ([The dock's navbar](Rewrite-1.2.5)).
 
 </details>

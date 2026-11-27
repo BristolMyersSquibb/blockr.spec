@@ -28,7 +28,7 @@ The operations are [The storage API](Rewrite-1.6.1)'s, and the dialog in which a
 - The Connect backend calls Connect's API directly, on the server that serves the app, with the visitor's key.
 - A record is a pin, as today, and the backend writes and reads its bundles itself, those of records saved today included, since pins has no client for JS (notes).
 - The Connect tag, the blockr option `session_connect_tag`, filters the listing on Connect's side, and each save applies it, as today, while the backend reads that blockr option with `core.blockrOption()`.
-- Today's renaming of a record through a content's title goes, since no control uses it once the plugin sets no board's name ([The storage API](Rewrite-1.6.1#records)).
+- Today's renaming of a record through a content's title goes, since no control uses it once the plugin sets no board's name ([The storage API](Rewrite-1.6.1#records-and-versions)).
 
 ### Sharing
 
