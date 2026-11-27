@@ -96,9 +96,9 @@ What changes for an app script, each change argued on the page that it links:
 - A dock app passes `drop = "name"` to `custom_navbar()`, so that its bar shows the record's key alone rather than beside the board's name ([The dock's navbar](Rewrite-1.2.5#app-scripts-from-today)).
 - The rack layer's exports go, since the storage API takes their place ([The storage API](Rewrite-1.6.1#the-operations)): `as_rack_id()`, `new_rack_id()`, `new_rack_record()`, and every function whose name starts with `rack_` but `rack_loader()` (above).
   A backend of a deployment's own that fills the rack generics becomes a service that speaks the storage API.
-- The blockr options `session_connect_tag`, `session_autosave` and `session_draft_ttl` stay.
-  Today, the blockr option `session_draft_ttl` expires only the drafts of boards that no record holds.
-  Now it expires every draft ([Drafts in the browser](Rewrite-1.6.4#when-a-draft-goes)).
+- The blockr option `session_connect_tag` stays.
+- The blockr options `session_autosave` and `session_draft_ttl` go, since the plugin writes drafts in every app and every draft expires after 7 days ([Drafts in the browser](Rewrite-1.6.4#writing-a-draft)).
+  A script drops them, and one that still sets them runs all the same, since nothing reads them any more.
 
 ### Deployments
 
