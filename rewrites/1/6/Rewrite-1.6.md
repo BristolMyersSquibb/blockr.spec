@@ -71,6 +71,7 @@ The clinical data explorer, an app for exploring the data of clinical studies, u
 - The rack layer becomes a storage API of named operations, with JSON args and replies, which the plugin calls from the browser, so that a service of a deployment's own, in any language, puts a database, S3 or other storage behind the plugin, where the blockr option `session_mgmt_backend` names that service by its URL ([The storage API](Rewrite-1.6.1)).
   Without that blockr option, the plugin uses Connect where the visitor has a key, R's folder where R runs off Connect, and no backend otherwise ([The storage API](Rewrite-1.6.1#choosing-the-backend)).
 - On Connect, the plugin calls Connect's API itself, with a key that R exchanges once per page for the visitor's session token, and writes and reads the pins of records itself, today's included, so that no save or listing waits on R, and the app's own Connect key goes ([Connect from the browser](Rewrite-1.6.2)).
+  A visitor with Connect's Viewer role, who may create no content, opens the records shared with them and saves downloads ([Connect from the browser](Rewrite-1.6.2#what-a-visitors-role-allows)).
 - For setting up and testing, R serves the storage API on a pins folder of its own disk, through Shiny's `session$registerDataObj()` ([The storage API](Rewrite-1.6.1#rs-folder)).
 - Where the plugin has no backend, its controls save a download, open an upload and start a new board, with a status that says why no records show ([The controls and dialogs](Rewrite-1.6.3#without-a-backend)).
 - Where the blockr option `session_autosave` is set, the plugin writes drafts of unsaved work to the browser's own storage, which the same browser offers again to the same user, at no cost to a backend ([Drafts in the browser](Rewrite-1.6.4)).
@@ -86,6 +87,7 @@ None.
 - Pass a plugin's request function the headers of the HTTP request that opened the session, in the reserved argument `headers`, which the transport fills, the Shiny transport from `session$request`, in blockr.core
 - Let a plugin open the board that R sent, in place of the open board, through `CoreApi`, since a plugin has no text of that board once the page has opened another, in blockr.core
 - Write the storage API with its description, and its client in the browser, in blockr.session
+- Spike the Connect backend on a Connect server: from a page that Connect serves, on a visitor's key, create a pin, deploy a bundle that the browser built, read it back, read a record that today's blockr.session saved, and read the new pin in R with `pins::pin_download()`, in Chrome, Firefox and Safari, in blockr.session
 - Write the Connect backend, which fills the storage API's operations with calls to Connect's API from the browser and writes and reads the pins of records, in blockr.session
 - Document the storage API for a service of a deployment's own in a vignette, in place of today's vignette on a backend of one's own, in blockr.session
 - Exchange the visitor's session token, which the plugin's request reads from `headers`, for a visitor-scoped API key once per page, in blockr.session

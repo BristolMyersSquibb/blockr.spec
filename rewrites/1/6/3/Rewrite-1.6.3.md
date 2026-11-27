@@ -64,7 +64,7 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 ### Saving
 
 - The controls save the JSON board that `core.store.save()` writes ([Serialization](Rewrite-1.1.4#files)).
-- Save adds a version to the record that the plugin opened, unless the record's last version holds the same content hash, which the plugin reports as "No changes to save", as today.
+- Save adds a version to the record that the plugin opened, unless the board is the one that the plugin opened or saved last, which it tells by a hash of the board's text ([The storage API](Rewrite-1.6.1#records-and-versions)), and which it reports as "No changes to save", as today.
 - A board that no record holds asks for a key at its first save, which creates the record and fails where the key is taken ([The storage API](Rewrite-1.6.1#records-and-versions)).
 - "Save as new workflow…" creates a record under a key that the user picks, suggesting the key with `-copy`, as today, and moves the URL to it.
   It opens nothing, since the board on the page is the one that the new record holds.
@@ -78,6 +78,7 @@ The plugin's storage controls are those of today's piece of the navbar, in today
 
 - Where the plugin has no backend, as on Connect for a visitor without a key, such as one who is not signed in, or where a service refuses with `unauthorized`, its controls are Save, which saves a download, Open, which opens an upload, and "New workflow", beside the drafts button.
 - A status says why no records show, with a tooltip that names what is missing: a Connect sign-in, a sign-in to the service, which the status links where the service gives its `sign_in` ([The storage API](Rewrite-1.6.1#who-the-user-is)), or the blockr option `session_mgmt_backend`.
+- Where the backend's capability `saving` is false, as on Connect for a visitor with the Viewer role, the controls list and open records as with a backend, while Save saves a download, "Save as new workflow…" and Delete are left out, and the status says that the user's role saves no records ([Connect from the browser](Rewrite-1.6.2#what-a-visitors-role-allows)).
 - Open converts a file of today's stack through R, as an upload does ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)).
 
 ### Notifications

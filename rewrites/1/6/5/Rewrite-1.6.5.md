@@ -18,7 +18,7 @@ It builds on [The conversion and the migration notes](Rewrite-1.8.3), which sett
 - A record that blockr.session stored today, or a file of today's stack that a visitor uploads, converts as the plugin opens it, through a request that R answers with blockr.convert's `convert_file()` ([The conversion and the migration notes](Rewrite-1.8.3#who-converts)).
 - An upload of a file of today's stack is stored as it is, and converts as it opens, as a record saved today does.
 - The Connect backend reads the pins of records saved today as it reads its own ([Connect from the browser](Rewrite-1.6.2#records-as-pins)), and R's folder reads those of today's local board ([The storage API](Rewrite-1.6.1#rs-folder)).
-- The first save after a record saved today opens always adds a version, the record's first in the new format, since no hash of a JSON board matches today's content hash (notes).
+- The first save after a record saved today opens always adds a version, the record's first in the new format, since the plugin holds no hash for a board that it converted ([The storage API](Rewrite-1.6.1#records-and-versions)).
 
 ### Links made today
 
@@ -48,7 +48,7 @@ What changes for an app script, each change argued on the page that it links:
 
 <details><summary>Notes for implementers</summary>
 
-Today's content hash is `rlang::hash()` of the R list that a save writes ([R/rack.R#L478-L480](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/rack.R#L478-L480)), which no hash of a JSON board matches.
-So the first save after a record saved today opens always adds a version, the record's first in the new format, as [The conversion and the migration notes](Rewrite-1.8.3#who-converts) has it.
+Today's content hash is `rlang::hash()` of the R list that a save writes ([R/rack.R#L478-L480](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/rack.R#L478-L480)), which the new stack neither reads nor writes, since the plugin tells a changed board itself.
+The first save after a record saved today opens adds a version in the new format, as [The conversion and the migration notes](Rewrite-1.8.3#who-converts) has it.
 
 </details>
