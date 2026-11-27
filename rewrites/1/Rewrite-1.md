@@ -109,7 +109,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.graph | New: the DAG plugin, drawn in the browser with React Flow, in the place of blockr.dag | [Client-drawn DAG](Rewrite-1.3) | blockr.core |
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
-| blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
+| blockr.session | A storage plugin that makes its storage calls from the browser | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with blockr.ui's components | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, with where the new stack spends its time and a comparison on each pull request, and how well the assistant does what users ask | [The speed benchmark](Rewrite-1.8.4), [The assistant's benchmark](Rewrite-1.8.1) | A proof of concept of the new stack |
