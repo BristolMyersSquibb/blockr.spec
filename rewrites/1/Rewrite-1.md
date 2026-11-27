@@ -151,3 +151,4 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
   A package's build lists what each file that it writes imports up front in `inst/js/preload.json`, with `staticImports()` from blockr.ui's build preset, `@blockr/ui/build` ([blockr.core#652](https://github.com/BristolMyersSquibb/blockr.core/pull/652), [Building on blockr.ui](Rewrite-1.7.4#the-build-preset)).
   R names those files in the head of the page that it serves, so that the browser fetches them as the page loads, rather than each once the file that imports it has loaded.
 - Documentation: a pull request that changes a package's client updates its client guide and the comments of the exports that it changes, once they exist ([Documentation of the new stack](Rewrite-1.8.2#ownership-and-checks)).
+  A package whose `js-state` branch starts later sets up the documentation build and the site under `dev/` on that branch, following the packages before it.
