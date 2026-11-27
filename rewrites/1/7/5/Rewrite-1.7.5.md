@@ -2,8 +2,8 @@
 Status: settled on 2026-11-24. Design for [UI kit and design system for the client](Rewrite-1.7).
 
 One of the designs for blockr.ui as the client's UI kit ([UI kit and design system for the client](Rewrite-1.7)): how an app gives the page a theme of its own, which blockr.ui's `new_blockr_theme()` makes in R and core's `serve()` takes, and how R writes the theme into the page.
-It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that export `new_blockr_theme()` from blockr.ui, [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), make blockr.theme's theme with it, [blockr.theme#10](https://github.com/BristolMyersSquibb/blockr.theme/issues/10), and have `serve()` take the theme and write it into the page, [blockr.core#868](https://github.com/BristolMyersSquibb/blockr.core/issues/868).
-The issues that write the design system's article and blockr.theme's migration notes rely on it too: [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116) and [blockr.theme#11](https://github.com/BristolMyersSquibb/blockr.theme/issues/11).
+It shapes the issues of [UI kit and design system for the client](Rewrite-1.7#work) that export `new_blockr_theme()` from blockr.ui, [blockr.ui#112](https://github.com/BristolMyersSquibb/blockr.ui/issues/112), and have `serve()` take the theme and write it into the page, [blockr.core#868](https://github.com/BristolMyersSquibb/blockr.core/issues/868).
+The issue that writes the design system's article relies on it too: [blockr.ui#116](https://github.com/BristolMyersSquibb/blockr.ui/issues/116).
 Which theme variables there are, what each is for, their defaults, how a frontend gives values of its own, which value wins on the page and which defaults a frontend keeps belong to [The theme variables](Rewrite-1.7.2), and how R puts blockr.ui's stylesheet on every page to [Building on blockr.ui](Rewrite-1.7.4#the-stylesheet-on-the-page).
 How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1.3#the-serve-generic), and how a blockr option is set to [Board options and blockr options](Rewrite-1.1.13#blockr-options).
 
@@ -16,7 +16,7 @@ How `serve()` takes its arguments belongs to [Defining a board in R](Rewrite-1.1
 4. A name that is no theme variable stops the app as it starts, naming it.
 5. An app's script sets the app's theme.
    A site-wide R profile can give one theme to every app that runs on its installation of R, and an app's script overrides it.
-6. A package that makes themes, such as blockr.theme, needs blockr.ui alone to make one.
+6. A package that makes themes needs blockr.ui alone to make one.
 
 ## Today
 
@@ -50,12 +50,11 @@ The spacing, which sets the density of every UI, has no token today, and a theme
 
 An app may give a theme of its own, whose values win over the frontend's and over blockr.ui's defaults, so that a company's design restyles the whole page, the frontend's own parts included ([The frontend's own parts](Rewrite-1.7.2#the-frontends-own-parts)).
 It sets theme variables, as a frontend does, so that one theme fits every frontend, and it sets those whose values the app wants its own and leaves the rest to the frontend.
-So blockr.theme makes such a theme from its values, where today it sets blockr.ui's tokens ([Today](#today)).
 
 The theme variables name jobs rather than the steps of a palette ([The theme variables](Rewrite-1.7.2#colours)), and a frontend sets each job's value itself, so an app's theme sets every job whose look it changes.
 A company's brand colour is thus `primary`, with `primary-foreground` for the text on it, `primary-text` for links and messages, and `ring` for the focus ring, each in both modes, where blockr.theme sets two of blockr.ui's tokens today, and no other job of a theme is derived from it behind its author's back.
 
-A theme that starts from a few colours, such as a company's brand colour, gets the values of the rest as it is made, from whatever makes it, such as blockr.theme, which computes colours for its palettes of plots already ([R/palettes.R#L26-L40](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/palettes.R#L26-L40)), so that the theme holds every value that the page draws, where its author sees and checks it.
+A theme that starts from a few colours, such as a company's brand colour, gets the values of the rest as it is made, from whatever makes it, so that the theme holds every value that the page draws, where its author sees and checks it.
 Nothing derives them as the page draws, since a derived colour can fall below a readable contrast for a colour that nobody tried, unseen, and a value that the frontend sets for a variable would win over one derived from the theme's colour.
 That is how shadcn/ui's command line writes a theme's values from a base colour as it makes the theme, while it derives nothing but its radii as the page draws ([theming.mdx#L93-L150](https://github.com/shadcn-ui/ui/blob/bfa64ff4d1cb7317d2403ecb176df6826d4caffc/apps/v4/content/docs/%28root%29/theming.mdx?plain=1#L93-L150)).
 
@@ -100,12 +99,11 @@ Its `weight` and `style` default to those of CSS's `@font-face`.
 It takes nothing but values and fonts, so a theme sets values alone, as condition 1 has it.
 Each method of `serve()` refuses a `theme` that is not what `new_blockr_theme()` returns, naming what it got, such as `NULL` or a string that an environment variable gave the blockr option.
 
-So blockr.theme makes an app's theme with `new_blockr_theme()`, from its chrome under the names of the theme variables, its font's family and its bundled font, and an app passes that theme to `serve()` or sets it as the blockr option `theme`.
-Its palettes for plots, its scale map and its templates stay its own, and so do the options that it sets for blockr.viz, such as the fills of a table's header ([R/theme.R#L359-L382](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L359-L382)).
+The package blockr.theme is left to its maintainer for now ([State in JS](Rewrite-1#parts)), so an app makes its theme with `new_blockr_theme()` itself, and passes it to `serve()` or sets it as the blockr option `theme`.
+The palettes for plots, the scale map and the templates of blockr.theme stay its own, and so do the options that it sets for blockr.viz, such as the fills of a table's header ([R/theme.R#L359-L382](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/R/theme.R#L359-L382)).
 They style data and documents rather than the page, and none of them passes through `serve()`.
-Its scale map is a board option with a Shiny editor today, and the new stack runs no such editor.
+The scale map is a board option with a Shiny editor today, and the new stack runs no such editor.
 How the scale map works in the new stack is for blockr.viz, which reads it, to work out.
-On its `js-state`, blockr.theme therefore drops the scale map's board option and its editor, which call functions of today's core that core's `js-state` lacks, and a later version may bring back a board option for the scale map.
 So what `new_blockr_theme()` returns holds what R writes into the page and nothing else, and `serve()` is the only code that takes it.
 The function is blockr.ui's, beside the variables that it sets and their list, so that a package that makes themes builds on blockr.ui alone (condition 6).
 Core only takes the theme in `serve()` and writes it into the page.
@@ -150,14 +148,14 @@ None.
 - The function `new_blockr_theme()` returns an object of class `blockr_theme`, and blockr.ui exports `is_blockr_theme()` beside it, as core exports `is_plugin()` beside `new_plugin()`.
   Core's `serve()` tells a theme by `is_blockr_theme()`.
   The class is not `theme`, which ggplot2's themes carry, as ggplot2 4.0.3's `class(theme_grey())` begins with it, so that neither package's methods dispatch on the other's objects.
-  The object that blockr.theme makes carries the class `blockr_theme` today, with the functions `blockr_theme()` and `is_blockr_theme()`, so blockr.theme gives them other names.
+  The object that blockr.theme makes carries the class `blockr_theme` today, with the functions `blockr_theme()` and `is_blockr_theme()`, so a version of blockr.theme for the new stack gives them other names.
 - The function `new_blockr_theme()` reads the list of theme variables through `theme_variables()`, which reads the file that blockr.ui's build writes from the list in TypeScript, so that the lists in R and in JS never disagree ([Building on blockr.ui](Rewrite-1.7.4#the-list-of-theme-variables)).
 - R writes each value as it is, so `new_blockr_theme()` refuses a value that holds `}` or `<`, which would end the rule or the element that holds it.
   The check goes no further, so a value that is malformed in another way, such as one with an unclosed parenthesis, can break the theme, which is then its author's to fix.
 - The function `blockr_option()` reads the blockr option `theme` from the R option `blockr.theme` or the environment variable `BLOCKR_THEME`.
   The R option bears the name of the package blockr.theme, so blockr.theme names its own R options otherwise, as it names `blockr.theme.current` today.
   The demo of blockr.theme picks a theme by `BLOCKR_THEME` today ([dev/theme-demo.R#L31](https://github.com/BristolMyersSquibb/blockr.theme/blob/6b7d00e89c53ef66d53d1ddf7c490e75c720c5f4/dev/theme-demo.R#L31)).
-  So the demo reads another variable, since `blockr_option()` would return its string for the blockr option, which `serve()` refuses.
+  So a version of the demo for the new stack reads another variable, since `blockr_option()` would return its string for the blockr option, which `serve()` refuses.
 - For a theme with no values and no fonts, such as the blockr option's fallback, the method of `format()` returns an empty string, so the page of an app that sets no theme holds no rules of a theme.
 
 </details>

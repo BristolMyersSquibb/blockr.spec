@@ -110,7 +110,6 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | blockr.assistant | A plugin whose agent loop runs in the browser | [Assistant as a plugin](Rewrite-1.4) | blockr.core, blockr.dock |
 | blockr.code | A plugin whose code export is a request to R | [Code export as a plugin](Rewrite-1.5) | blockr.core, blockr.dock |
 | blockr.session | A storage plugin that makes its storage calls from the browser and converts the records saved today as it opens them | [Session management as a storage plugin](Rewrite-1.6) | blockr.core, blockr.dock, blockr.convert |
-| blockr.theme | Makes an app's theme with blockr.ui's `new_blockr_theme()`, from its chrome under the names of the theme variables and from its font, while its palettes for plots, its options for blockr.viz, its scale map and its templates stay its own | [An app's theme](Rewrite-1.7.5) | blockr.ui |
 | blockr.dplyr, blockr.ggplot, blockr.io, blockr.dm and blockr.ai | Ported to block classes, one package at a time, with their UIs drawn with blockr.ui's components | [Block classes in R](Rewrite-1.1.5) | blockr.core |
 | blockr.md | Its documents become one plugin, in place of its extension | None yet | blockr.dock |
 | blockr.bench | New: the benchmarks of the new stack, the speed of the client and R against today's stack, with where the new stack spends its time and a comparison on each pull request, and how well the assistant does what users ask | [The speed benchmark](Rewrite-1.8.4), [The assistant's benchmark](Rewrite-1.8.1) | A proof of concept of the new stack |
@@ -121,6 +120,7 @@ Each repo of today's stack, with what the rewrite does to it, in an order in whi
 | dockViewR | No longer used, since blockr.dock draws dockview in the browser | [Client-drawn dock](Rewrite-1.2) | |
 | blockr.dag | Left to its maintainer, who may retire it or rewrite it for the new stack, while blockr.graph draws the new stack's DAG | [Client-drawn DAG](Rewrite-1.3) | |
 | blockr.viz and blockr.script | Left to their maintainer, who may port them to block classes, while the meta-package blockr no longer attaches them | [The `blockr` meta-package](Rewrite-1.8.5#what-it-attaches) | |
+| blockr.theme | Left to its maintainer for now, since an app makes its theme with blockr.ui's `new_blockr_theme()`, and blockr.theme's own theme, `theme_blockr()`, sets nothing on the page but a font | [An app's theme](Rewrite-1.7.5) | |
 | g6R | Not used by blockr.graph, which draws the DAG with React Flow | [Client-drawn DAG](Rewrite-1.3) | |
 | typedjson | Leaves blockr.core, and reads today's files for blockr.convert, in a release after 0.1.2 that refuses code | [The conversion and the migration notes](Rewrite-1.8.3#the-package) | |
 
