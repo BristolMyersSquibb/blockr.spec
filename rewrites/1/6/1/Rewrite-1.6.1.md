@@ -41,24 +41,24 @@ The dialog fetches every record at once and searches and pages them in R, matchi
 - A record's key is fixed once the user picks it, as today, since a URL and every link to the record name it by its key, and since some backends cannot rename a key at all (notes).
   Its rules are the backend's, and a key that the backend refuses fails with `invalid_key` (below).
 - The plugin keys a record on neither the board's name nor the board's id ([Plugins](Rewrite-1.1.12#storage)).
-- A version is named by a string that the backend gives, such as the version of a pin, and holds the JSON board that a save stored, the time of the save and the board's content hash.
-  The content hash is the SHA-256 of the text that `core.store.save()` wrote, in hex, which the plugin computes with the browser's `crypto.subtle` and sends with the board, and which the backend stores and gives back.
-  So Save adds no version where the record's last version holds the same hash ([The controls and dialogs](Rewrite-1.6.3#saving)), and no service computes a hash.
+- A version is named by a string that the backend gives, such as the version of a pin, and holds the JSON board that a save stored and the time of the save.
+- Whether a board changed is the plugin's to tell, and no backend's: the plugin keeps the SHA-256 of the text that `core.store.save()` writes for the version that it opened or saved last, which it computes with the browser's `crypto.subtle`, and Save adds no version where the board's text hashes the same ([The controls and dialogs](Rewrite-1.6.3#saving)).
+  So no backend stores or computes a hash, and listing a record's versions costs Connect one call ([Connect from the browser](Rewrite-1.6.2#records-as-pins)), where a hash for each version would cost a read of each.
 - Where the backend keeps no versions, its capability `versioning` is false, a record holds one version, which `add_version` replaces, and the controls leave out the version history.
 
 ### The operations
 
-Every backend gives the first nine, and a backend gives the last five where its capabilities say so.
+Every backend gives the first nine, the four of them that change records where its capability `saving` says so, and the last five where its capabilities say so.
 
 | Operation | Args | Reply | Fails with |
 |---|---|---|---|
-| `capabilities` | None | `{ api, versioning, sharing, visibility, user_discovery }`, where `api` is the version of the storage API that the backend speaks, `1`, and the rest are flags | |
+| `capabilities` | None | `{ api, saving, versioning, sharing, visibility, user_discovery }`, where `api` is the version of the storage API that the backend speaks, `1`, and the rest are flags | |
 | `user` | None | `{ owner, name }` of the user whom the backend knows, where `owner` names the user as an owner of records | `unauthorized` |
 | `list_records` | None | `{ records }`, each `{ owner, key, saved }`, every record that the user may open, the user's own and those shared with them, the latest save first | |
-| `record_versions` | `{ owner, key }` | `{ versions }`, each `{ version, saved, hash }`, the latest first | `not_found` |
-| `read_version` | `{ owner, key, version }`, where a missing `version` reads the latest | `{ version, saved, hash, board }`, where `board` is the JSON that the save stored | `not_found` |
-| `create_record` | `{ key, board, hash }` | `{ owner, key, version, saved }`, the record created under the user whom the backend knows | `key_taken`, `invalid_key` |
-| `add_version` | `{ owner, key, board, hash }` | `{ version, saved }` | `not_found`, `forbidden` |
+| `record_versions` | `{ owner, key }` | `{ versions }`, each `{ version, saved }`, the latest first | `not_found` |
+| `read_version` | `{ owner, key, version }`, where a missing `version` reads the latest | `{ version, saved, board }`, where `board` is the JSON that the save stored | `not_found` |
+| `create_record` | `{ key, board }` | `{ owner, key, version, saved }`, the record created under the user whom the backend knows | `key_taken`, `invalid_key` |
+| `add_version` | `{ owner, key, board }` | `{ version, saved }` | `not_found`, `forbidden` |
 | `delete_version` | `{ owner, key, version }` | `{}` | `not_found`, `forbidden` |
 | `delete_record` | `{ owner, key }` | `{}` | `not_found`, `forbidden` |
 | `access` | `{ owner, key }` | `{ access, shares }`, where `access` is `acl`, `logged_in` or `all`, and each share is `{ principal, name }`, a user who may open the record | `not_found` |
@@ -67,6 +67,7 @@ Every backend gives the first nine, and a backend gives the last five where its 
 | `unshare` | `{ owner, key, principal }` | `{}` | `not_found`, `forbidden` |
 | `find_users` | `{ query }` | `{ users }`, each `{ principal, name }`, the users whose name starts with `query` | |
 
+- The capability `saving` gives `create_record`, `add_version`, `delete_version` and `delete_record`, which a backend may withhold from a user who may only open records, as Connect withholds them from a viewer ([Connect from the browser](Rewrite-1.6.2#what-a-visitors-role-allows)), and where it is false, the controls save a download in place of a record ([The controls and dialogs](Rewrite-1.6.3#without-a-backend)).
 - The capability `visibility` gives `access` and `set_access`, `sharing` gives `share` and `unshare`, and `user_discovery` gives `find_users`, as today's flags give their generics.
   The flags `tags` and `metadata` go, since no operation needs them (notes).
 - An access of `acl` lets only the owner and the users that `shares` lists open the record, `logged_in` every user who is signed in, and `all` everyone, as Connect's access types do, while the dialog's Private is `acl` with no shares, as today's is ([R/server.R#L980-L1000](https://github.com/BristolMyersSquibb/blockr.session/blob/66d950549a905066a2860c1d39da1cf6cf320bc8/R/server.R#L980-L1000)).
@@ -105,7 +106,7 @@ Every backend gives the first nine, and a backend gives the last five where its 
 ### The once-per-page request
 
 - Where the blockr option `session_mgmt_backend` is unset, the plugin asks R through its request `session_backend` as its `storage.load()` runs, which core sends though no board is open yet ([Drawing the board](Rewrite-1.1.8#starting-the-page)).
-- Its reply names the backend: `{ backend: "connect", key }` with the visitor's key, where Connect sent a token ([Connect from the browser](Rewrite-1.6.2#the-visitors-key)), `{ backend: "folder", url }` with the URL of R's folder, where R serves one (below), or `{ backend: "none", missing }`, where `missing` is `"sign_in"` on Connect for a visitor without a token.
+- Its reply names the backend: `{ backend: "connect", server, key }` with Connect's address and the visitor's key, where Connect sent a token ([Connect from the browser](Rewrite-1.6.2#the-visitors-key)), `{ backend: "folder", url }` with the URL of R's folder, where R serves one (below), or `{ backend: "none", missing }`, where `missing` is `"sign_in"` on Connect for a visitor without a token.
 - The plugin waits for the reply in its `storage.load()` only where the URL names a record, and otherwise resolves at once and draws its controls once the reply comes.
 - Under the load lock, where core calls no `storage.load()`, the plugin asks as its `start` first runs.
 
@@ -131,9 +132,10 @@ None.
 
 <details><summary>Notes for implementers</summary>
 
-The operations take what the controls and the dialogs use from today's generics: the records (`rack_list()`), a record's versions (`rack_info()`), reading a version (`rack_download()`), creating a record and adding a version (`rack_create()`, `rack_append()` and `rack_upload()`), a version's content hash (`rack_content_hash()`), deleting a version or a record (`rack_delete()` and `rack_purge()`), the capabilities (`rack_capabilities()`), and the access type, the shares and the search of users (`rack_acl()`, `rack_set_acl()`, `rack_share()`, `rack_unshare()`, `rack_shares()` and `rack_find_users()`).
+The operations take what the controls and the dialogs use from today's generics: the records (`rack_list()`), a record's versions (`rack_info()`), reading a version (`rack_download()`), creating a record and adding a version (`rack_create()`, `rack_append()` and `rack_upload()`), deleting a version or a record (`rack_delete()` and `rack_purge()`), the capabilities (`rack_capabilities()`), and the access type, the shares and the search of users (`rack_acl()`, `rack_set_acl()`, `rack_share()`, `rack_unshare()`, `rack_shares()` and `rack_find_users()`).
 Whether a key is taken (`rack_exists()`) becomes the failure `key_taken` of `create_record`, so that no other save can take the key between the check and the create.
 Today's `rack_rename()`, `rack_name()`, `rack_tags()` and `rack_set_tags()` go, since no control uses them once the plugin sets no board's name, and so does the `draft` of `rack_create()` and `rack_records()`, since drafts leave the backend ([Drafts in the browser](Rewrite-1.6.4)).
+So does `rack_content_hash()`, since the plugin tells a changed board itself.
 With them go the flags `tags` and `metadata`, while the Connect tag stays the Connect backend's own ([Connect from the browser](Rewrite-1.6.2#records-as-pins)).
 Connect's API takes a new `name` for a content item ([Connect's API](https://docs.posit.co/connect/api/)), but pins finds a pin by its owner and `name`, so a renamed key would leave every URL and link that names the record by its old key opening nothing.
 
