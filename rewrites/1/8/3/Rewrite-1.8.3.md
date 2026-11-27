@@ -11,7 +11,7 @@ The benchmarks and documentation of the new stack are [Wrap-up](Rewrite-1.8)'s.
 1. Every file that today's packages open converts once, through blockr.convert, into a JSON board, which opens with the same blocks, links, stacks, board option values, but for `dark_mode`, whose value stays with the user, and plugins' state, for the block classes and plugin classes that have been ported, as condition 4 of [State in JS](Rewrite-1#what-must-hold) asks.
 2. Converting a file runs nothing that the file holds, so that a crafted file runs no code in the session that converts it ([Serialization](Rewrite-1.1.4#files)).
 3. No package but blockr.convert holds code that reads today's files.
-4. A record that blockr.session stored today opens in an app of the new stack for the user who stored it, and so does a file of today's stack that a user uploads to it.
+4. No app of the new stack converts a file as it opens it, so the client and `serve()` refuse every file of today's stack, a record that blockr.session stored today included.
 5. A conversion leaves the file it reads as it was, so that the file converts again once the converting session has what it lacked.
 6. Every package whose functions app scripts call, and which the switch changes, has migration notes, a vignette, that list each change a script needs, written so that an AI can apply them ([State in JS](Rewrite-1#migration)).
 7. The examples of each such package and the clinical data explorer's board, with their scripts changed by an AI that is given nothing but the migration notes, open into the same board as the conversion of the files that their scripts saved before the change, as [Saved boards and app scripts across the switch](Rewrite-1.2.2#what-must-hold) asks of the dock's.
@@ -23,7 +23,7 @@ Such a file names the R class of every object and the constructor that rebuilds 
 So each file needs one conversion, in R, by the `blockr_deser()` methods of the packages that wrote it, of which the workspace's packages register 35 on main: 11 in blockr.core, 16 in blockr.dplyr, 7 in blockr.dock and one in blockr.assistant.
 
 What the conversion does is settled in pieces, by [Serialization](Rewrite-1.1.4#files) for core's objects, [Plugins](Rewrite-1.1.12#boards-and-app-scripts-from-today) for extensions and [Saved boards and app scripts across the switch](Rewrite-1.2.2) for the dock.
-The records that blockr.session stores today also cross, while [Session management as a storage plugin](Rewrite-1.6) has the browser read the pin bundles of records saved today, which hold files that only R converts.
+The records that blockr.session stores today cross the same way, once a deployment converts those that it keeps ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)).
 
 Every app script changes at the switch too, and 89 R scripts and 8 documents in 15 of the workspace's repos call `serve()`, in examples, vignettes, READMEs and dev scripts.
 Each package's migration notes, a vignette, say what a script changes ([State in JS](Rewrite-1#migration)), but only blockr.core's ([blockr.core#445](https://github.com/BristolMyersSquibb/blockr.core/issues/445)) and blockr.dock's ([Client-drawn dock](Rewrite-1.2#work)) are planned outside Wrap-up.
@@ -72,10 +72,10 @@ It names every object that it leaves out in one warning, with its class and its 
 A user converts a file that they downloaded from an app of today's stack once, with `convert_file()`, and opens the JSON board in an app of the new stack, and so does a deployer with the file that `serve()` is given.
 The client and `serve()` refuse a file without a `format` with an error that names `convert_file()`, since they tell such a file apart ([Serialization](Rewrite-1.1.4#files)), while core converts nothing (condition 3).
 
-The storage plugin of blockr.session converts each record that blockr.session stored today as it opens the record, and each file of today's stack that a user uploads (condition 4), since the records sit under each visitor's own account on Connect, where no pass of a deployer's reaches them all ([Session management as a storage plugin](Rewrite-1.6)).
-Where a record's board has no `format`, the plugin sends it to R in a request of its class, which R answers with `convert_file()` on the request's body ([Plugins](Rewrite-1.1.12#a-plugins-requests)), and opens the JSON board that comes back, while the record gains a version in the new format only when the user saves the board.
-The warning of a conversion that leaves objects out reaches the user as a notification, as every warning that R raises does ([Notifications, logging and tracing](Rewrite-1.1.14)).
-So blockr.session imports blockr.convert, and every app that may open a record saved today can convert it.
+No app converts a file as it opens it (condition 4).
+Whoever converts does so on purpose, for the files that they keep, and sees the warning that names what each conversion left out (above).
+The storage plugin of blockr.session opens a record's board through the client, so it refuses a record that blockr.session stored today, and a file of today's stack that a user uploads, with the same error ([Records, links and app scripts across the switch](Rewrite-1.6.5#records-and-files-saved-today)).
+A deployment converts the records that it keeps with `convert_file()`, and writes each JSON board back as a new version of its record, as the migration notes of blockr.session say.
 
 ### The migration notes
 
@@ -107,7 +107,6 @@ Today's code, at `5abaa52`: the generic and core's methods are `R/utils-serdes.R
 Typedjson's readers on its main, at `b9d920a`, are `json_read(path, code = TRUE)` and `json_read_str(txt, code = TRUE)`, so blockr.convert pins typedjson's main in `Remotes` until the release after 0.1.2.
 
 The tests can open the JSON boards in core's `CoreApi` for tests, where a test registers the block classes and plugin classes that it needs ([Plugins](Rewrite-1.1.12#testing)).
-A request's body reaches R's function as a file, in `file`, which the request of blockr.session's plugin hands to `convert_file()` with `out = NULL` ([Plugins](Rewrite-1.1.12#a-plugins-requests)).
 
 A deployment's skills change at the switch too, so blockr.assistant's migration notes list what a skill changes, beside what an app script changes ([The assistant's tools](Rewrite-1.4.2#the-requests-in-r)):
 
